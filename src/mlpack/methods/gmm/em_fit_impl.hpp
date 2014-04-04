@@ -4,7 +4,7 @@
  *
  * Implementation of EM algorithm for fitting GMMs.
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -49,9 +49,12 @@ void EMFit<InitialClusteringType, CovarianceConstraintPolicy>::Estimate(
     const arma::mat& observations,
     std::vector<arma::vec>& means,
     std::vector<arma::mat>& covariances,
-    arma::vec& weights)
+    arma::vec& weights,
+    const bool useInitialModel)
 {
-  InitialClustering(observations, means, covariances, weights);
+  // Only perform initial clustering if the user wanted it.
+  if (!useInitialModel)
+    InitialClustering(observations, means, covariances, weights);
 
   double l = LogLikelihood(observations, means, covariances, weights);
 
@@ -133,9 +136,11 @@ void EMFit<InitialClusteringType, CovarianceConstraintPolicy>::Estimate(
     const arma::vec& probabilities,
     std::vector<arma::vec>& means,
     std::vector<arma::mat>& covariances,
-    arma::vec& weights)
+    arma::vec& weights,
+    const bool useInitialModel)
 {
-  InitialClustering(observations, means, covariances, weights);
+  if (!useInitialModel)
+    InitialClustering(observations, means, covariances, weights);
 
   double l = LogLikelihood(observations, means, covariances, weights);
 

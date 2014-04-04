@@ -5,7 +5,7 @@
  * Defines a Gaussian Mixture model and
  * estimates the parameters of the model
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -296,15 +296,23 @@ class GMM
    * with the greatest log-likelihood will be selected.  By default, only one
    * trial is performed.  The log-likelihood of the best fitting is returned.
    *
+   * Optionally, the existing model can be used as an initial model for the
+   * estimation by setting 'useExistingModel' to true.  If the fitting procedure
+   * is deterministic after the initial position is given, then 'trials' should
+   * be set to 1.
+   *
    * @tparam FittingType The type of fitting method which should be used
    *     (EMFit<> is suggested).
    * @param observations Observations of the model.
    * @param trials Number of trials to perform; the model in these trials with
    *      the greatest log-likelihood will be selected.
+   * @param useExistingModel If true, the existing model is used as an initial
+   *      model for the estimation.
    * @return The log-likelihood of the best fit.
    */
   double Estimate(const arma::mat& observations,
-                  const size_t trials = 1);
+                  const size_t trials = 1,
+                  const bool useExistingModel = false);
 
   /**
    * Estimate the probability distribution directly from the given observations,
@@ -316,16 +324,24 @@ class GMM
    * with the greatest log-likelihood will be selected.  By default, only one
    * trial is performed.  The log-likelihood of the best fitting is returned.
    *
+   * Optionally, the existing model can be used as an initial model for the
+   * estimation by setting 'useExistingModel' to true.  If the fitting procedure
+   * is deterministic after the initial position is given, then 'trials' should
+   * be set to 1.
+   *
    * @param observations Observations of the model.
    * @param probabilities Probability of each observation being from this
    *     distribution.
    * @param trials Number of trials to perform; the model in these trials with
    *     the greatest log-likelihood will be selected.
+   * @param useExistingModel If true, the existing model is used as an initial
+   *     model for the estimation.
    * @return The log-likelihood of the best fit.
    */
   double Estimate(const arma::mat& observations,
                   const arma::vec& probabilities,
-                  const size_t trials = 1);
+                  const size_t trials = 1,
+                  const bool useExistingModel = false);
 
   /**
    * Classify the given observations as being from an individual component in

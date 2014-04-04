@@ -7,15 +7,14 @@ configuration options.  One can consult any of numerous CMake tutorials for
 further documentation, but this tutorial should be enough to get MLPACK built
 and installed.
 
-@section Download latest mlpack build
-Download latest mlpack build from here : <a href="http://www.mlpack.org/files/mlpack-1.0.7.tar.gz">mlpack-1.0.7</a>
+@section Download latest mlpack build Download latest mlpack build from here : <a href="http://www.mlpack.org/files/mlpack-1.0.8.tar.gz">mlpack-1.0.8</a>
 
 @section builddir Creating Build Directory
 
 Once the MLPACK source is unpacked, you should create a build directory.
 
 @code
-$ cd mlpack-1.0.7
+$ cd mlpack-1.0.8
 $ mkdir build
 @endcode
 
@@ -38,8 +37,8 @@ In Ubuntu and Debian, you can get all of these dependencies through apt:
   libboost-random-dev libboost-test-dev libxml2-dev libarmadillo-dev
 @endcode
 
-If you are using an Ubuntu version older than 12.04 ("Precise Pangolin") or
-Debian older than Wheezy, you will have to compile Armadillo from source.  See
+If you are using an Ubuntu version older than 13.10 ("Saucy Salamander") or
+Debian older than Jessie, you will have to compile Armadillo from source.  See
 the README.txt distributed with Armadillo for more information.
 
 On Fedora, Red Hat, or CentOS, these same dependencies can be obtained via yum:

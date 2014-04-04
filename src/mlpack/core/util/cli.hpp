@@ -6,7 +6,7 @@
  * This can be used more or less regardless of context.  In the future,
  * it might be expanded to include file I/O.
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -34,6 +34,7 @@
 
 #include "timers.hpp"
 #include "cli_deleter.hpp" // To make sure we can delete the singleton.
+#include "version.hpp"
 
 /**
  * Document an executable.  Only one instance of this macro should be
@@ -612,7 +613,7 @@ class CLI
    *
    * In this case, the singleton is used to store data for the static methods,
    * as there is no point in defining static methods only to have users call
-   * private instance methods
+   * private instance methods.
    *
    * @return The singleton instance for use in the static methods.
    */
@@ -703,6 +704,9 @@ class CLI
 
   //! True, if CLI was used to parse command line options.
   bool didParse;
+
+  //! Hold the name of the program for --version.
+  std::string programName;
 
   //! Holds the timer objects.
   Timers timer;

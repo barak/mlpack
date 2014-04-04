@@ -5,7 +5,7 @@
  *
  * The generic L-BFGS optimizer.
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -108,6 +108,11 @@ class L_BFGS
    * @return Objective value of the final point.
    */
   double Optimize(arma::mat& iterate, const size_t maxIterations);
+
+  //! Return the function that is being optimized.
+  const FunctionType& Function() const { return function; }
+  //! Modify the function that is being optimized.
+  FunctionType& Function() { return function; }
 
   //! Get the memory size.
   size_t NumBasis() const { return numBasis; }

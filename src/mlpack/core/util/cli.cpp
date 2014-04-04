@@ -4,7 +4,7 @@
  *
  * Implementation of the CLI module for parsing parameters.
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -199,7 +199,15 @@ std::string CLI::AliasReverseLookup(const std::string& value)
  */
 void CLI::DefaultMessages()
 {
-  // Default help message
+  // --version is prioritized over --help.
+  if (HasParam("version"))
+  {
+    std::cout << GetSingleton().programName << ": part of "
+        << util::GetVersion() << std::endl;
+    exit(0);
+  }
+
+  // Default help message.
   if (HasParam("help"))
   {
     Log::Info.ignoreInput = false;
@@ -386,6 +394,7 @@ void CLI::ParseCommandLine(int argc, char** line)
 {
   Timer::Start("total_time");
 
+  GetSingleton().programName = std::string(line[0]);
   po::variables_map& vmap = GetSingleton().vmap;
   po::options_description& desc = GetSingleton().desc;
 
@@ -747,3 +756,4 @@ PARAM_FLAG("help", "Default help info.", "h");
 PARAM_STRING("info", "Get help on a specific module or option.", "", "");
 PARAM_FLAG("verbose", "Display informational messages and the full list of "
     "parameters and timers at the end of execution.", "v");
+PARAM_FLAG("version", "Display the version of mlpack.", "V");

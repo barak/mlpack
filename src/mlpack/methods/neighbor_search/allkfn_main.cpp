@@ -5,7 +5,7 @@
  * Implementation of the AllkFN executable.  Allows some number of standard
  * options.
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
     Log::Info << "Trees built." << endl;
   }
 
-  Log::Info << "Computing " << k << " nearest neighbors..." << endl;
+  Log::Info << "Computing " << k << " furthest neighbors..." << endl;
   allkfn->Search(k, neighbors, distances);
 
   Log::Info << "Neighbors computed." << endl;

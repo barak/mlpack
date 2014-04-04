@@ -3,7 +3,7 @@
  *
  * Definition of generalized binary space partitioning tree (BinarySpaceTree).
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -298,6 +298,12 @@ class BinarySpaceTree
 
   //! Return the number of children in this node.
   size_t NumChildren() const;
+
+  /**
+   * Return the furthest distance to a point held in this node.  If this is not
+   * a leaf node, then the distance is 0 because the node holds no points.
+   */
+  double FurthestPointDistance() const;
 
   /**
    * Return the furthest possible descendant distance.  This returns the maximum

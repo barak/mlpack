@@ -5,7 +5,7 @@
  * Implementation of PCA class to perform Principal Components Analysis on the
  * specified data set.
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -135,8 +135,9 @@ double PCA::Apply(arma::mat& data, const size_t newDimension) const
 
   Apply(data, data, eigVal, coeffs);
 
-  // Drop unnecessary rows.
-  data.shed_rows(newDimension, data.n_rows - 1);
+  if (newDimension < coeffs.n_rows)
+    // Drop unnecessary rows.
+    data.shed_rows(newDimension, data.n_rows - 1);
 
   // Calculate the total amount of variance retained.
   return (sum(eigVal.subvec(0, newDimension - 1)) / sum(eigVal));

@@ -4,7 +4,7 @@
  *
  * Implementation of FastMKSRules for cover tree search.
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -226,7 +226,7 @@ double FastMKSRules<KernelType, TreeType>::Score(TreeType& queryNode,
   const double dualTerm = queryDistBound * refDistBound;
 
   // The parent-child and parent-parent prunes work by applying the same pruning
-  // condition, except they are tighter because
+  // condition as when the parent node was used, except they are tighter because
   //    queryDistBound < queryNode.Parent()->FurthestDescendantDistance()
   // and
   //    refDistBound < referenceNode.Parent()->FurthestDescendantDistance()
