@@ -4,7 +4,7 @@
  *
  * Implementation of MaxVarianceNewCluster class.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -48,7 +48,7 @@ size_t MaxVarianceNewCluster::EmptyCluster(const MatType& data,
   for (size_t i = 0; i < data.n_cols; i++)
   {
     variances[assignments[i]] += arma::as_scalar(
-        var(data.col(i) - centroids.col(assignments[i])));
+        arma::var(data.col(i) - centroids.col(assignments[i])));
   }
 
   // Now find the cluster with maximum variance.
@@ -63,7 +63,7 @@ size_t MaxVarianceNewCluster::EmptyCluster(const MatType& data,
     if (assignments[i] == maxVarCluster)
     {
       double distance = arma::as_scalar(
-          var(data.col(i) - centroids.col(maxVarCluster)));
+          arma::var(data.col(i) - centroids.col(maxVarCluster)));
 
       if (distance > maxDistance)
       {

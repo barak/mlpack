@@ -5,7 +5,7 @@
  * Implementation of Neighbor-Search class to perform all-nearest-neighbors on
  * two specified data sets.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -220,7 +220,7 @@ void NeighborSearch<SortPolicy, MetricType, TreeType>::Search(
     numPrunes = traverser.NumPrunes();
   }
 
-  Log::Warn << "Pruned " << numPrunes << " nodes." << std::endl;
+  Log::Debug << "Pruned " << numPrunes << " nodes." << std::endl;
 
   Timer::Stop("computing_neighbors");
 

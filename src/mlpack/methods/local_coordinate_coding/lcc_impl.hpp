@@ -4,7 +4,7 @@
  *
  * Implementation of Local Coordinate Coding
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -63,7 +63,7 @@ void LocalCoordinateCoding<DictionaryInitializer>::Encode(
   Log::Info << "  Objective value: " << Objective(adjacencies) << "."
       << std::endl;
 
-  for (size_t t = 1; t <= maxIterations; t++)
+  for (size_t t = 1; t != maxIterations; t++)
   {
     Log::Info << "Iteration " << t << " of " << maxIterations << "."
         << std::endl;

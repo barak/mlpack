@@ -4,7 +4,7 @@
  *
  * Implementation of the Mahalanobis distance.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -35,10 +35,6 @@ template<typename VecType1, typename VecType2>
 double MahalanobisDistance<false>::Evaluate(const VecType1& a,
                                             const VecType2& b)
 {
-  // Check if covariance matrix has been initialized.
-  if (covariance.n_rows == 0)
-    covariance = arma::eye<arma::mat>(a.n_elem, a.n_elem);
-
   arma::vec m = (a - b);
   arma::mat out = trans(m) * covariance * m; // 1x1
   return out[0];

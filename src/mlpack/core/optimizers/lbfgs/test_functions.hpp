@@ -10,7 +10,7 @@
  *  ACM Trans. Math. Softw. 7, 1 (March 1981), 17-41.
  *  http://portal.acm.org/citation.cfm?id=355934.355936
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -112,6 +112,11 @@ class WoodFunction
  *
  * This should optimize to f(x) = 0, at x = [1, 1, 1, 1, ...].
  *
+ * This function can also be used for stochastic gradient descent (SGD) as a
+ * decomposable function (DecomposableFunctionType), so there are other
+ * overloads of Evaluate() and Gradient() implemented, as well as
+ * NumFunctions().
+ *
  * "An analysis of the behavior of a glass of genetic adaptive systems."
  *   K.A. De Jong.  Ph.D. thesis, University of Michigan, 1975.
  */
@@ -125,8 +130,14 @@ class GeneralizedRosenbrockFunction
    */
   GeneralizedRosenbrockFunction(int n);
 
-  double Evaluate(const arma::mat& coordinates);
-  void Gradient(const arma::mat& coordinates, arma::mat& gradient);
+  double Evaluate(const arma::mat& coordinates) const;
+  void Gradient(const arma::mat& coordinates, arma::mat& gradient) const;
+
+  size_t NumFunctions() const { return n - 1; }
+  double Evaluate(const arma::mat& coordinates, const size_t i) const;
+  void Gradient(const arma::mat& coordinates,
+                const size_t i,
+                arma::mat& gradient) const;
 
   const arma::mat& GetInitialPoint() const;
 
@@ -160,4 +171,4 @@ class RosenbrockWoodFunction
 }; // namespace optimization
 }; // namespace mlpack
 
-#endif // __MLPAC_CORE_OPTIMIZERS_LBFGS_TEST_FUNCTIONS_HPP
+#endif // __MLPACK_CORE_OPTIMIZERS_LBFGS_TEST_FUNCTIONS_HPP

@@ -4,7 +4,7 @@
  *
  * Executable which trains an HMM and saves the trained HMM to file.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -61,7 +61,7 @@ PARAM_INT("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
 using namespace mlpack;
 using namespace mlpack::hmm;
 using namespace mlpack::distribution;
-using namespace mlpack::utilities;
+using namespace mlpack::util;
 using namespace mlpack::gmm;
 using namespace mlpack::math;
 using namespace arma;

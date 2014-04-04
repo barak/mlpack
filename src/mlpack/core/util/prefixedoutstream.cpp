@@ -5,7 +5,7 @@
  *
  * Implementation of PrefixedOutStream methods.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -28,7 +28,7 @@
 
 #include "prefixedoutstream.hpp"
 
-using namespace mlpack::io;
+using namespace mlpack::util;
 
 /**
  * These are all necessary because gcc's template mechanism does not seem smart
@@ -111,7 +111,7 @@ PrefixedOutStream& PrefixedOutStream::operator<<(const char* str)
 
 PrefixedOutStream& PrefixedOutStream::operator<<(std::string& str)
 {
-  BaseLogic<std::string&>(str);
+  BaseLogic<std::string>(str);
   return *this;
 }
 

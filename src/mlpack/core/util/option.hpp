@@ -5,7 +5,7 @@
  * Definition of the Option class, which is used to define parameters which are
  * used by CLI.  The ProgramDoc class also resides here.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -28,7 +28,7 @@
 #include "cli.hpp"
 
 namespace mlpack {
-namespace io {
+namespace util {
 
 /**
  * A static object whose constructor registers a parameter with the CLI class.
@@ -108,7 +108,7 @@ class ProgramDoc
   std::string documentation;
 };
 
-}; // namespace io
+}; // namespace util
 }; // namespace mlpack
 
 // For implementations of templated functions

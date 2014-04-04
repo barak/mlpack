@@ -3,7 +3,7 @@
  *
  * Implementation of the (inlined) Range class.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -23,6 +23,7 @@
 
 #include "range.hpp"
 #include <float.h>
+#include <sstream>
 
 namespace mlpack {
 namespace math {
@@ -186,6 +187,15 @@ inline bool Range::Contains(const double d) const
 inline bool Range::Contains(const Range& r) const
 {
   return lo <= r.hi;
+}
+/**
+ * Returns a string representation of an object.
+ */
+std::string Range::ToString() const
+{
+  std::ostringstream convert;
+  convert << "[" << lo << ", " << hi << "]";
+  return convert.str();
 }
 
 }; // namesapce math

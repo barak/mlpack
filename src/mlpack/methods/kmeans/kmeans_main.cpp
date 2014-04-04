@@ -4,7 +4,7 @@
  *
  * Executable for running K-Means.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -108,10 +108,10 @@ int main(int argc, char** argv)
         AllowEmptyClusters> k(maxIterations, overclustering);
 
     Timer::Start("clustering");
-		if(CLI::HasParam("fast_kmeans"))
-			k.FastCluster(dataset, clusters, assignments);
-		else
-			k.Cluster(dataset, clusters, assignments);
+    if (CLI::HasParam("fast_kmeans"))
+      k.FastCluster(dataset, clusters, assignments);
+    else
+      k.Cluster(dataset, clusters, assignments);
     Timer::Stop("clustering");
   }
   else
@@ -119,10 +119,10 @@ int main(int argc, char** argv)
     KMeans<> k(maxIterations, overclustering);
 
     Timer::Start("clustering");
-		if(CLI::HasParam("fast_kmeans"))
-			k.FastCluster(dataset, clusters, assignments);
-		else
-			k.Cluster(dataset, clusters, assignments);
+    if (CLI::HasParam("fast_kmeans"))
+      k.FastCluster(dataset, clusters, assignments);
+    else
+      k.Cluster(dataset, clusters, assignments);
     Timer::Stop("clustering");
   }
 

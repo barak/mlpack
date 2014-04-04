@@ -4,7 +4,7 @@
  *
  * Implementation of template functions for the Option class.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -26,18 +26,18 @@
 #include "option.hpp"
 
 namespace mlpack {
-namespace io {
+namespace util {
 
 /**
  * Registers a parameter with CLI.
  */
 template<typename N>
 Option<N>::Option(bool ignoreTemplate,
-                N defaultValue,
-                const std::string& identifier,
-         	const std::string& description,
-         	const std::string& alias,
-                bool required)
+                  N defaultValue,
+                  const std::string& identifier,
+                  const std::string& description,
+                  const std::string& alias,
+                  bool required)
 {
   if (ignoreTemplate)
   {
@@ -46,7 +46,6 @@ Option<N>::Option(bool ignoreTemplate,
   else
   {
     CLI::Add<N>(identifier, description, alias, required);
-
     CLI::GetParam<N>(identifier) = defaultValue;
   }
 }
@@ -57,13 +56,13 @@ Option<N>::Option(bool ignoreTemplate,
  */
 template<typename N>
 Option<N>::Option(const std::string& identifier,
-         	const std::string& description,
-         	const std::string& alias)
+                  const std::string& description,
+                  const std::string& alias)
 {
   CLI::AddFlag(identifier, description, alias);
 }
 
-}; // namespace io
+}; // namespace util
 }; // namespace mlpack
 
 #endif

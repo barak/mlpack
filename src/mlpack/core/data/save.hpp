@@ -6,7 +6,7 @@
  * not transpose matrices upon saving, and it allows us to give better error
  * output.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -45,6 +45,7 @@ namespace data /** Functions to load and save matrices. */ {
  *  - PPM (ppm_binary), denoted by .ppm
  *  - Raw binary (raw_binary), denoted by .bin
  *  - Armadillo binary (arma_binary), denoted by .bin
+ *  - HDF5 (hdf5_binary), denoted by .hdf5, .hdf, .h5, or .he5
  *
  * If the file extension is not one of those types, an error will be given.  If
  * the 'fatal' parameter is set to true, an error will cause the program to

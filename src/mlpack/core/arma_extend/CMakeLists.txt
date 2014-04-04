@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 2.8)
-
 # Define the files we need to compile.
 # Anything not in this list will not be compiled into MLPACK.
 set(SOURCES
@@ -7,9 +5,11 @@ set(SOURCES
   fn_ccov.hpp
   glue_ccov_meat.hpp
   glue_ccov_proto.hpp
+  hdf5_misc.hpp
   op_ccov_meat.hpp
   op_ccov_proto.hpp
   promote_type.hpp
+  restrictors.hpp
   traits.hpp
   typedef.hpp
 )

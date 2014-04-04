@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 2.8)
-
 # Define the files we need to compile.
 # Anything not in this list will not be compiled into MLPACK.
 set(SOURCES
@@ -25,6 +23,8 @@ set(SOURCES
   periodichrectbound_impl.hpp
   statistic.hpp
   mrkd_statistic.hpp
+  mrkd_statistic_impl.hpp
+  mrkd_statistic.cpp
 )
 
 # add directory name to sources

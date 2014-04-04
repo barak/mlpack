@@ -4,7 +4,7 @@
  *
  * Declaration of NCA class (Neighborhood Components Analysis).
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -24,6 +24,9 @@
 
 #include <mlpack/core.hpp>
 #include <mlpack/core/metrics/lmetric.hpp>
+#include <mlpack/core/optimizers/sgd/sgd.hpp>
+
+#include "nca_softmax_error_function.hpp"
 
 namespace mlpack {
 namespace nca /** Neighborhood Components Analysis. */ {
@@ -51,29 +54,64 @@ namespace nca /** Neighborhood Components Analysis. */ {
  * }
  * @endcode
  */
-template<typename Kernel>
+template<typename MetricType = metric::SquaredEuclideanDistance,
+         template<typename> class OptimizerType = optimization::SGD>
 class NCA
 {
  public:
   /**
    * Construct the Neighborhood Components Analysis object.  This simply stores
-   * the reference to the dataset, before the actual optimization is performed.
+   * the reference to the dataset and labels as well as the parameters for
+   * optimization before the actual optimization is performed.
    *
    * @param dataset Input dataset.
+   * @param labels Input dataset labels.
+   * @param stepSize Step size for stochastic gradient descent.
+   * @param maxIterations Maximum iterations for stochastic gradient descent.
+   * @param tolerance Tolerance for termination of stochastic gradient descent.
+   * @param shuffle Whether or not to shuffle the dataset during SGD.
+   * @param metric Instantiated metric to use.
    */
-  NCA(const arma::mat& dataset, const arma::uvec& labels);
+  NCA(const arma::mat& dataset,
+      const arma::uvec& labels,
+      MetricType metric = MetricType());
 
   /**
    * Perform Neighborhood Components Analysis.  The output distance learning
-   * matrix is written into the passed reference.
+   * matrix is written into the passed reference.  If LearnDistance() is called
+   * with an outputMatrix which has the correct size (dataset.n_rows x
+   * dataset.n_rows), that matrix will be used as the starting point for
+   * optimization.
    *
    * @param output_matrix Covariance matrix of Mahalanobis distance.
    */
   void LearnDistance(arma::mat& outputMatrix);
 
+  //! Get the dataset reference.
+  const arma::mat& Dataset() const { return dataset; }
+  //! Get the labels reference.
+  const arma::uvec& Labels() const { return labels; }
+
+  //! Get the optimizer.
+  const OptimizerType<SoftmaxErrorFunction<MetricType> >& Optimizer() const
+  { return optimizer; }
+  OptimizerType<SoftmaxErrorFunction<MetricType> >& Optimizer()
+  { return optimizer; }
+
  private:
+  //! Dataset reference.
   const arma::mat& dataset;
+  //! Labels reference.
   const arma::uvec& labels;
+
+  //! Metric to be used.
+  MetricType metric;
+
+  //! The function to optimize.
+  SoftmaxErrorFunction<MetricType> errorFunction;
+
+  //! The optimizer to use.
+  OptimizerType<SoftmaxErrorFunction<MetricType> > optimizer;
 };
 
 }; // namespace nca

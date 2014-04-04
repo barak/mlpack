@@ -4,7 +4,7 @@
  *
  * Definition of CoverTree, which can be used in place of the BinarySpaceTree.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -42,14 +42,14 @@ namespace tree {
  *
  * - nesting: the level C_i is a subset of the level C_{i - 1}.
  * - covering: all node in level C_{i - 1} have at least one node in the
- *     level C_i with distance less than or equal to EC^i (exactly one of these
+ *     level C_i with distance less than or equal to b^i (exactly one of these
  *     is a parent of the point in level C_{i - 1}.
- * - separation: all nodes in level C_i have distance greater than EC^i to all
+ * - separation: all nodes in level C_i have distance greater than b^i to all
  *     other nodes in level C_i.
  *
- * The value 'EC' refers to the base, which is a parameter of the
- * tree.  These three properties make the cover tree very good for fast,
- * high-dimensional nearest-neighbor search.
+ * The value 'b' refers to the base, which is a parameter of the tree.  These
+ * three properties make the cover tree very good for fast, high-dimensional
+ * nearest-neighbor search.
  *
  * The theoretical structure of the tree contains many 'implicit' nodes which
  * only have a "self-child" (a child referencing the same point, but at a lower
@@ -159,6 +159,27 @@ class CoverTree
             MetricType& metric = NULL);
 
   /**
+   * Manually construct a cover tree node; no tree assembly is done in this
+   * constructor, and children must be added manually (use Children()).  This
+   * constructor is useful when the tree is being "imported" into the CoverTree
+   * class after being created in some other manner.
+   *
+   * @param dataset Reference to the dataset this node is a part of.
+   * @param base Base that was used for tree building.
+   * @param pointIndex Index of the point in the dataset which this node refers
+   *      to.
+   * @param scale Scale of this node's level in the tree.
+   * @param parentDistance Distance to parent node point.
+   * @param furthestDescendantDistance Distance to furthest descendant point.
+   */
+  CoverTree(const arma::mat& dataset,
+            const double base,
+            const size_t pointIndex,
+            const int scale,
+            const double parentDistance,
+            const double furthestDescendantDistance);
+
+  /**
    * Delete this cover tree node and its children.
    */
   ~CoverTree();
@@ -250,10 +271,14 @@ class CoverTree
 
   //! Get the distance to the parent.
   double ParentDistance() const { return parentDistance; }
+  //! Modify the distance to the parent.
+  double& ParentDistance() { return parentDistance; }
 
-  //! Get the distance to teh furthest descendant.
+  //! Get the distance to the furthest descendant.
   double FurthestDescendantDistance() const
   { return furthestDescendantDistance; }
+  //! Modify the distance to the furthest descendant.
+  double& FurthestDescendantDistance() { return furthestDescendantDistance; }
 
  private:
   //! Reference to the matrix which this tree is built on.
