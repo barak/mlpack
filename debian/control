@@ -1,0 +1,59 @@
+Source: mlpack
+Priority: extra
+Maintainer: Sterling Peet <sterling.peet@gatech.edu>
+Build-Depends: debhelper (>= 7.0.50~), cmake, doxygen
+# Build-Depends: liblapack-dev, libarmadillo-dev (>=2.4.0), libxml2-dev, libboost-dev, libboost-math-dev, libboost-program-options-dev, libboost-random-dev, libboost-test-dev, debhelper (>= 7.0.50~), cmake, doxygen
+Standards-Version: 3.9.1
+Section: libs
+Homepage: http://www.mlpack.org/
+Vcs-Svn: http://svn.cc.gatech.edu/fastlab/mlpack/conf/packages/mlpack/trunk
+Vcs-Browser: http://trac.research.cc.gatech.edu/fastlab/browser
+
+Package: libmlpack-dev
+Section: libdevel
+Architecture: any
+Depends: libarmadillo-dev (>= 2.4.0), liblapack-dev, libxml2-dev, libboost-dev, libmlpack1 (= ${binary:Version}), ${misc:Depends}
+Description: Fast and scalable C++ machine learning library header files
+ This package contains the development header files for the MLPACK library.
+ .
+ MLPACK (Machine Learning PACK) is an open-source, intuitive, fast, and
+ scalable C++ machine learning library, meant to be a machine learning
+ analog to LAPACK. It aims to implement a wide array of machine learning
+ methods and function as a "swiss army knife" for machine learning researchers.
+
+Package: libmlpack1
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Fast and scalable C++ machine learning library
+ This package contains the mlpack library itself.
+ .
+ MLPACK (Machine Learning PACK) is an open-source, intuitive, fast, and 
+ scalable C++ machine learning library, meant to be a machine learning 
+ analog to  LAPACK. It aims to implement a wide array of machine learning 
+ methods and function as a "swiss army knife" for machine learning researchers.
+
+Package: mlpack-bin
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Executable cli binaries for Machine Learning methods
+ This package contains example binaries using the mlpack library.
+ .
+ MLPACK (Machine Learning PACK) is an open-source, intuitive, fast, and
+ scalable C++ machine learning library, meant to be a machine learning
+ analog to  LAPACK. It aims to implement a wide array of machine learning
+ methods and function as a "swiss army knife" for machine learning researchers.
+
+Package: mlpack-doc
+Section: doc
+Architecture: all
+Depends: libmlpack1, ${misc:Depends}
+Description: Documentation for using MLPACK binaries and library
+ This package contains the html documentation for the mlpack library
+ built from the mlpack source.
+ .
+ MLPACK (Machine Learning PACK) is an open-source, intuitive, fast, and
+ scalable C++ machine learning library, meant to be a machine learning
+ analog to  LAPACK. It aims to implement a wide array of machine learning
+ methods and function as a "swiss army knife" for machine learning researchers.
