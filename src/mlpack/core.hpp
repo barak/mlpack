@@ -4,7 +4,7 @@
  * Include all of the base components required to write MLPACK methods, and the
  * main MLPACK Doxygen documentation.
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -77,6 +77,7 @@
  *  - @ref iodoc
  *  - @ref timer
  *  - @ref sample
+ *  - @ref verinfo
  *
  * Tutorials on specific methods are also available.
  *
@@ -144,6 +145,7 @@
  *   - Garry Boyer <garryb@gmail.com>
  *   - Andreas Löf <andreas.lof@cs.waikato.ac.nz>
  *   - Marcus Edel <marcus.edel@fu-berlin.de>
+ *   - Mudit Raj Gupta <mudit.raaj.gupta@gmail.com>
  *   - Sumedh Ghaisas <sumedhghaisas@gmail.com>
  */
 

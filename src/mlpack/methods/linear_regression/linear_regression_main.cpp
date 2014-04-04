@@ -4,7 +4,7 @@
  *
  * Main function for least-squares linear regression.
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -26,7 +26,7 @@ PROGRAM_INFO("Simple Linear Regression and Prediction",
     "An implementation of simple linear regression and simple ridge regression "
     "using ordinary least squares. This solves the problem\n\n"
     "  y = X * b + e\n\n"
-    "where X (--input_file) and y (the last row of --input_file, or "
+    "where X (--input_file) and y (the last column of --input_file, or "
     "--input_responses) are known and b is the desired variable.  If the "
     "covariance matrix (X'X) is not invertible, or if the solution is "
     "overdetermined, then specify a Tikhonov regularization constant (--lambda)"

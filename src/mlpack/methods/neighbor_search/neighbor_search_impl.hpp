@@ -5,7 +5,7 @@
  * Implementation of Neighbor-Search class to perform all-nearest-neighbors on
  * two specified data sets.
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -277,6 +277,10 @@ void NeighborSearch<SortPolicy, MetricType, TreeType>::Search(
             oldFromNewReferences[(*neighborPtr)(j, i)];
       }
     }
+
+    // Finished with temporary matrices.
+    delete neighborPtr;
+    delete distancePtr;
   }
   else if (treeOwner && hasQuerySet && singleMode) // Map only references.
   {

@@ -4,7 +4,7 @@
  *
  * Definition of CoverTree, which can be used in place of the BinarySpaceTree.
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -325,10 +325,14 @@ class CoverTree
   //! Modify the distance to the parent.
   double& ParentDistance() { return parentDistance; }
 
-  //! Get the distance to the furthest descendant.
+  //! Get the distance to the furthest point.  This is always 0 for cover trees.
+  double FurthestPointDistance() const { return 0.0; }
+
+  //! Get the distance from the center of the node to the furthest descendant.
   double FurthestDescendantDistance() const
   { return furthestDescendantDistance; }
-  //! Modify the distance to the furthest descendant.
+  //! Modify the distance from the center of the node to the furthest
+  //! descendant.
   double& FurthestDescendantDistance() { return furthestDescendantDistance; }
 
   //! Get the centroid of the node and store it in the given vector.

@@ -3,7 +3,7 @@
  *
  * Implementation of generalized space partitioning tree.
  *
- * This file is part of MLPACK 1.0.7.
+ * This file is part of MLPACK 1.0.8.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -387,6 +387,22 @@ inline size_t
     return 1;
 
   return 0;
+}
+
+/**
+ * Return a bound on the furthest point in the node from the centroid.  This
+ * returns 0 unless the node is a leaf.
+ */
+template<typename BoundType, typename StatisticType, typename MatType>
+inline double BinarySpaceTree<BoundType, StatisticType, MatType>::
+    FurthestPointDistance() const
+{
+  if (IsLeaf())
+    return 0.0;
+
+  // Otherwise half of the maximum bound distance is sufficient (this is the
+  // distance from a corner of the bound to the centroid).
+  return bound.MaxDistance(bound);
 }
 
 /**

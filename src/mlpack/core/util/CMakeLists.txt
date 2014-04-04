@@ -23,6 +23,8 @@ set(SOURCES
   string_util.cpp
   timers.hpp
   timers.cpp
+  version.hpp
+  version.cpp
 )
 
 # add directory name to sources
