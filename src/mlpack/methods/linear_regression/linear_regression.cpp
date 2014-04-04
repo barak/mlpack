@@ -47,7 +47,12 @@ LinearRegression::LinearRegression(arma::mat& predictors,
 
 LinearRegression::LinearRegression(const std::string& filename)
 {
-  parameters.load(filename);
+  data::Load(filename, parameters, true);
+}
+
+LinearRegression::LinearRegression(const LinearRegression& linearRegression)
+{
+  parameters = linearRegression.parameters;
 }
 
 LinearRegression::~LinearRegression()
@@ -61,6 +66,11 @@ void LinearRegression::Predict(const arma::mat& points, arma::vec& predictions)
 
   // We want to be sure we have the correct number of dimensions in the dataset.
   Log::Assert(nRows == parameters.n_rows - 1);
+  if (nRows != parameters.n_rows -1)
+  {
+    Log::Fatal << "The test data must have the same number of columns as the "
+        "training file.\n";
+  }
 
   predictions.zeros(nCols);
   // We set all the predictions to the intercept value initially.

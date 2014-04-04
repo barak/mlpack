@@ -46,9 +46,9 @@ class BinarySpaceTree
 {
  private:
   //! The left child node.
-  BinarySpaceTree *left;
+  BinarySpaceTree* left;
   //! The right child node.
-  BinarySpaceTree *right;
+  BinarySpaceTree* right;
   //! The index of the first point in the dataset contained in this node (and
   //! its children).
   size_t begin;
@@ -61,6 +61,8 @@ class BinarySpaceTree
   StatisticType stat;
   //! The leaf size.
   size_t leafSize;
+  //! The dimension this node split on if it is a parent.
+  size_t splitDimension;
 
  public:
   //! So other classes can use TreeType::Mat.
@@ -241,7 +243,12 @@ class BinarySpaceTree
   /**
    * Gets the right child of this node.
    */
-  BinarySpaceTree *Right() const;
+  BinarySpaceTree* Right() const;
+
+  /**
+  * Returns the dimension this parent's children are split on.
+  */
+  size_t GetSplitDimension() const;
 
   /**
    * Obtains the number of nodes in the tree, starting with this.

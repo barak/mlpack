@@ -27,13 +27,13 @@ PROGRAM_INFO("Hidden Markov Model (HMM) Training", "This program allows a "
     "--model_file.");
 
 PARAM_STRING_REQ("input_file", "File containing input observations.", "i");
-PARAM_STRING_REQ("type", "Type of HMM: discrete | gaussian | gmm", "t");
+PARAM_STRING_REQ("type", "Type of HMM: discrete | gaussian | gmm.", "t");
 
 PARAM_FLAG("batch", "If true, input_file (and if passed, labels_file) are "
     "expected to contain a list of files to use as input observation sequences "
     " (and label sequences).", "b");
 PARAM_INT("states", "Number of hidden states in HMM (necessary, unless "
-    "model_file is specified.", "s", 0);
+    "model_file is specified.", "n", 0);
 PARAM_INT("gaussians", "Number of gaussians in each GMM (necessary when type is"
     " 'gmm'.", "g", 0);
 PARAM_STRING("model_file", "Pre-existing HMM model (optional).", "m", "");
@@ -41,12 +41,14 @@ PARAM_STRING("labels_file", "Optional file of hidden states, used for "
     "labeled training.", "l", "");
 PARAM_STRING("output_file", "File to save trained HMM to (XML).", "o",
     "output_hmm.xml");
+PARAM_INT("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
 
 using namespace mlpack;
 using namespace mlpack::hmm;
 using namespace mlpack::distribution;
 using namespace mlpack::utilities;
 using namespace mlpack::gmm;
+using namespace mlpack::math;
 using namespace arma;
 using namespace std;
 
@@ -54,6 +56,12 @@ int main(int argc, char** argv)
 {
   // Parse command line options.
   CLI::ParseCommandLine(argc, argv);
+
+  // Set random seed.
+  if (CLI::GetParam<int>("seed") != 0)
+    RandomSeed((size_t) CLI::GetParam<int>("seed"));
+  else
+    RandomSeed((size_t) time(NULL));
 
   // Validate parameters.
   const string inputFile = CLI::GetParam<string>("input_file");

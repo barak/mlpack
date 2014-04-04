@@ -10,7 +10,10 @@ set(SOURCES
   bounds.hpp
   hrectbound.hpp
   hrectbound_impl.hpp
+  periodichrectbound.hpp
+  periodichrectbound_impl.hpp
   statistic.hpp
+  mrkd_statistic.hpp
 )
 
 # add directory name to sources

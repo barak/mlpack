@@ -21,17 +21,19 @@ PROGRAM_INFO("Hidden Markov Model (HMM) Sequence Generator", "This "
 PARAM_STRING_REQ("model_file", "File containing HMM (XML).", "m");
 PARAM_INT_REQ("length", "Length of sequence to generate.", "l");
 
-PARAM_INT("start_state", "Starting state of sequence.", "S", 0);
+PARAM_INT("start_state", "Starting state of sequence.", "t", 0);
 PARAM_STRING("output_file", "File to save observation sequence to.", "o",
     "output.csv");
 PARAM_STRING("state_file", "File to save hidden state sequence to (may be left "
-    "unspecified.", "s", "");
+    "unspecified.", "S", "");
+PARAM_INT("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
 
 using namespace mlpack;
 using namespace mlpack::hmm;
 using namespace mlpack::distribution;
 using namespace mlpack::utilities;
 using namespace mlpack::gmm;
+using namespace mlpack::math;
 using namespace arma;
 using namespace std;
 
@@ -39,6 +41,12 @@ int main(int argc, char** argv)
 {
   // Parse command line options.
   CLI::ParseCommandLine(argc, argv);
+
+  // Set random seed.
+  if (CLI::GetParam<int>("seed") != 0)
+    RandomSeed((size_t) CLI::GetParam<int>("seed"));
+  else
+    RandomSeed((size_t) time(NULL));
 
   // Load observations.
   const string modelFile = CLI::GetParam<string>("model_file");

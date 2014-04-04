@@ -31,6 +31,12 @@ BinarySpaceTree<BoundType, StatisticType, MatType>::BinarySpaceTree(
 {
   // Do the actual splitting of this node.
   SplitNode(data);
+
+  // Create the statistic depending on if we are a leaf or not.
+  if (IsLeaf())
+    stat = StatisticType(data, begin, count);
+  else
+    stat = StatisticType(data, begin, count, left->Stat(), right->Stat());
 }
 
 template<typename BoundType, typename StatisticType, typename MatType>
@@ -53,6 +59,12 @@ BinarySpaceTree<BoundType, StatisticType, MatType>::BinarySpaceTree(
 
   // Now do the actual splitting.
   SplitNode(data, oldFromNew);
+
+  // Create the statistic depending on if we are a leaf or not.
+  if (IsLeaf())
+    stat = StatisticType(data, begin, count);
+  else
+    stat = StatisticType(data, begin, count, left->Stat(), right->Stat());
 }
 
 template<typename BoundType, typename StatisticType, typename MatType>
@@ -76,6 +88,12 @@ BinarySpaceTree<BoundType, StatisticType, MatType>::BinarySpaceTree(
 
   // Now do the actual splitting.
   SplitNode(data, oldFromNew);
+
+  // Create the statistic depending on if we are a leaf or not.
+  if (IsLeaf())
+    stat = StatisticType(data, begin, count);
+  else
+    stat = StatisticType(data, begin, count, left->Stat(), right->Stat());
 
   // Map the newFromOld indices correctly.
   newFromOld.resize(data.n_cols);
@@ -159,16 +177,16 @@ BinarySpaceTree<BoundType, StatisticType, MatType>::BinarySpaceTree(
   // Perform the actual splitting.
   SplitNode(data, oldFromNew);
 
-  // Map the newFromOld indices correctly.
-  newFromOld.resize(data.n_cols);
-  for (size_t i = 0; i < data.n_cols; i++)
-    newFromOld[oldFromNew[i]] = i;
-
   // Create the statistic depending on if we are a leaf or not.
   if (IsLeaf())
     stat = StatisticType(data, begin, count);
   else
     stat = StatisticType(data, begin, count, left->Stat(), right->Stat());
+
+  // Map the newFromOld indices correctly.
+  newFromOld.resize(data.n_cols);
+  for (size_t i = 0; i < data.n_cols; i++)
+    newFromOld[oldFromNew[i]] = i;
 }
 
 template<typename BoundType, typename StatisticType, typename MatType>
@@ -309,7 +327,7 @@ size_t BinarySpaceTree<BoundType, StatisticType, MatType>::TreeDepth() const
 }
 
 template<typename BoundType, typename StatisticType, typename MatType>
-inline const 
+inline const
     BoundType& BinarySpaceTree<BoundType, StatisticType, MatType>::Bound() const
 {
   return bound;
@@ -322,7 +340,7 @@ inline BoundType& BinarySpaceTree<BoundType, StatisticType, MatType>::Bound()
 }
 
 template<typename BoundType, typename StatisticType, typename MatType>
-inline const StatisticType& 
+inline const StatisticType&
     BinarySpaceTree<BoundType, StatisticType, MatType>::Stat() const
 {
   return stat;
@@ -332,6 +350,12 @@ template<typename BoundType, typename StatisticType, typename MatType>
 inline StatisticType& BinarySpaceTree<BoundType, StatisticType, MatType>::Stat()
 {
   return stat;
+}
+
+template<typename BoundType, typename StatisticType, typename MatType>
+inline size_t BinarySpaceTree<BoundType, StatisticType, MatType>::GetSplitDimension() const
+{
+	return splitDimension;
 }
 
 template<typename BoundType, typename StatisticType, typename MatType>
@@ -388,7 +412,7 @@ inline size_t BinarySpaceTree<BoundType, StatisticType, MatType>::Count() const
 }
 
 template<typename BoundType, typename StatisticType, typename MatType>
-void 
+void
     BinarySpaceTree<BoundType, StatisticType, MatType>::SplitNode(MatType& data)
 {
   // We need to expand the bounds of this node properly.
@@ -413,6 +437,7 @@ void
       splitDim = d;
     }
   }
+	splitDimension = splitDim;
 
   // Split in the middle of that dimension.
   double splitVal = bound[splitDim].Mid();
@@ -462,6 +487,7 @@ void BinarySpaceTree<BoundType, StatisticType, MatType>::SplitNode(
       splitDim = d;
     }
   }
+	splitDimension = splitDim;
 
   // Split in the middle of that dimension.
   double splitVal = bound[splitDim].Mid();

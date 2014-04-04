@@ -5,9 +5,11 @@ set(DIRS
   emst
   gmm
   hmm
+  kernel_pca
   kmeans
   lars
   linear_regression
+  local_coordinate_coding
   mvu
   naive_bayes
   nca
@@ -15,6 +17,7 @@ set(DIRS
   pca
   radical
   range_search
+  sparse_coding
 )
 
 foreach(dir ${DIRS})

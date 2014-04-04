@@ -10,7 +10,7 @@
 using namespace mlpack;
 using namespace utilities;
 
-bool SaveRestoreUtility::ReadFile(const std::string filename)
+bool SaveRestoreUtility::ReadFile(const std::string& filename)
 {
   xmlDocPtr xmlDocTree = NULL;
   if (NULL == (xmlDocTree = xmlReadFile(filename.c_str(), NULL, 0)))
@@ -41,12 +41,11 @@ void SaveRestoreUtility::RecurseOnNodes(xmlNode* n)
   }
 }
 
-bool SaveRestoreUtility::WriteFile(const std::string filename)
+bool SaveRestoreUtility::WriteFile(const std::string& filename)
 {
   bool success = false;
   xmlDocPtr xmlDocTree = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr root = xmlNewNode(NULL, BAD_CAST "root");
-//  xmlNodePtr child = NULL;
 
   xmlDocSetRootElement(xmlDocTree, root);
 
@@ -54,11 +53,8 @@ bool SaveRestoreUtility::WriteFile(const std::string filename)
        it != parameters.end();
        ++it)
   {
-//    child = xmlNewChild(root, NULL,
-//                        BAD_CAST(*it).first.c_str(),
-//                        BAD_CAST(*it).second.c_str());
     xmlNewChild(root, NULL, BAD_CAST(*it).first.c_str(),
-        BAD_CAST(*it).second.c_str());
+                            BAD_CAST(*it).second.c_str());
     /* TODO: perhaps we'll add more later?
      * xmlNewProp(child, BAD_CAST "attr", BAD_CAST "add more addibutes?"); */
   }
@@ -69,7 +65,7 @@ bool SaveRestoreUtility::WriteFile(const std::string filename)
 }
 
 arma::mat& SaveRestoreUtility::LoadParameter(arma::mat& matrix,
-                                             const std::string name)
+                                             const std::string& name)
 {
   std::map<std::string, std::string>::iterator it = parameters.find(name);
   if (it != parameters.end())
@@ -128,7 +124,7 @@ arma::mat& SaveRestoreUtility::LoadParameter(arma::mat& matrix,
 }
 
 std::string SaveRestoreUtility::LoadParameter(std::string& str,
-                                              const std::string name)
+                                              const std::string& name)
 {
   std::map<std::string, std::string>::iterator it = parameters.find(name);
   if (it != parameters.end())
@@ -142,12 +138,12 @@ std::string SaveRestoreUtility::LoadParameter(std::string& str,
   return "";
 }
 
-char SaveRestoreUtility::LoadParameter(char c, const std::string name)
+char SaveRestoreUtility::LoadParameter(char c, const std::string& name)
 {
-  int temp;
   std::map<std::string, std::string>::iterator it = parameters.find(name);
   if (it != parameters.end())
   {
+    int temp;
     std::string value = (*it).second;
     std::istringstream input (value);
     input >> temp;
@@ -160,7 +156,7 @@ char SaveRestoreUtility::LoadParameter(char c, const std::string name)
   return 0;
 }
 
-void SaveRestoreUtility::SaveParameter(const char c, const std::string name)
+void SaveRestoreUtility::SaveParameter(const char c, const std::string& name)
 {
   int temp = (int) c;
   std::ostringstream output;
@@ -169,7 +165,7 @@ void SaveRestoreUtility::SaveParameter(const char c, const std::string name)
 }
 
 void SaveRestoreUtility::SaveParameter(const arma::mat& mat,
-                                       const std::string name)
+                                       const std::string& name)
 {
   std::ostringstream output;
   size_t columns = mat.n_cols;
@@ -192,14 +188,14 @@ namespace utilities {
 
 template<>
 arma::vec& SaveRestoreUtility::LoadParameter(arma::vec& t,
-                                             const std::string name)
+                                             const std::string& name)
 {
   return (arma::vec&) LoadParameter((arma::mat&) t, name);
 }
 
 template<>
 void SaveRestoreUtility::SaveParameter(const arma::vec& t,
-                                       const std::string name)
+                                       const std::string& name)
 {
   SaveParameter((const arma::mat&) t, name);
 }

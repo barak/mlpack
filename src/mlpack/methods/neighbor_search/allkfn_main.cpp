@@ -27,7 +27,7 @@ PROGRAM_INFO("All K-Furthest-Neighbors",
     "\n\n"
     "For example, the following will calculate the 5 furthest neighbors of each"
     "point in 'input.csv' and store the distances in 'distances.csv' and the "
-    "neighbors in 'neighbors.csv':"
+    "neighbors in the file 'neighbors.csv':"
     "\n\n"
     "$ allkfn --k=5 --reference_file=input.csv --distances_file=distances.csv\n"
     "  --neighbors_file=neighbors.csv"
@@ -59,7 +59,6 @@ int main(int argc, char *argv[])
 
   // Get all the parameters.
   string referenceFile = CLI::GetParam<string>("reference_file");
-  string outputFile = CLI::GetParam<string>("output_file");
 
   string distancesFile = CLI::GetParam<string>("distances_file");
   string neighborsFile = CLI::GetParam<string>("neighbors_file");
@@ -72,6 +71,7 @@ int main(int argc, char *argv[])
   bool singleMode = CLI::HasParam("single_mode");
 
   arma::mat referenceData;
+  arma::mat queryData; // So it doesn't go out of scope.
   if (!data::Load(referenceFile.c_str(), referenceData))
     Log::Fatal << "Reference file " << referenceFile << "not found." << endl;
 
@@ -117,6 +117,8 @@ int main(int argc, char *argv[])
 
   BinarySpaceTree<bound::HRectBound<2>, QueryStat<FurthestNeighborSort> >
       refTree(referenceData, oldFromNewRefs, leafSize);
+  BinarySpaceTree<bound::HRectBound<2>, QueryStat<FurthestNeighborSort> >*
+      queryTree = NULL; // Empty for now.
 
   Timer::Stop("reference_tree_building");
 
@@ -125,12 +127,11 @@ int main(int argc, char *argv[])
   if (CLI::GetParam<string>("query_file") != "")
   {
     string queryFile = CLI::GetParam<string>("query_file");
-    arma::mat queryData;
 
     if (!data::Load(queryFile.c_str(), queryData))
       Log::Fatal << "Query file " << queryFile << " not found." << endl;
 
-    Log::Info << "Query data loaded from '" << queryFile << "'." << endl;
+    Log::Info << "Loaded query data from '" << queryFile << "'." << endl;
 
     Log::Info << "Building query tree..." << endl;
 
@@ -141,12 +142,13 @@ int main(int argc, char *argv[])
     // NeighborSearch, it does not copy the matrix.
     Timer::Start("query_tree_building");
 
-    BinarySpaceTree<bound::HRectBound<2>, QueryStat<FurthestNeighborSort> >
-        queryTree(queryData, oldFromNewQueries, leafSize);
+    queryTree = new BinarySpaceTree<bound::HRectBound<2>,
+        QueryStat<FurthestNeighborSort> >(queryData, oldFromNewQueries,
+        leafSize);
 
     Timer::Stop("query_tree_building");
 
-    allkfn = new AllkFN(&refTree, &queryTree, referenceData, queryData,
+    allkfn = new AllkFN(&refTree, queryTree, referenceData, queryData,
         singleMode);
 
     Log::Info << "Tree built." << endl;
@@ -199,6 +201,10 @@ int main(int argc, char *argv[])
       }
     }
   }
+
+  // Clean up.
+  if (queryTree)
+    delete queryTree;
 
   // Save output.
   data::Save(distancesFile, distances);

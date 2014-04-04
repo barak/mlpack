@@ -18,14 +18,12 @@ endforeach()
 add_library(mlpack SHARED ${MLPACK_SRCS})
 target_link_libraries(mlpack
   armadillo
-  lapack
-  blas
   ${BOOST_LIBS}
   xml2
 )
 set_target_properties(mlpack
   PROPERTIES
-  VERSION 1.0.0
+  VERSION 1.0.1
   SOVERSION 1
 )
 
@@ -53,7 +51,16 @@ endforeach()
 # collected to include/.
 install(DIRECTORY ${CMAKE_BINARY_DIR}/include/mlpack DESTINATION include)
 
+# Set generated executables to be installed.  Unfortunately they must manually
+# be entered...
 install(TARGETS mlpack
-   RUNTIME DESTINATION bin
-   LIBRARY DESTINATION lib
-   ARCHIVE DESTINATION lib)
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib)
+
+# For 'make test'.
+add_custom_target(test
+  ${CMAKE_BINARY_DIR}/bin/mlpack_test
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/ # This is where test files are put.
+  COMMENT "Running MLPACK test"
+  DEPENDS mlpack_test)

@@ -51,8 +51,8 @@ $ cmake -D DEBUG=OFF -D PROFILE=OFF ../
 
 The full list of options MLPACK allows:
 
- - DEBUG=(ON/OFF): compile with debugging symbols (default OFF)
- - PROFILE=(ON/OFF): compile with profiling symbols (default OFF)
+ - DEBUG=(ON/OFF): compile with debugging symbols (default ON)
+ - PROFILE=(ON/OFF): compile with profiling symbols (default ON)
  - ARMA_EXTRA_DEBUG=(ON/OFF): compile with extra Armadillo debugging symbols
        (default OFF)
 

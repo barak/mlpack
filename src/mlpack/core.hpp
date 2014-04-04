@@ -50,7 +50,8 @@
  * A full list of executables is given below:
  *
  * allkfn, allknn, emst, gmm, hmm_train, hmm_loglik, hmm_viterbi, hmm_generate,
- * kmeans, lars, linear_regression, nbc, nca, pca, radical
+ * kernel_pca, kmeans, lars, linear_regression, local_coordinate_coding, nbc,
+ * nca, pca, radical, sparse_coding
  *
  * @section tutorial Tutorials
  *
@@ -62,6 +63,11 @@
  *  - @ref timer
  *  - @ref sample
  *
+ * Tutorials on specific methods are also available.
+ *
+ *  - @ref nstutorial
+ *  - @ref lrtutorial
+ *
  * @section methods Methods in MLPACK
  *
  * The following methods are included in MLPACK:
@@ -72,12 +78,14 @@
  *  - Kernel PCA - mlpack::kpca::KernelPCA
  *  - K-Means Clustering - mlpack::kmeans::KMeans
  *  - Least-Angle Regression (LARS/LASSO) - mlpack::regression::LARS
+ *  - Local Coordinate Coding - mlpack::lcc::LocalCoordinateCoding
  *  - Naive Bayes Classifier - mlpack::naive_bayes::NaiveBayesClassifier
  *  - Neighborhood Components Analysis (NCA) - mlpack::nca::NCA
  *  - Principal Components Analysis (PCA) - mlpack::pca::PCA
  *  - RADICAL (ICA) - mlpack::radical::Radical
  *  - Simple Least-Squares Linear Regression -
  *      mlpack::regression::LinearRegression
+ *  - Sparse Coding - mlpack::sparse_coding::SparseCoding
  *  - Tree-based neighbor search (AllkNN, AllkFN) -
  *      mlpack::neighbor::NeighborSearch
  *  - Tree-based range search - mlpack::range::RangeSearch
@@ -106,6 +114,9 @@
  *   - Noah Kauffman <notoriousnoah@gmail.com>
  *   - Guillermo Colon <gcolon7@mail.gatech.edu>
  *   - Wei Guan <wguan@cc.gatech.edu>
+ *   - Ryan Riegel <rriegel@cc.gatech.edu>
+ *   - Nikolaos Vasiloglou <nvasil@ieee.org>
+ *   - Garry Boyer <garryb@gmail.com>
  */
 
 // First, standard includes.

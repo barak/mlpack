@@ -53,7 +53,7 @@ CLI::CLI() : desc("Allowed Options") , didParse(false), doc(&emptyProgramDoc)
  *
  * @param optionsName Name of the module, as far as boost is concerned.
  */
-CLI::CLI(std::string& optionsName) :
+CLI::CLI(const std::string& optionsName) :
     desc(optionsName.c_str()), didParse(false), doc(&emptyProgramDoc)
 {
   return;
@@ -93,11 +93,7 @@ CLI::~CLI()
   // options.  This way this output doesn't show up inexplicably for someone who
   // may not have wanted it there (i.e. in Boost unit tests).
   if (didParse)
-  {
     Log::Debug << "Compiled with debugging symbols." << std::endl;
-    Log::Info << "Please cite MLPACK in your work!  See http://mlpack.org/ for "
-        "a citation.";
-  }
 
   return;
 }
@@ -113,24 +109,21 @@ CLI::~CLI()
  * @param alias An alias for the parameter.
  * @param required Indicates if parameter must be set on command line.
  */
-void CLI::Add(const char* identifier,
-             const char* description,
-             const char* alias,
+void CLI::Add(const std::string& path,
+             const std::string& description,
+             const std::string& alias,
              bool required)
 {
   po::options_description& desc = CLI::GetSingleton().desc;
 
-  std::string tmp = TYPENAME(bool);
-  std::string path = identifier;
-  std::string stringAlias = alias;
   // Must make use of boost option name syntax.
-  std::string progOptId = stringAlias.length() ? path + "," + alias : path;
+  std::string progOptId = alias.length() ? path + "," + alias : path;
 
   // Deal with a required alias.
-  AddAlias(stringAlias, path);
+  AddAlias(alias, path);
 
   // Add the option to boost::program_options.
-  desc.add_options()(progOptId.c_str(), description);
+  desc.add_options()(progOptId.c_str(), description.c_str());
 
   // Make sure the description, etc. ends up in gmap.
   gmap_t& gmap = GetSingleton().globalValues;
@@ -157,7 +150,7 @@ void CLI::Add(const char* identifier,
  * @param alias The alias we will use for the parameter.
  * @param original The name of the actual parameter we will be mapping to.
  */
-void CLI::AddAlias(std::string alias, std::string original)
+void CLI::AddAlias(const std::string& alias, const std::string& original)
 {
   //Conduct the mapping
   if (alias.length())
@@ -170,9 +163,9 @@ void CLI::AddAlias(std::string alias, std::string original)
 /*
  * @brief Adds a flag parameter to CLI.
  */
-void CLI::AddFlag(const char* identifier,
-                 const char* description,
-                 const char* alias)
+void CLI::AddFlag(const std::string& identifier,
+                 const std::string& description,
+                 const std::string& alias)
 {
   // Reuse functionality from add
   Add(identifier, description, alias, false);
@@ -190,11 +183,11 @@ void CLI::AddFlag(const char* identifier,
   gmap[data.name] = data;
 }
 
-std::string CLI::AliasReverseLookup(std::string value)
+std::string CLI::AliasReverseLookup(const std::string& value)
 {
   amap_t& amap = GetSingleton().aliasValues;
   amap_t::iterator iter;
-  for (iter = amap.begin(); iter != amap.end(); iter++)
+  for (iter = amap.begin(); iter != amap.end(); ++iter)
     if (iter->second == value) // Found our match.
       return iter->first;
 
@@ -265,24 +258,24 @@ void CLI::Destroy()
  *
  * @param identifier The name of the parameter in question.
  */
-bool CLI::HasParam(const char* identifier)
+bool CLI::HasParam(const std::string& key)
 {
+  std::string used_key = key;
   po::variables_map vmap = GetSingleton().vmap;
   gmap_t& gmap = GetSingleton().globalValues;
-  std::string key = identifier;
 
   // Take any possible alias into account.
   amap_t& amap = GetSingleton().aliasValues;
   if (amap.count(key))
-    key = amap[key];
+    used_key = amap[key];
 
   // Does the parameter exist at all?
-  int isInGmap = gmap.count(key);
+  int isInGmap = gmap.count(used_key);
 
   // Check if the parameter is boolean; if it is, we just want to see if it was
   // passed.
   if (isInGmap)
-    return gmap[key].wasPassed;
+    return gmap[used_key].wasPassed;
 
   // The parameter was not passed in; return false.
   return false;
@@ -295,7 +288,7 @@ bool CLI::HasParam(const char* identifier)
  * @param str String to hyphenate (splits are on ' ').
  * @param padding Amount of padding on the left for each new line.
  */
-std::string CLI::HyphenateString(std::string str, int padding)
+std::string CLI::HyphenateString(const std::string& str, int padding)
 {
   size_t margin = 80 - padding;
   if (str.length() < margin)
@@ -303,7 +296,7 @@ std::string CLI::HyphenateString(std::string str, int padding)
   std::string out("");
   unsigned int pos = 0;
   // First try to look as far as possible.
-  while (pos < str.length() - 1)
+  while (pos < str.length())
   {
     size_t splitpos;
     // Check that we don't have a newline first.
@@ -342,7 +335,7 @@ std::string CLI::HyphenateString(std::string str, int padding)
  * @param identifier Name of the node in question.
  * @return Description of the node in question.
  */
-std::string CLI::GetDescription(const char* identifier)
+std::string CLI::GetDescription(const std::string& identifier)
 {
   gmap_t& gmap = GetSingleton().globalValues;
   std::string name = std::string(identifier);
@@ -436,7 +429,7 @@ void CLI::Print()
   gmap_t::iterator iter;
 
   // Print out all the values.
-  for (iter = gmap.begin(); iter != gmap.end(); iter++)
+  for (iter = gmap.begin(); iter != gmap.end(); ++iter)
   {
     std::string key = iter->first;
 
@@ -485,22 +478,23 @@ void CLI::Print()
 }
 
 /* Prints the descriptions of the current hierarchy. */
-void CLI::PrintHelp(std::string param)
+void CLI::PrintHelp(const std::string& param)
 {
+  std::string used_param = param;
   gmap_t& gmap = GetSingleton().globalValues;
   amap_t& amap = GetSingleton().aliasValues;
   gmap_t::iterator iter;
   ProgramDoc docs = *GetSingleton().doc;
 
   // If we pass a single param, alias it if necessary.
-  if (param != "" && amap.count(param))
-    param = amap[param];
+  if (used_param != "" && amap.count(used_param))
+    used_param = amap[used_param];
 
   // Do we only want to print out one value?
-  if (param != "" && gmap.count(param))
+  if (used_param != "" && gmap.count(used_param))
   {
-    ParamData data = gmap[param];
-    std::string alias = AliasReverseLookup(param);
+    ParamData data = gmap[used_param];
+    std::string alias = AliasReverseLookup(used_param);
     alias = alias.length() ? " (-" + alias + ")" : alias;
 
     // Figure out the name of the type.
@@ -517,7 +511,7 @@ void CLI::PrintHelp(std::string param)
       type = " [double]";
 
     // Now, print the descriptions.
-    std::string fullDesc = "  --" + param + alias + type + "  ";
+    std::string fullDesc = "  --" + used_param + alias + type + "  ";
 
     if (fullDesc.length() <= 32) // It all fits on one line.
       std::cout << fullDesc << std::string(32 - fullDesc.length(), ' ');
@@ -527,10 +521,10 @@ void CLI::PrintHelp(std::string param)
     std::cout << HyphenateString(data.desc, 32) << std::endl;
     return;
   }
-  else if (param != "")
+  else if (used_param != "")
   {
     // User passed a single variable, but it doesn't exist.
-    std::cerr << "Parameter --" << param << " does not exist." << std::endl;
+    std::cerr << "Parameter --" << used_param << " does not exist." << std::endl;
     exit(1); // Nothing left to do.
   }
 
@@ -552,7 +546,7 @@ void CLI::PrintHelp(std::string param)
       std::cout << "Options: " << std::endl << std::endl;
 
     // Print out the descriptions of everything else.
-    for (iter = gmap.begin(); iter != gmap.end(); iter++)
+    for (iter = gmap.begin(); iter != gmap.end(); ++iter)
     {
       std::string key = iter->first;
       ParamData data = iter->second;
@@ -616,9 +610,16 @@ void CLI::PrintHelp(std::string param)
       std::cout << HyphenateString(desc, 32) << std::endl;
     }
 
-  std::cout << std::endl;
+    std::cout << std::endl;
 
   }
+
+  // Helpful information at the bottom of the help output, to point the user to
+  // citations and better documentation (if necessary).  See ticket #201.
+  std::cout << HyphenateString("For further information, including relevant "
+      "papers, citations, and theory, consult the documentation found at "
+      "http://www.mlpack.org or included with your distribution of MLPACK.", 0)
+      << std::endl;
 }
 
 /**
@@ -646,7 +647,7 @@ void CLI::RequiredOptions()
 
   // Now, warn the user if they missed any required options.
   std::list<std::string>::iterator iter;
-  for (iter = rOpt.begin(); iter != rOpt.end(); iter++)
+  for (iter = rOpt.begin(); iter != rOpt.end(); ++iter)
   {
     std::string str = *iter;
     if (!vmap.count(str))
@@ -668,7 +669,7 @@ void CLI::UpdateGmap()
   // Iterate through vmap, and overwrite default values with anything found on
   // command line.
   po::variables_map::iterator i;
-  for (i = vmap.begin(); i != vmap.end(); i++)
+  for (i = vmap.begin(); i != vmap.end(); ++i)
   {
     ParamData param;
     if (gmap.count(i->first)) // We need to preserve certain data
