@@ -4,7 +4,7 @@
  * Include all of the base components required to write MLPACK methods, and the
  * main MLPACK Doxygen documentation.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -143,6 +143,8 @@
  *   - Nikolaos Vasiloglou <nvasil@ieee.org>
  *   - Garry Boyer <garryb@gmail.com>
  *   - Andreas Löf <andreas.lof@cs.waikato.ac.nz>
+ *   - Marcus Edel <marcus.edel@fu-berlin.de>
+ *   - Sumedh Ghaisas <sumedhghaisas@gmail.com>
  */
 
 // First, standard includes.
@@ -167,25 +169,13 @@
   #define M_PI 3.141592653589793238462643383279
 #endif
 
-// Clean up unfortunate Windows preprocessor definitions.
-// Use std::min and std::max!
-#ifdef _WIN32
-  #ifdef min
-    #undef min
-  #endif
-
-  #ifdef max
-    #undef max
-  #endif
-#endif
-
 // Give ourselves a nice way to force functions to be inline if we need.
 #define force_inline
 #if defined(__GNUG__) && !defined(DEBUG)
   #undef force_inline
   #define force_inline __attribute__((always_inline))
-#elif defined(_MSC_VER)
-  #undef force_inline && !defined(DEBUG)
+#elif defined(_MSC_VER) && !defined(DEBUG)
+  #undef force_inline
   #define force_inline __forceinline
 #endif
 
@@ -195,6 +185,7 @@
 #include <mlpack/core/util/cli.hpp>
 #include <mlpack/core/data/load.hpp>
 #include <mlpack/core/data/save.hpp>
+#include <mlpack/core/data/normalize_labels.hpp>
 #include <mlpack/core/math/clamp.hpp>
 #include <mlpack/core/math/random.hpp>
 #include <mlpack/core/math/lin_alg.hpp>
@@ -204,4 +195,29 @@
 #include <mlpack/core/dists/discrete_distribution.hpp>
 #include <mlpack/core/dists/gaussian_distribution.hpp>
 
+// Include kernel traits.
+#include <mlpack/core/kernels/kernel_traits.hpp>
+#include <mlpack/core/kernels/linear_kernel.hpp>
+#include <mlpack/core/kernels/polynomial_kernel.hpp>
+#include <mlpack/core/kernels/cosine_distance.hpp>
+#include <mlpack/core/kernels/gaussian_kernel.hpp>
+#include <mlpack/core/kernels/epanechnikov_kernel.hpp>
+#include <mlpack/core/kernels/hyperbolic_tangent_kernel.hpp>
+#include <mlpack/core/kernels/laplacian_kernel.hpp>
+#include <mlpack/core/kernels/pspectrum_string_kernel.hpp>
+#include <mlpack/core/kernels/spherical_kernel.hpp>
+#include <mlpack/core/kernels/triangular_kernel.hpp>
+
+#endif
+
+// Clean up unfortunate Windows preprocessor definitions, even if this file was
+// already included.  Use std::min and std::max!
+#ifdef _WIN32
+  #ifdef min
+    #undef min
+  #endif
+
+  #ifdef max
+    #undef max
+  #endif
 #endif

@@ -3,7 +3,7 @@
  *
  * Test file for HMMs.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -690,7 +690,7 @@ BOOST_AUTO_TEST_CASE(GaussianHMMTrainTest)
     for (size_t row = 0; row < 3; row++)
       for (size_t col = 0; col < 3; col++)
         BOOST_REQUIRE_SMALL(hmm.Emission()[dist].Covariance()(row, col) -
-            emission[dist].Covariance()(row, col), 0.12);
+            emission[dist].Covariance()(row, col), 0.14);
   }
 }
 

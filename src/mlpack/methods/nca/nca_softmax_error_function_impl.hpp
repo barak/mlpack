@@ -4,7 +4,7 @@
  *
  * Implementation of the Softmax error function.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -30,13 +30,14 @@ namespace nca {
 
 // Initialize with the given kernel.
 template<typename MetricType>
-SoftmaxErrorFunction<MetricType>::SoftmaxErrorFunction(const arma::mat& dataset,
-                                                       const arma::uvec& labels,
-                                                       MetricType metric) :
-  dataset(dataset),
-  labels(labels),
-  metric(metric),
-  precalculated(false)
+SoftmaxErrorFunction<MetricType>::SoftmaxErrorFunction(
+    const arma::mat& dataset,
+    const arma::Col<size_t>& labels,
+    MetricType metric) :
+    dataset(dataset),
+    labels(labels),
+    metric(metric),
+    precalculated(false)
 { /* nothing to do */ }
 
 //! The non-separable implementation, which uses Precalculate() to save time.

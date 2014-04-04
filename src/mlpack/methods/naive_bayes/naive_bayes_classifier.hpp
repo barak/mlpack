@@ -6,7 +6,7 @@
  * the features.  It is assumed that the features have been sampled from a
  * Gaussian PDF.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -77,13 +77,17 @@ class NaiveBayesClassifier
    * Example use:
    * @code
    * extern arma::mat training_data, testing_data;
-   * NaiveBayesClassifier nbc(training_data, 5);
+   * extern arma::Col<size_t> labels;
+   * NaiveBayesClassifier nbc(training_data, labels, 5);
    * @endcode
    *
-   * @param data Sample data points; the last row should be labels.
+   * @param data Training data points.
+   * @param labels Labels corresponding to training data points.
    * @param classes Number of classes in this classifier.
    */
-  NaiveBayesClassifier(const MatType& data, const size_t classes);
+  NaiveBayesClassifier(const MatType& data,
+                       const arma::Col<size_t>& labels,
+                       const size_t classes);
 
   /**
    * Given a bunch of data points, this function evaluates the class of each of

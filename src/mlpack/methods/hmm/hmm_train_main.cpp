@@ -4,7 +4,7 @@
  *
  * Executable which trains an HMM and saves the trained HMM to file.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -192,7 +192,7 @@ int main(int argc, char** argv)
   {
     // Only one input file.
     trainSeq.resize(1);
-    data::Load(inputFile.c_str(), trainSeq[0], true);
+    data::Load(inputFile, trainSeq[0], true);
 
     // Do we need to load labels?
     if (labelsFile != "")

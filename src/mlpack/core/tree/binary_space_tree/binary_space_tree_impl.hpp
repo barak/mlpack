@@ -3,7 +3,7 @@
  *
  * Implementation of generalized space partitioning tree.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -428,6 +428,27 @@ BinarySpaceTree<BoundType, StatisticType, MatType>::NumPoints() const
     return 0;
 
   return count;
+}
+
+/**
+ * Return the number of descendants contained in the node.
+ */
+template<typename BoundType, typename StatisticType, typename MatType>
+inline size_t
+BinarySpaceTree<BoundType, StatisticType, MatType>::NumDescendants() const
+{
+  return count;
+}
+
+/**
+ * Return the index of a particular descendant contained in this node.
+ */
+template<typename BoundType, typename StatisticType, typename MatType>
+inline size_t
+BinarySpaceTree<BoundType, StatisticType, MatType>::Descendant(
+    const size_t index) const
+{
+  return (begin + index);
 }
 
 /**

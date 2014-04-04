@@ -4,7 +4,7 @@
  *
  * Specialization of the TreeTraits class for the BinarySpaceTree type of tree.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -56,6 +56,11 @@ class TreeTraits<BinarySpaceTree<BoundType, StatisticType, MatType> >
    * There is no guarantee that the first point in a node is its centroid.
    */
   static const bool FirstPointIsCentroid = false;
+
+  /**
+   * Points are not contained at multiple levels of the binary space tree.
+   */
+  static const bool HasSelfChildren = false;
 };
 
 }; // namespace tree

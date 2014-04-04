@@ -6,7 +6,7 @@
  * the features.  It is assumed that the features have been sampled from a
  * Gaussian PDF.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -33,14 +33,16 @@ namespace mlpack {
 namespace naive_bayes {
 
 template<typename MatType>
-NaiveBayesClassifier<MatType>::NaiveBayesClassifier(const MatType& data,
-                                                    const size_t classes)
+NaiveBayesClassifier<MatType>::NaiveBayesClassifier(
+    const MatType& data,
+    const arma::Col<size_t>& labels,
+    const size_t classes)
 {
-  size_t dimensionality = data.n_rows - 1;
+  size_t dimensionality = data.n_rows;
 
   // Update the variables according to the number of features and classes
   // present in the data.
-  probabilities.set_size(classes);
+  probabilities.zeros(classes);
   means.zeros(dimensionality, classes);
   variances.zeros(dimensionality, classes);
 
@@ -51,18 +53,21 @@ NaiveBayesClassifier<MatType>::NaiveBayesClassifier(const MatType& data,
   // for each of the features with respect to each of the labels.
   for (size_t j = 0; j < data.n_cols; ++j)
   {
-    size_t label = (size_t) data(dimensionality, j);
+    const size_t label = labels[j];
     ++probabilities[label];
 
-    means.col(label) += data(arma::span(0, dimensionality - 1), j);
-    variances.col(label) += square(data(arma::span(0, dimensionality - 1), j));
+    means.col(label) += data.col(j);
+    variances.col(label) += square(data.col(j));
   }
 
   for (size_t i = 0; i < classes; ++i)
   {
-    variances.col(i) -= (square(means.col(i)) / probabilities[i]);
-    means.col(i) /= probabilities[i];
-    variances.col(i) /= (probabilities[i] - 1);
+    if (probabilities[i] != 0)
+    {
+      variances.col(i) -= (square(means.col(i)) / probabilities[i]);
+      means.col(i) /= probabilities[i];
+      variances.col(i) /= (probabilities[i] - 1);
+    }
   }
 
   probabilities /= data.n_cols;
@@ -95,9 +100,12 @@ void NaiveBayesClassifier<MatType>::Classify(const MatType& data,
       // Use the log values to prevent floating point underflow.
       probs(i) = log(probabilities(i));
 
-      // Loop over every feature.
-      probs(i) += log(gmm::phi(data.unsafe_col(n), means.unsafe_col(i),
-          diagmat(variances.unsafe_col(i))));
+      // Loop over every feature, but avoid inverting empty matrices.
+      if (probabilities[i] != 0)
+      {
+        probs(i) += log(gmm::phi(data.unsafe_col(n), means.unsafe_col(i),
+            diagmat(variances.unsafe_col(i))));
+      }
     }
 
     // Find the index of the maximum value in tmp_vals.

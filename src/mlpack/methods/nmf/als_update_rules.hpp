@@ -10,7 +10,7 @@
  * \f$ \sqrt{\sum_i \sum_j(V-WH)^2} \f$ by alternately calculating W and H
  * respectively while holding the other matrix constant.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -53,7 +53,8 @@ class WAlternatingLeastSquaresRule
    * @param W Basis matrix to be updated.
    * @param H Encoding matrix.
    */
-  inline static void Update(const arma::mat& V,
+  template<typename MatType>
+  inline static void Update(const MatType& V,
                             arma::mat& W,
                             const arma::mat& H)
   {
@@ -92,7 +93,8 @@ class HAlternatingLeastSquaresRule
    * @param W Basis matrix.
    * @param H Encoding matrix to be updated.
    */
-  inline static void Update(const arma::mat& V,
+  template<typename MatType>
+  inline static void Update(const MatType& V,
                             const arma::mat& W,
                             arma::mat& H)
   {

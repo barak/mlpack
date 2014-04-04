@@ -5,7 +5,7 @@
  * Implementation of the SortPolicy class for NeighborSearch; in this case, the
  * furthest neighbors are those that are most important.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -142,6 +142,16 @@ class FurthestNeighborSort
    * @return DBL_MAX
    */
   static inline double BestDistance() { return DBL_MAX; }
+
+  /**
+   * Return the best combination of the two distances.
+   */
+  static inline double CombineBest(const double a, const double b)
+  {
+    if (a == DBL_MAX || b == DBL_MAX)
+      return DBL_MAX;
+    return a + b;
+  }
 
   /**
    * Return the worst combination of the two distances.

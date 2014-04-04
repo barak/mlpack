@@ -6,7 +6,7 @@
  * specializations can probably be given in many cases, but this is the most
  * general case.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -38,7 +38,8 @@ AugLagrangianFunction<LagrangianFunction>::AugLagrangianFunction(
     lambda(function.NumConstraints()),
     sigma(10)
 {
-  // Nothing else to do.
+  // Initialize lambda vector to all zeroes.
+  lambda.zeros();
 }
 
 // Initialize the AugLagrangianFunction.

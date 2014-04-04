@@ -5,7 +5,7 @@
  * Intialization rule for Non-Negative Matrix Factorization (NMF). This simple
  * initialization is performed by assigning a random matrix to W and H.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -34,7 +34,8 @@ class RandomInitialization
   // Empty constructor required for the InitializeRule template
   RandomInitialization() { }
 
-  inline static void Initialize(const arma::mat& V,
+  template<typename MatType>
+  inline static void Initialize(const MatType& V,
                                 const size_t r,
                                 arma::mat& W,
                                 arma::mat& H)

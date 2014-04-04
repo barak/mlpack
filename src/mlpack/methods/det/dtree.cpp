@@ -6,7 +6,7 @@
  * the Density Estimation Tree class.
  *
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -291,8 +291,8 @@ double DTree::Grow(arma::mat& data,
                    const size_t maxLeafSize,
                    const size_t minLeafSize)
 {
-  assert(data.n_rows == maxVals.n_elem);
-  assert(data.n_rows == minVals.n_elem);
+  Log::Assert(data.n_rows == maxVals.n_elem);
+  Log::Assert(data.n_rows == minVals.n_elem);
 
   double leftG, rightG;
 

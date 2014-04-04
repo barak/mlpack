@@ -6,7 +6,7 @@
  * provides information about tree types.  If you create a tree class, you
  * should specialize this class with the characteristics of your tree.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -104,6 +104,12 @@ class TreeTraits
    * This is true if Point(0) is the centroid of the node.
    */
   static const bool FirstPointIsCentroid = false;
+
+  /**
+   * This is true if the points contained in the first child of a node
+   * (Child(0)) are also contained in that node.
+   */
+  static const bool HasSelfChildren = false;
 };
 
 }; // namespace tree

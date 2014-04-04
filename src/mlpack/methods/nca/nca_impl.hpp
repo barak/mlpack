@@ -4,7 +4,7 @@
  *
  * Implementation of templated NCA class.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -31,7 +31,7 @@ namespace nca {
 // Just set the internal matrix reference.
 template<typename MetricType, template<typename> class OptimizerType>
 NCA<MetricType, OptimizerType>::NCA(const arma::mat& dataset,
-                                    const arma::uvec& labels,
+                                    const arma::Col<size_t>& labels,
                                     MetricType metric) :
     dataset(dataset),
     labels(labels),

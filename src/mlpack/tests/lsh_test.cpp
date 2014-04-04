@@ -3,7 +3,7 @@
  *
  * Unit tests for the 'LSHSearch' class.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -20,14 +20,10 @@
  */
 #include <mlpack/core.hpp>
 #include <mlpack/core/metrics/lmetric.hpp>
-
-// So that we can test private members.  This is hackish (for now).
-#define private public
-#include <mlpack/methods/lsh/lsh_search.hpp>
-#undef private
-
 #include <boost/test/unit_test.hpp>
 #include "old_boost_test_definitions.hpp"
+
+#include <mlpack/methods/lsh/lsh_search.hpp>
 
 using namespace std;
 using namespace mlpack;

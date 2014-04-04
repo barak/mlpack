@@ -5,7 +5,7 @@
  * This is an example kernel.  If you are making your own kernel, follow the
  * outline specified in this file.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -94,9 +94,19 @@ class SphericalKernel
   {
     return (t <= bandwidth) ? 1.0 : 0.0;
   }
+
  private:
   double bandwidth;
   double bandwidthSquared;
+};
+
+//! Kernel traits for the spherical kernel.
+template<>
+class KernelTraits<SphericalKernel>
+{
+ public:
+  //! The spherical kernel is normalized: K(x, x) = 1 for all x.
+  static const bool IsNormalized = true;
 };
 
 }; // namespace kernel

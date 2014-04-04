@@ -4,7 +4,7 @@
  *
  * Definition of CoverTree, which can be used in place of the BinarySpaceTree.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -231,12 +231,6 @@ class CoverTree
   //! For compatibility with other trees; the argument is ignored.
   size_t Point(const size_t) const { return point; }
 
-  // Fake
-  CoverTree* Left() const { return NULL; }
-  CoverTree* Right() const { return NULL; }
-  size_t Begin() const { return 0; }
-  size_t Count() const { return 0; }
-  size_t End() const { return 0; }
   bool IsLeaf() const { return (children.size() == 0); }
   size_t NumPoints() const { return 1; }
 
@@ -252,6 +246,12 @@ class CoverTree
   const std::vector<CoverTree*>& Children() const { return children; }
   //! Modify the children manually (maybe not a great idea).
   std::vector<CoverTree*>& Children() { return children; }
+
+  //! Get the number of descendant points.
+  size_t NumDescendants() const;
+
+  //! Get the index of a particular descendant point.
+  size_t Descendant(const size_t index) const;
 
   //! Get the scale of this node.
   int Scale() const { return scale; }
@@ -296,6 +296,22 @@ class CoverTree
   //! the center to the point has already been calculated.
   double MaxDistance(const arma::vec& other, const double distance) const;
 
+  //! Return the minimum and maximum distance to another node.
+  math::Range RangeDistance(const CoverTree* other) const;
+
+  //! Return the minimum and maximum distance to another node given that the
+  //! point-to-point distance has already been calculated.
+  math::Range RangeDistance(const CoverTree* other, const double distance)
+      const;
+
+  //! Return the minimum and maximum distance to another point.
+  math::Range RangeDistance(const arma::vec& other) const;
+
+  //! Return the minimum and maximum distance to another point given that the
+  //! point-to-point distance has already been calculated.
+  math::Range RangeDistance(const arma::vec& other, const double distance)
+      const;
+
   //! Returns true: this tree does have self-children.
   static bool HasSelfChildren() { return true; }
 
@@ -339,6 +355,9 @@ class CoverTree
 
   //! The instantiated statistic.
   StatisticType stat;
+
+  //! The number of descendant points.
+  size_t numDescendants;
 
   //! The parent node (NULL if this is the root of the tree).
   CoverTree* parent;
@@ -436,11 +455,24 @@ class CoverTree
                      const double bound,
                      const size_t nearSetSize,
                      const size_t pointSetSize);
+
+  /**
+   * Take a look at the last child (the most recently created one) and remove
+   * any implicit nodes that have been created.
+   */
+  void RemoveNewImplicitNodes();
+
  public:
   /**
    * Returns a string representation of this object.
    */
   std::string ToString() const;
+
+  size_t DistanceComps() const { return distanceComps; }
+  size_t& DistanceComps() { return distanceComps; }
+
+ private:
+  size_t distanceComps;
 };
 
 }; // namespace tree
