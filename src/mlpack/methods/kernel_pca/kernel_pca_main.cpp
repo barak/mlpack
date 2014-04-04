@@ -4,7 +4,7 @@
  *
  * Executable for Kernel PCA.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -136,7 +136,7 @@ int main(int argc, char** argv)
     const double degree = CLI::GetParam<double>("degree");
     const double offset = CLI::GetParam<double>("offset");
 
-    PolynomialKernel kernel(offset, degree);
+    PolynomialKernel kernel(degree, offset);
     KernelPCA<PolynomialKernel> kpca(kernel, scaleData);
     kpca.Apply(dataset, newDim);
   }

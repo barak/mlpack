@@ -1,12 +1,12 @@
 /**
- * @file emst.h
+ * @file edge_pair.hpp
  *
  * @author Bill March (march@gatech.edu)
  *
  * This file contains utilities necessary for all of the minimum spanning tree
  * algorithms.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free

@@ -4,7 +4,7 @@
  *
  * Test file for NMF class.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -101,8 +101,9 @@ BOOST_AUTO_TEST_CASE(NMFRandomDivTest)
 }
 
 /**
- * Check the if the product of the calculated factorization is close to the
- * input matrix. Random Initialization Alternating Least Squares Update
+ * Check that the product of the calculated factorization is close to the
+ * input matrix.  This uses the random initialization and alternating least
+ * squares update rule.
  */
 BOOST_AUTO_TEST_CASE(NMFALSTest)
 {
@@ -120,7 +121,7 @@ BOOST_AUTO_TEST_CASE(NMFALSTest)
 
   for (size_t row = 0; row < 5; row++)
     for (size_t col = 0; col < 5; col++)
-      BOOST_REQUIRE_CLOSE(v(row, col), wh(row, col), 10.0);
+      BOOST_REQUIRE_CLOSE(v(row, col), wh(row, col), 13.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

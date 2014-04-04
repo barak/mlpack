@@ -5,7 +5,7 @@
  *
  * Declaration of the PrefixedOutStream class.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -138,27 +138,27 @@ class PrefixedOutStream
   void CallBaseLogic(const T& s,
       typename boost::disable_if<
           boost::is_class<T>
-      >::type*);
+      >::type* = 0);
 
   //! Forward all objects that do not implement a ToString() method
   template<typename T>
   void CallBaseLogic(const T& s,
       typename boost::enable_if<
           boost::is_class<T>
-      >::type*,
+      >::type* = 0,
       typename boost::disable_if<
           HasToString<T, std::string(T::*)() const>
-      >::type*);
+      >::type* = 0);
 
   //! Call ToString() on all objects that implement ToString() before forwarding
   template<typename T>
   void CallBaseLogic(const T& s,
       typename boost::enable_if<
           boost::is_class<T>
-      >::type*,
+      >::type* = 0,
       typename boost::enable_if<
           HasToString<T, std::string(T::*)() const>
-      >::type*);
+      >::type* = 0);
 
   /**
    * @brief Conducts the base logic required in all the operator << overloads.

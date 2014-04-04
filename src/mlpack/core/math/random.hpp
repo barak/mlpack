@@ -3,7 +3,7 @@
  *
  * Miscellaneous math random-related routines.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -117,12 +117,12 @@ inline int RandInt(const int hiExclusive)
 inline int RandInt(const int lo, const int hiExclusive)
 {
 #if BOOST_VERSION >= 103900
-  return lo + (int) std::floor((double)(hiExclusive - lo) 
+  return lo + (int) std::floor((double) (hiExclusive - lo)
                                * randUniformDist(randGen));
 #else
   // Before Boost 1.39, we did not give the random object when we wanted a
   // random number; that gets given at construction time.
-  return lo + (int) std::floor((double)(hiExclusive - lo) 
+  return lo + (int) std::floor((double) (hiExclusive - lo)
                                * randUniformDist());
 #endif
 

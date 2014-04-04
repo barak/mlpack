@@ -5,7 +5,7 @@
  * The SaveRestoreUtility provides helper functions in saving and
  *   restoring models.  The current output file type is XML.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -73,8 +73,10 @@ bool SaveRestoreUtility::WriteFile(const std::string& filename)
     /* TODO: perhaps we'll add more later?
      * xmlNewProp(child, BAD_CAST "attr", BAD_CAST "add more addibutes?"); */
   }
-  /* save the file */
-  xmlSaveFormatFileEnc(filename.c_str(), xmlDocTree, "UTF-8", 1);
+
+  // Actually save the file.
+  success =
+      (xmlSaveFormatFileEnc(filename.c_str(), xmlDocTree, "UTF-8", 1) != -1);
   xmlFreeDoc(xmlDocTree);
   return success;
 }

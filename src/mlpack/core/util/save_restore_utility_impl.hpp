@@ -1,11 +1,11 @@
 /**
- * @file utilities/save_restore_utility_impl.hpp
+ * @file save_restore_utility_impl.hpp
  * @author Neil Slagle
  *
  * The SaveRestoreUtility provides helper functions in saving and
  *   restoring models.  The current output file type is XML.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free

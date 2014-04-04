@@ -4,7 +4,7 @@
  *
  * Implementation of Local Coordinate Coding
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -138,7 +138,7 @@ void LocalCoordinateCoding<DictionaryInitializer>::OptimizeCode()
     // Run LARS for this point, by making an alias of the point and passing
     // that.
     arma::vec beta = codes.unsafe_col(i);
-    lars.Regress(dictPrime, data.unsafe_col(i), beta, true);
+    lars.Regress(dictPrime, data.unsafe_col(i), beta, false);
     beta %= invW; // Remember, beta is an alias of codes.col(i).
   }
 }

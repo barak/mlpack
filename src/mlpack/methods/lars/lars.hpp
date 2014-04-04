@@ -16,7 +16,7 @@
  * Although this option currently is not implemented, it will be implemented
  * very soon.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -138,19 +138,19 @@ class LARS
    * column-major -- each column is an observation and each row is a dimension.
    * However, because LARS is more efficient on a row-major matrix, this method
    * will (internally) transpose the matrix.  If this transposition is not
-   * necessary (i.e., you want to pass in a row-major matrix), pass 'true' for
-   * the rowMajor parameter.
+   * necessary (i.e., you want to pass in a row-major matrix), pass 'false' for
+   * the transposeData parameter.
    *
    * @param data Column-major input data (or row-major input data if rowMajor =
    *     true).
    * @param responses A vector of targets.
    * @param beta Vector to store the solution (the coefficients) in.
-   * @param rowMajor Set to true if matX is row-major.
+   * @param rowMajor Set to false if the data is row-major.
    */
   void Regress(const arma::mat& data,
                const arma::vec& responses,
                arma::vec& beta,
-               const bool rowMajor = false);
+               const bool transposeData = true);
 
   //! Access the set of active dimensions.
   const std::vector<size_t>& ActiveSet() const { return activeSet; }

@@ -5,7 +5,7 @@
  * Defines the NMF class to perform Non-negative Matrix Factorization
  * on the given matrix.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -74,9 +74,11 @@ namespace nmf {
  * @endcode
  *
  * @tparam WUpdateRule The update rule for calculating W matrix at each
- *     iteration; @see MultiplicativeDistanceW for an example.
+ *     iteration.
  * @tparam HUpdateRule The update rule for calculating H matrix at each
- *     iteration; @see MultiplicativeDistanceH for an example.
+ *     iteration.
+ *
+ * @see WMultiplicativeDistanceRule, HMultiplicativeDistanceRule
  */
 template<typename InitializationRule = RandomInitialization,
          typename WUpdateRule = WMultiplicativeDistanceRule,
