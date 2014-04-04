@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 ## recurse
 set(DIRS
+  det
   emst
   gmm
   hmm
@@ -14,6 +15,7 @@ set(DIRS
   naive_bayes
   nca
   neighbor_search
+  nmf
   pca
   radical
   range_search

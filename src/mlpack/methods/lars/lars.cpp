@@ -3,158 +3,162 @@
  * @author Nishant Mehta (niche)
  *
  * Implementation of LARS and LASSO.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include "lars.hpp"
 
-// we are explicit with std:: to avoid confusing std::vector with arma::vec
-// we use arma namespace too often to explicitly use arma:: everywhere
-//using namespace std;
-using namespace arma;
 using namespace mlpack;
 using namespace mlpack::regression;
 
-LARS::LARS(const bool useCholesky) :
-    useCholesky(useCholesky),
-    lasso(false),
-    elasticNet(false)
-{ /* nothing left to do */ }
-
-LARS::LARS(const bool useCholesky,
-           const double lambda1) :
-    useCholesky(useCholesky),
-    lasso(true),
-    lambda1(lambda1),
-    elasticNet(false),
-    lambda2(0)
-{ /* nothing left to do */ }
-
 LARS::LARS(const bool useCholesky,
            const double lambda1,
-           const double lambda2) :
+           const double lambda2,
+           const double tolerance) :
+    matGram(matGramInternal),
     useCholesky(useCholesky),
-    lasso(true),
+    lasso((lambda1 != 0)),
     lambda1(lambda1),
-    elasticNet(true),
-    lambda2(lambda2)
-{ /* nothing left to do */ }
+    elasticNet((lambda1 != 0) && (lambda2 != 0)),
+    lambda2(lambda2),
+    tolerance(tolerance)
+{ /* Nothing left to do. */ }
 
-void LARS::SetGram(const mat& matGram)
+LARS::LARS(const bool useCholesky,
+           const arma::mat& gramMatrix,
+           const double lambda1,
+           const double lambda2,
+           const double tolerance) :
+    matGram(gramMatrix),
+    useCholesky(useCholesky),
+    lasso((lambda1 != 0)),
+    lambda1(lambda1),
+    elasticNet((lambda1 != 0) && (lambda2 != 0)),
+    lambda2(lambda2),
+    tolerance(tolerance)
+{ /* Nothing left to do */ }
+
+void LARS::Regress(const arma::mat& matX,
+                   const arma::vec& y,
+                   arma::vec& beta,
+                   const bool rowMajor)
 {
-  this->matGram = matGram;
-}
+  Timer::Start("lars_regression");
 
-void LARS::ComputeGram(const mat& matX)
-{
-  if (elasticNet)
-  {
-    matGram = trans(matX) * matX + lambda2 * eye(matX.n_cols, matX.n_cols);
-  }
-  else
-  {
-    matGram = trans(matX) * matX;
-  }
-}
+  // This matrix may end up holding the transpose -- if necessary.
+  arma::mat dataTrans;
+  // dataRef is row-major.
+  const arma::mat& dataRef = (rowMajor ? matX : dataTrans);
+  if (!rowMajor)
+    dataTrans = trans(matX);
 
-void LARS::DoLARS(const mat& matX, const vec& y)
-{
-  // compute Xty
-  vec vecXTy = trans(matX) * y;
-  
-  // compute Gram matrix
-  if (!useCholesky && matGram.is_empty())
-  {
-    ComputeGram(matX);
-  }
+  // Compute X' * y.
+  arma::vec vecXTy = trans(dataRef) * y;
 
-  // set up active set variables
-  nActive = 0;
-  activeSet = std::vector<u32>(0);
-  isActive = std::vector<bool>(matX.n_cols);
-  fill(isActive.begin(), isActive.end(), false);
+  // Set up active set variables.  In the beginning, the active set has size 0
+  // (all dimensions are inactive).
+  isActive.resize(dataRef.n_cols, false);
 
-  // initialize yHat and beta
-  vec beta = zeros(matX.n_cols);
-  vec yHat = zeros(matX.n_rows);
-  vec yHatDirection = vec(matX.n_rows);
+  // Initialize yHat and beta.
+  beta = arma::zeros(dataRef.n_cols);
+  arma::vec yHat = arma::zeros(dataRef.n_rows);
+  arma::vec yHatDirection = arma::vec(dataRef.n_rows);
 
   bool lassocond = false;
 
-  // used for elastic net
-  if (!elasticNet)
+  // Compute the initial maximum correlation among all dimensions.
+  arma::vec corr = vecXTy;
+  double maxCorr = 0;
+  size_t changeInd = 0;
+  for (size_t i = 0; i < vecXTy.n_elem; ++i)
   {
-    lambda2 = 0; // just in case it is accidentally used, the code still will be correct
+    if (fabs(corr(i)) > maxCorr)
+    {
+      maxCorr = fabs(corr(i));
+      changeInd = i;
+    }
   }
-  
-  vec corr = vecXTy;
-  vec absCorr = abs(corr);
-  u32 changeInd;
-  double maxCorr = absCorr.max(changeInd); // change_ind gets set here
 
   betaPath.push_back(beta);
   lambdaPath.push_back(maxCorr);
-  
-  // don't even start!
+
+  // If the maximum correlation is too small, there is no reason to continue.
   if (maxCorr < lambda1)
   {
     lambdaPath[0] = lambda1;
+    Timer::Stop("lars_regression");
     return;
   }
 
-  //u32 iterations_run = 0;
-  // MAIN LOOP
-  while ((nActive < matX.n_cols) && (maxCorr > EPS))
+  // Compute the Gram matrix.  If this is the elastic net problem, we will add
+  // lambda2 * I_n to the matrix.
+  if (matGram.n_elem == 0)
   {
-    //iterations_run++;
-    //printf("iteration %d\t\n", iterations_run);
+    // In this case, matGram should reference matGramInternal.
+    matGramInternal = trans(dataRef) * dataRef;
 
-    // explicit computation of max correlation, among inactive indices
-    changeInd = -1;
+    if (elasticNet && !useCholesky)
+      matGramInternal += lambda2 * arma::eye(dataRef.n_cols, dataRef.n_cols);
+  }
+
+  // Main loop.
+  while ((activeSet.size() < dataRef.n_cols) && (maxCorr > tolerance))
+  {
+    // Compute the maximum correlation among inactive dimensions.
     maxCorr = 0;
-    for (u32 i = 0; i < matX.n_cols; i++)
+    for (size_t i = 0; i < dataRef.n_cols; i++)
     {
-      if (!isActive[i])
+      if ((!isActive[i]) && (fabs(corr(i)) > maxCorr))
       {
-        if (fabs(corr(i)) > maxCorr)
-        {
-          maxCorr = fabs(corr(i));
-          changeInd = i;
-        }
+        maxCorr = fabs(corr(i));
+        changeInd = i;
       }
     }
 
     if (!lassocond)
     {
-      // index is absolute index
-      //printf("activating %d\n", changeInd);
       if (useCholesky)
       {
-        vec newGramCol = vec(nActive);
-        for (u32 i = 0; i < nActive; i++)
-        {
-          newGramCol[i] = dot(matX.col(activeSet[i]), matX.col(changeInd));
-        }
+        // vec newGramCol = vec(activeSet.size());
+        // for (size_t i = 0; i < activeSet.size(); i++)
+        // {
+        //   newGramCol[i] = dot(matX.col(activeSet[i]), matX.col(changeInd));
+        // }
+        // This is equivalent to the above 5 lines.
+        arma::vec newGramCol = matGram.elem(changeInd * dataRef.n_cols +
+            arma::conv_to<arma::uvec>::from(activeSet));
 
-        CholeskyInsert(matX.col(changeInd), newGramCol);
+        CholeskyInsert(matGram(changeInd, changeInd), newGramCol);
       }
 
-      // add variable to active set
+      // Add variable to active set.
       Activate(changeInd);
     }
 
-    // compute signs of correlations
-    vec s = vec(nActive);
-    for (u32 i = 0; i < nActive; i++)
-    {
+    // Compute signs of correlations.
+    arma::vec s = arma::vec(activeSet.size());
+    for (size_t i = 0; i < activeSet.size(); i++)
       s(i) = corr(activeSet[i]) / fabs(corr(activeSet[i]));
-    }
 
-    // compute "equiangular" direction in parameter space (betaDirection)
-    /* We use quotes because in the case of non-unit norm variables,
-       this need not be equiangular. */
-    vec unnormalizedBetaDirection;
+    // Compute the "equiangular" direction in parameter space (betaDirection).
+    // We use quotes because in the case of non-unit norm variables, this need
+    // not be equiangular.
+    arma::vec unnormalizedBetaDirection;
     double normalization;
-    vec betaDirection;
+    arma::vec betaDirection;
     if (useCholesky)
     {
       /**
@@ -176,61 +180,50 @@ void LARS::DoLARS(const mat& matX, const vec& y)
     }
     else
     {
-      mat matGramActive = mat(nActive, nActive);
-      for (u32 i = 0; i < nActive; i++)
-      {
-        for (u32 j = 0; j < nActive; j++)
-        {
-          matGramActive(i,j) = matGram(activeSet[i], activeSet[j]);
-        }
-      }
+      arma::mat matGramActive = arma::mat(activeSet.size(), activeSet.size());
+      for (size_t i = 0; i < activeSet.size(); i++)
+        for (size_t j = 0; j < activeSet.size(); j++)
+          matGramActive(i, j) = matGram(activeSet[i], activeSet[j]);
 
-      mat matS = s * ones<mat>(1, nActive);
-      unnormalizedBetaDirection =
-          solve(matGramActive % trans(matS) % matS, ones<mat>(nActive, 1));
+      arma::mat matS = s * arma::ones<arma::mat>(1, activeSet.size());
+      unnormalizedBetaDirection = solve(matGramActive % trans(matS) % matS,
+          arma::ones<arma::mat>(activeSet.size(), 1));
       normalization = 1.0 / sqrt(sum(unnormalizedBetaDirection));
       betaDirection = normalization * unnormalizedBetaDirection % s;
     }
 
     // compute "equiangular" direction in output space
-    ComputeYHatDirection(matX, betaDirection, yHatDirection);
-
+    ComputeYHatDirection(dataRef, betaDirection, yHatDirection);
 
     double gamma = maxCorr / normalization;
 
-    // if not all variables are active
-    if (nActive < matX.n_cols)
+    // If not all variables are active.
+    if (activeSet.size() < dataRef.n_cols)
     {
-      // compute correlations with direction
-      for (u32 ind = 0; ind < matX.n_cols; ind++)
+      // Compute correlations with direction.
+      for (size_t ind = 0; ind < dataRef.n_cols; ind++)
       {
         if (isActive[ind])
-        {
           continue;
-        }
 
-        double dirCorr = dot(matX.col(ind), yHatDirection);
+        double dirCorr = dot(dataRef.col(ind), yHatDirection);
         double val1 = (maxCorr - corr(ind)) / (normalization - dirCorr);
         double val2 = (maxCorr + corr(ind)) / (normalization + dirCorr);
         if ((val1 > 0) && (val1 < gamma))
-        {
           gamma = val1;
-        }
         if ((val2 > 0) && (val2 < gamma))
-        {
           gamma = val2;
-        }
       }
     }
 
-    // bound gamma according to LASSO
+    // Bound gamma according to LASSO.
     if (lasso)
     {
       lassocond = false;
       double lassoboundOnGamma = DBL_MAX;
-      u32 activeIndToKickOut = -1;
+      size_t activeIndToKickOut = -1;
 
-      for (u32 i = 0; i < nActive; i++)
+      for (size_t i = 0; i < activeSet.size(); i++)
       {
         double val = -beta(activeSet[i]) / betaDirection(i);
         if ((val > 0) && (val < lassoboundOnGamma))
@@ -242,62 +235,48 @@ void LARS::DoLARS(const mat& matX, const vec& y)
 
       if (lassoboundOnGamma < gamma)
       {
-        // printf("%d: gap = %e\tbeta(%d) = %e\n",
-        //    activeSet[activeIndToKickOut],
-        //    gamma - lassoboundOnGamma,
-        //    activeSet[activeIndToKickOut],
-        //    beta(activeSet[activeIndToKickOut]));
         gamma = lassoboundOnGamma;
         lassocond = true;
         changeInd = activeIndToKickOut;
       }
     }
 
-    // update prediction
+    // Update the prediction.
     yHat += gamma * yHatDirection;
 
-    // update estimator
-    for (u32 i = 0; i < nActive; i++)
+    // Update the estimator.
+    for (size_t i = 0; i < activeSet.size(); i++)
     {
       beta(activeSet[i]) += gamma * betaDirection(i);
     }
 
-    // sanity check to make sure the kicked out guy (or girl?) is actually zero
+    // Sanity check to make sure the kicked out dimension is actually zero.
     if (lassocond)
     {
       if (beta(activeSet[changeInd]) != 0)
-      {
-        //printf("fixed from %e to 0\n", beta(activeSet[changeInd]));
         beta(activeSet[changeInd]) = 0;
-      }
     }
-    
+
     betaPath.push_back(beta);
 
     if (lassocond)
     {
-      // index is in position changeInd in activeSet
-      //printf("\t\tKICK OUT %d!\n", activeSet[changeInd]);
-
+      // Index is in position changeInd in activeSet.
       if (useCholesky)
-      {
         CholeskyDelete(changeInd);
-      }
 
       Deactivate(changeInd);
     }
 
-    corr = vecXTy - trans(matX) * yHat;
+    corr = vecXTy - trans(dataRef) * yHat;
     if (elasticNet)
-    {
       corr -= lambda2 * beta;
-    }
+
     double curLambda = 0;
-    for (u32 i = 0; i < nActive; i++)
-    {
+    for (size_t i = 0; i < activeSet.size(); i++)
       curLambda += fabs(corr(activeSet[i]));
-    }
-    curLambda /= ((double)nActive);
+
+    curLambda /= ((double) activeSet.size());
 
     lambdaPath.push_back(curLambda);
 
@@ -311,40 +290,33 @@ void LARS::DoLARS(const mat& matX, const vec& y)
       }
     }
   }
+
+  // Unfortunate copy...
+  beta = betaPath.back();
+
+  Timer::Stop("lars_regression");
 }
 
-void LARS::Solution(vec& beta)
+// Private functions.
+void LARS::Deactivate(const size_t activeVarInd)
 {
-  beta = BetaPath().back();
-}
-
-
-
-  ////////// private functions //////////
-
-void LARS::Deactivate(u32 activeVarInd)
-{
-  nActive--;
   isActive[activeSet[activeVarInd]] = false;
   activeSet.erase(activeSet.begin() + activeVarInd);
 }
 
-void LARS::Activate(u32 varInd)
+void LARS::Activate(const size_t varInd)
 {
-  nActive++;
   isActive[varInd] = true;
   activeSet.push_back(varInd);
 }
 
- void LARS::ComputeYHatDirection(const mat& matX,
-         const vec& betaDirection,
-         vec& yHatDirection)
+void LARS::ComputeYHatDirection(const arma::mat& matX,
+                                const arma::vec& betaDirection,
+                                arma::vec& yHatDirection)
 {
   yHatDirection.fill(0);
-  for(u32 i = 0; i < nActive; i++)
-  {
+  for (size_t i = 0; i < activeSet.size(); i++)
     yHatDirection += betaDirection(i) * matX.col(activeSet[i]);
-  }
 }
 
 void LARS::InterpolateBeta()
@@ -363,81 +335,70 @@ void LARS::InterpolateBeta()
   lambdaPath[pathLength - 1] = lambda1;
 }
 
-void LARS::CholeskyInsert(const vec& newX, const mat& X)
+void LARS::CholeskyInsert(const arma::vec& newX, const arma::mat& X)
 {
   if (matUtriCholFactor.n_rows == 0)
   {
-    matUtriCholFactor = mat(1, 1);
+    matUtriCholFactor = arma::mat(1, 1);
+
     if (elasticNet)
-    {
       matUtriCholFactor(0, 0) = sqrt(dot(newX, newX) + lambda2);
-    }
     else
-    {
       matUtriCholFactor(0, 0) = norm(newX, 2);
-    }
   }
   else
   {
-    vec newGramCol = trans(X) * newX;
-    CholeskyInsert(newX, newGramCol);
+    arma::vec newGramCol = trans(X) * newX;
+    CholeskyInsert(dot(newX, newX), newGramCol);
   }
 }
 
-void LARS::CholeskyInsert(const vec& newX, const vec& newGramCol)
+void LARS::CholeskyInsert(double sqNormNewX, const arma::vec& newGramCol)
 {
   int n = matUtriCholFactor.n_rows;
 
   if (n == 0)
   {
-    matUtriCholFactor = mat(1, 1);
+    matUtriCholFactor = arma::mat(1, 1);
+
     if (elasticNet)
-    {
-      matUtriCholFactor(0, 0) = sqrt(dot(newX, newX) + lambda2);
-    }
+      matUtriCholFactor(0, 0) = sqrt(sqNormNewX + lambda2);
     else
-    {
-      matUtriCholFactor(0, 0) = norm(newX, 2);
-    }
+      matUtriCholFactor(0, 0) = sqrt(sqNormNewX);
   }
   else
   {
-    mat matNewR = mat(n + 1, n + 1);
+    arma::mat matNewR = arma::mat(n + 1, n + 1);
 
-    double sqNormNewX;
     if (elasticNet)
-    {
-      sqNormNewX = dot(newX, newX) + lambda2;
-    }
-    else
-    {
-      sqNormNewX = dot(newX, newX);
-    }
+      sqNormNewX += lambda2;
 
-    vec matUtriCholFactork = solve(trimatl(trans(matUtriCholFactor)),
+    arma::vec matUtriCholFactork = solve(trimatl(trans(matUtriCholFactor)),
         newGramCol);
 
-    matNewR(span(0, n - 1), span(0, n - 1)) = matUtriCholFactor;
-    matNewR(span(0, n - 1), n) = matUtriCholFactork;
-    matNewR(n, span(0, n - 1)).fill(0.0);
+    matNewR(arma::span(0, n - 1), arma::span(0, n - 1)) = matUtriCholFactor;
+    matNewR(arma::span(0, n - 1), n) = matUtriCholFactork;
+    matNewR(n, arma::span(0, n - 1)).fill(0.0);
     matNewR(n, n) = sqrt(sqNormNewX - dot(matUtriCholFactork,
-        matUtriCholFactork));
+                                          matUtriCholFactork));
 
     matUtriCholFactor = matNewR;
   }
 }
 
-void LARS::GivensRotate(const vec& x, vec& rotatedX, mat& matG) 
+void LARS::GivensRotate(const arma::vec::fixed<2>& x,
+                        arma::vec::fixed<2>& rotatedX,
+                        arma::mat& matG)
 {
   if (x(1) == 0)
   {
-    matG = eye(2, 2);
+    matG = arma::eye(2, 2);
     rotatedX = x;
   }
   else
   {
     double r = norm(x, 2);
-    matG = mat(2, 2);
+    matG = arma::mat(2, 2);
 
     double scaledX1 = x(0) / r;
     double scaledX2 = x(1) / r;
@@ -447,37 +408,41 @@ void LARS::GivensRotate(const vec& x, vec& rotatedX, mat& matG)
     matG(0, 1) = scaledX2;
     matG(1, 1) = scaledX1;
 
-    rotatedX = vec(2);
+    rotatedX = arma::vec(2);
     rotatedX(0) = r;
     rotatedX(1) = 0;
   }
 }
 
-void LARS::CholeskyDelete(u32 colToKill)
+void LARS::CholeskyDelete(const size_t colToKill)
 {
-  u32 n = matUtriCholFactor.n_rows;
+  size_t n = matUtriCholFactor.n_rows;
 
   if (colToKill == (n - 1))
   {
-    matUtriCholFactor = matUtriCholFactor(span(0, n - 2), span(0, n - 2));
+    matUtriCholFactor = matUtriCholFactor(arma::span(0, n - 2),
+                                          arma::span(0, n - 2));
   }
   else
   {
     matUtriCholFactor.shed_col(colToKill); // remove column colToKill
     n--;
 
-    for(u32 k = colToKill; k < n; k++)
+    for (size_t k = colToKill; k < n; k++)
     {
-      mat matG;
-      vec rotatedVec;
-      GivensRotate(matUtriCholFactor(span(k, k + 1), k), rotatedVec, matG);
-      matUtriCholFactor(span(k, k + 1), k) = rotatedVec;
+      arma::mat matG;
+      arma::vec::fixed<2> rotatedVec;
+      GivensRotate(matUtriCholFactor(arma::span(k, k + 1), k), rotatedVec,
+          matG);
+      matUtriCholFactor(arma::span(k, k + 1), k) = rotatedVec;
       if (k < n - 1)
       {
-        matUtriCholFactor(span(k, k + 1), span(k + 1, n - 1)) =
-            matG * matUtriCholFactor(span(k, k + 1), span(k + 1, n - 1));
+        matUtriCholFactor(arma::span(k, k + 1), arma::span(k + 1, n - 1)) =
+            matG * matUtriCholFactor(arma::span(k, k + 1),
+            arma::span(k + 1, n - 1));
       }
     }
+
     matUtriCholFactor.shed_row(n);
   }
 }

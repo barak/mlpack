@@ -5,12 +5,20 @@ cmake_minimum_required(VERSION 2.8)
 set(SOURCES
   cosine_distance.hpp
   cosine_distance_impl.hpp
+  epanechnikov_kernel.hpp
+  epanechnikov_kernel_impl.hpp
+  epanechnikov_kernel.cpp
+  example_kernel.hpp
   gaussian_kernel.hpp
   hyperbolic_tangent_kernel.hpp
   laplacian_kernel.hpp
   linear_kernel.hpp
   polynomial_kernel.hpp
+  pspectrum_string_kernel.hpp
+  pspectrum_string_kernel_impl.hpp
+  pspectrum_string_kernel.cpp
   spherical_kernel.hpp
+  triangular_kernel.hpp
 )
 
 # add directory name to sources

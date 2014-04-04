@@ -5,9 +5,24 @@
  *
  * This file describes the interface for the PeriodicHRectBound policy, which
  * implements a hyperrectangle bound in a periodic space.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __MLPACK_CORE_TREE_PERCLIDICHRECTBOUND_HPP
-#define __MLPACK_CORE_TREE_PERCLIDICHRECTBOUND_HPP
+#ifndef __MLPACK_CORE_TREE_PERIODICHRECTBOUND_HPP
+#define __MLPACK_CORE_TREE_PERIODICHRECTBOUND_HPP
 
 #include <mlpack/core.hpp>
 
@@ -142,4 +157,4 @@ class PeriodicHRectBound
 
 #include "periodichrectbound_impl.hpp"
 
-#endif // __MLPACK_CORE_TREE_PERCLIDICHRECTBOUND_HPP
+#endif // __MLPACK_CORE_TREE_PERIODICHRECTBOUND_HPP

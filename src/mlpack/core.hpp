@@ -3,6 +3,21 @@
  *
  * Include all of the base components required to write MLPACK methods, and the
  * main MLPACK Doxygen documentation.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_HPP
 #define __MLPACK_CORE_HPP
@@ -50,8 +65,8 @@
  * A full list of executables is given below:
  *
  * allkfn, allknn, emst, gmm, hmm_train, hmm_loglik, hmm_viterbi, hmm_generate,
- * kernel_pca, kmeans, lars, linear_regression, local_coordinate_coding, nbc,
- * nca, pca, radical, sparse_coding
+ * kernel_pca, kmeans, lars, linear_regression, local_coordinate_coding, mvu,
+ * nbc, nca, pca, radical, sparse_coding
  *
  * @section tutorial Tutorials
  *
@@ -67,6 +82,9 @@
  *
  *  - @ref nstutorial
  *  - @ref lrtutorial
+ *  - @ref rstutorial
+ *  - @ref dettutorial
+ *  - @ref emst_tutorial
  *
  * @section methods Methods in MLPACK
  *
@@ -108,6 +126,8 @@
  *   - Dongryeol Lee <dongryel@cc.gatech.edu>
  *   - Nishant Mehta <niche@cc.gatech.edu>
  *   - Parikshit Ram <p.ram@gatech.edu>
+ *   - Rajendran Mohan <rmohan88@gatech.edu>
+ *   - Trironk Kiatkungwanglai <trironk@gmail.com>
  *   - Chip Mappus <cmappus@gatech.edu>
  *   - Hua Ouyang <houyang@gatech.edu>
  *   - Long Quoc Tran <tqlong@gmail.com>
@@ -117,6 +137,7 @@
  *   - Ryan Riegel <rriegel@cc.gatech.edu>
  *   - Nikolaos Vasiloglou <nvasil@ieee.org>
  *   - Garry Boyer <garryb@gmail.com>
+ *   - Andreas Löf <andreas.lof@cs.waikato.ac.nz>
  */
 
 // First, standard includes.
@@ -133,6 +154,9 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+// For tgamma().
+#include <boost/math/special_functions/gamma.hpp>
+
 // But if it's not defined, we'll do it.
 #ifndef M_PI
   #define M_PI 3.141592653589793238462643383279
@@ -146,9 +170,33 @@
 #include <mlpack/core/data/save.hpp>
 #include <mlpack/core/math/clamp.hpp>
 #include <mlpack/core/math/random.hpp>
+#include <mlpack/core/math/lin_alg.hpp>
 #include <mlpack/core/math/range.hpp>
+#include <mlpack/core/math/round.hpp>
 #include <mlpack/core/util/save_restore_utility.hpp>
 #include <mlpack/core/dists/discrete_distribution.hpp>
 #include <mlpack/core/dists/gaussian_distribution.hpp>
+
+// Clean up unfortunate Windows preprocessor definitions.
+// Use std::min and std::max!
+#ifdef _WIN32
+  #ifdef min
+    #undef min
+  #endif
+
+  #ifdef max
+    #undef max
+  #endif
+#endif
+
+// Give ourselves a nice way to force functions to be inline if we need.
+#define force_inline
+#if defined(__GNUG__) && !defined(DEBUG)
+  #undef force_inline
+  #define force_inline __attribute__((always_inline))
+#elif defined(_MSC_VER)
+  #undef force_inline && !defined(DEBUG)
+  #define force_inline __forceinline
+#endif
 
 #endif

@@ -3,6 +3,21 @@
  * @author Matthew Amidon
  *
  * Timers for MLPACK.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_UTILITIES_TIMERS_HPP
 #define __MLPACK_CORE_UTILITIES_TIMERS_HPP
@@ -34,7 +49,12 @@ class Timer
 {
  public:
   /**
-   * Start the given timer.
+   * Start the given timer.  If a timer is started, then stopped, then
+   * re-started, then re-stopped, the final value of the timer is the length of
+   * both runs -- that is, MLPACK timers are additive for each time they are
+   * run, and do not reset.
+   *
+   * @note Undefined behavior will occur if a timer is started twice.
    *
    * @param name Name of timer to be started.
    */
@@ -42,6 +62,8 @@ class Timer
 
   /**
    * Stop the given timer.
+   *
+   * @note Undefined behavior will occur if a timer is started twice.
    *
    * @param name Name of timer to be stopped.
    */
@@ -83,7 +105,9 @@ class Timers
 
   /**
    * Initializes a timer, available like a normal value specified on
-   * the command line.  Timers are of type timval
+   * the command line.  Timers are of type timeval.  If a timer is started, then
+   * stopped, then re-started, then stopped, the final timer value will be the
+   * length of both runs of the timer.
    *
    * @param timerName The name of the timer in question.
    */

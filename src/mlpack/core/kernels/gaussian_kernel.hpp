@@ -5,6 +5,21 @@
  * @author Ryan Curtin
  *
  * Implementation of the Gaussian kernel (GaussianKernel).
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_KERNELS_GAUSSIAN_KERNEL_HPP
 #define __MLPACK_CORE_KERNELS_GAUSSIAN_KERNEL_HPP
@@ -82,7 +97,7 @@ class GaussianKernel
    */
   double Normalizer(size_t dimension)
   {
-    return pow(sqrt(2.0 * M_PI) * bandwidth, dimension);
+    return pow(sqrt(2.0 * M_PI) * bandwidth, (double) dimension);
   }
   /**
    * Obtain a convolution integral of the Gaussian kernel.
@@ -101,6 +116,7 @@ class GaussianKernel
 
   //! Get the bandwidth.
   double Bandwidth() const { return bandwidth; }
+
   //! Modify the bandwidth.  This takes an argument because we must update the
   //! precalculated constant (gamma).
   void Bandwidth(const double bandwidth)

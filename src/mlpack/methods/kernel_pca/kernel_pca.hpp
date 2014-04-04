@@ -4,6 +4,21 @@
  *
  * Defines the KernelPCA class to perform Kernel Principal Components Analysis
  * on the specified data set.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_KERNEL_PCA_KERNEL_PCA_HPP
 #define __MLPACK_METHODS_KERNEL_PCA_KERNEL_PCA_HPP
@@ -19,7 +34,6 @@ class KernelPCA
 {
  public:
   KernelPCA(const KernelType kernel = KernelType(),
-            const bool centerData = true,
             const bool scaleData = false);
 
   /**
@@ -63,13 +77,6 @@ class KernelPCA
   //! Modify the kernel.
   KernelType& Kernel() { return kernel; }
 
-  //! Return whether or not this KernelPCA object will center the data when
-  //! kernel PCA is performed.
-  bool CenterData() const { return centerData; }
-  //! Modify whether or not this KernelPCA object will center the data when
-  //! kernel PCA is performed.
-  bool& CenterData() { return centerData; }
-
   //! Return whether or not this KernelPCA object will scale (by standard
   //! deviation) the data when kernel PCA is performed.
   bool ScaleData() const { return scaleData; }
@@ -80,8 +87,6 @@ class KernelPCA
  private:
   //! The instantiated kernel.
   KernelType kernel;
-  //! If true, the data will be centered when Apply() is run.
-  bool centerData;
   //! If true, the data will be scaled (by standard deviation) when Apply() is
   //! run.
   bool scaleData;

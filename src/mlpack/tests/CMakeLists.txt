@@ -23,6 +23,7 @@ add_executable(mlpack_test
   math_test.cpp
   nbc_test.cpp
   nca_test.cpp
+  nmf_test.cpp
   pca_test.cpp
   radical_test.cpp
   range_search_test.cpp
@@ -31,11 +32,12 @@ add_executable(mlpack_test
   sparse_coding_test.cpp
   tree_test.cpp
   union_find_test.cpp
+  det_test.cpp
 )
 # Link dependencies of test executable.
 target_link_libraries(mlpack_test
   mlpack
-  boost_unit_test_framework
+  ${BOOST_unit_test_framework_LIBRARY}
 )
 
 # Copy test data into right place.

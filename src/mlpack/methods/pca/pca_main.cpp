@@ -3,6 +3,21 @@
  * @author Ryan Curtin
  *
  * Main executable to run PCA.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 
@@ -27,8 +42,6 @@ PARAM_INT("new_dimensionality", "Desired dimensionality of output dataset.  If "
 
 PARAM_FLAG("scale", "If set, the data will be scaled before running PCA, such "
     "that the variance of each feature is 1.", "s");
-PARAM_FLAG("nocenter", "If set, the data will NOT be centered before performing"
-    " PCA.", "N");
 
 int main(int argc, char** argv)
 {
@@ -56,10 +69,9 @@ int main(int argc, char** argv)
 
   // Get the options for running PCA.
   const size_t scale = CLI::HasParam("scale");
-  const size_t center = !CLI::HasParam("nocenter");
 
   // Perform PCA.
-  PCA p(center, scale);
+  PCA p(scale);
   Log::Info << "Performing PCA on dataset..." << endl;
   p.Apply(dataset, newDimension);
 

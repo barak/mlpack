@@ -4,6 +4,21 @@
  *
  * Implementation of KernelPCA class to perform Kernel Principal Components
  * Analysis on the specified data set.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_KERNEL_PCA_KERNEL_PCA_IMPL_HPP
 #define __MLPACK_METHODS_KERNEL_PCA_KERNEL_PCA_IMPL_HPP
@@ -17,11 +32,12 @@ namespace mlpack {
 namespace kpca {
 
 template <typename KernelType>
+arma::mat GetKernelMatrix(KernelType kernel, arma::mat transData);
+
+template <typename KernelType>
 KernelPCA<KernelType>::KernelPCA(const KernelType kernel,
-                                 const bool centerData,
                                  const bool scaleData) :
       kernel(kernel),
-      centerData(centerData),
       scaleData(scaleData)
 { }
 
@@ -39,14 +55,9 @@ void KernelPCA<KernelType>::Apply(const arma::mat& data,
                                   arma::vec& eigVal,
                                   arma::mat& coeffs)
 {
-  arma::mat transData = trans(data);
+  arma::mat transData = ccov(data);
 
   // Center the data if necessary.
-  if (centerData)
-  {
-    arma::rowvec means = arma::mean(transData, 0);
-    transData = transData - arma::ones<arma::colvec>(transData.n_rows) * means;
-  }
 
   // Scale the data if necessary.
   if (scaleData)
@@ -60,7 +71,7 @@ void KernelPCA<KernelType>::Apply(const arma::mat& data,
   arma::eig_sym(eigVal, coeffs, kernelMat);
 
   int n_eigVal = eigVal.n_elem;
-  for(int i = 0; i < floor(n_eigVal / 2); i++)
+  for(int i = 0; i < floor(n_eigVal / 2.0); i++)
     eigVal.swap_rows(i, (n_eigVal - 1) - i);
 
   coeffs = arma::fliplr(coeffs);
@@ -109,9 +120,6 @@ void KernelPCA<KernelType>::Apply(arma::mat& data, const size_t newDimension)
     data.shed_rows(newDimension, data.n_rows - 1);
 }
 
-}; // namespace mlpack
-}; // namespace kpca
-
 template <typename KernelType>
 arma::mat GetKernelMatrix(KernelType kernel, arma::mat transData)
 {
@@ -129,5 +137,8 @@ arma::mat GetKernelMatrix(KernelType kernel, arma::mat transData)
 
   return kernelMat;
 }
+
+}; // namespace mlpack
+}; // namespace kpca
 
 #endif

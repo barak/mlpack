@@ -1,42 +1,66 @@
-/** 
+/**
  * @file sparse_coding.hpp
  * @author Nishant Mehta
  *
- * Definition of the SparseCoding class, which performs l1 (LASSO) or 
- * l1+l2 (Elastic Net)-regularized sparse coding with dictionary learning
+ * Definition of the SparseCoding class, which performs L1 (LASSO) or
+ * L1+L2 (Elastic Net)-regularized sparse coding with dictionary learning
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #ifndef __MLPACK_METHODS_SPARSE_CODING_SPARSE_CODING_HPP
 #define __MLPACK_METHODS_SPARSE_CODING_SPARSE_CODING_HPP
 
-//#include <armadillo>
 #include <mlpack/core.hpp>
 #include <mlpack/methods/lars/lars.hpp>
+
+// Include our three simple dictionary initializers.
+#include "nothing_initializer.hpp"
+#include "data_dependent_random_initializer.hpp"
+#include "random_initializer.hpp"
 
 namespace mlpack {
 namespace sparse_coding {
 
 /**
- * An implementation of Sparse Coding with Dictionary Learning that achieves 
- * sparsity via an l1-norm regularizer on the codes (LASSO) or an (l1+l2)-norm 
+ * An implementation of Sparse Coding with Dictionary Learning that achieves
+ * sparsity via an l1-norm regularizer on the codes (LASSO) or an (l1+l2)-norm
  * regularizer on the codes (the Elastic Net).
- * Let d be the number of dimensions in the original space, m the number of 
- * training points, and k the number of atoms in the dictionary (the dimension 
- * of the learned feature space). The training data X is a d-by-m matrix where 
- * each column is a point and each row is a dimension. The dictionary D is a 
+ *
+ * Let d be the number of dimensions in the original space, m the number of
+ * training points, and k the number of atoms in the dictionary (the dimension
+ * of the learned feature space). The training data X is a d-by-m matrix where
+ * each column is a point and each row is a dimension. The dictionary D is a
  * d-by-k matrix, and the sparse codes matrix Z is a k-by-m matrix.
  * This program seeks to minimize the objective:
- * min_{D,Z} 0.5 ||X - D Z||_{Fro}^2\ + lambda_1 sum_{i=1}^m ||Z_i||_1
- *                                    + 0.5 lambda_2 sum_{i=1}^m ||Z_i||_2^2
- * subject to ||D_j||_2 <= 1 for 1 <= j <= k
- * where typically lambda_1 > 0 and lambda_2 = 0.
+ *
+ * \f[
+ * \min_{D,Z} 0.5 ||X - D Z||_{F}^2\ + \lambda_1 \sum_{i=1}^m ||Z_i||_1
+ *                                    + 0.5 \lambda_2 \sum_{i=1}^m ||Z_i||_2^2
+ * \f]
+ *
+ * subject to \f$ ||D_j||_2 <= 1 \f$ for \f$ 1 <= j <= k \f$
+ * where typically \f$ lambda_1 > 0 \f$ and \f$ lambda_2 = 0 \f$.
  *
  * This problem is solved by an algorithm that alternates between a dictionary
- * learning step and a sparse coding step. The dictionary learning step updates 
- * the dictionary D using a Newton method based on the Lagrange dual (see the 
- * paper below for details). The sparse coding step involves solving a large 
- * number of sparse linear regression problems; this can be done efficiently 
- * using LARS, an algorithm that can solve the LASSO or the Elastic Net (papers below).
+ * learning step and a sparse coding step. The dictionary learning step updates
+ * the dictionary D using a Newton method based on the Lagrange dual (see the
+ * paper below for details). The sparse coding step involves solving a large
+ * number of sparse linear regression problems; this can be done efficiently
+ * using LARS, an algorithm that can solve the LASSO or the Elastic Net (papers
+ * below).
  *
  * Here are those papers:
  *
@@ -78,144 +102,116 @@ namespace sparse_coding {
  *   publisher={Royal Statistical Society}
  * }
  * @endcode
+ *
+ * Before the method is run, the dictionary is initialized using the
+ * DictionaryInitializationPolicy class.  Possible choices include the
+ * RandomInitializer, which provides an entirely random dictionary, the
+ * DataDependentRandomInitializer, which provides a random dictionary based
+ * loosely on characteristics of the dataset, and the NothingInitializer, which
+ * does not initialize the dictionary -- instead, the user should set the
+ * dictionary using the Dictionary() mutator method.
+ *
+ * @tparam DictionaryInitializationPolicy The class to use to initialize the
+ *     dictionary; must have 'void Initialize(const arma::mat& data, arma::mat&
+ *     dictionary)' function.
  */
-class SparseCoding {
-
+template<typename DictionaryInitializer = DataDependentRandomInitializer>
+class SparseCoding
+{
  public:
-  // void Init(double* memX, u32 nDims, u32 nPoints,
-  // 	    u32 nAtoms, double lambda1);
-
-  //void SetDictionary(double* memD);
-
-  
   /**
    * Set the parameters to SparseCoding. lambda2 defaults to 0.
    *
-   * @param matX Data matrix
-   * @param nAtoms Number of atoms in dictionary
+   * @param data Data matrix
+   * @param atoms Number of atoms in dictionary
    * @param lambda1 Regularization parameter for l1-norm penalty
    * @param lambda2 Regularization parameter for l2-norm penalty
    */
-  SparseCoding(const arma::mat& matX, arma::u32 nAtoms, double lambda1, double lambda2 = 0);
-  
+  SparseCoding(const arma::mat& data,
+               const size_t atoms,
+               const double lambda1,
+               const double lambda2 = 0);
 
   /**
-   * Initialize dictionary somehow
-   */
-  void InitDictionary();
-  
-  /** 
-   * Load dictionary from a file
-   * 
-   * @param dictionaryFilename Filename containing dictionary
-   */
-  void LoadDictionary(const char* dictionaryFilename);
-  
-  /**
-   * Initialize dictionary by drawing k vectors uniformly at random from the 
-   * unit sphere
-   */
-  void RandomInitDictionary();
-
-  /**
-   * Initialize dictionary by initializing each atom to a normalized mixture of
-   * a small number of randomly selected points in X
-   */
-  void DataDependentRandomInitDictionary();
-
-  /**
-   * Initialize an atom to a normalized mixture of a small number of randomly
-   * selected points in X
+   * Run Sparse Coding with Dictionary Learning.
    *
-   * @param atom The atom to initialize
+   * @param maxIterations Maximum number of iterations to run algorithm.  If 0,
+   *     the algorithm will run until convergence (or forever).
+   * @param objTolerance Tolerance for objective function.  When an iteration of
+   *     the algorithm produces an improvement smaller than this, the algorithm
+   *     will terminate.
+   * @param newtonTolerance Tolerance for the Newton's method dictionary
+   *     optimization step.
    */
-  void RandomAtom(arma::vec& atom);
-
-  
-  // core algorithm functions
+  void Encode(const size_t maxIterations = 0,
+              const double objTolerance = 0.01,
+              const double newtonTolerance = 1e-6);
 
   /**
-   * Run Sparse Coding with Dictionary Learning
-   *
-   * @param nIterations Maximum number of iterations to run algorithm
-   */
-  void DoSparseCoding(arma::u32 nIterations);
-
-  /**
-   * Sparse code each point via LARS
+   * Sparse code each point via LARS.
    */
   void OptimizeCode();
-  
-  /** 
-   * Learn dictionary via Newton method based on Lagrange dual
-   *
-   * @param adjacencies Indices of entries (unrolled column by column) of 
-   *    the coding matrix Z that are non-zero (the adjacency matrix for the 
-   *    bipartite graph of points and atoms)
-   */
-  void OptimizeDictionary(arma::uvec adjacencies);
 
   /**
-   * Project each atom of the dictionary onto the unit ball
+   * Learn dictionary via Newton method based on Lagrange dual.
+   *
+   * @param adjacencies Indices of entries (unrolled column by column) of
+   *    the coding matrix Z that are non-zero (the adjacency matrix for the
+   *    bipartite graph of points and atoms).
+   * @param newtonTolerance Tolerance of the Newton's method optimizer.
+   * @return the norm of the gradient of the Lagrange dual with respect to
+   *    the dual variables
+   */
+  double OptimizeDictionary(const arma::uvec& adjacencies,
+                            const double newtonTolerance = 1e-6);
+
+  /**
+   * Project each atom of the dictionary back onto the unit ball, if necessary.
    */
   void ProjectDictionary();
 
   /**
-   * Compute objective function
+   * Compute the objective function.
    */
-  double Objective();
+  double Objective() const;
 
+  //! Access the data.
+  const arma::mat& Data() const { return data; }
 
-  // accessors, modifiers, printers
+  //! Access the dictionary.
+  const arma::mat& Dictionary() const { return dictionary; }
+  //! Modify the dictionary.
+  arma::mat& Dictionary() { return dictionary; }
 
-  //! Modifier for matX
-  void SetData(const arma::mat& matX);
-
-  //! Modifier for matD
-  void SetDictionary(const arma::mat& matD);
-  
-  //! Accessor for matD
-  const arma::mat& MatD() {
-    return matD;
-  }
-  
-  //! Accessor for matZ
-  const arma::mat& MatZ() {
-    return matZ;
-  }
-
-  // Print the dictionary matD
-  void PrintDictionary();
-
-  // Print the sparse codes matZ
-  void PrintCoding();
+  //! Access the sparse codes.
+  const arma::mat& Codes() const { return codes; }
+  //! Modify the sparse codes.
+  arma::mat& Codes() { return codes; }
 
  private:
-  arma::u32 nDims;
-  arma::u32 nAtoms;
-  arma::u32 nPoints;
+  //! Number of atoms.
+  size_t atoms;
 
-  // data (columns are points)
-  arma::mat matX;
+  //! Data matrix (columns are points).
+  const arma::mat& data;
 
-  // dictionary (columns are atoms)
-  arma::mat matD; 
-  
-  // sparse codes (columns are points)
-  arma::mat matZ; 
-  
-  // l1 regularization term
-  double lambda1; 
-  
-  // l2 regularization term
-  double lambda2; 
-  
+  //! Dictionary (columns are atoms).
+  arma::mat dictionary;
+
+  //! Sparse codes (columns are points).
+  arma::mat codes;
+
+  //! l1 regularization term.
+  double lambda1;
+
+  //! l2 regularization term.
+  double lambda2;
 };
-
-void RemoveRows(const arma::mat& X, arma::uvec rows_to_remove, arma::mat& X_mod);
-
 
 }; // namespace sparse_coding
 }; // namespace mlpack
+
+// Include implementation.
+#include "sparse_coding_impl.hpp"
 
 #endif

@@ -4,6 +4,21 @@
  *
  * Implementation of the SortPolicy class for NeighborSearch; in this case, the
  * furthest neighbors are those that are most important.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_NEIGHBOR_SEARCH_FURTHEST_NEIGHBOR_SORT_HPP
 #define __MLPACK_METHODS_NEIGHBOR_SEARCH_FURTHEST_NEIGHBOR_SORT_HPP
@@ -62,6 +77,17 @@ class FurthestNeighborSort
                                        const TreeType* referenceNode);
 
   /**
+   * Return the best possible distance between two nodes, given that the
+   * distance between the centers of the two nodes has already been calculated.
+   * This is used in conjunction with trees that have self-children (like cover
+   * trees).
+   */
+  template<typename TreeType>
+  static double BestNodeToNodeDistance(const TreeType* queryNode,
+                                       const TreeType* referenceNode,
+                                       const double centerToCenterDistance);
+
+  /**
    * Return the best possible distance between a node and a point.  In our case,
    * this is the maximum distance between the tree node and the point using the
    * given distance function.
@@ -69,6 +95,17 @@ class FurthestNeighborSort
   template<typename TreeType>
   static double BestPointToNodeDistance(const arma::vec& queryPoint,
                                         const TreeType* referenceNode);
+
+  /**
+   * Return the best possible distance between a point and a node, given that
+   * the distance between the point and the center of the node has already been
+   * calculated.  This is used in conjunction with trees that have
+   * self-children (like cover trees).
+   */
+  template<typename TreeType>
+  static double BestPointToNodeDistance(const arma::vec& queryPoint,
+                                        const TreeType* referenceNode,
+                                        const double pointToCenterDistance);
 
   /**
    * Return what should represent the worst possible distance with this

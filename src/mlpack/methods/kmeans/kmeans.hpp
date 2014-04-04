@@ -3,6 +3,21 @@
  * @author Parikshit Ram (pram@cc.gatech.edu)
  *
  * K-Means clustering.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_KMEANS_KMEANS_HPP
 #define __MLPACK_METHODS_KMEANS_KMEANS_HPP
@@ -12,6 +27,8 @@
 #include <mlpack/core/metrics/lmetric.hpp>
 #include "random_partition.hpp"
 #include "max_variance_new_cluster.hpp"
+
+#include <mlpack/core/tree/binary_space_tree.hpp>
 
 namespace mlpack {
 namespace kmeans /** K-Means clustering. */ {
@@ -100,6 +117,10 @@ class KMeans
    */
   template<typename MatType>
   void Cluster(const MatType& data,
+               const size_t clusters,
+               arma::Col<size_t>& assignments) const;
+  template<typename MatType>
+  void FastCluster(MatType& data,
                const size_t clusters,
                arma::Col<size_t>& assignments) const;
 

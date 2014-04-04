@@ -4,15 +4,30 @@
  *
  * Defines the NeighborSearch class, which performs an abstract
  * nearest-neighbor-like query on two datasets.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_NEIGHBOR_SEARCH_NEIGHBOR_SEARCH_HPP
 #define __MLPACK_METHODS_NEIGHBOR_SEARCH_NEIGHBOR_SEARCH_HPP
 
 #include <mlpack/core.hpp>
-#include <mlpack/core/tree/bounds.hpp>
-#include <mlpack/core/tree/binary_space_tree.hpp>
 #include <vector>
 #include <string>
+
+#include <mlpack/core/tree/binary_space_tree.hpp>
 
 #include <mlpack/core/metrics/lmetric.hpp>
 #include "sort_policies/nearest_neighbor_sort.hpp"
@@ -235,77 +250,6 @@ class NeighborSearch
               arma::mat& distances);
 
  private:
-  /**
-   * Perform exhaustive computation between two leaves, comparing every node in
-   * the leaf to the other leaf to find the furthest neighbor.  The
-   * neighbors and distances matrices will be updated with the changed
-   * information.
-   *
-   * @param queryNode Node in query tree.  This should be a leaf
-   *     (bottom-level).
-   * @param referenceNode Node in reference tree.  This should be a leaf
-   *     (bottom-level).
-   * @param neighbors List of neighbors for each point.
-   * @param distances List of distances for each point.
-   */
-  void ComputeBaseCase(TreeType* queryNode,
-                       TreeType* referenceNode,
-                       arma::Mat<size_t>& neighbors,
-                       arma::mat& distances);
-
-  /**
-   * Recurse down the trees, computing base case computations when the leaves
-   * are reached.
-   *
-   * @param queryNode Node in query tree.
-   * @param referenceNode Node in reference tree.
-   * @param lowerBound The lower bound; if above this, we can prune.
-   * @param neighbors List of neighbors for each point.
-   * @param distances List of distances for each point.
-   */
-  void ComputeDualNeighborsRecursion(TreeType* queryNode,
-                                     TreeType* referenceNode,
-                                     const double lowerBound,
-                                     arma::Mat<size_t>& neighbors,
-                                     arma::mat& distances);
-
-  /**
-   * Perform a recursion only on the reference tree; the query point is given.
-   * This method is similar to ComputeBaseCase().
-   *
-   * @param pointId Index of query point.
-   * @param point The query point.
-   * @param referenceNode Reference node.
-   * @param bestDistSoFar Best distance to a node so far -- used for pruning.
-   * @param neighbors List of neighbors for each point.
-   * @param distances List of distances for each point.
-   */
-  template<typename VecType>
-  void ComputeSingleNeighborsRecursion(const size_t pointId,
-                                       const VecType& point,
-                                       TreeType* referenceNode,
-                                       double& bestDistSoFar,
-                                       arma::Mat<size_t>& neighbors,
-                                       arma::mat& distances);
-
-  /**
-   * Insert a point into the neighbors and distances matrices; this is a helper
-   * function.
-   *
-   * @param queryIndex Index of point whose neighbors we are inserting into.
-   * @param pos Position in list to insert into.
-   * @param neighbor Index of reference point which is being inserted.
-   * @param distance Distance from query point to reference point.
-   * @param neighbors List of neighbors for each point.
-   * @param distances List of distances for each point.
-   */
-  void InsertNeighbor(const size_t queryIndex,
-                      const size_t pos,
-                      const size_t neighbor,
-                      const double distance,
-                      arma::Mat<size_t>& neighbors,
-                      arma::mat& distances);
-
   //! Copy of reference dataset (if we need it, because tree building modifies
   //! it).
   arma::mat referenceCopy;

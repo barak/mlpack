@@ -4,6 +4,21 @@
  * Definition of the policy type for the statistic class.
  *
  * You should define your own statistic that looks like EmptyStatistic.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef __MLPACK_CORE_TREE_MRKD_STATISTIC_HPP
@@ -41,7 +56,8 @@ class MRKDStatistic
     :
       dataset(&dataset),
       begin(begin),
-      count(count)
+      count(count),
+      parentStat(NULL)
     {
       centerOfMass = dataset.col(begin);
       for(size_t i = begin+1; i < begin+count; ++i)
@@ -66,14 +82,15 @@ class MRKDStatistic
     MRKDStatistic(const MatType& dataset,
                    const size_t begin,
                    const size_t count,
-                   const MRKDStatistic& leftStat,
-                   const MRKDStatistic& rightStat)
+                   MRKDStatistic& leftStat,
+                   MRKDStatistic& rightStat)
     :
       dataset(&dataset),
       begin(begin),
       count(count),
       leftStat(&leftStat),
-      rightStat(&rightStat)
+      rightStat(&rightStat),
+      parentStat(NULL)
     {
       sumOfSquaredNorms = leftStat.sumOfSquaredNorms + rightStat.sumOfSquaredNorms;
 
@@ -83,6 +100,11 @@ class MRKDStatistic
                       (leftStat.count + rightStat.count);
       */
       centerOfMass = leftStat.centerOfMass + rightStat.centerOfMass;
+
+      isWhiteListValid = false;
+
+      leftStat.parentStat = this;
+      rightStat.parentStat = this;
     }
 
     //! The data points this object contains
@@ -95,6 +117,8 @@ class MRKDStatistic
     const MRKDStatistic* leftStat;
     //! The right child 
     const MRKDStatistic* rightStat;
+    //! A link to my parent node, null if I am the root
+    const MRKDStatistic* parentStat;
 
     // Computed statistics
     //! The center of mass for this dataset
@@ -105,6 +129,11 @@ class MRKDStatistic
 		// There may be a better place to store this -- HRectBound?
 		//! The index of the dominating centroid of the associated hyperrectangle
 		size_t dominatingCentroid;
+
+    //! The list of centroids that cannot own this hyperrectangle
+    std::vector<size_t> whiteList;
+    //! Whether or not the whitelist is valid
+    bool isWhiteListValid;
 };
 
 }; // namespace tree

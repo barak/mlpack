@@ -2,11 +2,27 @@
  * @file linear_regression_test.cpp
  *
  * Test for linear regression.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/methods/linear_regression/linear_regression.hpp>
 
 #include <boost/test/unit_test.hpp>
+#include "old_boost_test_definitions.hpp"
 
 using namespace mlpack;
 using namespace mlpack::regression;
@@ -17,7 +33,7 @@ BOOST_AUTO_TEST_SUITE(LinearRegressionTest);
  * Creates two 10x3 random matrices and one 10x1 "results" matrix.
  * Finds B in y=BX with one matrix, then predicts against the other.
  */
-BOOST_AUTO_TEST_CASE(LinearRegressionTest)
+BOOST_AUTO_TEST_CASE(LinearRegressionTestCase)
 {
   // Predictors and points are 100x3 matrices.
   arma::mat predictors(3, 10);

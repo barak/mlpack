@@ -3,6 +3,21 @@
  * @author Ryan Curtin
  *
  * Executable for running K-Means.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 
@@ -37,6 +52,7 @@ PARAM_DOUBLE("overclustering", "Finds (overclustering * clusters) clusters, "
 PARAM_INT("max_iterations", "Maximum number of iterations before K-Means "
     "terminates.", "m", 1000);
 PARAM_INT("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
+PARAM_FLAG("fast_kmeans", "Use the experimental fast k-means algorithm by Pelleg and Moore", "f")
 
 int main(int argc, char** argv)
 {
@@ -85,18 +101,29 @@ int main(int argc, char** argv)
   // Now create the KMeans object.  Because we could be using different types,
   // it gets a little weird...
   arma::Col<size_t> assignments;
+
   if (CLI::HasParam("allow_empty_clusters"))
   {
     KMeans<metric::SquaredEuclideanDistance, RandomPartition,
         AllowEmptyClusters> k(maxIterations, overclustering);
 
-    k.Cluster(dataset, clusters, assignments);
+    Timer::Start("clustering");
+		if(CLI::HasParam("fast_kmeans"))
+			k.FastCluster(dataset, clusters, assignments);
+		else
+			k.Cluster(dataset, clusters, assignments);
+    Timer::Stop("clustering");
   }
   else
   {
     KMeans<> k(maxIterations, overclustering);
 
-    k.Cluster(dataset, clusters, assignments);
+    Timer::Start("clustering");
+		if(CLI::HasParam("fast_kmeans"))
+			k.FastCluster(dataset, clusters, assignments);
+		else
+			k.Cluster(dataset, clusters, assignments);
+    Timer::Stop("clustering");
   }
 
   // Now figure out what to do with our results.

@@ -4,6 +4,21 @@
  *
  * This is an example kernel.  If you are making your own kernel, follow the
  * outline specified in this file.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_KERNELS_SPHERICAL_KERNEL_H
 #define __MLPACK_CORE_KERNELS_SPHERICAL_KERNEL_H
@@ -72,8 +87,8 @@ class SphericalKernel
   }
   double Normalizer(size_t dimension)
   {
-    return pow(bandwidth, dimension) * pow(M_PI, dimension / 2.0) /
-             tgamma(dimension / 2.0 + 1.0);
+    return pow(bandwidth, (double) dimension) * pow(M_PI, dimension / 2.0) /
+        boost::math::tgamma(dimension / 2.0 + 1.0);
   }
   double Evaluate(double t)
   {

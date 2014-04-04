@@ -3,6 +3,21 @@
  * @author Ryan Curtin
  *
  * Implementation of templatized load() function defined in load.hpp.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_DATA_LOAD_IMPL_HPP
 #define __MLPACK_CORE_DATA_LOAD_IMPL_HPP
@@ -10,12 +25,19 @@
 // In case it hasn't already been included.
 #include "load.hpp"
 
+#include <mlpack/core/util/timers.hpp>
+
 namespace mlpack {
 namespace data {
 
 template<typename eT>
-bool Load(const std::string& filename, arma::Mat<eT>& matrix, bool fatal)
+bool Load(const std::string& filename,
+          arma::Mat<eT>& matrix,
+          bool fatal,
+          bool transpose)
 {
+  Timer::Start("loading_data");
+
   // First we will try to discriminate by file extension.
   size_t ext = filename.rfind('.');
   if (ext == std::string::npos)
@@ -161,8 +183,11 @@ bool Load(const std::string& filename, arma::Mat<eT>& matrix, bool fatal)
       Log::Warn << "Loading from '" << filename << "' failed." << std::endl;
   }
 
-  // Now transpose the matrix.
-  matrix = trans(matrix);
+  // Now transpose the matrix, if necessary.
+  if (transpose)
+    matrix = trans(matrix);
+
+  Timer::Stop("loading_data");
 
   // Finally, return the success indicator.
   return success;

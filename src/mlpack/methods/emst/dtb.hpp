@@ -16,6 +16,21 @@
  *   year = {2010}
  * }
  * @endcode
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_EMST_DTB_HPP
 #define __MLPACK_METHODS_EMST_DTB_HPP
@@ -23,9 +38,9 @@
 #include "edge_pair.hpp"
 
 #include <mlpack/core.hpp>
-#include <mlpack/core/tree/bounds.hpp>
-#include <mlpack/core/tree/binary_space_tree.hpp>
 #include <mlpack/core/metrics/lmetric.hpp>
+
+#include <mlpack/core/tree/binary_space_tree.hpp>
 
 namespace mlpack {
 namespace emst /** Euclidean Minimum Spanning Trees. */ {

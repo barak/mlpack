@@ -5,10 +5,12 @@ cmake_minimum_required(VERSION 2.8)
 set(SOURCES
   clamp.hpp
   lin_alg.hpp
+  lin_alg.cpp
   random.hpp
   random.cpp
   range.hpp
   range_impl.hpp
+  round.hpp
 )
 
 # add directory name to sources

@@ -3,17 +3,40 @@
  * @author Matthew Amidon, Ryan Curtin
  *
  * Test for the CLI input parameter system.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <iostream>
 #include <sstream>
-#include <sys/time.h>
+#ifndef _WIN32
+  #include <sys/time.h>
+#endif
+
+// For Sleep().
+#ifdef _WIN32
+  #include <Windows.h>
+#endif
 
 #include <mlpack/core.hpp>
 
 #define DEFAULT_INT 42
 
 #include <boost/test/unit_test.hpp>
+#include "old_boost_test_definitions.hpp"
 
 #define BASH_RED "\033[0;31m"
 #define BASH_GREEN "\033[0;32m"
@@ -44,11 +67,11 @@ BOOST_AUTO_TEST_CASE(TestCLIAdd)
       std::string("True or False")) , 0);
 
   // Check that our aliasing works.
-  BOOST_REQUIRE_EQUAL(CLI::HasParam("global/bool"), 
+  BOOST_REQUIRE_EQUAL(CLI::HasParam("global/bool"),
       CLI::HasParam("alias/bool"));
   BOOST_REQUIRE_EQUAL(CLI::GetDescription("global/bool").compare(
       CLI::GetDescription("alias/bool")), 0);
-  BOOST_REQUIRE_EQUAL(CLI::GetParam<bool>("global/bool"), 
+  BOOST_REQUIRE_EQUAL(CLI::GetParam<bool>("global/bool"),
       CLI::GetParam<bool>("alias/bool"));
 }
 
@@ -197,6 +220,54 @@ BOOST_AUTO_TEST_CASE(TestPrefixedOutStreamModifiers)
   BOOST_REQUIRE_EQUAL(ss.str(),
       BASH_GREEN "[INFO ] " BASH_CLEAR
       "I have a precise number which is 000156");
+}
+
+/**
+ * We should be able to start and then stop a timer multiple times and it should
+ * save the value.
+ */
+BOOST_AUTO_TEST_CASE(MultiRunTimerTest)
+{
+  Timer::Start("test_timer");
+
+  // On Windows (or, at least, in Windows not using VS2010) we cannot use
+  // usleep() because it is not provided.  Instead we will use Sleep() for a
+  // number of milliseconds.
+  #ifdef _WIN32
+  Sleep(10);
+  #else
+  usleep(10000);
+  #endif
+
+  Timer::Stop("test_timer");
+
+  BOOST_REQUIRE_GE(Timer::Get("test_timer").tv_usec, 10000);
+
+  // Restart it.
+  Timer::Start("test_timer");
+
+  #ifdef _WIN32
+  Sleep(10);
+  #else
+  usleep(10000);
+  #endif
+
+  Timer::Stop("test_timer");
+
+  BOOST_REQUIRE_GE(Timer::Get("test_timer").tv_usec, 20000);
+
+  // Just one more time, for good measure...
+  Timer::Start("test_timer");
+
+  #ifdef _WIN32
+  Sleep(20);
+  #else
+  usleep(20000);
+  #endif
+
+  Timer::Stop("test_timer");
+
+  BOOST_REQUIRE_GE(Timer::Get("test_timer").tv_usec, 40000);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

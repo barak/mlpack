@@ -2,9 +2,24 @@
  * @file binary_space_tree_impl.hpp
  *
  * Implementation of generalized space partitioning tree.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __MLPACK_CORE_TREE_BINARY_SPACE_TREE_IMPL_HPP
-#define __MLPACK_CORE_TREE_BINARY_SPACE_TREE_IMPL_HPP
+#ifndef __MLPACK_CORE_TREE_BINARY_SPACE_TREE_BINARY_SPACE_TREE_IMPL_HPP
+#define __MLPACK_CORE_TREE_BINARY_SPACE_TREE_BINARY_SPACE_TREE_IMPL_HPP
 
 // In case it wasn't included already for some reason.
 #include "binary_space_tree.hpp"
@@ -355,7 +370,7 @@ inline StatisticType& BinarySpaceTree<BoundType, StatisticType, MatType>::Stat()
 template<typename BoundType, typename StatisticType, typename MatType>
 inline size_t BinarySpaceTree<BoundType, StatisticType, MatType>::GetSplitDimension() const
 {
-	return splitDimension;
+  return splitDimension;
 }
 
 template<typename BoundType, typename StatisticType, typename MatType>
@@ -382,6 +397,59 @@ inline BinarySpaceTree<BoundType, StatisticType, MatType>*
     BinarySpaceTree<BoundType, StatisticType, MatType>::Right() const
 {
   return right;
+}
+
+/**
+ * Returns the number of children in this node.
+ */
+template<typename BoundType, typename StatisticType, typename MatType>
+inline size_t
+    BinarySpaceTree<BoundType, StatisticType, MatType>::NumChildren() const
+{
+  if (left && right)
+    return 2;
+  if (left)
+    return 1;
+
+  return 0;
+}
+
+/**
+ * Return the specified child.
+ */
+template<typename BoundType, typename StatisticType, typename MatType>
+inline BinarySpaceTree<BoundType, StatisticType, MatType>&
+    BinarySpaceTree<BoundType, StatisticType, MatType>::Child(
+    const size_t child) const
+{
+  if (child == 0)
+    return *left;
+  else
+    return *right;
+}
+
+/**
+ * Return the number of points contained in this node.
+ */
+template<typename BoundType, typename StatisticType, typename MatType>
+inline size_t
+BinarySpaceTree<BoundType, StatisticType, MatType>::NumPoints() const
+{
+  if (left)
+    return 0;
+
+  return count;
+}
+
+/**
+ * Return the index of a particular point contained in this node.
+ */
+template<typename BoundType, typename StatisticType, typename MatType>
+inline size_t
+BinarySpaceTree<BoundType, StatisticType, MatType>::Point(const size_t index)
+    const
+{
+  return (begin + index);
 }
 
 /**
@@ -437,7 +505,7 @@ void
       splitDim = d;
     }
   }
-	splitDimension = splitDim;
+  splitDimension = splitDim;
 
   // Split in the middle of that dimension.
   double splitVal = bound[splitDim].Mid();
@@ -487,7 +555,7 @@ void BinarySpaceTree<BoundType, StatisticType, MatType>::SplitNode(
       splitDim = d;
     }
   }
-	splitDimension = splitDim;
+  splitDimension = splitDim;
 
   // Split in the middle of that dimension.
   double splitVal = bound[splitDim].Mid();

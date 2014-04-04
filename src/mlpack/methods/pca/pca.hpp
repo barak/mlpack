@@ -4,6 +4,21 @@
  *
  * Defines the PCA class to perform Principal Components Analysis on the
  * specified data set.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_PCA_PCA_HPP
 #define __MLPACK_METHODS_PCA_PCA_HPP
@@ -16,7 +31,7 @@ namespace pca {
 class PCA
 {
  public:
-  PCA(const bool centerData = true, const bool scaleData = false);
+  PCA(const bool scaleData = false);
 
   /**
    * Apply Principal Component Analysis to the provided data set.
@@ -56,12 +71,6 @@ class PCA
    */
   ~PCA();
 
-  //! Get whether or not this PCA object will center the data.
-  bool CenterData() const { return centerData; }
-  //! Modify whether or not this PCA object will center the data when PCA is
-  //! is performed.
-  bool& CenterData() {  return centerData; }
-
   //! Get whether or not this PCA object will scale (by standard deviation) the
   //! data when PCA is performed.
   bool ScaleData() const { return scaleData; }
@@ -70,7 +79,6 @@ class PCA
   bool& ScaleData() { return scaleData; }
 
  private:
-  bool centerData;
   bool scaleData;
 }; // class PCA
 

@@ -4,6 +4,21 @@
  *
  * Implementation of PCA class to perform Principal Components Analysis on the
  * specified data set.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "pca.hpp"
 #include <mlpack/core.hpp>
@@ -13,8 +28,7 @@ using namespace std;
 namespace mlpack {
 namespace pca {
 
-PCA::PCA(const bool centerData, const bool scaleData) :
-    centerData(centerData),
+PCA::PCA(const bool scaleData) :
     scaleData(scaleData)
 { }
 
@@ -31,25 +45,20 @@ void PCA::Apply(const arma::mat& data,
                 arma::vec& eigVal,
                 arma::mat& coeffs) const
 {
-  arma::mat transData = trans(data);
+	//Original transpose op goes here.
+  arma::mat covMat = ccov(data);
 
-  if (centerData)
+	//Centering is built into ccov
+	if (scaleData)
   {
-    arma::rowvec means = arma::mean(transData, 0);
-    transData = transData - arma::ones<arma::colvec>(transData.n_rows) * means;
+    covMat = covMat / (arma::ones<arma::colvec>(covMat.n_rows))
+      * stddev(covMat, 0, 0);
   }
-
-  if (scaleData)
-  {
-    transData = transData / (arma::ones<arma::colvec>(transData.n_rows) *
-        stddev(transData, 0, 0));
-  }
-
-  arma::mat covMat = cov(transData);
+ 
   arma::eig_sym(eigVal, coeffs, covMat);
 
   int nEigVal = eigVal.n_elem;
-  for (int i = 0; i < floor(nEigVal / 2); i++)
+  for (int i = 0; i < floor(nEigVal / 2.0); i++)
     eigVal.swap_rows(i, (nEigVal - 1) - i);
 
   coeffs = arma::fliplr(coeffs);

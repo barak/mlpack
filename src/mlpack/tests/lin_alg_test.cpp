@@ -5,11 +5,27 @@
  * Simple tests for things in the linalg__private namespace.
  * Partly so I can be sure that my changes are working.
  * Move to boost unit testing framework at some point.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/core/math/lin_alg.hpp>
 
 #include <boost/test/unit_test.hpp>
+#include "old_boost_test_definitions.hpp"
 
 using namespace arma;
 using namespace mlpack;
@@ -126,6 +142,59 @@ BOOST_AUTO_TEST_CASE(TestOrthogonalize)
       else
       {
         BOOST_REQUIRE_SMALL(test(row, col), 1e-10);
+      }
+    }
+  }
+}
+
+// Test RemoveRows().
+BOOST_AUTO_TEST_CASE(TestRemoveRows)
+{
+  // Run this test several times.
+  for (size_t run = 0; run < 10; ++run)
+  {
+    arma::mat input;
+    input.randu(200, 200);
+
+    // Now pick some random numbers.
+    std::vector<size_t> rowsToRemove;
+    size_t row = 0;
+    while (row < 200)
+    {
+      row += RandInt(1, (2 * (run + 1) + 1));
+      if (row < 200)
+      {
+        rowsToRemove.push_back(row);
+      }
+    }
+
+    // Ensure we're not about to remove every single row.
+    if (rowsToRemove.size() == 10)
+    {
+      rowsToRemove.erase(rowsToRemove.begin() + 4); // Random choice to remove.
+    }
+
+    arma::mat output;
+    RemoveRows(input, rowsToRemove, output);
+
+    // Now check that the output is right.
+    size_t outputRow = 0;
+    size_t skipIndex = 0;
+
+    for (row = 0; row < 200; ++row)
+    {
+      // Was this row supposed to be removed?  If so skip it.
+      if ((skipIndex < rowsToRemove.size()) && (rowsToRemove[skipIndex] == row))
+      {
+        ++skipIndex;
+      }
+      else
+      {
+        // Compare.
+        BOOST_REQUIRE_EQUAL(accu(input.row(row) == output.row(outputRow)), 200);
+
+        // Increment output row counter.
+        ++outputRow;
       }
     }
   }

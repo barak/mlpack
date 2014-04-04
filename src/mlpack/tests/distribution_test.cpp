@@ -3,15 +3,31 @@
  * @author Ryan Curtin
  *
  * Test for the mlpack::distribution::DiscreteDistribution class.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 
 #include <boost/test/unit_test.hpp>
+#include "old_boost_test_definitions.hpp"
 
 using namespace mlpack;
 using namespace mlpack::distribution;
 
-BOOST_AUTO_TEST_SUITE(DistributionTest)
+BOOST_AUTO_TEST_SUITE(DistributionTest);
 
 /**
  * Make sure we initialize correctly.
@@ -54,6 +70,7 @@ BOOST_AUTO_TEST_CASE(DiscreteDistributionRandomTest)
   d.Probabilities() = "0.3 0.6 0.1";
 
   arma::vec actualProb(3);
+  actualProb.zeros();
 
   for (size_t i = 0; i < 10000; i++)
     actualProb((size_t) (d.Random()[0] + 0.5))++;

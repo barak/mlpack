@@ -3,6 +3,21 @@
  * @author Matthew Amidon
  *
  * Implementation of timers.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "timers.hpp"
 #include "cli.hpp"
@@ -12,6 +27,20 @@
 #include <string>
 
 using namespace mlpack;
+
+// On Windows machines, we need to define timersub.
+#ifdef _WIN32
+inline void timersub(const timeval* tvp, const timeval* uvp, timeval* vvp)
+{
+  vvp->tv_sec = tvp->tv_sec - uvp->tv_sec;
+  vvp->tv_usec = tvp->tv_usec - uvp->tv_usec;
+  if (vvp->tv_usec < 0)
+  {
+     --vvp->tv_sec;
+     vvp->tv_usec += 1000000;
+  }
+}
+#endif
 
 /**
  * Start the given timer.
@@ -91,7 +120,7 @@ void Timers::PrintTimer(const std::string& timerName)
     if (seconds > 0)
     {
       if (output)
-        Log::Info << ",";
+        Log::Info << ", ";
       Log::Info << seconds << "." << std::setw(1) << (t.tv_usec / 100000) <<
           "secs";
       output = true;
@@ -115,21 +144,19 @@ void Timers::StartTimer(const std::string& timerName)
 #else
   FileTimeToTimeVal(&tmp);
 #endif
+
+  // Check to see if the timer already exists.  If it does, we'll subtract the
+  // old value.
+  if (timers.count(timerName) == 1)
+  {
+    timeval tmpDelta;
+
+    timersub(&tmp, &timers[timerName], &tmpDelta);
+
+    tmp = tmpDelta;
+  }
+
   timers[timerName] = tmp;
-}
-
-void Timers::StopTimer(const std::string& timerName)
-{
-  timeval delta, b, a = timers[timerName];
-
-#ifndef _WIN32
-  gettimeofday(&b, NULL);
-#else
-  FileTimeToTimeVal(&b);
-#endif
-  // Calculate the delta time.
-  timersub(&b, &a, &delta);
-  timers[timerName] = delta;
 }
 
 #ifdef _WIN32
@@ -144,10 +171,23 @@ void Timers::FileTimeToTimeVal(timeval* tv)
   ptime = ptime << 32;
   ptime |= ftime.dwLowDateTime;
   ptime /= 10;
-  ptime -= DELTA_EPOC_IN_MICROSECONDS;
+  ptime -= DELTA_EPOCH_IN_MICROSECS;
 
-  tv.tv_sec = (long) (ptime / 1000000UL);
-  tv.tv_usec = (long) (ptime % 1000000UL);
+  tv->tv_sec = (long) (ptime / 1000000UL);
+  tv->tv_usec = (long) (ptime % 1000000UL);
 }
-
 #endif // _WIN32
+
+void Timers::StopTimer(const std::string& timerName)
+{
+  timeval delta, b, a = timers[timerName];
+
+#ifndef _WIN32
+  gettimeofday(&b, NULL);
+#else
+  FileTimeToTimeVal(&b);
+#endif
+  // Calculate the delta time.
+  timersub(&b, &a, &delta);
+  timers[timerName] = delta;
+}

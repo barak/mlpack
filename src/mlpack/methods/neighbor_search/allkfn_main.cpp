@@ -4,6 +4,21 @@
  *
  * Implementation of the AllkFN executable.  Allows some number of standard
  * options.
+ *
+ * This file is part of MLPACK 1.0.2.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 
@@ -72,17 +87,17 @@ int main(int argc, char *argv[])
 
   arma::mat referenceData;
   arma::mat queryData; // So it doesn't go out of scope.
-  if (!data::Load(referenceFile.c_str(), referenceData))
-    Log::Fatal << "Reference file " << referenceFile << "not found." << endl;
+  data::Load(referenceFile.c_str(), referenceData, true);
 
-  Log::Info << "Loaded reference data from '" << referenceFile << "'." << endl;
+  Log::Info << "Loaded reference data from '" << referenceFile << "' ("
+      << referenceData.n_rows << " x " << referenceData.n_cols << ")." << endl;
 
   // Sanity check on k value: must be greater than 0, must be less than the
   // number of reference points.
-  if ((k <= 0) || (k >= referenceData.n_cols))
+  if (k > referenceData.n_cols)
   {
     Log::Fatal << "Invalid k: " << k << "; must be greater than 0 and less ";
-    Log::Fatal << "than the number of reference points (";
+    Log::Fatal << "than or equal to the number of reference points (";
     Log::Fatal << referenceData.n_cols << ")." << endl;
   }
 
@@ -128,10 +143,10 @@ int main(int argc, char *argv[])
   {
     string queryFile = CLI::GetParam<string>("query_file");
 
-    if (!data::Load(queryFile.c_str(), queryData))
-      Log::Fatal << "Query file " << queryFile << " not found." << endl;
+    data::Load(queryFile.c_str(), queryData, true);
 
-    Log::Info << "Loaded query data from '" << queryFile << "'." << endl;
+    Log::Info << "Loaded query data from '" << queryFile << "' ("
+        << queryData.n_rows << " x " << queryData.n_cols << ")." << endl;
 
     Log::Info << "Building query tree..." << endl;
 
@@ -207,8 +222,8 @@ int main(int argc, char *argv[])
     delete queryTree;
 
   // Save output.
-  data::Save(distancesFile, distances);
-  data::Save(neighborsFile, neighbors);
+  data::Save(distancesFile, distancesOut);
+  data::Save(neighborsFile, neighborsOut);
 
   delete allkfn;
 }
