@@ -4,7 +4,7 @@
  *
  * Implementation of template specializations of LMetric class.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -91,6 +91,14 @@ template<typename VecType1, typename VecType2>
 double LMetric<3, false>::Evaluate(const VecType1& a, const VecType2& b)
 {
   return accu(pow(abs(a - b), 3.0));
+}
+
+// L-infinity (Chebyshev distance) specialization
+template<>
+template<typename VecType1, typename VecType2>
+double LMetric<INT_MAX, false>::Evaluate(const VecType1& a, const VecType2& b)
+{
+  return arma::as_scalar(max(abs(a - b)));
 }
 
 }; // namespace metric

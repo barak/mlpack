@@ -2,10 +2,10 @@
  * @file det_test.cpp
  * @author Parikshit Ram (pram@cc.gatech.edu)
  *
- * Unit tests for the functions of the class DTree
- * and the utility functions using this class.
+ * Unit tests for the functions of the class DTree and the utility functions
+ * using this class.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -20,17 +20,24 @@
  * You should have received a copy of the GNU General Public License along with
  * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#define protected public
-#define private public
-#include <mlpack/methods/det/dtree.hpp>
-#include <mlpack/methods/det/dt_utils.hpp>
-#undef protected
-#undef private
-
 #include <mlpack/core.hpp>
 #include <boost/test/unit_test.hpp>
 #include "old_boost_test_definitions.hpp"
+
+// This trick does not work on Windows.  We will have to comment out the tests
+// that depend on it.
+#ifndef _WIN32
+  #define protected public
+  #define private public
+#endif
+
+#include <mlpack/methods/det/dtree.hpp>
+#include <mlpack/methods/det/dt_utils.hpp>
+
+#ifndef _WIN32
+  #undef protected
+  #undef private
+#endif
 
 using namespace mlpack;
 using namespace mlpack::det;
@@ -38,8 +45,10 @@ using namespace std;
 
 BOOST_AUTO_TEST_SUITE(DETTest);
 
-// Tests for the private functions.
-
+// Tests for the private functions.  We cannot perform these if we are on
+// Windows because we cannot make private functions accessible using the macro
+// trick above.
+#ifndef _WIN32
 BOOST_AUTO_TEST_CASE(TestGetMaxMinVals)
 {
   arma::mat testData(3, 5);
@@ -150,6 +159,7 @@ BOOST_AUTO_TEST_CASE(TestSplitData)
   BOOST_REQUIRE_EQUAL(oTest[3], 2);
   BOOST_REQUIRE_EQUAL(oTest[4], 5);
 }
+#endif
 
 // Tests for the public functions.
 
@@ -198,12 +208,14 @@ BOOST_AUTO_TEST_CASE(TestGrow)
   BOOST_REQUIRE(testDTree.Right()->SplitDim() == 1);
   BOOST_REQUIRE_CLOSE(testDTree.Right()->SplitValue(), 0.5, 1e-5);
 
-  // Test node errors for every node.
+  // Test node errors for every node (these are private functions).
+#ifndef _WIN32
   BOOST_REQUIRE_CLOSE(testDTree.logNegError, rootError, 1e-10);
   BOOST_REQUIRE_CLOSE(testDTree.Left()->logNegError, lError, 1e-10);
   BOOST_REQUIRE_CLOSE(testDTree.Right()->logNegError, rError, 1e-10);
   BOOST_REQUIRE_CLOSE(testDTree.Right()->Left()->logNegError, rlError, 1e-10);
   BOOST_REQUIRE_CLOSE(testDTree.Right()->Right()->logNegError, rrError, 1e-10);
+#endif
 
   // Test alpha.
   double rootAlpha, rAlpha;

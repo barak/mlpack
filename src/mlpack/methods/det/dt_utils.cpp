@@ -5,7 +5,7 @@
  * This file implements functions to perform different tasks with the Density
  * Tree class.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -34,7 +34,7 @@ void mlpack::det::PrintLeafMembership(DTree* dtree,
   // Tag the leaves with numbers.
   int numLeaves = dtree->TagTree();
 
-  arma::Mat<size_t> table(numLeaves, numClasses);
+  arma::Mat<size_t> table(numLeaves, (numClasses + 1));
   table.zeros();
 
   for (size_t i = 0; i < data.n_cols; i++)

@@ -28,8 +28,6 @@ set(SOURCES
   periodichrectbound_impl.hpp
   statistic.hpp
   tree_traits.hpp
-  mrkd_statistic_impl.hpp
-  mrkd_statistic.cpp
 )
 
 # add directory name to sources

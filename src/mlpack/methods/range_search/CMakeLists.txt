@@ -3,6 +3,9 @@
 set(SOURCES
   range_search.hpp
   range_search_impl.hpp
+  range_search_rules.hpp
+  range_search_rules_impl.hpp
+  range_search_stat.hpp
 )
 
 # Add directory name to sources.

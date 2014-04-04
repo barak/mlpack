@@ -5,7 +5,7 @@
  * Inner product induced metric.  If given a kernel function, this gives the
  * complementary metric.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -24,7 +24,7 @@
 #define __MLPACK_METHODS_FASTMKS_IP_METRIC_HPP
 
 namespace mlpack {
-namespace fastmks /** Fast maximum kernel search. */ {
+namespace metric {
 
 template<typename KernelType>
 class IPMetric
@@ -57,7 +57,7 @@ class IPMetric
   KernelType& kernel;
 };
 
-}; // namespace fastmks
+}; // namespace metric
 }; // namespace mlpack
 
 // Include implementation.

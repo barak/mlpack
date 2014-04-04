@@ -4,7 +4,7 @@
  *
  * Implementation of MaxVarianceNewCluster class.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -57,7 +57,7 @@ size_t MaxVarianceNewCluster::EmptyCluster(const MatType& data,
 
   // Now, inside this cluster, find the point which is furthest away.
   size_t furthestPoint = data.n_cols;
-  double maxDistance = 0;
+  double maxDistance = -DBL_MAX;
   for (size_t i = 0; i < data.n_cols; i++)
   {
     if (assignments[i] == maxVarCluster)

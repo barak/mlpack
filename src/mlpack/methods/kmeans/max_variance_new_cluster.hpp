@@ -6,7 +6,7 @@
  * an empty cluster is detected, the point furthest from the centroid of the
  * cluster with maximum variance is taken to be a new cluster.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -43,7 +43,7 @@ class MaxVarianceNewCluster
    * Take the point furthest from the centroid of the cluster with maximum
    * variance to be a new cluster.
    *
-   * @tparam MatType Type of data (arma::mat or arma::spmat).
+   * @tparam MatType Type of data (arma::mat or arma::sp_mat).
    * @param data Dataset on which clustering is being performed.
    * @param emptyCluster Index of cluster which is empty.
    * @param centroids Centroids of each cluster (one per column).

@@ -4,7 +4,7 @@
  *
  * Implementation of templated functions of the CLI class.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -57,8 +57,7 @@ void CLI::Add(const std::string& path,
   AddAlias(alias, path);
 
   // Add the option to boost program_options.
-  desc.add_options()
-    (progOptId.c_str(), po::value<T>(),  description.c_str());
+  desc.add_options()(progOptId.c_str(), po::value<T>(), description.c_str());
 
   // Make sure the appropriate metadata is inserted into gmap.
   gmap_t& gmap = GetSingleton().globalValues;
@@ -79,6 +78,9 @@ void CLI::Add(const std::string& path,
     GetSingleton().requiredOptions.push_front(path);
 }
 
+// We specialize this in cli.cpp.
+template<>
+bool& CLI::GetParam<bool>(const std::string& identifier);
 
 /**
  * @brief Returns the value of the specified parameter.

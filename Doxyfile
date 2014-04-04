@@ -4,7 +4,7 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 PROJECT_NAME           = MLPACK
-PROJECT_NUMBER         = 1.0.6
+PROJECT_NUMBER         = 1.0.7
 OUTPUT_DIRECTORY       = ./doc
 CREATE_SUBDIRS         = NO
 OUTPUT_LANGUAGE        = English
@@ -86,10 +86,7 @@ WARN_LOGFILE           =
 INPUT                  = ./src/mlpack \
                          ./doc/guide \
                          ./doc/tutorials
-FILE_PATTERNS          = *.c \
-                         *.cc \
-                         *.h \
-                         *.hpp \
+FILE_PATTERNS          = *.hpp \
                          *.cpp \
                          *.txt
 RECURSIVE              = YES

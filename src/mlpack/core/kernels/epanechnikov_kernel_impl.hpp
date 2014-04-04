@@ -4,7 +4,7 @@
  *
  * Implementation of template-based Epanechnikov kernel functions.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -32,6 +32,7 @@ namespace kernel {
 
 template<typename Vec1Type, typename Vec2Type>
 inline double EpanechnikovKernel::Evaluate(const Vec1Type& a, const Vec2Type& b)
+    const
 {
   return std::max(0.0, 1.0 - metric::SquaredEuclideanDistance::Evaluate(a, b)
       * inverseBandwidthSquared);

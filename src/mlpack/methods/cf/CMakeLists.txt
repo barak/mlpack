@@ -1,8 +1,8 @@
-# Define the files we need to compile.
+# Define the files we need to compile
 # Anything not in this list will not be compiled into MLPACK.
 set(SOURCES
-  mvu.hpp
-  mvu.cpp
+  cf.hpp
+  cf.cpp
 )
 
 # Add directory name to sources.
@@ -14,10 +14,10 @@ endforeach()
 # the parent scope).
 set(MLPACK_SRCS ${MLPACK_SRCS} ${DIR_SRCS} PARENT_SCOPE)
 
-add_executable(mvu
-  mvu_main.cpp
+add_executable(cf
+  cf_main.cpp
 )
-target_link_libraries(mvu
+target_link_libraries(cf
   mlpack
 )
-install(TARGETS mvu RUNTIME DESTINATION bin)
+install(TARGETS cf RUNTIME DESTINATION bin)

@@ -4,7 +4,7 @@
  *
  * This implements the cosine distance.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -30,8 +30,16 @@ namespace kernel {
 template<typename VecType>
 double CosineDistance::Evaluate(const VecType& a, const VecType& b)
 {
-  // Since we are using the L2 inner product, this is easy.
-  return dot(a, b) / (norm(a, 2) * norm(b, 2));
+  // Since we are using the L2 inner product, this is easy.  But we have to make
+  // sure we aren't dividing by zero (if we are, then the cosine similarity is
+  // 0: we reason this value because the cosine distance is just a normalized
+  // dot product; take away the normalization, and if ||a|| or ||b|| is equal to
+  // 0, then a^T b is zero too).
+  const double denominator = norm(a, 2) * norm(b, 2);
+  if (denominator == 0.0)
+    return 0;
+  else
+    return dot(a, b) / denominator;
 }
 
 }; // namespace kernel

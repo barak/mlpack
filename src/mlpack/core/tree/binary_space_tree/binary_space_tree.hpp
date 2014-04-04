@@ -3,7 +3,7 @@
  *
  * Definition of generalized binary space partitioning tree (BinarySpaceTree).
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -320,6 +320,22 @@ class BinarySpaceTree
   size_t NumPoints() const;
 
   /**
+   * Return the number of descendants of this node.  For a non-leaf in a binary
+   * space tree, this is the number of points at the descendant leaves.  For a
+   * leaf, this is the number of points in the leaf.
+   */
+  size_t NumDescendants() const;
+
+  /**
+   * Return the index (with reference to the dataset) of a particular descendant
+   * of this node.  The index should be greater than zero but less than the
+   * number of descendants.
+   *
+   * @param index Index of the descendant.
+   */
+  size_t Descendant(const size_t index) const;
+
+  /**
    * Return the index (with reference to the dataset) of a particular point in
    * this node.  This will happily return invalid indices if the given index is
    * greater than the number of points in this node (obtained with NumPoints())
@@ -341,6 +357,12 @@ class BinarySpaceTree
     return bound.MaxDistance(other->Bound());
   }
 
+  //! Return the minimum and maximum distance to another node.
+  math::Range RangeDistance(const BinarySpaceTree* other) const
+  {
+    return bound.RangeDistance(other->Bound());
+  }
+
   //! Return the minimum distance to another point.
   double MinDistance(const arma::vec& point) const
   {
@@ -351,6 +373,12 @@ class BinarySpaceTree
   double MaxDistance(const arma::vec& point) const
   {
     return bound.MaxDistance(point);
+  }
+
+  //! Return the minimum and maximum distance to another point.
+  math::Range RangeDistance(const arma::vec& point) const
+  {
+    return bound.RangeDistance(point);
   }
 
   /**

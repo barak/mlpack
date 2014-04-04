@@ -4,7 +4,7 @@
  *
  * Main executable for maximum inner product search.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -35,6 +35,7 @@ using namespace mlpack;
 using namespace mlpack::fastmks;
 using namespace mlpack::kernel;
 using namespace mlpack::tree;
+using namespace mlpack::metric;
 
 PROGRAM_INFO("FastMKS (Fast Max-Kernel Search)",
     "This program will find the k maximum kernel of a set of points, "
@@ -76,7 +77,7 @@ PARAM_STRING("kernel", "Kernel type to use: 'linear', 'polynomial', 'cosine', "
 
 PARAM_FLAG("naive", "If true, O(n^2) naive mode is used for computation.", "N");
 PARAM_FLAG("single", "If true, single-tree search is used (as opposed to "
-    "dual-tree search.", "s");
+    "dual-tree search.", "S");
 
 // Cover tree parameter.
 PARAM_DOUBLE("base", "Base to use during cover tree construction.", "b", 2.0);

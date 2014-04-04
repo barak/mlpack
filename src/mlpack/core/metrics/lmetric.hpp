@@ -7,7 +7,7 @@
  *
  * This also gives several convenience typedefs for commonly used L-metrics.
  *
- * This file is part of MLPACK 1.0.6.
+ * This file is part of MLPACK 1.0.7.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -102,6 +102,11 @@ typedef LMetric<2, false> SquaredEuclideanDistance;
  * The Euclidean (L2) distance.
  */
 typedef LMetric<2, true> EuclideanDistance;
+
+/***
+ * The L-infinity distance
+ */
+typedef LMetric<INT_MAX, false> ChebyshevDistance;
 
 }; // namespace metric
 }; // namespace mlpack
