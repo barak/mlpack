@@ -1,7 +1,7 @@
-mlpack (1.0.0-1) unstable; urgency=medium
+mlpack (1.0.8-1) unstable; urgency=medium
 
-  * Initial release (closes: #nnnn)
+  * Initial release (closes: #660925, #743710)
   * Thanks to Sterling Lewis Peet <sterling.peet@gatech.edu> for an
     earlier packaging from which a bit of material was poached
 
- -- Barak A. Pearlmutter <bap@debian.org>  Fri, 04 Apr 2014 10:57:49 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 07 Apr 2014 10:30:54 +0100
