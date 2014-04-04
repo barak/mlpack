@@ -4,7 +4,7 @@
  *
  * Implementation of CoverTree class.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -424,6 +424,25 @@ CoverTree<MetricType, RootPointPolicy, StatisticType>::CoverTree(
       furthestDescendantDistance = distances[i];
 
   Log::Assert(furthestDescendantDistance <= pow(base, scale + 1));
+}
+
+// Manually create a cover tree node.
+template<typename MetricType, typename RootPointPolicy, typename StatisticType>
+CoverTree<MetricType, RootPointPolicy, StatisticType>::CoverTree(
+    const arma::mat& dataset,
+    const double base,
+    const size_t pointIndex,
+    const int scale,
+    const double parentDistance,
+    const double furthestDescendantDistance) :
+    dataset(dataset),
+    point(pointIndex),
+    scale(scale),
+    base(base),
+    parentDistance(parentDistance),
+    furthestDescendantDistance(furthestDescendantDistance)
+{
+  // Nothing to do.
 }
 
 template<typename MetricType, typename RootPointPolicy, typename StatisticType>

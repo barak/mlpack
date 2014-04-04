@@ -5,7 +5,7 @@
  *
  * Implementation of templated PrefixedOutStream member functions.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -27,16 +27,55 @@
 #include "prefixedoutstream.hpp"
 #include <iostream>
 
-template<typename T>
-PrefixedOutStream& PrefixedOutStream::operator<<(T s)
-{
-  BaseLogic<T>(s);
+namespace mlpack {
+namespace util {
 
+template<typename T>
+PrefixedOutStream& PrefixedOutStream::operator<<(const T& s)
+{
+  CallBaseLogic<T>(s);
   return *this;
 }
 
+//! This handles forwarding all primitive types transparently
 template<typename T>
-void PrefixedOutStream::BaseLogic(T val)
+void PrefixedOutStream::CallBaseLogic(const T& s,
+    typename boost::disable_if<
+        boost::is_class<T>
+    >::type* = 0)
+{
+  BaseLogic<T>(s);
+}
+
+// Forward all objects that do not implement a ToString() method transparently
+template<typename T>
+void PrefixedOutStream::CallBaseLogic(const T& s,
+    typename boost::enable_if<
+        boost::is_class<T>
+    >::type* = 0,
+    typename boost::disable_if<
+        HasToString<T, std::string(T::*)() const>
+    >::type* = 0)
+{
+  BaseLogic<T>(s);
+}
+
+// Call ToString() on all objects that implement ToString() before forwarding
+template<typename T>
+void PrefixedOutStream::CallBaseLogic(const T& s,
+    typename boost::enable_if<
+        boost::is_class<T>
+    >::type* = 0,
+    typename boost::enable_if<
+        HasToString<T, std::string(T::*)() const>
+    >::type* = 0)
+{
+  std::string result = s.ToString();
+  BaseLogic<std::string>(result);
+}
+
+template<typename T>
+void PrefixedOutStream::BaseLogic(const T& val)
 {
   // We will use this to track whether or not we need to terminate at the end of
   // this call (only for streams which terminate after a newline).
@@ -121,5 +160,8 @@ void PrefixedOutStream::PrefixIfNeeded()
     carriageReturned = false; // Denote that the prefix has been displayed.
   }
 }
+
+}; // namespace util
+}; // namespace mlpack
 
 #endif // MLPACK_CLI_PREFIXEDOUTSTREAM_IMPL_H

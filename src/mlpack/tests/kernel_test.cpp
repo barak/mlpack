@@ -5,7 +5,7 @@
  *
  * Tests for the various kernel classes.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -123,11 +123,13 @@ BOOST_AUTO_TEST_CASE(lmetric_zeros)
 }
 
 /**
- * Simple test of Mahalanobis distance with unset covariance matrix.
+ * Simple test of Mahalanobis distance with unset covariance matrix in
+ * constructor.
  */
 BOOST_AUTO_TEST_CASE(md_unset_covariance)
 {
   MahalanobisDistance<false> md;
+  md.Covariance() = arma::eye<arma::mat>(4, 4);
   arma::vec a = "1.0 2.0 2.0 3.0";
   arma::vec b = "0.0 0.0 1.0 3.0";
 
@@ -136,12 +138,41 @@ BOOST_AUTO_TEST_CASE(md_unset_covariance)
 }
 
 /**
- * Simple test of Mahalanobis distance with unset covariance matrix and
- * t_take_root set to true.
+ * Simple test of Mahalanobis distance with unset covariance matrix in
+ * constructor and t_take_root set to true.
  */
 BOOST_AUTO_TEST_CASE(md_root_unset_covariance)
 {
   MahalanobisDistance<true> md;
+  md.Covariance() = arma::eye<arma::mat>(4, 4);
+  arma::vec a = "1.0 2.0 2.5 5.0";
+  arma::vec b = "0.0 2.0 0.5 8.0";
+
+  BOOST_REQUIRE_CLOSE(md.Evaluate(a, b), sqrt(14.0), 1e-5);
+  BOOST_REQUIRE_CLOSE(md.Evaluate(b, a), sqrt(14.0), 1e-5);
+}
+
+/**
+ * Simple test of Mahalanobis distance setting identity covariance in
+ * constructor.
+ */
+BOOST_AUTO_TEST_CASE(md_eye_covariance)
+{
+  MahalanobisDistance<false> md(4);
+  arma::vec a = "1.0 2.0 2.0 3.0";
+  arma::vec b = "0.0 0.0 1.0 3.0";
+
+  BOOST_REQUIRE_CLOSE(md.Evaluate(a, b), 6.0, 1e-5);
+  BOOST_REQUIRE_CLOSE(md.Evaluate(b, a), 6.0, 1e-5);
+}
+
+/**
+ * Simple test of Mahalanobis distance setting identity covariance in
+ * constructor and t_take_root set to true.
+ */
+BOOST_AUTO_TEST_CASE(md_root_eye_covariance)
+{
+  MahalanobisDistance<true> md(4);
   arma::vec a = "1.0 2.0 2.5 5.0";
   arma::vec b = "0.0 2.0 0.5 8.0";
 

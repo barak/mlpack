@@ -2,11 +2,11 @@
  * @file hrectbound_impl.hpp
  *
  * Implementation of hyper-rectangle bound policy class.
- * Template parameter t_pow is the metric to use; use 2 for Euclidean (L2).
+ * Template parameter Power is the metric to use; use 2 for Euclidean (L2).
  *
  * @experimental
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -33,29 +33,29 @@ namespace mlpack {
 namespace bound {
 
 /**
- * Empty constructor
+ * Empty constructor.
  */
-template<int t_pow>
-HRectBound<t_pow>::HRectBound() :
+template<int Power, bool TakeRoot>
+HRectBound<Power, TakeRoot>::HRectBound() :
     dim(0),
     bounds(NULL)
-{ /* nothing to do */ }
+{ /* Nothing to do. */ }
 
 /**
  * Initializes to specified dimensionality with each dimension the empty
  * set.
  */
-template<int t_pow>
-HRectBound<t_pow>::HRectBound(const size_t dimension) :
+template<int Power, bool TakeRoot>
+HRectBound<Power, TakeRoot>::HRectBound(const size_t dimension) :
     dim(dimension),
     bounds(new math::Range[dim])
-{ /* nothing to do */ }
+{ /* Nothing to do. */ }
 
 /***
  * Copy constructor necessary to prevent memory leaks.
  */
-template<int t_pow>
-HRectBound<t_pow>::HRectBound(const HRectBound& other) :
+template<int Power, bool TakeRoot>
+HRectBound<Power, TakeRoot>::HRectBound(const HRectBound& other) :
     dim(other.Dim()),
     bounds(new math::Range[dim])
 {
@@ -67,16 +67,21 @@ HRectBound<t_pow>::HRectBound(const HRectBound& other) :
 /***
  * Same as the copy constructor.
  */
-template<int t_pow>
-HRectBound<t_pow>& HRectBound<t_pow>::operator=(const HRectBound& other)
+template<int Power, bool TakeRoot>
+HRectBound<Power, TakeRoot>& HRectBound<Power, TakeRoot>::operator=(
+    const HRectBound& other)
 {
-  if (bounds)
-    delete[] bounds;
+  if (dim != other.Dim())
+  {
+    // Reallocation is necessary.
+    if (bounds)
+      delete[] bounds;
 
-  // We can't just copy the bounds_ pointer like the default copy constructor
-  // will!
-  dim = other.Dim();
-  bounds = new math::Range[dim];
+    dim = other.Dim();
+    bounds = new math::Range[dim];
+  }
+
+  // Now copy each of the bound values.
   for (size_t i = 0; i < dim; i++)
     bounds[i] = other[i];
 
@@ -84,10 +89,10 @@ HRectBound<t_pow>& HRectBound<t_pow>::operator=(const HRectBound& other)
 }
 
 /**
- * Destructor: clean up memory
+ * Destructor: clean up memory.
  */
-template<int t_pow>
-HRectBound<t_pow>::~HRectBound()
+template<int Power, bool TakeRoot>
+HRectBound<Power, TakeRoot>::~HRectBound()
 {
   if (bounds)
     delete[] bounds;
@@ -96,8 +101,8 @@ HRectBound<t_pow>::~HRectBound()
 /**
  * Resets all dimensions to the empty set.
  */
-template<int t_pow>
-void HRectBound<t_pow>::Clear()
+template<int Power, bool TakeRoot>
+void HRectBound<Power, TakeRoot>::Clear()
 {
   for (size_t i = 0; i < dim; i++)
     bounds[i] = math::Range();
@@ -106,8 +111,9 @@ void HRectBound<t_pow>::Clear()
 /**
  * Gets the range for a particular dimension.
  */
-template<int t_pow>
-inline const math::Range& HRectBound<t_pow>::operator[](const size_t i) const
+template<int Power, bool TakeRoot>
+inline const math::Range& HRectBound<Power, TakeRoot>::operator[](
+    const size_t i) const
 {
   return bounds[i];
 }
@@ -115,8 +121,8 @@ inline const math::Range& HRectBound<t_pow>::operator[](const size_t i) const
 /**
  * Sets the range for the given dimension.
  */
-template<int t_pow>
-inline math::Range& HRectBound<t_pow>::operator[](const size_t i)
+template<int Power, bool TakeRoot>
+inline math::Range& HRectBound<Power, TakeRoot>::operator[](const size_t i)
 {
   return bounds[i];
 }
@@ -126,10 +132,10 @@ inline math::Range& HRectBound<t_pow>::operator[](const size_t i)
  *
  * @param centroid Vector which the centroid will be written to.
  */
-template<int t_pow>
-void HRectBound<t_pow>::Centroid(arma::vec& centroid) const
+template<int Power, bool TakeRoot>
+void HRectBound<Power, TakeRoot>::Centroid(arma::vec& centroid) const
 {
-  // set size correctly if necessary
+  // Set size correctly if necessary.
   if (!(centroid.n_elem == dim))
     centroid.set_size(dim);
 
@@ -140,9 +146,9 @@ void HRectBound<t_pow>::Centroid(arma::vec& centroid) const
 /**
  * Calculates minimum bound-to-point squared distance.
  */
-template<int t_pow>
+template<int Power, bool TakeRoot>
 template<typename VecType>
-double HRectBound<t_pow>::MinDistance(const VecType& point) const
+double HRectBound<Power, TakeRoot>::MinDistance(const VecType& point) const
 {
   Log::Assert(point.n_elem == dim);
 
@@ -156,23 +162,25 @@ double HRectBound<t_pow>::MinDistance(const VecType& point) const
 
     // Since only one of 'lower' or 'higher' is negative, if we add each's
     // absolute value to itself and then sum those two, our result is the
-    // nonnegative half of the equation times two; then we raise to power t_pow.
-    sum += pow((lower + fabs(lower)) + (higher + fabs(higher)), (double) t_pow);
+    // nonnegative half of the equation times two; then we raise to power Power.
+    sum += pow((lower + fabs(lower)) + (higher + fabs(higher)), (double) Power);
   }
 
-  // Now take the t_pow'th root (but make sure our result is squared); then
-  // divide by four to cancel out the constant of 2 (which has been squared now)
-  // that was introduced earlier.
-  return pow(sum, 2.0 / (double) t_pow) / 4.0;
+  // Now take the Power'th root (but make sure our result is squared if it needs
+  // to be); then cancel out the constant of 2 (which may have been squared now)
+  // that was introduced earlier.  The compiler should optimize out the if
+  // statement entirely.
+  if (TakeRoot)
+    return pow(sum, 1.0 / (double) Power) / 2.0;
+  else
+    return sum / pow(2.0, Power);
 }
 
 /**
  * Calculates minimum bound-to-bound squared distance.
- *
- * Example: bound1.MinDistanceSq(other) for minimum squared distance.
  */
-template<int t_pow>
-double HRectBound<t_pow>::MinDistance(const HRectBound& other) const
+template<int Power, bool TakeRoot>
+double HRectBound<Power, TakeRoot>::MinDistance(const HRectBound& other) const
 {
   Log::Assert(dim == other.dim);
 
@@ -188,22 +196,26 @@ double HRectBound<t_pow>::MinDistance(const HRectBound& other) const
     // We invoke the following:
     //   x + fabs(x) = max(x * 2, 0)
     //   (x * 2)^2 / 4 = x^2
-    sum += pow((lower + fabs(lower)) + (higher + fabs(higher)), (double) t_pow);
+    sum += pow((lower + fabs(lower)) + (higher + fabs(higher)), (double) Power);
 
     // Move bound pointers.
     mbound++;
     obound++;
   }
 
-  return pow(sum, 2.0 / (double) t_pow) / 4.0;
+  // The compiler should optimize out this if statement entirely.
+  if (TakeRoot)
+    return pow(sum, 1.0 / (double) Power) / 2.0;
+  else
+    return sum / pow(2.0, Power);
 }
 
 /**
  * Calculates maximum bound-to-point squared distance.
  */
-template<int t_pow>
+template<int Power, bool TakeRoot>
 template<typename VecType>
-double HRectBound<t_pow>::MaxDistance(const VecType& point) const
+double HRectBound<Power, TakeRoot>::MaxDistance(const VecType& point) const
 {
   double sum = 0;
 
@@ -211,19 +223,23 @@ double HRectBound<t_pow>::MaxDistance(const VecType& point) const
 
   for (size_t d = 0; d < dim; d++)
   {
-		double v = std::max(fabs(point[d] - bounds[d].Lo()),
-					       fabs(bounds[d].Hi() - point[d]));
-    sum += pow(v, (double) t_pow);
+    double v = std::max(fabs(point[d] - bounds[d].Lo()),
+        fabs(bounds[d].Hi() - point[d]));
+    sum += pow(v, (double) Power);
   }
 
-  return pow(sum, 2.0 / (double) t_pow);
+  // The compiler should optimize out this if statement entirely.
+  if (TakeRoot)
+    return pow(sum, 1.0 / (double) Power);
+  else
+    return sum;
 }
 
 /**
  * Computes maximum distance.
  */
-template<int t_pow>
-double HRectBound<t_pow>::MaxDistance(const HRectBound& other) const
+template<int Power, bool TakeRoot>
+double HRectBound<Power, TakeRoot>::MaxDistance(const HRectBound& other) const
 {
   double sum = 0;
 
@@ -232,19 +248,24 @@ double HRectBound<t_pow>::MaxDistance(const HRectBound& other) const
   double v;
   for (size_t d = 0; d < dim; d++)
   {
-		v = std::max(fabs(other.bounds[d].Hi() - bounds[d].Lo()),
-					       fabs(bounds[d].Hi() - other.bounds[d].Lo()));
-    sum += pow(v, (double) t_pow); // v is non-negative.
+    v = std::max(fabs(other.bounds[d].Hi() - bounds[d].Lo()),
+        fabs(bounds[d].Hi() - other.bounds[d].Lo()));
+    sum += pow(v, (double) Power); // v is non-negative.
   }
 
-  return pow(sum, 2.0 / (double) t_pow);
+  // The compiler should optimize out this if statement entirely.
+  if (TakeRoot)
+    return pow(sum, 1.0 / (double) Power);
+  else
+    return sum;
 }
 
 /**
  * Calculates minimum and maximum bound-to-bound squared distance.
  */
-template<int t_pow>
-math::Range HRectBound<t_pow>::RangeDistance(const HRectBound& other) const
+template<int Power, bool TakeRoot>
+math::Range HRectBound<Power, TakeRoot>::RangeDistance(const HRectBound& other)
+    const
 {
   double loSum = 0;
   double hiSum = 0;
@@ -268,20 +289,24 @@ math::Range HRectBound<t_pow>::RangeDistance(const HRectBound& other) const
       vLo = (v2 > 0) ? v2 : 0; // Force to be 0 if negative.
     }
 
-    loSum += pow(vLo, (double) t_pow);
-    hiSum += pow(vHi, (double) t_pow);
+    loSum += pow(vLo, (double) Power);
+    hiSum += pow(vHi, (double) Power);
   }
 
-  return math::Range(pow(loSum, 2.0 / (double) t_pow),
-                     pow(hiSum, 2.0 / (double) t_pow));
+  if (TakeRoot)
+    return math::Range(pow(loSum, 1.0 / (double) Power),
+                       pow(hiSum, 1.0 / (double) Power));
+  else
+    return math::Range(loSum, hiSum);
 }
 
 /**
  * Calculates minimum and maximum bound-to-point squared distance.
  */
-template<int t_pow>
+template<int Power, bool TakeRoot>
 template<typename VecType>
-math::Range HRectBound<t_pow>::RangeDistance(const VecType& point) const
+math::Range HRectBound<Power, TakeRoot>::RangeDistance(const VecType& point)
+    const
 {
   double loSum = 0;
   double hiSum = 0;
@@ -313,25 +338,29 @@ math::Range HRectBound<t_pow>::RangeDistance(const VecType& point) const
       }
     }
 
-    loSum += pow(vLo, (double) t_pow);
-    hiSum += pow(vHi, (double) t_pow);
+    loSum += pow(vLo, (double) Power);
+    hiSum += pow(vHi, (double) Power);
   }
 
-  return math::Range(pow(loSum, 2.0 / (double) t_pow),
-                     pow(hiSum, 2.0 / (double) t_pow));
+  if (TakeRoot)
+    return math::Range(pow(loSum, 1.0 / (double) Power),
+                       pow(hiSum, 1.0 / (double) Power));
+  else
+    return math::Range(loSum, hiSum);
 }
 
 /**
  * Expands this region to include a new point.
  */
-template<int t_pow>
+template<int Power, bool TakeRoot>
 template<typename MatType>
-HRectBound<t_pow>& HRectBound<t_pow>::operator|=(const MatType& data)
+HRectBound<Power, TakeRoot>& HRectBound<Power, TakeRoot>::operator|=(
+    const MatType& data)
 {
   Log::Assert(data.n_rows == dim);
 
-  arma::vec mins = min(data, 1);
-  arma::vec maxs = max(data, 1);
+  arma::vec mins(min(data, 1));
+  arma::vec maxs(max(data, 1));
 
   for (size_t i = 0; i < dim; i++)
     bounds[i] |= math::Range(mins[i], maxs[i]);
@@ -342,8 +371,9 @@ HRectBound<t_pow>& HRectBound<t_pow>::operator|=(const MatType& data)
 /**
  * Expands this region to encompass another bound.
  */
-template<int t_pow>
-HRectBound<t_pow>& HRectBound<t_pow>::operator|=(const HRectBound& other)
+template<int Power, bool TakeRoot>
+HRectBound<Power, TakeRoot>& HRectBound<Power, TakeRoot>::operator|=(
+    const HRectBound& other)
 {
   assert(other.dim == dim);
 
@@ -356,9 +386,9 @@ HRectBound<t_pow>& HRectBound<t_pow>::operator|=(const HRectBound& other)
 /**
  * Determines if a point is within this bound.
  */
-template<int t_pow>
+template<int Power, bool TakeRoot>
 template<typename VecType>
-bool HRectBound<t_pow>::Contains(const VecType& point) const
+bool HRectBound<Power, TakeRoot>::Contains(const VecType& point) const
 {
   for (size_t i = 0; i < point.n_elem; i++)
   {

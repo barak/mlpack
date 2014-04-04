@@ -7,7 +7,7 @@
  *
  * @experimental
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -37,7 +37,7 @@
 #include <mlpack/core.hpp>
 
 namespace mlpack {
-namespace utilities {
+namespace util {
 
 class SaveRestoreUtility
 {
@@ -128,11 +128,10 @@ template<>
 void SaveRestoreUtility::SaveParameter(const arma::vec& t,
                                        const std::string& name);
 
-} /* namespace utilities */
-} /* namespace mlpack */
+}; /* namespace util */
+}; /* namespace mlpack */
 
+// Include implementation.
 #include "save_restore_utility_impl.hpp"
-
-
 
 #endif

@@ -5,7 +5,7 @@
  * Implementation of the SortPolicy class for NeighborSearch; in this case, the
  * nearest neighbors are those that are most important.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -89,6 +89,24 @@ class NearestNeighborSort
   template<typename TreeType>
   static double BestNodeToNodeDistance(const TreeType* queryNode,
                                        const TreeType* referenceNode,
+                                       const double centerToCenterDistance);
+
+  /**
+   * Return the best possible distance between the query node and the reference
+   * child node given the base case distance between the query node and the
+   * reference node.  TreeType::ParentDistance() must be implemented to use
+   * this.
+   *
+   * @param queryNode Query node.
+   * @param referenceNode Reference node.
+   * @param referenceChildNode Child of reference node which is being inspected.
+   * @param centerToCenterDistance Distance between centers of query node and
+   *     reference node.
+   */
+  template<typename TreeType>
+  static double BestNodeToNodeDistance(const TreeType* queryNode,
+                                       const TreeType* referenceNode,
+                                       const TreeType* referenceChildNode,
                                        const double centerToCenterDistance);
   /**
    * Return the best possible distance between a node and a point.  In our case,

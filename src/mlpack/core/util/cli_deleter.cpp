@@ -1,5 +1,5 @@
 /**
- * @file io_deleter.cc
+ * @file cli_deleter.cpp
  * @author Ryan Curtin
  *
  * Extremely simple class whose only job is to delete the existing CLI object at
@@ -8,7 +8,7 @@
  * CLIDeleter class, which will be initialized at the beginning of the program
  * and deleted at the end.  The destructor destroys the CLI singleton.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -27,14 +27,14 @@
 #include "cli.hpp"
 
 using namespace mlpack;
-using namespace mlpack::io;
+using namespace mlpack::util;
 
 /***
  * Empty constructor that does nothing.
  */
 CLIDeleter::CLIDeleter()
 {
-  /* nothing to do */
+  /* Nothing to do. */
 }
 
 /***

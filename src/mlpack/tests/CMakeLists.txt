@@ -1,10 +1,9 @@
-cmake_minimum_required(VERSION 2.8)
-
 # MLPACK test executable.
 add_executable(mlpack_test
   mlpack_test.cpp
   allkfn_test.cpp
   allknn_test.cpp
+  arma_extend_test.cpp
   aug_lagrangian_test.cpp
   cli_test.cpp
   distribution_test.cpp
@@ -28,6 +27,7 @@ add_executable(mlpack_test
   radical_test.cpp
   range_search_test.cpp
   save_restore_utility_test.cpp
+  sgd_test.cpp
   sort_policy_test.cpp
   sparse_coding_test.cpp
   tree_test.cpp

@@ -5,7 +5,7 @@
  * Defines the NMF class to perform Non-negative Matrix Factorization
  * on the given matrix.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -105,7 +105,7 @@ class NMF
    */
   NMF(const size_t maxIterations = 10000,
       const double minResidue = 1e-10,
-      const InitializationRule initializateRule = InitializationRule(),
+      const InitializationRule initializeRule = InitializationRule(),
       const WUpdateRule wUpdate = WUpdateRule(),
       const HUpdateRule hUpdate = HUpdateRule());
 

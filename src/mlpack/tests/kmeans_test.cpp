@@ -2,7 +2,7 @@
  * @file kmeans_test.cpp
  * @author Ryan Curtin
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -221,9 +221,13 @@ BOOST_AUTO_TEST_CASE(RandomPartitionTest)
     BOOST_REQUIRE_LT(assignments[i], 18);
 }
 
+#ifdef ARMA_HAS_SPMAT
+// Can't do this test on Armadillo 3.4; var(SpBase) is not implemented.
+#if !((ARMA_VERSION_MAJOR == 3) && (ARMA_VERSION_MINOR == 4))
+
 /**
  * Make sure sparse k-means works okay.
- *
+ */
 BOOST_AUTO_TEST_CASE(SparseKMeansTest)
 {
   // Huge dimensionality, few points.
@@ -263,6 +267,7 @@ BOOST_AUTO_TEST_CASE(SparseKMeansTest)
   BOOST_REQUIRE_EQUAL(assignments[10], clusterTwo);
   BOOST_REQUIRE_EQUAL(assignments[11], clusterTwo);
 }
-*/
+#endif // Exclude Armadillo 3.4.
+#endif // ARMA_HAS_SPMAT
 
 BOOST_AUTO_TEST_SUITE_END();

@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 2.8)
-
 # Define the files we need to compile.
 # Anything not in this list will not be compiled into MLPACK.
 set(SOURCES
@@ -20,6 +18,9 @@ set(SOURCES
   save_restore_utility.hpp
   save_restore_utility.cpp
   save_restore_utility_impl.hpp
+  sfinae_utility.hpp
+  string_util.hpp
+  string_util.cpp
   timers.hpp
   timers.cpp
 )

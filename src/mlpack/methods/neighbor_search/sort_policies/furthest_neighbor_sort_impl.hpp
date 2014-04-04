@@ -5,7 +5,7 @@
  * Implementation of templated methods for the FurthestNeighborSort SortPolicy
  * class for the NeighborSearch class.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -43,6 +43,17 @@ inline double FurthestNeighborSort::BestNodeToNodeDistance(
     const double centerToCenterDistance)
 {
   return queryNode->MaxDistance(referenceNode, centerToCenterDistance);
+}
+
+template<typename TreeType>
+inline double FurthestNeighborSort::BestNodeToNodeDistance(
+    const TreeType* queryNode,
+    const TreeType* referenceNode,
+    const TreeType* referenceChildNode,
+    const double centerToCenterDistance)
+{
+  return queryNode->MaxDistance(referenceNode, centerToCenterDistance) +
+      referenceChildNode->ParentDistance();
 }
 
 template<typename TreeType>

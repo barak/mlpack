@@ -4,7 +4,7 @@
  *
  * Implementation of DiscreteDistribution probability distribution.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -94,3 +94,15 @@ void DiscreteDistribution::Estimate(const arma::mat& observations,
   else
     probabilities.fill(1 / probabilities.n_elem); // Force normalization.
 }
+
+/*
+ * Returns a string representation of this object.
+ */
+std::string DiscreteDistribution::ToString() const
+{
+  std::ostringstream convert;
+  convert << "DiscreteDistribution [" << this << "]" << std::endl;
+  convert << "Probabilities" << std::endl << probabilities;
+  return convert.str();
+}
+

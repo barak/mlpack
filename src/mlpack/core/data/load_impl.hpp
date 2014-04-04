@@ -4,7 +4,7 @@
  *
  * Implementation of templatized load() function defined in load.hpp.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -25,6 +25,7 @@
 // In case it hasn't already been included.
 #include "load.hpp"
 
+#include <algorithm>
 #include <mlpack/core/util/timers.hpp>
 
 namespace mlpack {
@@ -52,7 +53,10 @@ bool Load(const std::string& filename,
     return false;
   }
 
+  // Get the extension and force it to lowercase.
   std::string extension = filename.substr(ext + 1);
+  std::transform(extension.begin(), extension.end(), extension.begin(),
+      ::tolower);
 
   // Catch nonexistent files by opening the stream ourselves.
   std::fstream stream;
@@ -145,6 +149,25 @@ bool Load(const std::string& filename,
     loadType = arma::pgm_binary;
     stringType = "PGM data";
   }
+  else if (extension == "h5" || extension == "hdf5" || extension == "hdf" ||
+           extension == "he5")
+  {
+#ifdef ARMA_USE_HDF5
+    loadType = arma::hdf5_binary;
+    stringType = "HDF5 data";
+#else
+    if (fatal)
+      Log::Fatal << "Attempted to load '" << filename << "' as HDF5 data, but "
+          << "Armadillo was compiled without HDF5 support.  Load failed."
+          << std::endl;
+    else
+      Log::Warn << "Attempted to load '" << filename << "' as HDF5 data, but "
+          << "Armadillo was compiled without HDF5 support.  Load failed."
+          << std::endl;
+
+    return false;
+#endif
+  }
   else // Unknown extension...
   {
     unknownType = true;
@@ -170,18 +193,22 @@ bool Load(const std::string& filename,
     Log::Warn << "Loading '" << filename << "' as " << stringType << "; "
         << "but this may not be the actual filetype!" << std::endl;
   else
-    Log::Info << "Loading '" << filename << "' as " << stringType << "."
-        << std::endl;
+    Log::Info << "Loading '" << filename << "' as " << stringType << ".  "
+        << std::flush;
 
   bool success = matrix.load(stream, loadType);
 
   if (!success)
   {
+    Log::Info << std::endl;
     if (fatal)
       Log::Fatal << "Loading from '" << filename << "' failed." << std::endl;
     else
       Log::Warn << "Loading from '" << filename << "' failed." << std::endl;
   }
+  else
+    Log::Info << "Size is " << (transpose ? matrix.n_cols : matrix.n_rows)
+        << " x " << (transpose ? matrix.n_rows : matrix.n_cols) << ".\n";
 
   // Now transpose the matrix, if necessary.
   if (transpose)

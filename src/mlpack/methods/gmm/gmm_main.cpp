@@ -4,7 +4,7 @@
  *
  * This program trains a mixture of Gaussians on a given data matrix.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -36,7 +36,7 @@ PARAM_INT("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
 
 using namespace mlpack;
 using namespace mlpack::gmm;
-using namespace mlpack::utilities;
+using namespace mlpack::util;
 
 int main(int argc, char* argv[])
 {
@@ -64,11 +64,13 @@ int main(int argc, char* argv[])
 
   ////// Computing the parameters of the model using the EM algorithm //////
   Timer::Start("em");
-  gmm.Estimate(dataPoints);
+  double likelihood = gmm.Estimate(dataPoints);
   Timer::Stop("em");
 
+  Log::Info << "Log-likelihood of estimate: " << likelihood << ".\n";
+
   ////// OUTPUT RESULTS //////
-  mlpack::utilities::SaveRestoreUtility save;
+  SaveRestoreUtility save;
   save.SaveParameter(gmm.Gaussians(), "gaussians");
   save.SaveParameter(gmm.Dimensionality(), "dimensionality");
   save.SaveParameter(trans(gmm.Weights()), "weights");

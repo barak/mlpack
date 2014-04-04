@@ -4,7 +4,7 @@
  * Include all of the base components required to write MLPACK methods, and the
  * main MLPACK Doxygen documentation.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -90,6 +90,7 @@
  *
  * The following methods are included in MLPACK:
  *
+ *  - Density Estimation Trees - mlpack::det::DTree
  *  - Euclidean Minimum Spanning Trees - mlpack::emst::DualTreeBoruvka
  *  - Gaussian Mixture Models (GMMs) - mlpack::gmm::GMM
  *  - Hidden Markov Models (HMMs) - mlpack::hmm::HMM
@@ -128,6 +129,7 @@
  *   - Parikshit Ram <p.ram@gatech.edu>
  *   - Rajendran Mohan <rmohan88@gatech.edu>
  *   - Trironk Kiatkungwanglai <trironk@gmail.com>
+ *   - Patrick Mason <patrick.s.mason@gmail.com>
  *   - Chip Mappus <cmappus@gatech.edu>
  *   - Hua Ouyang <houyang@gatech.edu>
  *   - Long Quoc Tran <tqlong@gmail.com>
@@ -150,7 +152,7 @@
 #include <stdint.h>
 #include <iostream>
 
-// Defining __USE_MATH_DEFINES should set M_PI.
+// Defining _USE_MATH_DEFINES should set M_PI.
 #define _USE_MATH_DEFINES
 #include <math.h>
 

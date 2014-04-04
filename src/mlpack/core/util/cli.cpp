@@ -4,7 +4,7 @@
  *
  * Implementation of the CLI module for parsing parameters.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -46,7 +46,7 @@
 #include "option.hpp"
 
 using namespace mlpack;
-using namespace mlpack::io;
+using namespace mlpack::util;
 
 CLI* CLI::singleton = NULL;
 
@@ -419,7 +419,7 @@ void CLI::ParseCommandLine(int argc, char** line)
 /*
  * Removes duplicate flags.
  *
- * @param bpo The basic_program_options to remove duplicate flags from. 
+ * @param bpo The basic_program_options to remove duplicate flags from.
  */
 void CLI::RemoveDuplicateFlags(po::basic_parsed_options<char>& bpo)
 {
@@ -585,7 +585,8 @@ void CLI::PrintHelp(const std::string& param)
   else if (used_param != "")
   {
     // User passed a single variable, but it doesn't exist.
-    std::cerr << "Parameter --" << used_param << " does not exist." << std::endl;
+    std::cerr << "Parameter --" << used_param << " does not exist."
+        << std::endl;
     exit(1); // Nothing left to do.
   }
 

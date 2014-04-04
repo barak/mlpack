@@ -1,15 +1,15 @@
-cmake_minimum_required(VERSION 2.8)
-
 ## recurse
 set(DIRS
   det
   emst
+#  fastmks
   gmm
   hmm
   kernel_pca
   kmeans
   lars
   linear_regression
+#  lmnn
   local_coordinate_coding
   mvu
   naive_bayes

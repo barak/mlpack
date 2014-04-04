@@ -4,7 +4,7 @@
  *
  * Implementation of templated functions of the CLI class.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -19,8 +19,8 @@
  * You should have received a copy of the GNU General Public License along with
  * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __MLPACK_CORE_IO_CLI_IMPL_HPP
-#define __MLPACK_CORE_IO_CLI_IMPL_HPP
+#ifndef __MLPACK_CORE_UTIL_CLI_IMPL_HPP
+#define __MLPACK_CORE_UTIL_CLI_IMPL_HPP
 
 // In case it has not already been included.
 #include "cli.hpp"
@@ -44,9 +44,9 @@ namespace mlpack {
  */
 template<typename T>
 void CLI::Add(const std::string& path,
-             const std::string& description,
-             const std::string& alias,
-             bool required)
+              const std::string& description,
+              const std::string& alias,
+              bool required)
 {
 
   po::options_description& desc = CLI::GetSingleton().desc;

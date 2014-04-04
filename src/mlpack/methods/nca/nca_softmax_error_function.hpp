@@ -5,7 +5,7 @@
  * Implementation of the stochastic neighbor assignment probability error
  * function (the "softmax error").
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -39,11 +39,16 @@ namespace nca {
  * where x_n represents a point and A is the current scaling matrix.
  *
  * This class is more flexible than the original paper, allowing an arbitrary
- * kernel function to be used, meaning that the Mahalanobis distance is not the
- * only allowed way to run NCA.  However, the Mahalanobis distance is probably
- * the best way to use this.
+ * metric function to be used in place of || A x_i - A x_j ||^2, meaning that
+ * the squared Euclidean distance is not the only allowed metric for NCA.
+ * However, that is probably the best way to use this class.
+ *
+ * In addition to the standard Evaluate() and Gradient() functions which MLPACK
+ * optimizers use, overloads of Evaluate() and Gradient() are given which only
+ * operate on one point in the dataset.  This is useful for optimizers like
+ * stochastic gradient descent (see mlpack::optimization::SGD).
  */
-template<typename Kernel>
+template<typename MetricType = metric::SquaredEuclideanDistance>
 class SoftmaxErrorFunction
 {
  public:
@@ -59,18 +64,33 @@ class SoftmaxErrorFunction
    */
   SoftmaxErrorFunction(const arma::mat& dataset,
                        const arma::uvec& labels,
-                       Kernel kernel = Kernel());
+                       MetricType metric = MetricType());
 
   /**
-   * Evaluate the softmax function for the given covariance matrix.
+   * Evaluate the softmax function for the given covariance matrix.  This is the
+   * non-separable implementation, where the objective function is not
+   * decomposed into the sum of several objective functions.
    *
    * @param covariance Covariance matrix of Mahalanobis distance.
    */
   double Evaluate(const arma::mat& covariance);
 
   /**
+   * Evaluate the softmax objective function for the given covariance matrix on
+   * only one point of the dataset.  This is the separable implementation, where
+   * the objective function is decomposed into the sum of many objective
+   * functions, and here, only one of those constituent objective functions is
+   * returned.
+   *
+   * @param covariance Covariance matrix of Mahalanobis distance.
+   * @param i Index of point to use for objective function.
+   */
+  double Evaluate(const arma::mat& covariance, const size_t i);
+
+  /**
    * Evaluate the gradient of the softmax function for the given covariance
-   * matrix.
+   * matrix.  This is the non-separable implementation, where the objective
+   * function is not decomposed into the sum of several objective functions.
    *
    * @param covariance Covariance matrix of Mahalanobis distance.
    * @param gradient Matrix to store the calculated gradient in.
@@ -78,28 +98,55 @@ class SoftmaxErrorFunction
   void Gradient(const arma::mat& covariance, arma::mat& gradient);
 
   /**
+   * Evaluate the gradient of the softmax function for the given covariance
+   * matrix on only one point of the dataset.  This is the separable
+   * implementation, where the objective function is decomposed into the sum of
+   * many objective functions, and here, only one of those constituent objective
+   * functions is returned.
+   *
+   * @param covariance Covariance matrix of Mahalanobis distance.
+   * @param i Index of point to use for objective function.
+   * @param gradient Matrix to store the calculated gradient in.
+   */
+  void Gradient(const arma::mat& covariance,
+                const size_t i,
+                arma::mat& gradient);
+
+  /**
    * Get the initial point.
    */
   const arma::mat GetInitialPoint() const;
 
+  /**
+   * Get the number of functions the objective function can be decomposed into.
+   * This is just the number of points in the dataset.
+   */
+  size_t NumFunctions() const { return dataset.n_cols; }
+
  private:
-  const arma::mat& dataset_;
-  const arma::uvec& labels_;
+  const arma::mat& dataset;
+  const arma::uvec& labels;
 
-  Kernel kernel_;
+  MetricType metric;
 
-  arma::mat last_coordinates_;
-  arma::mat stretched_dataset_;
-  arma::vec p_; // Holds calculated p_i.
-  arma::vec denominators_; // Holds denominators for calculation of p_ij.
+  //! Last coordinates.  Used for the non-separable Evaluate() and Gradient().
+  arma::mat lastCoordinates;
+  //! Stretched dataset.  Kept internal to avoid memory reallocations.
+  arma::mat stretchedDataset;
+  //! Holds calculated p_i, for the non-separable Evaluate() and Gradient().
+  arma::vec p;
+  //! Holds denominators for calculation of p_ij, for the non-separable
+  //! Evaluate() and Gradient().
+  arma::vec denominators;
 
-  //! False is nothing has ever been precalculated (only at construction time).
-  bool precalculated_;
+  //! False if nothing has ever been precalculated (only at construction time).
+  bool precalculated;
 
   /**
    * Precalculate the denominators and numerators that will make up the p_ij,
    * but only if the coordinates matrix is different than the last coordinates
-   * the Precalculate() method was run with.
+   * the Precalculate() method was run with.  This method is only called by the
+   * non-separable Evaluate() and Gradient().
    *
    * This will update last_coordinates_ and stretched_dataset_, and also
    * calculate the p_i and denominators_ which are used in the calculation of

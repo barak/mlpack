@@ -1,10 +1,10 @@
-/***
+/**
  * @file nca_impl.hpp
  * @author Ryan Curtin
  *
  * Implementation of templated NCA class.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -25,33 +25,34 @@
 // In case it was not already included.
 #include "nca.hpp"
 
-#include <mlpack/core/optimizers/lbfgs/lbfgs.hpp>
-
-#include "nca_softmax_error_function.hpp"
-
 namespace mlpack {
 namespace nca {
 
 // Just set the internal matrix reference.
-template<typename Kernel>
-NCA<Kernel>::NCA(const arma::mat& dataset, const arma::uvec& labels) :
-    dataset(dataset), labels(labels) { /* nothing to do */ }
+template<typename MetricType, template<typename> class OptimizerType>
+NCA<MetricType, OptimizerType>::NCA(const arma::mat& dataset,
+                                    const arma::uvec& labels,
+                                    MetricType metric) :
+    dataset(dataset),
+    labels(labels),
+    metric(metric),
+    errorFunction(dataset, labels, metric),
+    optimizer(OptimizerType<SoftmaxErrorFunction<MetricType> >(errorFunction))
+{ /* Nothing to do. */ }
 
-template<typename Kernel>
-void NCA<Kernel>::LearnDistance(arma::mat& outputMatrix)
+template<typename MetricType, template<typename> class OptimizerType>
+void NCA<MetricType, OptimizerType>::LearnDistance(arma::mat& outputMatrix)
 {
-  outputMatrix = arma::eye<arma::mat>(dataset.n_rows, dataset.n_rows);
+  // See if we were passed an initialized matrix.
+  if ((outputMatrix.n_rows != dataset.n_rows) ||
+      (outputMatrix.n_cols != dataset.n_rows))
+    outputMatrix.eye(dataset.n_rows, dataset.n_rows);
 
-  SoftmaxErrorFunction<Kernel> errorFunc(dataset, labels);
+  Timer::Start("nca_sgd_optimization");
 
-  // We will use the L-BFGS optimizer to optimize the stretching matrix.
-  optimization::L_BFGS<SoftmaxErrorFunction<Kernel> > lbfgs(errorFunc, 10);
+  optimizer.Optimize(outputMatrix);
 
-  Timer::Start("nca_lbfgs_optimization");
-
-  lbfgs.Optimize(outputMatrix);
-
-  Timer::Stop("nca_lbfgs_optimization");
+  Timer::Stop("nca_sgd_optimization");
 }
 
 }; // namespace nca

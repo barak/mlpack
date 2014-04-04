@@ -5,7 +5,7 @@
  *
  * Implementation of template-based GMM methods.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -138,8 +138,8 @@ arma::vec GMM<FittingType>::Random() const
  * Fit the GMM to the given observations.
  */
 template<typename FittingType>
-void GMM<FittingType>::Estimate(const arma::mat& observations,
-                                const size_t trials)
+double GMM<FittingType>::Estimate(const arma::mat& observations,
+                                  const size_t trials)
 {
   double bestLikelihood; // This will be reported later.
 
@@ -155,7 +155,7 @@ void GMM<FittingType>::Estimate(const arma::mat& observations,
   else
   {
     if (trials == 0)
-      return; // It's what they asked for...
+      return -DBL_MAX; // It's what they asked for...
 
     // We need to keep temporary copies.  We'll do the first training into the
     // actual model position, so that if it's the best we don't need to copy it.
@@ -195,9 +195,10 @@ void GMM<FittingType>::Estimate(const arma::mat& observations,
     }
   }
 
-  // Report final log-likelihood.
+  // Report final log-likelihood and return it.
   Log::Info << "GMM::Estimate(): log-likelihood of trained GMM is "
       << bestLikelihood << "." << std::endl;
+  return bestLikelihood;
 }
 
 /**
@@ -205,9 +206,9 @@ void GMM<FittingType>::Estimate(const arma::mat& observations,
  * probability of being from this distribution.
  */
 template<typename FittingType>
-void GMM<FittingType>::Estimate(const arma::mat& observations,
-                                const arma::vec& probabilities,
-                                const size_t trials)
+double GMM<FittingType>::Estimate(const arma::mat& observations,
+                                  const arma::vec& probabilities,
+                                  const size_t trials)
 {
   double bestLikelihood; // This will be reported later.
 
@@ -223,7 +224,7 @@ void GMM<FittingType>::Estimate(const arma::mat& observations,
   else
   {
     if (trials == 0)
-      return; // It's what they asked for...
+      return -DBL_MAX; // It's what they asked for...
 
     // We need to keep temporary copies.  We'll do the first training into the
     // actual model position, so that if it's the best we don't need to copy it.
@@ -263,9 +264,10 @@ void GMM<FittingType>::Estimate(const arma::mat& observations,
     }
   }
 
-  // Report final log-likelihood.
+  // Report final log-likelihood and return it.
   Log::Info << "GMM::Estimate(): log-likelihood of trained GMM is "
       << bestLikelihood << "." << std::endl;
+  return bestLikelihood;
 }
 
 /**

@@ -4,7 +4,7 @@
  *
  * Here we have tests for the SaveRestoreModel class.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -26,7 +26,7 @@
 #define ARGSTR(a) a,#a
 
 using namespace mlpack;
-using namespace mlpack::utilities;
+using namespace mlpack::util;
 
 BOOST_AUTO_TEST_SUITE(SaveRestoreUtilityTests);
 

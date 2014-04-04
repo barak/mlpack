@@ -5,7 +5,7 @@
  * Implementation of the discrete distribution, where each discrete observation
  * has a given probability.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -143,6 +143,11 @@ class DiscreteDistribution
   const arma::vec& Probabilities() const { return probabilities; }
   //! Modify the vector of probabilities.
   arma::vec& Probabilities() { return probabilities; }
+  
+  /*
+   * Returns a string representation of this object.
+   */
+  std::string ToString() const;
 
  private:
   arma::vec probabilities;

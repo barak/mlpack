@@ -5,7 +5,7 @@
  * Defines the pruning rules and base case rules necessary to perform a
  * tree-based search (with an arbitrary tree) for the NeighborSearch class.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -38,8 +38,19 @@ class NeighborSearchRules
 
   double BaseCase(const size_t queryIndex, const size_t referenceIndex);
 
-  // Update bounds.  Needs a better name.
-  void UpdateAfterRecursion(TreeType& queryNode, TreeType& referenceNode);
+  /**
+   * Get the score for the recursion order, in general before the base case is
+   * computed.  This is useful for cover trees or other trees that can cache
+   * some statistic that could be used to make a prune of a child before its
+   * base case is computed.
+   *
+   * @param queryNode Query node.
+   * @param referenceNode Reference node.
+   */
+  double Prescore(TreeType& queryNode,
+                  TreeType& referenceNode,
+                  TreeType& referenceChildNode,
+                  const double baseCaseResult) const;
 
   /**
    * Get the score for recursion order.  A low score indicates priority for

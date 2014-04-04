@@ -12,6 +12,13 @@
 #ifndef __MLPACK_CORE_ARMA_EXTEND_ARMA_EXTEND_HPP
 #define __MLPACK_CORE_ARMA_EXTEND_ARMA_EXTEND_HPP
 
+// Add constructors for sparse vectors (these are only added if sparse support
+// is enabled).
+#define ARMA_EXTRA_COL_PROTO mlpack/core/arma_extend/Col_extra_bones.hpp
+#define ARMA_EXTRA_COL_MEAT  mlpack/core/arma_extend/Col_extra_meat.hpp
+#define ARMA_EXTRA_ROW_PROTO mlpack/core/arma_extend/Row_extra_bones.hpp
+#define ARMA_EXTRA_ROW_MEAT  mlpack/core/arma_extend/Row_extra_meat.hpp
+
 #include <armadillo>
 
 // To get CSV support on versions of Armadillo prior to 2.0.0, we'll do this.  I
@@ -21,10 +28,12 @@
 #endif
 
 namespace arma {
-  // u64
+  // u64/s64
   #include "typedef.hpp"
   #include "traits.hpp"
   #include "promote_type.hpp"
+  #include "restrictors.hpp"
+  #include "hdf5_misc.hpp"
 
   // ccov()
   #include "op_ccov_proto.hpp"
@@ -32,6 +41,9 @@ namespace arma {
   #include "glue_ccov_proto.hpp"
   #include "glue_ccov_meat.hpp"
   #include "fn_ccov.hpp"
+
+  // inplace_reshape()
+  #include "fn_inplace_reshape.hpp"
 };
 
 #endif

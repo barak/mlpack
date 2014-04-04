@@ -5,7 +5,7 @@
  * Implementation of NMF class to perform Non-Negative Matrix Factorization
  * on the given matrix.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -78,8 +78,8 @@ void NMF<InitializationRule, WUpdateRule, HUpdateRule>::Apply(
   size_t iteration = 1;
   const size_t nm = n * m;
   double residue = minResidue;
-  double normOld;
-  double norm;
+  double normOld = 0;
+  double norm = 0;
   arma::mat WH;
 
   while (residue >= minResidue && iteration != maxIterations)

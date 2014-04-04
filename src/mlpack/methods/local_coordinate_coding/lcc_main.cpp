@@ -4,7 +4,7 @@
  *
  * Executable for Local Coordinate Coding.
  *
- * This file is part of MLPACK 1.0.3.
+ * This file is part of MLPACK 1.0.4.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
   const string initialDictionaryFile =
       CLI::GetParam<string>("initial_dictionary");
 
-  const size_t maxIterations = CLI::GetParam<int>("max_iteartions");
+  const size_t maxIterations = CLI::GetParam<int>("max_iterations");
   const size_t atoms = CLI::GetParam<int>("atoms");
 
   const bool normalize = CLI::HasParam("normalize");
