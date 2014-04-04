@@ -1,12 +1,12 @@
 /**
- * @file tree/periodichrectbound.h
+ * @file periodichrectbound.hpp
  *
  * Bounds that are useful for binary space partitioning trees.
  *
  * This file describes the interface for the PeriodicHRectBound policy, which
  * implements a hyperrectangle bound in a periodic space.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -145,6 +145,11 @@ class PeriodicHRectBound
    * Determines if a point is within this bound.
    */
   bool Contains(const arma::vec& point) const;
+
+  /**
+   * Returns a string representation of an object.
+   */
+  std::string ToString() const;
 
  private:
   math::Range *bounds;

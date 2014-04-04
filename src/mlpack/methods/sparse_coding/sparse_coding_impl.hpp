@@ -5,7 +5,7 @@
  * Implementation of Sparse Coding with Dictionary Learning using l1 (LASSO) or
  * l1+l2 (Elastic Net) regularization.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -122,7 +122,7 @@ void SparseCoding<DictionaryInitializer>::OptimizeCode()
     // place the result directly into that; then we will not need to have an
     // extra copy.
     arma::vec code = codes.unsafe_col(i);
-    lars.Regress(dictionary, data.unsafe_col(i), code, true);
+    lars.Regress(dictionary, data.unsafe_col(i), code, false);
   }
 }
 

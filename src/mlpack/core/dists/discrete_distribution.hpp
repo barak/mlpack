@@ -5,7 +5,7 @@
  * Implementation of the discrete distribution, where each discrete observation
  * has a given probability.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -106,7 +106,17 @@ class DiscreteDistribution
   {
     // Adding 0.5 helps ensure that we cast the floating point to a size_t
     // correctly.
-    return probabilities((size_t) (observation[0] + 0.5));
+    const size_t obs = size_t(observation[0] + 0.5);
+
+    // Ensure that the observation is within the bounds.
+    if (obs >= probabilities.n_elem)
+    {
+      Log::Debug << "DiscreteDistribution::Probability(): received observation "
+          << obs << "; observation must be in [0, " << probabilities.n_elem
+          << "] for this distribution." << std::endl;
+    }
+
+    return probabilities(obs);
   }
 
   /**
@@ -143,7 +153,7 @@ class DiscreteDistribution
   const arma::vec& Probabilities() const { return probabilities; }
   //! Modify the vector of probabilities.
   arma::vec& Probabilities() { return probabilities; }
-  
+
   /*
    * Returns a string representation of this object.
    */

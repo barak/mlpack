@@ -4,7 +4,7 @@
  *
  * Implementation of NearestNeighborRules.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -80,8 +80,8 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Prescore(
   // Calculate the bound on the fly.  This bound will be the minimum of
   // pointBound (the bounds given by the points in this node) and childBound
   // (the bounds given by the children of this node).
-  double pointBound = DBL_MAX;
-  double childBound = DBL_MAX;
+  double pointBound = SortPolicy::WorstDistance();
+  double childBound = SortPolicy::WorstDistance();
   const double maxDescendantDistance = queryNode.FurthestDescendantDistance();
 
   // Find the bound of the points contained in this node.
@@ -91,7 +91,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Prescore(
     // distance to a child of this node.
     const double bound = distances(distances.n_rows - 1, queryNode.Point(i)) +
         maxDescendantDistance;
-    if (bound < pointBound)
+    if (SortPolicy::IsBetter(bound, pointBound))
       pointBound = bound;
   }
 
@@ -99,7 +99,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Prescore(
   for (size_t i = 0; i < queryNode.NumChildren(); ++i)
   {
     const double bound = queryNode.Child(i).Stat().Bound();
-    if (bound < childBound)
+    if (SortPolicy::IsBetter(bound, childBound))
       childBound = bound;
   }
 
@@ -164,8 +164,8 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Score(
   // Calculate the bound on the fly.  This bound will be the minimum of
   // pointBound (the bounds given by the points in this node) and childBound
   // (the bounds given by the children of this node).
-  double pointBound = DBL_MAX;
-  double childBound = DBL_MAX;
+  double pointBound = SortPolicy::WorstDistance();
+  double childBound = SortPolicy::WorstDistance();
   const double maxDescendantDistance = queryNode.FurthestDescendantDistance();
 
   // Find the bound of the points contained in this node.
@@ -175,7 +175,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Score(
     // distance to a child of this node.
     const double bound = distances(distances.n_rows - 1, queryNode.Point(i)) +
         maxDescendantDistance;
-    if (bound < pointBound)
+    if (SortPolicy::IsBetter(bound, pointBound))
       pointBound = bound;
   }
 
@@ -183,7 +183,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Score(
   for (size_t i = 0; i < queryNode.NumChildren(); ++i)
   {
     const double bound = queryNode.Child(i).Stat().Bound();
-    if (bound < childBound)
+    if (SortPolicy::IsBetter(bound, childBound))
       childBound = bound;
   }
 
@@ -206,8 +206,8 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Score(
   // Calculate the bound on the fly.  This bound will be the minimum of
   // pointBound (the bounds given by the points in this node) and childBound
   // (the bounds given by the children of this node).
-  double pointBound = DBL_MAX;
-  double childBound = DBL_MAX;
+  double pointBound = SortPolicy::WorstDistance();
+  double childBound = SortPolicy::WorstDistance();
   const double maxDescendantDistance = queryNode.FurthestDescendantDistance();
 
   // Find the bound of the points contained in this node.
@@ -217,7 +217,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Score(
     // distance to a child of this node.
     const double bound = distances(distances.n_rows - 1, queryNode.Point(i)) +
         maxDescendantDistance;
-    if (bound < pointBound)
+    if (SortPolicy::IsBetter(bound, pointBound))
       pointBound = bound;
   }
 
@@ -225,7 +225,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Score(
   for (size_t i = 0; i < queryNode.NumChildren(); ++i)
   {
     const double bound = queryNode.Child(i).Stat().Bound();
-    if (bound < childBound)
+    if (SortPolicy::IsBetter(bound, childBound))
       childBound = bound;
   }
 
@@ -248,8 +248,8 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Rescore(
   // Calculate the bound on the fly.  This bound will be the minimum of
   // pointBound (the bounds given by the points in this node) and childBound
   // (the bounds given by the children of this node).
-  double pointBound = DBL_MAX;
-  double childBound = DBL_MAX;
+  double pointBound = SortPolicy::WorstDistance();
+  double childBound = SortPolicy::WorstDistance();
   const double maxDescendantDistance = queryNode.FurthestDescendantDistance();
 
   // Find the bound of the points contained in this node.
@@ -259,7 +259,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Rescore(
     // distance to a child of this node.
     const double bound = distances(distances.n_rows - 1, queryNode.Point(i)) +
         maxDescendantDistance;
-    if (bound < pointBound)
+    if (SortPolicy::IsBetter(bound, pointBound))
       pointBound = bound;
   }
 
@@ -267,7 +267,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Rescore(
   for (size_t i = 0; i < queryNode.NumChildren(); ++i)
   {
     const double bound = queryNode.Child(i).Stat().Bound();
-    if (bound < childBound)
+    if (SortPolicy::IsBetter(bound, childBound))
       childBound = bound;
   }
 

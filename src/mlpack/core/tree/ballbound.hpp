@@ -4,7 +4,7 @@
  * Bounds that are useful for binary space partitioning trees.
  * Interface to a ball bound that works in arbitrary metric spaces.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -137,6 +137,12 @@ class BallBound
    */
   template<typename MatType>
   const BallBound& operator|=(const MatType& data);
+
+  /**
+   * Returns a string representation of this object.
+   */
+  std::string ToString() const;
+
 };
 
 }; // namespace bound

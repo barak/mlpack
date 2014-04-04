@@ -5,7 +5,7 @@
  * Implementation of the AllkFN executable.  Allows some number of standard
  * options.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -27,6 +27,7 @@
 #include <iostream>
 
 #include "neighbor_search.hpp"
+#include "unmap.hpp"
 
 using namespace std;
 using namespace mlpack;
@@ -187,35 +188,15 @@ int main(int argc, char *argv[])
   arma::mat distancesOut(distances.n_rows, distances.n_cols);
   arma::Mat<size_t> neighborsOut(neighbors.n_rows, neighbors.n_cols);
 
-  // Do the actual remapping.
-  if (CLI::GetParam<string>("query_file") != "")
-  {
-    for (size_t i = 0; i < distances.n_cols; ++i)
-    {
-      // Map distances (copy a column).
-      distancesOut.col(oldFromNewQueries[i]) = distances.col(i);
-
-      // Map indices of neighbors.
-      for (size_t j = 0; j < distances.n_rows; ++j)
-      {
-        neighborsOut(j, oldFromNewQueries[i]) = oldFromNewRefs[neighbors(j, i)];
-      }
-    }
-  }
+  // Map the points back to their original locations.
+  if ((CLI::GetParam<string>("query_file") != "") && !singleMode)
+    Unmap(neighbors, distances, oldFromNewRefs, oldFromNewQueries, neighborsOut,
+        distancesOut);
+  else if ((CLI::GetParam<string>("query_file") != "") && singleMode)
+    Unmap(neighbors, distances, oldFromNewRefs, neighborsOut, distancesOut);
   else
-  {
-    for (size_t i = 0; i < distances.n_cols; ++i)
-    {
-      // Map distances (copy a column).
-      distancesOut.col(oldFromNewRefs[i]) = distances.col(i);
-
-      // Map indices of neighbors.
-      for (size_t j = 0; j < distances.n_rows; ++j)
-      {
-        neighborsOut(j, oldFromNewRefs[i]) = oldFromNewRefs[neighbors(j, i)];
-      }
-    }
-  }
+    Unmap(neighbors, distances, oldFromNewRefs, oldFromNewRefs, neighborsOut,
+        distancesOut);
 
   // Clean up.
   if (queryTree)

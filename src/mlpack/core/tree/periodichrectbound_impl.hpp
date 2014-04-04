@@ -1,10 +1,10 @@
 /**
- * @file tree/periodichrectbound_impl.h
+ * @file periodichrectbound_impl.hpp
  *
  * Implementation of periodic hyper-rectangle bound policy class.
  * Template parameter t_pow is the metric to use; use 2 for Euclidian (L2).
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -578,6 +578,20 @@ bool PeriodicHRectBound<t_pow>::Contains(const arma::vec& point) const
       return false;
 
   return true;
+}
+
+/**
+ * Returns a string representation of this object.
+ */
+template<int t_pow>
+std::string PeriodicHRectBound<t_pow>::ToString() const
+{
+  std::ostringstream convert;
+  convert << "PeriodicHRectBound [" << this << "]" << std::endl;
+  convert << "bounds: " << bounds->ToString() << std::endl;
+  convert << "dim: " << dim << std::endl;
+  convert << "box: " << box;
+  return convert.str();
 }
 
 }; // namespace bound

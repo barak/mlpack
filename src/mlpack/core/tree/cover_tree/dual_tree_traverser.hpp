@@ -4,7 +4,7 @@
  *
  * A dual-tree traverser for the cover tree.
  *
- * This file is part of MLPACK 1.0.4.
+ * This file is part of MLPACK 1.0.5.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -71,7 +71,8 @@ class CoverTree<MetricType, RootPointPolicy, StatisticType>::DualTreeTraverser
   size_t numPrunes;
 
   //! Prepare map for recursion.
-  void PruneMap(CoverTree& candidateQueryNode,
+  void PruneMap(CoverTree& queryNode,
+                CoverTree& candidateQueryNode,
                 std::map<int, std::vector<DualCoverTreeMapEntry<
                     MetricType, RootPointPolicy, StatisticType> > >&
                     referenceMap,
