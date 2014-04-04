@@ -3,7 +3,7 @@
  *
  * Tests for tree-building methods.
  *
- * This file is part of MLPACK 1.0.2.
+ * This file is part of MLPACK 1.0.3.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -1376,7 +1376,7 @@ void GenerateVectorOfTree(TreeType* node,
  *     with any other bounds at that level.
  *
  * Then, we do that whole process a handful of times.
- */
+ *
 BOOST_AUTO_TEST_CASE(ExhaustiveSparseKDTreeTest)
 {
   typedef BinarySpaceTree<HRectBound<2>, EmptyStatistic, arma::SpMat<double> >
@@ -1451,7 +1451,7 @@ BOOST_AUTO_TEST_CASE(ExhaustiveSparseKDTreeTest)
   BOOST_REQUIRE_EQUAL(root.TreeSize(), 127);
   // Check the tree depth.
   BOOST_REQUIRE_EQUAL(root.TreeDepth(), 7);
-}
+}*/
 
 template<typename TreeType>
 void RecurseTreeCountLeaves(const TreeType& node, arma::vec& counts)
