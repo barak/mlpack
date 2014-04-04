@@ -1,4 +1,0 @@
-* First, it needs to be built in the pbuilder or sbuilder environment for 12.04, this was built under 11.04
-* It needs to build against the version of arma that is in the repos, currently it builds against the latest jenkins package I wrote (2.4.2)
-* It needs to build against the version of boost in the repos, this is built against the 11.04 boost package
-* It will need to be signed for upload to launchpad, which will then sign the package(s) with its own key

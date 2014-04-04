@@ -1,2 +1,5 @@
-debian/tmp/usr/share/doc/mlpack/html
+# reference manual in PDF
+obj-*/doc/latex/refman.pdf
+README.txt
+doc/guide
 doc/tutorials

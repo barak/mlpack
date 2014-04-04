@@ -1,18 +1,17 @@
 #!/usr/bin/make -f
 
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE
-
-REV=$(shell dpkg-parsechangelog | sed -rne 's,^Version: .*[+~]svn([0-9]+).*,\1,p')
-VER=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-]+).*,\1,p')
-get-orig-source:
-	rm -rf mlpack-$(VER).orig
-	svn -q export -r $(REV) http://svn.cc.gatech.edu/fastlab/mlpack/trunk \
-			mlpack-$(VER).orig
-	GZIP=--best tar -cz --owner root --group root --mode a+rX \
-			-f mlpack_$(VER).orig.tar.gz \
-			mlpack-$(VER).orig
-	rm -r mlpack-$(VER).orig
-
 %:
-	dh $@
+	dh $@ --parallel
+
+override_dh_auto_build:
+	dh_auto_build
+	@echo building PDF reference manual
+	cd obj-*/doc/latex && \
+	 sed --in-place 's:usepackage\[utf8\]{inputenc}:usepackage[utf8x]{inputenc}:' refman.tex && \
+	 $(MAKE) pdf
+
+override_dh_auto_test:
+	@echo do not ask do not tell do not test
+
+override_dh_compress:
+	dh_compress -Xrefman.pdf -Xdoc/html/

@@ -1,0 +1,5 @@
+# reference manual in HTML
+/usr/share/doc/mlpack/html/*.html	/usr/share/doc/mlpack-doc/html/
+/usr/share/doc/mlpack/html/*.png	/usr/share/doc/mlpack-doc/html/
+/usr/share/doc/mlpack/html/*.js		/usr/share/doc/mlpack-doc/html/
+/usr/share/doc/mlpack/html/*.css	/usr/share/doc/mlpack-doc/html/
