@@ -11,27 +11,9 @@ override_dh_auto_build:
 	cd obj-*/doc/latex && \
 	 sed --in-place 's:usepackage\[utf8\]{inputenc}:usepackage[utf8x]{inputenc}:' refman.tex && \
 	 $(MAKE) pdf
-	@echo txt2man should backslash-escape lines starting with a single quote.
-	cd obj-*/share/man &&				\
-	 for f in fastmks.1 nca.1; do			\
-	  gunzip --force --keep $$f.gz &&		\
-	  sed --in-place "s:^[']:\\\\':" $$f &&		\
-	  gzip --force $$f ;				\
-	 done
 
 override_dh_auto_test:
 	@echo do not ask do not tell do not test
-
-override_dh_auto_install:
-	dh_auto_install
-	@echo txt2man should backslash-escape lines starting with a single quote.
-	@echo These are re-generated during installation so we re-fix them here.
-	cd debian/tmp/usr/share/man/man1 &&		\
-	 for f in fastmks.1 nca.1; do			\
-	  gunzip --force --keep $$f.gz &&		\
-	  sed --in-place "s:^[']:\\\\':" $$f &&		\
-	  gzip --force $$f ;				\
-	 done
 
 override_dh_compress:
 	dh_compress -Xrefman.pdf -Xdoc/html/
