@@ -1,0 +1,21 @@
+From: "Barak A. Pearlmutter" <barak+git@cs.nuim.ie>
+Date: Mon, 7 Apr 2014 21:51:14 +0100
+Subject: spelling
+
+---
+ src/mlpack/core/metrics/lmetric.hpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/mlpack/core/metrics/lmetric.hpp b/src/mlpack/core/metrics/lmetric.hpp
+index cd8df92..08ef26c 100644
+--- a/src/mlpack/core/metrics/lmetric.hpp
++++ b/src/mlpack/core/metrics/lmetric.hpp
+@@ -33,7 +33,7 @@ namespace metric {
+ /**
+  * The L_p metric for arbitrary integer p, with an option to take the root.
+  *
+- * This class implements the standard L_p metric for two arbitary vectors @f$ x
++ * This class implements the standard L_p metric for two arbitrary vectors @f$ x
+  * @f$ and @f$ y @f$ of dimensionality @f$ n @f$:
+  *
+  * @f[
