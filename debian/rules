@@ -15,5 +15,17 @@ override_dh_auto_build:
 override_dh_auto_test:
 	@echo do not ask do not tell do not test
 
+override_dh_install:
+	dh_install
+	for d in				\
+	  debian/mlpack-bin/usr/bin		\
+	  debian/mlpack-bin/usr/share/man/man1;	\
+	do					\
+	  (cd $$d &&				\
+	  for f in *; do			\
+	    mv --verbose $${f} mlpack-$${f};	\
+	  done);				\
+	done
+
 override_dh_compress:
 	dh_compress -Xrefman.pdf -Xdoc/html/
