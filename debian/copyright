@@ -5,6 +5,10 @@ Source: http://www.mlpack.org/
  See also the development repository,
  http://svn.cc.gatech.edu/fastlab/mlpack/conf/packages/mlpack/trunk
  http://trac.research.cc.gatech.edu/fastlab/browser
+ git config svn-remote.svn.url      'http://svn.cc.gatech.edu/fastlab/mlpack'
+ git config svn-remote.svn.fetch    'trunk:refs/remotes/svn/trunk'
+ git config svn-remote.svn.branches 'branches/*:refs/remotes/svn/*'
+ git config svn-remote.svn.tags     'tags/*:refs/remotes/svn/tags/*'
 
 Files: *
 Copyright: Copyright 2008-2014, Ryan Curtin <gth671b@mail.gatech.edu>
