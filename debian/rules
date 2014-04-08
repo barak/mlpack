@@ -23,7 +23,7 @@ override_dh_install:
 	do					\
 	  (cd $$d &&				\
 	  for f in *; do			\
-	    mv --verbose $${f} mlpack-$${f};	\
+	    mv --verbose $${f} mlpack_$${f};	\
 	  done);				\
 	done
 
