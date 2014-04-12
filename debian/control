@@ -54,7 +54,7 @@ Section: science
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}, libmlpack1 (>= ${binary:Version})
-Description: intuitive, fast, scalable C++ machine learning library
+Description: intuitive, fast, scalable C++ machine learning library (binaries)
  This package contains example binaries using the MLPACK Library.
  .
  MLPACK (Machine Learning PACK) is an intuitive, fast, scalable C++
@@ -68,7 +68,7 @@ Section: doc
 Architecture: all
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: intuitive, fast, scalable C++ machine learning library
+Description: intuitive, fast, scalable C++ machine learning library (documentation)
  This package contains documentation for the MLPACK Library.
  .
  MLPACK is an intuitive, fast, scalable C++ machine learning library,
