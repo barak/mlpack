@@ -11,6 +11,7 @@ Build-Depends: cmake, debhelper (>=9), dh-exec,
 		libboost-test-dev,
 		libxml2-dev,
 		libarmadillo-dev,
+		txt2man,
 		doxygen, doxygen-latex
 Standards-Version: 3.9.5
 Homepage: http://www.mlpack.org/
