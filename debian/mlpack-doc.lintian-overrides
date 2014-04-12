@@ -12,3 +12,6 @@ mlpack-doc binary: manpage-has-bad-whatis-entry usr/share/man/man3/*
 
 # It is too much to ask doxygen to generate hyphen-slash-dash clean man pages.
 mlpack-doc binary: hyphen-used-as-minus-sign usr/share/man/man3/*
+
+# It is too much to ask doxygen to produce man pages containing LEGAL NROFF!
+mlpack-doc binary: manpage-has-errors-from-man usr/share/man/man3/*
