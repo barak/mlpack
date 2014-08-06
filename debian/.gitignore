@@ -1,9 +1,0 @@
-/*.debhelper
-/*.debhelper.log
-/*.substvars
-/files
-/libmlpack-dev/
-/libmlpack1/
-/mlpack-bin/
-/mlpack-doc/
-/tmp/
