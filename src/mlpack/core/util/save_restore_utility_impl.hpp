@@ -5,7 +5,7 @@
  * The SaveRestoreUtility provides helper functions in saving and
  *   restoring models.  The current output file type is XML.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -25,6 +25,7 @@
 
 // In case it hasn't been included already.
 #include "save_restore_utility.hpp"
+#include "log.hpp"
 
 namespace mlpack {
 namespace util {
@@ -81,7 +82,9 @@ template<typename T>
 void SaveRestoreUtility::SaveParameter(const T& t, const std::string& name)
 {
   std::ostringstream output;
-  output << t;
+  // Manually increase precision to solve #313 for now, until we have a way to
+  // store this as an actual binary number.
+  output << std::setprecision(15) << t;
   parameters[name] = output.str();
 }
 

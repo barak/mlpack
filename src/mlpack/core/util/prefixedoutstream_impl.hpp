@@ -5,7 +5,7 @@
  *
  * Implementation of templated PrefixedOutStream member functions.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -20,8 +20,8 @@
  * You should have received a copy of the GNU General Public License along with
  * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __MLPACK_CORE_IO_PREFIXEDOUTSTREAM_IMPL_HPP
-#define __MLPACK_CORE_IO_PREFIXEDOUTSTREAM_IMPL_HPP
+#ifndef __MLPACK_CORE_UTIL_PREFIXEDOUTSTREAM_IMPL_HPP
+#define __MLPACK_CORE_UTIL_PREFIXEDOUTSTREAM_IMPL_HPP
 
 // Just in case it hasn't been included.
 #include "prefixedoutstream.hpp"

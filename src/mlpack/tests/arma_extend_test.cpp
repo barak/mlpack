@@ -10,6 +10,7 @@
 #include "old_boost_test_definitions.hpp"
 
 using namespace mlpack;
+using namespace arma;
 
 BOOST_AUTO_TEST_SUITE(ArmaExtendTest);
 

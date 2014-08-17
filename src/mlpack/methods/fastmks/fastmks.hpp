@@ -5,7 +5,7 @@
  * Definition of the FastMKS class, which implements fast exact max-kernel
  * search.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -193,6 +193,11 @@ class FastMKS
   const metric::IPMetric<KernelType>& Metric() const { return metric; }
   //! Modify the inner-product metric induced by the given kernel.
   metric::IPMetric<KernelType>& Metric() { return metric; }
+
+  /**
+   * Returns a string representation of this object.
+   */
+  std::string ToString() const;
 
  private:
   //! The reference dataset.

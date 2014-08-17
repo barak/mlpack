@@ -6,7 +6,7 @@
  * the Density Estimation Tree class.
  *
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -145,7 +145,6 @@ bool DTree::FindSplit(const arma::mat& data,
                       double& splitValue,
                       double& leftError,
                       double& rightError,
-                      const size_t maxLeafSize,
                       const size_t minLeafSize) const
 {
   // Ensure the dimensionality of the data is the same as the dimensionality of
@@ -186,9 +185,6 @@ bool DTree::FindSplit(const arma::mat& data,
 
     // Sort the values in ascending order.
     dimVec = arma::sort(dimVec);
-
-    // Get ready to go through the sorted list and compute error.
-    assert(dimVec.n_elem > maxLeafSize);
 
     // Find the best split for this dimension.  We need to figure out why
     // there are spikes if this minLeafSize is enforced here...
@@ -312,8 +308,7 @@ double DTree::Grow(arma::mat& data,
     size_t dim;
     double splitValueTmp;
     double leftError, rightError;
-    if (FindSplit(data, dim, splitValueTmp, leftError, rightError, maxLeafSize,
-        minLeafSize))
+    if (FindSplit(data, dim, splitValueTmp, leftError, rightError, minLeafSize))
     {
       // Move the data around for the children to have points in a node lie
       // contiguously (to increase efficiency during the training).
@@ -679,4 +674,20 @@ void DTree::ComputeVariableImportance(arma::vec& importances) const
     nodes.push(curNode.Left());
     nodes.push(curNode.Right());
   }
+}
+
+// Return string of object. 
+std::string DTree::ToString() const
+{
+  std::ostringstream convert;
+  convert << "Density Estimation Tree [" << this << "]" << std::endl;
+  convert << "  Start Node Index: " << start <<std::endl;
+  convert << "  End Node Index: " << end <<std::endl;
+  convert << "  Node Information:" << std::endl;
+  convert << "    Splitting Dimension: " << splitDim << std::endl;
+  convert << "    Splitting Value: " << splitValue << std::endl;
+  convert << "    Is Root: " << root << std::endl;
+  convert << "    # of points in Node to Total # of points" << ratio ;
+  convert << std::endl;
+  return convert.str();
 }

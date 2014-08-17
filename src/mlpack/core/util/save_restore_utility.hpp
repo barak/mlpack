@@ -7,7 +7,7 @@
  *
  * @experimental
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -22,9 +22,10 @@
  * You should have received a copy of the GNU General Public License along with
  * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __MLPACK_CORE_UTIL_SAVE_RESTORE_MODEL_HPP
-#define __MLPACK_CORE_UTIL_SAVE_RESTORE_MODEL_HPP
+#ifndef __MLPACK_CORE_UTIL_SAVE_RESTORE_UTILITY_HPP
+#define __MLPACK_CORE_UTIL_SAVE_RESTORE_UTILITY_HPP
 
+#include <mlpack/prereqs.hpp>
 #include <list>
 #include <map>
 #include <sstream>
@@ -34,7 +35,6 @@
 #include <libxml/tree.h>
 
 #include <boost/tokenizer.hpp>
-#include <mlpack/core.hpp>
 
 namespace mlpack {
 namespace util {

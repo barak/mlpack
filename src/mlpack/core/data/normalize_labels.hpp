@@ -6,7 +6,7 @@
  * {-1, 1} or otherwise.  The purpose of this function is to normalize labels to
  * {0, 1, 2, ...} and provide a mapping back to those labels.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -24,7 +24,7 @@
 #ifndef __MLPACK_CORE_DATA_NORMALIZE_LABELS_HPP
 #define __MLPACK_CORE_DATA_NORMALIZE_LABELS_HPP
 
-#include <mlpack/core.hpp>
+#include <mlpack/prereqs.hpp>
 
 namespace mlpack {
 namespace data {

@@ -5,7 +5,7 @@
  * The LogisticRegression class, which implements logistic regression.  This
  * implements supports L2-regularization.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -144,6 +144,9 @@ class LogisticRegression
    */
   double ComputeError(const arma::mat& predictors,
                       const arma::vec& responses) const;
+
+  // Returns a string representation of this object. 
+  std::string ToString() const;
 
  private:
   //! Vector of trained parameters.

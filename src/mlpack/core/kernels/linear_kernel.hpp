@@ -6,7 +6,7 @@
  *
  * Implementation of the linear kernel (just the standard dot product).
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -61,6 +61,14 @@ class LinearKernel
   static double Evaluate(const VecType& a, const VecType& b)
   {
     return arma::dot(a, b);
+  }
+
+  //! Return a string representation of the kernel.
+  std::string ToString() const
+  {
+    std::ostringstream convert;
+    convert << "LinearKernel [" << this << "]" << std::endl;
+    return convert.str();
   }
 };
 

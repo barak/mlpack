@@ -4,7 +4,7 @@
  *
  * Test file for NMF class.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -20,10 +20,11 @@
  * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/nmf/nmf.hpp>
-#include <mlpack/methods/nmf/random_acol_init.hpp>
-#include <mlpack/methods/nmf/mult_div_update_rules.hpp>
-#include <mlpack/methods/nmf/als_update_rules.hpp>
+#include <mlpack/methods/amf/amf.hpp>
+#include <mlpack/methods/amf/init_rules/random_acol_init.hpp>
+#include <mlpack/methods/amf/update_rules/nmf_mult_div.hpp>
+#include <mlpack/methods/amf/update_rules/nmf_als.hpp>
+#include <mlpack/methods/amf/update_rules/nmf_mult_dist.hpp>
 
 #include <boost/test/unit_test.hpp>
 #include "old_boost_test_definitions.hpp"
@@ -33,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(NMFTest);
 using namespace std;
 using namespace arma;
 using namespace mlpack;
-using namespace mlpack::nmf;
+using namespace mlpack::amf;
 
 /**
  * Check the if the product of the calculated factorization is close to the
@@ -41,19 +42,20 @@ using namespace mlpack::nmf;
  */
 BOOST_AUTO_TEST_CASE(NMFDefaultTest)
 {
-  mat w = randu<mat>(20, 16);
-  mat h = randu<mat>(16, 20);
+  mlpack::math::RandomSeed(std::time(NULL));
+  mat w = randu<mat>(20, 12);
+  mat h = randu<mat>(12, 20);
   mat v = w * h;
-  size_t r = 16;
+  size_t r = 12;
 
-  NMF<> nmf;
+  AMF<> nmf;
   nmf.Apply(v, r, w, h);
 
   mat wh = w * h;
 
-  for (size_t row = 0; row < 20; row++)
-    for (size_t col = 0; col < 20; col++)
-      BOOST_REQUIRE_CLOSE(v(row, col), wh(row, col), 10.0);
+  // Make sure reconstruction error is not too high.  0.5% tolerance.
+  BOOST_REQUIRE_SMALL(arma::norm(v - wh, "fro") / arma::norm(v, "fro"),
+      0.012);
 }
 
 /**
@@ -62,19 +64,21 @@ BOOST_AUTO_TEST_CASE(NMFDefaultTest)
  */
 BOOST_AUTO_TEST_CASE(NMFAcolDistTest)
 {
-  mat w = randu<mat>(20, 16);
-  mat h = randu<mat>(16, 20);
+  mlpack::math::RandomSeed(std::time(NULL));
+  mat w = randu<mat>(20, 12);
+  mat h = randu<mat>(12, 20);
   mat v = w * h;
-  size_t r = 16;
+  const size_t r = 12;
 
-  NMF<RandomAcolInitialization<> > nmf;
+  SimpleResidueTermination srt(1e-7, 10000);
+  AMF<SimpleResidueTermination,RandomAcolInitialization<> >
+        nmf(srt);
   nmf.Apply(v, r, w, h);
 
   mat wh = w * h;
 
-  for (size_t row = 0; row < 20; row++)
-    for (size_t col = 0; col < 20; col++)
-      BOOST_REQUIRE_CLOSE(v(row, col), wh(row, col), 10.0);
+  BOOST_REQUIRE_SMALL(arma::norm(v - wh, "fro") / arma::norm(v, "fro"),
+      0.012);
 }
 
 /**
@@ -83,21 +87,22 @@ BOOST_AUTO_TEST_CASE(NMFAcolDistTest)
  */
 BOOST_AUTO_TEST_CASE(NMFRandomDivTest)
 {
-  mat w = randu<mat>(20, 16);
-  mat h = randu<mat>(16, 20);
+  mlpack::math::RandomSeed(std::time(NULL));
+  mat w = randu<mat>(20, 12);
+  mat h = randu<mat>(12, 20);
   mat v = w * h;
-  size_t r = 16;
+  size_t r = 12;
 
-  NMF<RandomInitialization,
-      WMultiplicativeDivergenceRule,
-      HMultiplicativeDivergenceRule> nmf;
+  AMF<SimpleResidueTermination,
+      RandomInitialization, 
+      NMFMultiplicativeDivergenceUpdate> nmf;
   nmf.Apply(v, r, w, h);
 
   mat wh = w * h;
 
-  for (size_t row = 0; row < 20; row++)
-    for (size_t col = 0; col < 20; col++)
-      BOOST_REQUIRE_CLOSE(v(row, col), wh(row, col), 10.0);
+  // Make sure reconstruction error is not too high.  0.5% tolerance.
+  BOOST_REQUIRE_SMALL(arma::norm(v - wh, "fro") / arma::norm(v, "fro"),
+      0.012);
 }
 
 /**
@@ -107,59 +112,24 @@ BOOST_AUTO_TEST_CASE(NMFRandomDivTest)
  */
 BOOST_AUTO_TEST_CASE(NMFALSTest)
 {
-  mat w = randu<mat>(20, 16);
-  mat h = randu<mat>(16, 20);
+  mlpack::math::RandomSeed(std::time(NULL));
+  mat w = randu<mat>(20, 12);
+  mat h = randu<mat>(12, 20);
   mat v = w * h;
-  size_t r = 16;
+  size_t r = 12;
 
-  NMF<RandomInitialization,
-      WAlternatingLeastSquaresRule,
-      HAlternatingLeastSquaresRule> nmf(50000, 1e-15);
+  SimpleResidueTermination srt(1e-12, 50000);
+  AMF<SimpleResidueTermination, RandomAcolInitialization<>, NMFALSUpdate>
+        nmf(srt);
   nmf.Apply(v, r, w, h);
 
-  mat wh = w * h;
+  const mat wh = w * h;
 
-  for (size_t row = 0; row < 20; row++)
-    for (size_t col = 0; col < 20; col++)
-      BOOST_REQUIRE_CLOSE(v(row, col), wh(row, col), 15.0);
-}
-
-/**
- * Check the if the product of the calculated factorization is close to the
- * input matrix, with a sparse input matrix.. Default case.
- */
-BOOST_AUTO_TEST_CASE(SparseNMFDefaultTest)
-{
-  mat w, h;
-  sp_mat v;
-  v.sprandu(20, 20, 0.2);
-  mat dv(v); // Make a dense copy.
-  mat dw, dh;
-  size_t r = 18;
-
-  // It seems to hit the iteration limit first.
-  NMF<> nmf(10000, 1e-20);
-  mlpack::math::RandomSeed(1000); // Set random seed so results are the same.
-  nmf.Apply(v, r, w, h);
-  mlpack::math::RandomSeed(1000);
-  nmf.Apply(dv, r, dw, dh);
-
-  // Make sure the results are about equal for the W and H matrices.
-  for (size_t i = 0; i < w.n_elem; ++i)
-  {
-    if (w(i) == 0.0)
-      BOOST_REQUIRE_SMALL(dw(i), 1e-15);
-    else
-      BOOST_REQUIRE_CLOSE(w(i), dw(i), 1e-5);
-  }
-
-  for (size_t i = 0; i < h.n_elem; ++i)
-  {
-    if (h(i) == 0.0)
-      BOOST_REQUIRE_SMALL(dh(i), 1e-15);
-    else
-      BOOST_REQUIRE_CLOSE(h(i), dh(i), 1e-5);
-  }
+  // Make sure reconstruction error is not too high.  8% tolerance.  It seems
+  // like ALS doesn't converge to results that are as good.  It also seems to be
+  // particularly sensitive to initial conditions.
+  BOOST_REQUIRE_SMALL(arma::norm(v - wh, "fro") / arma::norm(v, "fro"),
+      0.08);
 }
 
 /**
@@ -169,75 +139,45 @@ BOOST_AUTO_TEST_CASE(SparseNMFDefaultTest)
  */
 BOOST_AUTO_TEST_CASE(SparseNMFAcolDistTest)
 {
-  mat w, h;
-  sp_mat v;
-  v.sprandu(20, 20, 0.3);
-  mat dv(v); // Make a dense copy.
-  mat dw, dh;
-  size_t r = 16;
+  // We have to ensure that the residues aren't NaNs.  This can happen when a
+  // matrix is created with all zeros in a column or row.
+  double denseResidue = std::numeric_limits<double>::quiet_NaN();
+  double sparseResidue = std::numeric_limits<double>::quiet_NaN();
 
-  NMF<RandomAcolInitialization<> > nmf;
-  mlpack::math::RandomSeed(1000); // Set random seed so results are the same.
-  nmf.Apply(v, r, w, h);
-  mlpack::math::RandomSeed(1000);
-  nmf.Apply(dv, r, dw, dh);
+  mat vp, dvp; // Resulting matrices.
+
+  while (sparseResidue != sparseResidue && denseResidue != denseResidue)
+  {
+    mlpack::math::RandomSeed(std::time(NULL));
+    mat w, h;
+    sp_mat v;
+    v.sprandu(20, 20, 0.3);
+    // Ensure there is at least one nonzero element in every row and column.
+    for (size_t i = 0; i < 20; ++i)
+      v(i, i) += 1e-5;
+    mat dv(v); // Make a dense copy.
+    mat dw, dh;
+    size_t r = 15;
+
+    SimpleResidueTermination srt(1e-10, 10000);
+    AMF<SimpleResidueTermination, RandomAcolInitialization<> > nmf(srt);
+    const size_t seed = mlpack::math::RandInt(1000000);
+    mlpack::math::RandomSeed(seed); // Set random seed so results are the same.
+    nmf.Apply(v, r, w, h);
+    mlpack::math::RandomSeed(seed);
+    nmf.Apply(dv, r, dw, dh);
+
+    // Reconstruct matrices.
+    vp = w * h;
+    dvp = dw * dh;
+
+    denseResidue = arma::norm(v - vp, "fro");
+    sparseResidue = arma::norm(dv - dvp, "fro");
+  }
 
   // Make sure the results are about equal for the W and H matrices.
-  for (size_t i = 0; i < w.n_elem; ++i)
-  {
-    if (w(i) == 0.0)
-      BOOST_REQUIRE_SMALL(dw(i), 1e-15);
-    else
-      BOOST_REQUIRE_CLOSE(w(i), dw(i), 1e-5);
-  }
-
-  for (size_t i = 0; i < h.n_elem; ++i)
-  {
-    if (h(i) == 0.0)
-      BOOST_REQUIRE_SMALL(dh(i), 1e-15);
-    else
-      BOOST_REQUIRE_CLOSE(h(i), dh(i), 1e-5);
-  }
-}
-
-/**
- * Check the if the product of the calculated factorization is close to the
- * input matrix, with a sparse input matrix. Random initialization, divergence
- * minimization update.
- */
-BOOST_AUTO_TEST_CASE(SparseNMFRandomDivTest)
-{
-  mat w, h;
-  sp_mat v;
-  v.sprandu(20, 20, 0.3);
-  mat dv(v); // Make a dense copy.
-  mat dw, dh;
-  size_t r = 16;
-
-  NMF<RandomInitialization,
-      WMultiplicativeDivergenceRule,
-      HMultiplicativeDivergenceRule> nmf;
-  mlpack::math::RandomSeed(10); // Set random seed so the results are the same.
-  nmf.Apply(v, r, w, h);
-  mlpack::math::RandomSeed(10);
-  nmf.Apply(dv, r, dw, dh);
-
-  // Make sure the results are about equal for the W and H matrices.
-  for (size_t i = 0; i < w.n_elem; ++i)
-  {
-    if (w(i) == 0.0)
-      BOOST_REQUIRE_SMALL(dw(i), 1e-15);
-    else
-      BOOST_REQUIRE_CLOSE(w(i), dw(i), 1e-5);
-  }
-
-  for (size_t i = 0; i < h.n_elem; ++i)
-  {
-    if (h(i) == 0.0)
-      BOOST_REQUIRE_SMALL(dh(i), 1e-15);
-    else
-      BOOST_REQUIRE_CLOSE(h(i), dh(i), 1e-5);
-  }
+  BOOST_REQUIRE_SMALL(arma::norm(vp - dvp, "fro") / arma::norm(vp, "fro"),
+      1e-5);
 }
 
 /**
@@ -247,37 +187,45 @@ BOOST_AUTO_TEST_CASE(SparseNMFRandomDivTest)
  */
 BOOST_AUTO_TEST_CASE(SparseNMFALSTest)
 {
-  mat w, h;
-  sp_mat v;
-  v.sprandu(10, 10, 0.3);
-  mat dv(v); // Make a dense copy.
-  mat dw, dh;
-  size_t r = 8;
+  // We have to ensure that the residues aren't NaNs.  This can happen when a
+  // matrix is created with all zeros in a column or row.
+  double denseResidue = std::numeric_limits<double>::quiet_NaN();
+  double sparseResidue = std::numeric_limits<double>::quiet_NaN();
 
-  NMF<RandomInitialization,
-      WAlternatingLeastSquaresRule,
-      HAlternatingLeastSquaresRule> nmf;
-  mlpack::math::RandomSeed(40);
-  nmf.Apply(v, r, w, h);
-  mlpack::math::RandomSeed(40);
-  nmf.Apply(dv, r, dw, dh);
+  mat vp, dvp; // Resulting matrices.
+
+  while (sparseResidue != sparseResidue && denseResidue != denseResidue)
+  {
+    mlpack::math::RandomSeed(std::time(NULL));
+    mat w, h;
+    sp_mat v;
+    v.sprandu(10, 10, 0.3);
+    // Ensure there is at least one nonzero element in every row and column.
+    for (size_t i = 0; i < 10; ++i)
+      v(i, i) += 1e-5;
+    mat dv(v); // Make a dense copy.
+    mat dw, dh;
+    size_t r = 5;
+
+    SimpleResidueTermination srt(1e-10, 10000);
+    AMF<SimpleResidueTermination, RandomInitialization, NMFALSUpdate> nmf(srt);
+    const size_t seed = mlpack::math::RandInt(1000000);
+    mlpack::math::RandomSeed(seed);
+    nmf.Apply(v, r, w, h);
+    mlpack::math::RandomSeed(seed);
+    nmf.Apply(dv, r, dw, dh);
+
+    // Reconstruct matrices.
+    vp = w * h; // In general vp won't be sparse.
+    dvp = dw * dh;
+
+    denseResidue = arma::norm(v - vp, "fro");
+    sparseResidue = arma::norm(dv - dvp, "fro");
+  }
 
   // Make sure the results are about equal for the W and H matrices.
-  for (size_t i = 0; i < w.n_elem; ++i)
-  {
-    if (w(i) == 0.0)
-      BOOST_REQUIRE_SMALL(dw(i), 1e-15);
-    else
-      BOOST_REQUIRE_CLOSE(w(i), dw(i), 1e-5);
-  }
-
-  for (size_t i = 0; i < h.n_elem; ++i)
-  {
-    if (h(i) == 0.0)
-      BOOST_REQUIRE_SMALL(dh(i), 1e-15);
-    else
-      BOOST_REQUIRE_CLOSE(h(i), dh(i), 1e-5);
-  }
+  BOOST_REQUIRE_SMALL(arma::norm(vp - dvp, "fro") / arma::norm(vp, "fro"),
+      1e-5);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

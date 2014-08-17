@@ -5,7 +5,7 @@
  * Unit tests for the functions of the class DTree and the utility functions
  * using this class.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(TestFindSplit)
 
   testDTree.logVolume = log(7.0) + log(4.0) + log(7.0);
   BOOST_REQUIRE(testDTree.FindSplit(testData, obDim, obSplit, obLeftError,
-      obRightError, 2, 1));
+      obRightError, 1));
 
   BOOST_REQUIRE(trueDim == obDim);
   BOOST_REQUIRE_CLOSE(trueSplit, obSplit, 1e-10);

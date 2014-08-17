@@ -1,6 +1,8 @@
 set(DIRS
   aug_lagrangian
   lbfgs
+  lrsdp
+  sa
   sgd
 )
 

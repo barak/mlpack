@@ -4,7 +4,7 @@
  *
  * Implementation of the FastMKS class (fast max-kernel search).
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -313,6 +313,20 @@ void FastMKS<KernelType, TreeType>::InsertNeighbor(arma::Mat<size_t>& indices,
   // Now put the new information in the right index.
   products(pos, queryIndex) = distance;
   indices(pos, queryIndex) = neighbor;
+}
+
+// Return string of object.
+template<typename KernelType, typename TreeType>
+std::string FastMKS<KernelType, TreeType>::ToString() const
+{
+  std::ostringstream convert;
+  convert << "FastMKS [" << this << "]" << std::endl;
+  convert << "  Naive: " << naive << std::endl;
+  convert << "  Single: " << single << std::endl;
+  convert << "  Metric: " << std::endl;
+  convert << mlpack::util::Indent(metric.ToString(),2);
+  convert << std::endl;
+  return convert.str();
 }
 
 // Specialized implementation for tighter bounds for Gaussian.

@@ -8,6 +8,8 @@ add_executable(mlpack_test
   aug_lagrangian_test.cpp
   cf_test.cpp
   cli_test.cpp
+  cosine_tree_test.cpp
+  decision_stump_test.cpp
   det_test.cpp
   distribution_test.cpp
   emst_test.cpp
@@ -33,15 +35,24 @@ add_executable(mlpack_test
   nca_test.cpp
   nmf_test.cpp
   pca_test.cpp
+  perceptron_test.cpp
+  quic_svd_test.cpp
   radical_test.cpp
   range_search_test.cpp
+  regularized_svd_test.cpp
+  sa_test.cpp
   save_restore_utility_test.cpp
   sgd_test.cpp
   sort_policy_test.cpp
+  sparse_autoencoder_test.cpp
   sparse_coding_test.cpp
+  to_string_test.cpp
   tree_test.cpp
   tree_traits_test.cpp
   union_find_test.cpp
+  svd_batch_test.cpp
+  svd_incremental_test.cpp
+  nystroem_method_test.cpp
 )
 # Link dependencies of test executable.
 target_link_libraries(mlpack_test

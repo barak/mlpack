@@ -7,7 +7,7 @@
  * This classifier does parametric naive bayes classification assuming that the
  * features are sampled from a Gaussian distribution.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -29,19 +29,25 @@
 PROGRAM_INFO("Parametric Naive Bayes Classifier",
     "This program trains the Naive Bayes classifier on the given labeled "
     "training set and then uses the trained classifier to classify the points "
-    "in the given test set.\n"
-    "\n"
+    "in the given test set."
+    "\n\n"
     "Labels are expected to be the last row of the training set (--train_file),"
     " but labels can also be passed in separately as their own file "
-    "(--labels_file).");
+    "(--labels_file)."
+    "\n\n"
+    "The '--incremental_variance' option can be used to force the training to "
+    "use an incremental algorithm for calculating variance.  This is slower, "
+    "but can help avoid loss of precision in some cases.");
 
 PARAM_STRING_REQ("train_file", "A file containing the training set.", "t");
 PARAM_STRING_REQ("test_file", "A file containing the test set.", "T");
 
 PARAM_STRING("labels_file", "A file containing labels for the training set.",
     "l", "");
-PARAM_STRING("output", "The file in which the output of the test would "
-    "be written, defaults to 'output.csv')", "o", "output.csv");
+PARAM_STRING("output", "The file in which the predicted labels for the test set"
+    " will be written.", "o", "output.csv");
+PARAM_FLAG("incremental_variance", "The variance of each class will be "
+    "calculated incrementally.", "I");
 
 using namespace mlpack;
 using namespace mlpack::naive_bayes;
@@ -67,7 +73,11 @@ int main(int argc, char* argv[])
   {
     // Load labels.
     mat rawLabels;
-    data::Load(labelsFilename, rawLabels, true);
+    data::Load(labelsFilename, rawLabels, true, false);
+
+    // Do the labels need to be transposed?
+    if (rawLabels.n_rows == 1)
+      rawLabels = rawLabels.t();
 
     data::NormalizeLabels(rawLabels.unsafe_col(0), labels, mappings);
   }
@@ -91,12 +101,12 @@ int main(int argc, char* argv[])
         << "must be the same as training data (" << trainingData.n_rows - 1
         << ")!" << std::endl;
 
-  // Calculate number of classes.
-  size_t classes = (size_t) max(trainingData.row(trainingData.n_rows - 1)) + 1;
+  const bool incrementalVariance = CLI::HasParam("incremental_variance");
 
   // Create and train the classifier.
   Timer::Start("training");
-  NaiveBayesClassifier<> nbc(trainingData, labels, classes);
+  NaiveBayesClassifier<> nbc(trainingData, labels, mappings.n_elem,
+      incrementalVariance);
   Timer::Stop("training");
 
   // Time the running of the Naive Bayes Classifier.
@@ -109,7 +119,7 @@ int main(int argc, char* argv[])
   vec rawResults;
   data::RevertLabels(results, mappings, rawResults);
 
-  // Output results.
+  // Output results.  Don't transpose: one result per line.
   const string outputFilename = CLI::GetParam<string>("output");
-  data::Save(outputFilename, results, true);
+  data::Save(outputFilename, rawResults, true, false);
 }

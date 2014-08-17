@@ -5,7 +5,7 @@
  * This file implements functions to perform different tasks with the Density
  * Tree class.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -229,8 +229,10 @@ DTree* mlpack::det::Trainer(arma::mat& dataset,
         minLeafSize);
 
     // Sequentially prune with all the values of available alphas and adding
-    // values for test values.
-    for (size_t i = 0; i < prunedSequence.size() - 2; ++i)
+    // values for test values.  Don't enter this loop if there are less than two
+    // trees in the pruned sequence.
+    for (size_t i = 0;
+         i < ((prunedSequence.size() < 2) ? 0 : prunedSequence.size() - 2); ++i)
     {
       // Compute test values for this state of the tree.
       double cvVal = 0.0;
@@ -257,8 +259,9 @@ DTree* mlpack::det::Trainer(arma::mat& dataset,
       cvVal += cvDTree->ComputeValue(testPoint);
     }
 
-    regularizationConstants[prunedSequence.size() - 2] += 2.0 * cvVal /
-        (double) dataset.n_cols;
+    if (prunedSequence.size() > 2)
+      regularizationConstants[prunedSequence.size() - 2] += 2.0 * cvVal /
+          (double) dataset.n_cols;
 
     test.reset();
     delete cvDTree;

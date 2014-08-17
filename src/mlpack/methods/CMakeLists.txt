@@ -1,6 +1,8 @@
 # Recurse into each method mlpack provides.
 set(DIRS
+  amf
   cf
+  decision_stump
   det
   emst
   fastmks
@@ -18,11 +20,17 @@ set(DIRS
   nca
   neighbor_search
   nmf
+#  lmf
   pca
+  perceptron
+  quic_svd
   radical
   range_search
   rann
+  regularized_svd
+  sparse_autoencoder
   sparse_coding
+  nystroem_method
 )
 
 foreach(dir ${DIRS})

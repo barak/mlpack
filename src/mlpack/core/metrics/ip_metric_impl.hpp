@@ -4,7 +4,7 @@
  *
  * Implementation of the IPMetric.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -66,6 +66,17 @@ inline double IPMetric<KernelType>::Evaluate(const Vec1Type& a,
   // Maybe we can do better by caching some of this?
   return sqrt(kernel.Evaluate(a, a) + kernel.Evaluate(b, b) -
       2 * kernel.Evaluate(a, b));
+}
+
+// Convert object to string.
+template<typename KernelType>
+std::string IPMetric<KernelType>::ToString() const
+{
+  std::ostringstream convert;
+  convert << "IPMetric [" << this << "]" << std::endl;
+  convert << "  Kernel: " << std::endl;
+  convert << util::Indent(kernel.ToString(), 2);
+  return convert.str();
 }
 
 // A specialization for the linear kernel, which actually just turns out to be

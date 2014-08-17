@@ -15,7 +15,7 @@
  *   year={2009}
  * }
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -40,55 +40,7 @@
 #include <mlpack/core/metrics/lmetric.hpp>
 #include <mlpack/methods/neighbor_search/sort_policies/nearest_neighbor_sort.hpp>
 
-namespace mlpack {
-namespace neighbor /** Neighbor-search routines.  These include
-                    * all-nearest-neighbors and all-furthest-neighbors
-                    * searches. */ {
-
-/**
- * Extra data for each node in the tree.  For neighbor searches, each node only
- * needs to store a bound on neighbor distances.
- *
- * Every query is required to make a minimum number of samples to guarantee the
- * desired approximation error. The 'numSamplesMade' keeps track of the minimum
- * number of samples made by all queries in the node in question.
- */
-template<typename SortPolicy>
-class RAQueryStat
-{
- private:
-  //! The bound on the node's neighbor distances.
-  double bound;
-
-  //! The minimum number of samples made by any query in this node.
-  size_t numSamplesMade;
-
- public:
-  /**
-   * Initialize the statistic with the worst possible distance according to our
-   * sorting policy.
-   */
-  RAQueryStat() : bound(SortPolicy::WorstDistance()), numSamplesMade(0) { }
-
-  /**
-   * Initialization for a node.
-   */
-  template<typename TreeType>
-  RAQueryStat(const TreeType& /* node */) :
-    bound(SortPolicy::WorstDistance()),
-    numSamplesMade(0)
-  { }
-
-  //! Get the bound.
-  double Bound() const { return bound; }
-  //! Modify the bound.
-  double& Bound() { return bound; }
-
-  //! Get the number of samples made.
-  size_t NumSamplesMade() const { return numSamplesMade; }
-  //! Modify the number of samples made.
-  size_t& NumSamplesMade() { return numSamplesMade; }
-};
+#include "ra_query_stat.hpp"
 
 /**
  * The RASearch class: This class provides a generic manner to perform
@@ -105,6 +57,8 @@ class RAQueryStat
  *   booktitle={{Advances of Neural Information Processing Systems}},
  *   year={2009}
  * }
+ *
+ * RASearch is currently known to not work with ball trees (#356).
  *
  * @tparam SortPolicy The sort policy for distances; see NearestNeighborSort.
  * @tparam MetricType The metric to use for computation.
@@ -142,7 +96,6 @@ class RASearch
            const typename TreeType::Mat& querySet,
            const bool naive = false,
            const bool singleMode = false,
-           const size_t leafSize = 20,
            const MetricType metric = MetricType());
 
   /**
@@ -170,7 +123,6 @@ class RASearch
   RASearch(const typename TreeType::Mat& referenceSet,
            const bool naive = false,
            const bool singleMode = false,
-           const size_t leafSize = 20,
            const MetricType metric = MetricType());
 
   /**
@@ -301,6 +253,9 @@ class RASearch
    */
   void ResetQueryTree();
 
+  // Returns a string representation of this object.
+  std::string ToString() const;
+
  private:
   //! Copy of reference dataset (if we need it, because tree building modifies
   //! it).
@@ -318,10 +273,10 @@ class RASearch
   //! Pointer to the root of the query tree (might not exist).
   TreeType* queryTree;
 
-  //! Indicates if we should free the reference tree at deletion time.
-  bool ownReferenceTree;
-  //! Indicates if we should free the query tree at deletion time.
-  bool ownQueryTree;
+  //! If true, this object created the trees and is responsible for them.
+  bool treeOwner;
+  //! Indicates if a separate query set was passed.
+  bool hasQuerySet;
 
   //! Indicates if naive random sampling on the set is being used.
   bool naive;

@@ -5,7 +5,7 @@
  * This is an example kernel.  If you are making your own kernel, follow the
  * outline specified in this file.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -93,6 +93,15 @@ class SphericalKernel
   double Evaluate(double t)
   {
     return (t <= bandwidth) ? 1.0 : 0.0;
+  }
+
+  //! Return a string representation of the kernel.
+  std::string ToString() const
+  {
+    std::ostringstream convert;
+    convert << "SphericalKernel [" << this << "]" << std::endl;
+    convert << "  Bandwidth: " << bandwidth << std::endl;
+    return convert.str();
   }
 
  private:

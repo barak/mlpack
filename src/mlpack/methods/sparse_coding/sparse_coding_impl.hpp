@@ -5,7 +5,7 @@
  * Implementation of Sparse Coding with Dictionary Learning using l1 (LASSO) or
  * l1+l2 (Elastic Net) regularization.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -344,6 +344,19 @@ double SparseCoding<DictionaryInitializer>::Objective() const
   {
     return 0.5 * std::pow(froNormResidual, 2.0) + lambda1 * l11NormZ;
   }
+}
+
+template<typename DictionaryInitializer>
+std::string SparseCoding<DictionaryInitializer>::ToString() const
+{
+  std::ostringstream convert;
+  convert << "Sparse Coding  [" << this << "]" << std::endl;
+  convert << "  Data: " << data.n_rows << "x" ;
+  convert <<  data.n_cols << std::endl;
+  convert << "  Atoms: " << atoms << std::endl; 
+  convert << "  Lambda 1: " << lambda1 << std::endl; 
+  convert << "  Lambda 2: " << lambda2 << std::endl; 
+  return convert.str();
 }
 
 }; // namespace sparse_coding

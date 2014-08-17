@@ -3,7 +3,7 @@
  *
  * Tests for tree-building methods.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -23,10 +23,9 @@
 #include <mlpack/core/tree/binary_space_tree/binary_space_tree.hpp>
 #include <mlpack/core/metrics/lmetric.hpp>
 #include <mlpack/core/tree/cover_tree/cover_tree.hpp>
-#include <mlpack/core/tree/cosine_tree/cosine_tree.hpp>
-#include <mlpack/core/tree/cosine_tree/cosine_tree_builder.hpp>
 
 #include <queue>
+#include <stack>
 
 #include <boost/test/unit_test.hpp>
 #include "old_boost_test_definitions.hpp"
@@ -47,6 +46,7 @@ BOOST_AUTO_TEST_CASE(HRectBoundEmptyConstructor)
   HRectBound<2> b;
 
   BOOST_REQUIRE_EQUAL((int) b.Dim(), 0);
+  BOOST_REQUIRE_EQUAL(b.MinWidth(), 0.0);
 }
 
 /**
@@ -69,6 +69,8 @@ BOOST_AUTO_TEST_CASE(HRectBoundDimConstructor)
   BOOST_REQUIRE_SMALL(b[2].Width(), 1e-5);
   BOOST_REQUIRE_SMALL(b[3].Width(), 1e-5);
   BOOST_REQUIRE_SMALL(b[4].Width(), 1e-5);
+
+  BOOST_REQUIRE_EQUAL(b.MinWidth(), 0.0);
 }
 
 /**
@@ -79,6 +81,7 @@ BOOST_AUTO_TEST_CASE(HRectBoundCopyConstructor)
   HRectBound<2> b(2);
   b[0] = Range(0.0, 2.0);
   b[1] = Range(2.0, 3.0);
+  b.MinWidth() = 0.5;
 
   HRectBound<2> c(b);
 
@@ -87,6 +90,7 @@ BOOST_AUTO_TEST_CASE(HRectBoundCopyConstructor)
   BOOST_REQUIRE_CLOSE(c[0].Hi(), 2.0, 1e-5);
   BOOST_REQUIRE_CLOSE(c[1].Lo(), 2.0, 1e-5);
   BOOST_REQUIRE_CLOSE(c[1].Hi(), 3.0, 1e-5);
+  BOOST_REQUIRE_CLOSE(c.MinWidth(), 0.5, 1e-5);
 }
 
 /**
@@ -97,6 +101,7 @@ BOOST_AUTO_TEST_CASE(HRectBoundAssignmentOperator)
   HRectBound<2> b(2);
   b[0] = Range(0.0, 2.0);
   b[1] = Range(2.0, 3.0);
+  b.MinWidth() = 0.5;
 
   HRectBound<2> c(4);
 
@@ -107,6 +112,7 @@ BOOST_AUTO_TEST_CASE(HRectBoundAssignmentOperator)
   BOOST_REQUIRE_CLOSE(c[0].Hi(), 2.0, 1e-5);
   BOOST_REQUIRE_CLOSE(c[1].Lo(), 2.0, 1e-5);
   BOOST_REQUIRE_CLOSE(c[1].Hi(), 3.0, 1e-5);
+  BOOST_REQUIRE_CLOSE(c.MinWidth(), 0.5, 1e-5);
 }
 
 /**
@@ -118,12 +124,14 @@ BOOST_AUTO_TEST_CASE(HRectBoundClear)
 
   b[0] = Range(0.0, 2.0);
   b[1] = Range(2.0, 4.0);
+  b.MinWidth() = 1.0;
 
   // Now we just need to make sure that we clear the range.
   b.Clear();
 
   BOOST_REQUIRE_SMALL(b[0].Width(), 1e-5);
   BOOST_REQUIRE_SMALL(b[1].Width(), 1e-5);
+  BOOST_REQUIRE_SMALL(b.MinWidth(), 1e-5);
 }
 
 /**
@@ -469,6 +477,7 @@ BOOST_AUTO_TEST_CASE(HRectBoundOrOperatorPoint)
   b[2] = Range(-2.0, -1.0);
   b[3] = Range(0.0, 0.0);
   b[4] = Range(); // Empty range.
+  b.MinWidth() = 0.0;
 
   arma::vec point = "2.0 4.0 2.0 -1.0 6.0";
 
@@ -484,6 +493,7 @@ BOOST_AUTO_TEST_CASE(HRectBoundOrOperatorPoint)
   BOOST_REQUIRE_SMALL(b[3].Hi(), 1e-5);
   BOOST_REQUIRE_CLOSE(b[4].Lo(), 6.0, 1e-5);
   BOOST_REQUIRE_CLOSE(b[4].Hi(), 6.0, 1e-5);
+  BOOST_REQUIRE_SMALL(b.MinWidth(), 1e-5);
 }
 
 /**
@@ -559,6 +569,9 @@ BOOST_AUTO_TEST_CASE(HRectBoundOrOperatorBound)
   BOOST_REQUIRE_CLOSE(b[7].Hi(), 3.0, 1e-5);
   BOOST_REQUIRE_CLOSE(d[7].Lo(), 1.0, 1e-5);
   BOOST_REQUIRE_CLOSE(d[7].Hi(), 3.0, 1e-5);
+
+  BOOST_REQUIRE_CLOSE(b.MinWidth(), 1.0, 1e-5);
+  BOOST_REQUIRE_CLOSE(d.MinWidth(), 1.0, 1e-5);
 }
 
 /**
@@ -986,531 +999,6 @@ BOOST_AUTO_TEST_CASE(HRectBoundDiameter)
 }
 
 /**
- * Ensure that a bound, by default, is empty and has no dimensionality, and the
- * box size vector is empty.
- */
-BOOST_AUTO_TEST_CASE(PeriodicHRectBoundEmptyConstructor)
-{
-  PeriodicHRectBound<2> b;
-
-  BOOST_REQUIRE_EQUAL(b.Dim(), 0);
-  BOOST_REQUIRE_EQUAL(b.Box().n_elem, 0);
-}
-
-/**
- * Ensure that when we specify the dimensionality in the constructor, it is
- * correct, and the bounds are all the empty set.
- */
-BOOST_AUTO_TEST_CASE(PeriodicHRectBoundBoxConstructor)
-{
-  PeriodicHRectBound<2> b(arma::vec("5 6"));
-
-  BOOST_REQUIRE_EQUAL(b.Dim(), 2);
-  BOOST_REQUIRE_SMALL(b[0].Width(), 1e-5);
-  BOOST_REQUIRE_SMALL(b[1].Width(), 1e-5);
-  BOOST_REQUIRE_EQUAL(b.Box().n_elem, 2);
-  BOOST_REQUIRE_CLOSE(b.Box()[0], 5.0, 1e-5);
-  BOOST_REQUIRE_CLOSE(b.Box()[1], 6.0, 1e-5);
-
-  PeriodicHRectBound<2> d(arma::vec("2 3 4 5 6"));
-
-  BOOST_REQUIRE_EQUAL(d.Dim(), 5);
-  BOOST_REQUIRE_SMALL(d[0].Width(), 1e-5);
-  BOOST_REQUIRE_SMALL(d[1].Width(), 1e-5);
-  BOOST_REQUIRE_SMALL(d[2].Width(), 1e-5);
-  BOOST_REQUIRE_SMALL(d[3].Width(), 1e-5);
-  BOOST_REQUIRE_SMALL(d[4].Width(), 1e-5);
-  BOOST_REQUIRE_EQUAL(d.Box().n_elem, 5);
-  BOOST_REQUIRE_CLOSE(d.Box()[0], 2.0, 1e-5);
-  BOOST_REQUIRE_CLOSE(d.Box()[1], 3.0, 1e-5);
-  BOOST_REQUIRE_CLOSE(d.Box()[2], 4.0, 1e-5);
-  BOOST_REQUIRE_CLOSE(d.Box()[3], 5.0, 1e-5);
-  BOOST_REQUIRE_CLOSE(d.Box()[4], 6.0, 1e-5);
-}
-
-/**
- * Test the copy constructor.
- */
-BOOST_AUTO_TEST_CASE(PeriodicHRectBoundCopyConstructor)
-{
-  PeriodicHRectBound<2> b(arma::vec("3 4"));
-  b[0] = Range(0.0, 2.0);
-  b[1] = Range(2.0, 3.0);
-
-  PeriodicHRectBound<2> c(b);
-
-  BOOST_REQUIRE_EQUAL(c.Dim(), 2);
-  BOOST_REQUIRE_SMALL(c[0].Lo(), 1e-5);
-  BOOST_REQUIRE_CLOSE(c[0].Hi(), 2.0, 1e-5);
-  BOOST_REQUIRE_CLOSE(c[1].Lo(), 2.0, 1e-5);
-  BOOST_REQUIRE_CLOSE(c[1].Hi(), 3.0, 1e-5);
-  BOOST_REQUIRE_EQUAL(c.Box().n_elem, 2);
-  BOOST_REQUIRE_CLOSE(c.Box()[0], 3.0, 1e-5);
-  BOOST_REQUIRE_CLOSE(c.Box()[1], 4.0, 1e-5);
-}
-
-/**
- * Test the assignment operator.
- *
-BOOST_AUTO_TEST_CASE(PeriodicHRectBoundAssignmentOperator)
-{
-  PeriodicHRectBound<2> b(arma::vec("3 4"));
-  b[0] = Range(0.0, 2.0);
-  b[1] = Range(2.0, 3.0);
-
-  PeriodicHRectBound<2> c(arma::vec("3 4 5 6"));
-
-  c = b;
-
-  BOOST_REQUIRE_EQUAL(c.Dim(), 2);
-  BOOST_REQUIRE_SMALL(c[0].Lo(), 1e-5);
-  BOOST_REQUIRE_CLOSE(c[0].Hi(), 2.0, 1e-5);
-  BOOST_REQUIRE_CLOSE(c[1].Lo(), 2.0, 1e-5);
-  BOOST_REQUIRE_CLOSE(c[1].Hi(), 3.0, 1e-5);
-  BOOST_REQUIRE_EQUAL(c.Box().n_elem, 2);
-  BOOST_REQUIRE_CLOSE(c.Box()[0], 3.0, 1e-5);
-  BOOST_REQUIRE_CLOSE(c.Box()[1], 4.0, 1e-5);
-}*/
-
-/**
- * Ensure that we can set the box size correctly.
- *
-BOOST_AUTO_TEST_CASE(PeriodicHRectBoundSetBoxSize)
-{
-  PeriodicHRectBound<2> b(arma::vec("1 2"));
-
-  b.SetBoxSize(arma::vec("10 12"));
-
-  BOOST_REQUIRE_EQUAL(b.Box().n_elem, 2);
-  BOOST_REQUIRE_CLOSE(b.Box()[0], 10.0, 1e-5);
-  BOOST_REQUIRE_CLOSE(b.Box()[1], 12.0, 1e-5);
-}*/
-
-/**
- * Ensure that we can clear the dimensions correctly.  This does not involve the
- * box size at all, so the test can be identical to the HRectBound test.
- *
-BOOST_AUTO_TEST_CASE(PeriodicHRectBoundClear)
-{
-  // We'll do this with two dimensions only.
-  PeriodicHRectBound<2> b(arma::vec("5 5"));
-
-  b[0] = Range(0.0, 2.0);
-  b[1] = Range(2.0, 4.0);
-
-  // Now we just need to make sure that we clear the range.
-  b.Clear();
-
-  BOOST_REQUIRE_SMALL(b[0].Width(), 1e-5);
-  BOOST_REQUIRE_SMALL(b[1].Width(), 1e-5);
-}*/
-
-/**
- * Ensure that we get the correct centroid for our bound.
- *
-BOOST_AUTO_TEST_CASE(PeriodicHRectBoundCentroid) {
-  // Create a simple 3-dimensional bound.  The centroid is not affected by the
-  // periodic coordinates.
-  PeriodicHRectBound<2> b(arma::vec("100 100 100"));
-
-  b[0] = Range(0.0, 5.0);
-  b[1] = Range(-2.0, -1.0);
-  b[2] = Range(-10.0, 50.0);
-
-  arma::vec centroid;
-
-  b.Centroid(centroid);
-
-  BOOST_REQUIRE_EQUAL(centroid.n_elem, 3);
-  BOOST_REQUIRE_CLOSE(centroid[0], 2.5, 1e-5);
-  BOOST_REQUIRE_CLOSE(centroid[1], -1.5, 1e-5);
-  BOOST_REQUIRE_CLOSE(centroid[2], 20.0, 1e-5);
-}*/
-
-/**
- * Correctly calculate the minimum distance between the bound and a point in
- * periodic coordinates.  We have to account for the shifts necessary in
- * periodic coordinates too, so that makes testing this a little more difficult.
- *
-BOOST_AUTO_TEST_CASE(PeriodicHRectBoundMinDistancePoint)
-{
-  // First, we'll start with a simple 2-dimensional case where the point is
-  // inside the bound, then on the edge of the bound, then barely outside the
-  // bound.  The box size will be large enough that this is basically the
-  // HRectBound case.
-  PeriodicHRectBound<2> b(arma::vec("100 100"));
-
-  b[0] = Range(0.0, 5.0);
-  b[1] = Range(2.0, 4.0);
-
-  // Inside the bound.
-  arma::vec point = "2.5 3.0";
-
-  BOOST_REQUIRE_SMALL(b.MinDistance(point), 1e-5);
-
-  // On the edge.
-  point = "5.0 4.0";
-
-  BOOST_REQUIRE_SMALL(b.MinDistance(point), 1e-5);
-
-  // And just a little outside the bound.
-  point = "6.0 5.0";
-
-  BOOST_REQUIRE_CLOSE(b.MinDistance(point), 2.0, 1e-5);
-
-  // Now we start to invoke the periodicity.  This point will "alias" to (-1,
-  // -1).
-  point = "99.0 99.0";
-
-  BOOST_REQUIRE_CLOSE(b.MinDistance(point), 10.0, 1e-5);
-
-  // We will perform several tests on a one-dimensional bound.
-  PeriodicHRectBound<2> a(arma::vec("5.0"));
-  point.set_size(1);
-
-  a[0] = Range(2.0, 4.0); // Entirely inside box.
-  point[0] = 7.5; // Inside first right image of the box.
-
-  BOOST_REQUIRE_SMALL(a.MinDistance(point), 1e-5);
-
-  a[0] = Range(0.0, 5.0); // Fills box fully.
-  point[1] = 19.3; // Inside the box, which covers everything.
-
-  BOOST_REQUIRE_SMALL(a.MinDistance(point), 1e-5);
-
-  a[0] = Range(-10.0, 10.0); // Larger than the box.
-  point[0] = -500.0; // Inside the box, which covers everything.
-
-  BOOST_REQUIRE_SMALL(a.MinDistance(point), 1e-5);
-
-  a[0] = Range(-2.0, 1.0); // Crosses over an edge.
-  point[0] = 2.9; // The first right image of the bound starts at 3.0.
-
-  BOOST_REQUIRE_CLOSE(a.MinDistance(point), 0.01, 1e-5);
-
-  a[0] = Range(2.0, 4.0); // Inside box.
-  point[0] = 0.0; // Closest to the first left image of the bound.
-
-  BOOST_REQUIRE_CLOSE(a.MinDistance(point), 1.0, 1e-5);
-
-  a[0] = Range(0.0, 2.0); // On edge of box.
-  point[0] = 7.1; // 0.1 away from the first right image of the bound.
-
-  BOOST_REQUIRE_CLOSE(a.MinDistance(point), 0.01, 1e-5);
-
-  PeriodicHRectBound<2> d(arma::vec("0.0"));
-  d[0] = Range(-10.0, 10.0); // Box is of infinite size.
-  point[0] = 810.0; // 800 away from the only image of the box.
-
-  BOOST_REQUIRE_CLOSE(d.MinDistance(point), 640000.0, 1e-5);
-
-  PeriodicHRectBound<2> e(arma::vec("-5.0"));
-  e[0] = Range(2.0, 4.0); // Box size of -5 should function the same as 5.
-  point[0] = -10.8; // Should alias to 4.2.
-
-  BOOST_REQUIRE_CLOSE(e.MinDistance(point), 0.04, 1e-5);
-
-  // Switch our bound to a higher dimensionality.  This should ensure that the
-  // dimensions are independent like they should be.
-  PeriodicHRectBound<2> c(arma::vec("5.0 5.0 5.0 5.0 5.0 5.0 0.0 -5.0"));
-
-  c[0] = Range(2.0, 4.0); // Entirely inside box.
-  c[1] = Range(0.0, 5.0); // Fills box fully.
-  c[2] = Range(-10.0, 10.0); // Larger than the box.
-  c[3] = Range(-2.0, 1.0); // Crosses over an edge.
-  c[4] = Range(2.0, 4.0); // Inside box.
-  c[5] = Range(0.0, 2.0); // On edge of box.
-  c[6] = Range(-10.0, 10.0); // Box is of infinite size.
-  c[7] = Range(2.0, 4.0); // Box size of -5 should function the same as 5.
-
-  point.set_size(8);
-  point[0] = 7.5; // Inside first right image of the box.
-  point[1] = 19.3; // Inside the box, which covers everything.
-  point[2] = -500.0; // Inside the box, which covers everything.
-  point[3] = 2.9; // The first right image of the bound starts at 3.0.
-  point[4] = 0.0; // Closest to the first left image of the bound.
-  point[5] = 7.1; // 0.1 away from the first right image of the bound.
-  point[6] = 810.0; // 800 away from the only image of the box.
-  point[7] = -10.8; // Should alias to 4.2.
-
-  BOOST_REQUIRE_CLOSE(c.MinDistance(point), 640001.06, 1e-10);
-}*/
-
-/**
- * Correctly calculate the minimum distance between the bound and another bound in
- * periodic coordinates.  We have to account for the shifts necessary in
- * periodic coordinates too, so that makes testing this a little more difficult.
- *
-BOOST_AUTO_TEST_CASE(PeriodicHRectBoundMinDistanceBound)
-{
-  // First, we'll start with a simple 2-dimensional case where the bounds are nonoverlapping,
-  // then one bound is on the edge of the other bound,
-  //  then overlapping, then one range entirely covering the other.  The box size will be large enough that this is basically the
-  // HRectBound case.
-  PeriodicHRectBound<2> b(arma::vec("100 100"));
-  PeriodicHRectBound<2> c(arma::vec("100 100"));
-
-  b[0] = Range(0.0, 5.0);
-  b[1] = Range(2.0, 4.0);
-
-  // Inside the bound.
-  c[0] = Range(7.0, 9.0);
-  c[1] = Range(10.0,12.0);
-
-
-  BOOST_REQUIRE_CLOSE(b.MinDistance(c), 40.0, 1e-5);
-
-  // On the edge.
-  c[0] = Range(5.0, 8.0);
-  c[1] = Range(4.0, 6.0);
-
-  BOOST_REQUIRE_SMALL(b.MinDistance(c), 1e-5);
-
-  // Overlapping the bound.
-  c[0] = Range(3.0, 6.0);
-  c[1] = Range(1.0, 3.0);
-
-  BOOST_REQUIRE_SMALL(b.MinDistance(c), 1e-5);
-
-  // One range entirely covering the other
-
-  c[0] = Range(0.0, 6.0);
-  c[1] = Range(1.0, 7.0);
-
-  BOOST_REQUIRE_SMALL(b.MinDistance(c), 1e-5);
-
-  // Now we start to invoke the periodicity.  These bounds "alias" to (-3.0,
-  // -1.0) and (5,0,6.0).
-
-  c[0] = Range(97.0, 99.0);
-  c[1] = Range(105.0, 106.0);
-
-  BOOST_REQUIRE_CLOSE(b.MinDistance(c), 2.0, 1e-5);
-
-  // We will perform several tests on a one-dimensional bound and smaller box size and mostly overlapping.
-  PeriodicHRectBound<2> a(arma::vec("5.0"));
-  PeriodicHRectBound<2> d(a);
-
-  a[0] = Range(2.0, 4.0); // Entirely inside box.
-  d[0] = Range(7.5, 10.0); // In the right image of the box, overlapping ranges.
-
-  BOOST_REQUIRE_SMALL(a.MinDistance(d), 1e-5);
-
-  a[0] = Range(0.0, 5.0); // Fills box fully.
-  d[0] = Range(19.3, 21.0); // Two intervals inside the box, same as range of b[0].
-
-  BOOST_REQUIRE_SMALL(a.MinDistance(d), 1e-5);
-
-  a[0] = Range(-10.0, 10.0); // Larger than the box.
-  d[0] = Range(-500.0, -498.0); // Inside the box, which covers everything.
-
-  BOOST_REQUIRE_SMALL(a.MinDistance(d), 1e-5);
-
-  a[0] = Range(-2.0, 1.0); // Crosses over an edge.
-  d[0] = Range(2.9, 5.1); // The first right image of the bound starts at 3.0. Overlapping
-
-  BOOST_REQUIRE_SMALL(a.MinDistance(d), 1e-5);
-
-  a[0] = Range(-1.0, 1.0); // Crosses over an edge.
-  d[0] = Range(11.9, 12.5); // The first right image of the bound starts at 4.0.
-  BOOST_REQUIRE_CLOSE(a.MinDistance(d), 0.81, 1e-5);
-
-  a[0] = Range(2.0, 3.0);
-  d[0] = Range(9.5, 11);
-  BOOST_REQUIRE_CLOSE(a.MinDistance(d), 1.0, 1e-5);
-
-}*/
-
-/**
- * Correctly calculate the maximum distance between the bound and a point in
- * periodic coordinates.  We have to account for the shifts necessary in
- * periodic coordinates too, so that makes testing this a little more difficult.
- *
-BOOST_AUTO_TEST_CASE(PeriodicHRectBoundMaxDistancePoint)
-{
-  // First, we'll start with a simple 2-dimensional case where the point is
-  // inside the bound, then on the edge of the bound, then barely outside the
-  // bound.  The box size will be large enough that this is basically the
-  // HRectBound case.
-  PeriodicHRectBound<2> b(arma::vec("100 100"));
-
-  b[0] = Range(0.0, 5.0);
-  b[1] = Range(2.0, 4.0);
-
-  // Inside the bound.
-  arma::vec point = "2.5 3.0";
-
-  //BOOST_REQUIRE_CLOSE(b.MaxDistance(point), 7.25, 1e-5);
-
-  // On the edge.
-  point = "5.0 4.0";
-
-  BOOST_REQUIRE_CLOSE(b.MaxDistance(point), 29.0, 1e-5);
-
-  // And just a little outside the bound.
-  point = "6.0 5.0";
-
-  BOOST_REQUIRE_CLOSE(b.MaxDistance(point), 45.0, 1e-5);
-
-  // Now we start to invoke the periodicity.  This point will "alias" to (-1,
-  // -1).
-  point = "99.0 99.0";
-
-  BOOST_REQUIRE_CLOSE(b.MaxDistance(point), 61.0, 1e-5);
-
-  // We will perform several tests on a one-dimensional bound and smaller box size.
-  PeriodicHRectBound<2> a(arma::vec("5.0"));
-  point.set_size(1);
-
-  a[0] = Range(2.0, 4.0); // Entirely inside box.
-  point[0] = 7.5; // Inside first right image of the box.
-
-  BOOST_REQUIRE_CLOSE(a.MaxDistance(point), 2.25, 1e-5);
-
-  a[0] = Range(0.0, 5.0); // Fills box fully.
-  point[1] = 19.3; // Inside the box, which covers everything.
-
-  BOOST_REQUIRE_CLOSE(a.MaxDistance(point), 18.49, 1e-5);
-
-  a[0] = Range(-10.0, 10.0); // Larger than the box.
-  point[0] = -500.0; // Inside the box, which covers everything.
-
-  BOOST_REQUIRE_CLOSE(a.MaxDistance(point), 25.0, 1e-5);
-
-  a[0] = Range(-2.0, 1.0); // Crosses over an edge.
-  point[0] = 2.9; // The first right image of the bound starts at 3.0.
-
-  BOOST_REQUIRE_CLOSE(a.MaxDistance(point), 8.41, 1e-5);
-
-  a[0] = Range(2.0, 4.0); // Inside box.
-  point[0] = 0.0; // Farthest from the first right image of the bound.
-
-  BOOST_REQUIRE_CLOSE(a.MaxDistance(point), 25.0, 1e-5);
-
-  a[0] = Range(0.0, 2.0); // On edge of box.
-  point[0] = 7.1; // 2.1 away from the first left image of the bound.
-
-  BOOST_REQUIRE_CLOSE(a.MaxDistance(point), 4.41, 1e-5);
-
-  PeriodicHRectBound<2> d(arma::vec("0.0"));
-  d[0] = Range(-10.0, 10.0); // Box is of infinite size.
-  point[0] = 810.0; // 820 away from the only left image of the box.
-
-  BOOST_REQUIRE_CLOSE(d.MinDistance(point), 672400.0, 1e-5);
-
-  PeriodicHRectBound<2> e(arma::vec("-5.0"));
-  e[0] = Range(2.0, 4.0); // Box size of -5 should function the same as 5.
-  point[0] = -10.8; // Should alias to 4.2.
-
-  BOOST_REQUIRE_CLOSE(e.MaxDistance(point), 4.84, 1e-5);
-
-  // Switch our bound to a higher dimensionality.  This should ensure that the
-  // dimensions are independent like they should be.
-  PeriodicHRectBound<2> c(arma::vec("5.0 5.0 5.0 5.0 5.0 5.0 0.0 -5.0"));
-
-  c[0] = Range(2.0, 4.0); // Entirely inside box.
-  c[1] = Range(0.0, 5.0); // Fills box fully.
-  c[2] = Range(-10.0, 10.0); // Larger than the box.
-  c[3] = Range(-2.0, 1.0); // Crosses over an edge.
-  c[4] = Range(2.0, 4.0); // Inside box.
-  c[5] = Range(0.0, 2.0); // On edge of box.
-  c[6] = Range(-10.0, 10.0); // Box is of infinite size.
-  c[7] = Range(2.0, 4.0); // Box size of -5 should function the same as 5.
-
-  point.set_size(8);
-  point[0] = 7.5; // Inside first right image of the box.
-  point[1] = 19.3; // Inside the box, which covers everything.
-  point[2] = -500.0; // Inside the box, which covers everything.
-  point[3] = 2.9; // The first right image of the bound starts at 3.0.
-  point[4] = 0.0; // Closest to the first left image of the bound.
-  point[5] = 7.1; // 0.1 away from the first right image of the bound.
-  point[6] = 810.0; // 800 away from the only image of the box.
-  point[7] = -10.8; // Should alias to 4.2.
-
-  BOOST_REQUIRE_CLOSE(c.MaxDistance(point), 672630.65, 1e-10);
-}*/
-
-/**
- * Correctly calculate the maximum distance between the bound and another bound in
- * periodic coordinates.  We have to account for the shifts necessary in
- * periodic coordinates too, so that makes testing this a little more difficult.
- *
-BOOST_AUTO_TEST_CASE(PeriodicHRectBoundMaxDistanceBound)
-{
-  // First, we'll start with a simple 2-dimensional case where the bounds are nonoverlapping,
-  // then one bound is on the edge of the other bound,
-  //  then overlapping, then one range entirely covering the other.  The box size will be large enough that this is basically the
-  // HRectBound case.
-  PeriodicHRectBound<2> b(arma::vec("100 100"));
-  PeriodicHRectBound<2> c(b);
-
-  b[0] = Range(0.0, 5.0);
-  b[1] = Range(2.0, 4.0);
-
-  // Inside the bound.
-
-  c[0] = Range(7.0, 9.0);
-  c[1] = Range(10.0,12.0);
-
-
-  BOOST_REQUIRE_CLOSE(b.MaxDistance(c), 181.0, 1e-5);
-
-  // On the edge.
-
-  c[0] = Range(5.0, 8.0);
-  c[1] = Range(4.0, 6.0);
-
-  BOOST_REQUIRE_CLOSE(b.MaxDistance(c), 80.0, 1e-5);
-
-  // Overlapping the bound.
-
-  c[0] = Range(3.0, 6.0);
-  c[1] = Range(1.0, 3.0);
-
-  BOOST_REQUIRE_CLOSE(b.MaxDistance(c), 45.0, 1e-5);
-
-  // One range entirely covering the other
-
-  c[0] = Range(0.0, 6.0);
-  c[1] = Range(1.0, 7.0);
-
-   BOOST_REQUIRE_CLOSE(b.MaxDistance(c), 61.0, 1e-5);
-
-  // Now we start to invoke the periodicity.  Thess bounds "alias" to (-3.0,
-  // -1.0) and (5,0,6.0).
-
-  c[0] = Range(97.0, 99.0);
-  c[1] = Range(105.0, 106.0);
-
-  BOOST_REQUIRE_CLOSE(b.MaxDistance(c), 80.0, 1e-5);
-
-  // We will perform several tests on a one-dimensional bound and smaller box size.
-  PeriodicHRectBound<2> a(arma::vec("5.0"));
-  PeriodicHRectBound<2> d(a);
-
-  a[0] = Range(2.0, 4.0); // Entirely inside box.
-  d[0] = Range(7.5, 10); // In the right image of the box, overlapping ranges.
-
-  BOOST_REQUIRE_CLOSE(a.MaxDistance(d), 9.0, 1e-5);
-
-  a[0] = Range(0.0, 5.0); // Fills box fully.
-  d[0] = Range(19.3, 21.0); // Two intervals inside the box, same as range of b[0].
-
-  BOOST_REQUIRE_CLOSE(a.MaxDistance(d), 18.49, 1e-5);
-
-  a[0] = Range(-10.0, 10.0); // Larger than the box.
-  d[0] = Range(-500.0, -498.0); // Inside the box, which covers everything.
-
-  BOOST_REQUIRE_CLOSE(a.MaxDistance(d), 9.0, 1e-5);
-
-  a[0] = Range(-2.0, 1.0); // Crosses over an edge.
-  d[0] = Range(2.9, 5.1); // The first right image of the bound starts at 3.0.
-
-  BOOST_REQUIRE_CLOSE(a.MaxDistance(d), 24.01, 1e-5);
-}*/
-
-
-/**
  * It seems as though Bill has stumbled across a bug where
  * BinarySpaceTree<>::count() returns something different than
  * BinarySpaceTree<>::count_.  So, let's build a simple tree and make sure they
@@ -1616,7 +1104,7 @@ BOOST_AUTO_TEST_CASE(FurthestPointDistanceTest)
     BinarySpaceTree<HRectBound<2> >* node = nodeQueue.front();
     nodeQueue.pop();
 
-    if (node->NumChildren() == 0)
+    if (node->NumChildren() != 0)
       BOOST_REQUIRE_EQUAL(node->FurthestPointDistance(), 0.0);
     else
     {
@@ -1645,9 +1133,94 @@ BOOST_AUTO_TEST_CASE(FurthestPointDistanceTest)
   }
 }
 
+BOOST_AUTO_TEST_CASE(ParentDistanceTest)
+{
+  arma::mat dataset;
+  dataset.randu(5, 500);
+
+  BinarySpaceTree<HRectBound<2> > tree(dataset);
+
+  // The root's parent distance should be 0 (although maybe it doesn't actually
+  // matter; I just want to be sure it's not an uninitialized value, which this
+  // test *sort* of checks).
+  BOOST_REQUIRE_EQUAL(tree.ParentDistance(), 0.0);
+
+  // Do a depth-first traversal and make sure the parent distance is the same as
+  // we calculate.
+  std::stack<BinarySpaceTree<HRectBound<2> >*> nodeStack;
+  nodeStack.push(&tree);
+
+  while (!nodeStack.empty())
+  {
+    BinarySpaceTree<HRectBound<2> >* node = nodeStack.top();
+    nodeStack.pop();
+
+    // If it's a leaf, nothing to check.
+    if (node->NumChildren() == 0)
+      continue;
+
+    arma::vec centroid, leftCentroid, rightCentroid;
+    node->Centroid(centroid);
+    node->Left()->Centroid(leftCentroid);
+    node->Right()->Centroid(rightCentroid);
+
+    const double leftDistance = LMetric<2>::Evaluate(centroid, leftCentroid);
+    const double rightDistance = LMetric<2>::Evaluate(centroid, rightCentroid);
+
+    BOOST_REQUIRE_CLOSE(leftDistance, node->Left()->ParentDistance(), 1e-5);
+    BOOST_REQUIRE_CLOSE(rightDistance, node->Right()->ParentDistance(), 1e-5);
+
+    nodeStack.push(node->Left());
+    nodeStack.push(node->Right());
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ParentDistanceTestWithMapping)
+{
+  arma::mat dataset;
+  dataset.randu(5, 500);
+  std::vector<size_t> oldFromNew;
+
+  BinarySpaceTree<HRectBound<2> > tree(dataset, oldFromNew);
+
+  // The root's parent distance should be 0 (although maybe it doesn't actually
+  // matter; I just want to be sure it's not an uninitialized value, which this
+  // test *sort* of checks).
+  BOOST_REQUIRE_EQUAL(tree.ParentDistance(), 0.0);
+
+  // Do a depth-first traversal and make sure the parent distance is the same as
+  // we calculate.
+  std::stack<BinarySpaceTree<HRectBound<2> >*> nodeStack;
+  nodeStack.push(&tree);
+
+  while (!nodeStack.empty())
+  {
+    BinarySpaceTree<HRectBound<2> >* node = nodeStack.top();
+    nodeStack.pop();
+
+    // If it's a leaf, nothing to check.
+    if (node->NumChildren() == 0)
+      continue;
+
+    arma::vec centroid, leftCentroid, rightCentroid;
+    node->Centroid(centroid);
+    node->Left()->Centroid(leftCentroid);
+    node->Right()->Centroid(rightCentroid);
+
+    const double leftDistance = LMetric<2>::Evaluate(centroid, leftCentroid);
+    const double rightDistance = LMetric<2>::Evaluate(centroid, rightCentroid);
+
+    BOOST_REQUIRE_CLOSE(leftDistance, node->Left()->ParentDistance(), 1e-5);
+    BOOST_REQUIRE_CLOSE(rightDistance, node->Right()->ParentDistance(), 1e-5);
+
+    nodeStack.push(node->Left());
+    nodeStack.push(node->Right());
+  }
+}
+
 // Forward declaration of methods we need for the next test.
 template<typename TreeType, typename MatType>
-bool CheckPointBounds(TreeType* node, const MatType& data);
+bool CheckPointBounds(TreeType& node, const MatType& data);
 
 template<typename TreeType>
 void GenerateVectorOfTree(TreeType* node,
@@ -1715,7 +1288,7 @@ BOOST_AUTO_TEST_CASE(KdTreeTest)
     }
 
     // Now check that each point is contained inside of all bounds above it.
-    CheckPointBounds(&root, dataset);
+    CheckPointBounds(root, dataset);
 
     // Now check that no peers overlap.
     std::vector<TreeType*> v;
@@ -1750,20 +1323,74 @@ BOOST_AUTO_TEST_CASE(KdTreeTest)
 
 // Recursively checks that each node contains all points that it claims to have.
 template<typename TreeType, typename MatType>
-bool CheckPointBounds(TreeType* node, const MatType& data)
+bool CheckPointBounds(TreeType& node, const MatType& data)
 {
-  if (node == NULL) // We have passed a leaf node.
-    return true;
-
-  TreeType* left = node->Left();
-  TreeType* right = node->Right();
-
   // Check that each point which this tree claims is actually inside the tree.
-  for (size_t index = 0; index < node->NumDescendants(); index++)
-    if (!node->Bound().Contains(data.col(node->Descendant(index))))
+  for (size_t index = 0; index < node.NumDescendants(); index++)
+    if (!node.Bound().Contains(data.col(node.Descendant(index))))
       return false;
 
-  return CheckPointBounds(left, data) && CheckPointBounds(right, data);
+  bool result = true;
+  for (size_t child = 0; child < node.NumChildren(); ++child)
+    result &= CheckPointBounds(node.Child(child), data);
+  return result;
+}
+
+/**
+ * Exhaustive ball tree test based on #125.
+ *
+ * - Generate a random dataset of a random size.
+ * - Build a tree on that dataset.
+ * - Ensure all the permutation indices map back to the correct points.
+ * - Verify that each point is contained inside all of the bounds of its parent
+ *     nodes.
+ *
+ * Then, we do that whole process a handful of times.
+ */
+BOOST_AUTO_TEST_CASE(BallTreeTest)
+{
+  typedef BinarySpaceTree<BallBound<> > TreeType;
+
+  size_t maxRuns = 10; // Ten total tests.
+  size_t pointIncrements = 1000; // Range is from 2000 points to 11000.
+
+  // We use the default leaf size of 20.
+  for(size_t run = 0; run < maxRuns; run++)
+  {
+    size_t dimensions = run + 2;
+    size_t maxPoints = (run + 1) * pointIncrements;
+
+    size_t size = maxPoints;
+    arma::mat dataset = arma::mat(dimensions, size);
+    arma::mat datacopy; // Used to test mappings.
+
+    // Mappings for post-sort verification of data.
+    std::vector<size_t> newToOld;
+    std::vector<size_t> oldToNew;
+
+    // Generate data.
+    dataset.randu();
+    datacopy = dataset; // Save a copy.
+
+    // Build the tree itself.
+    TreeType root(dataset, newToOld, oldToNew);
+
+    // Ensure the size of the tree is correct.
+    BOOST_REQUIRE_EQUAL(root.NumDescendants(), size);
+
+    // Check the forward and backward mappings for correctness.
+    for(size_t i = 0; i < size; i++)
+    {
+      for(size_t j = 0; j < dimensions; j++)
+      {
+        BOOST_REQUIRE_EQUAL(dataset(j, i), datacopy(j, newToOld[i]));
+        BOOST_REQUIRE_EQUAL(dataset(j, oldToNew[i]), datacopy(j, i));
+      }
+    }
+
+    // Now check that each point is contained inside of all bounds above it.
+    CheckPointBounds(root, dataset);
+  }
 }
 
 template<int t_pow>
@@ -1870,7 +1497,7 @@ BOOST_AUTO_TEST_CASE(ExhaustiveSparseKDTreeTest)
     }
 
     // Now check that each point is contained inside of all bounds above it.
-    CheckPointBounds(&root, dataset);
+    CheckPointBounds(root, dataset);
 
     // Now check that no peers overlap.
     std::vector<TreeType*> v;
@@ -2367,198 +1994,6 @@ BOOST_AUTO_TEST_CASE(CoverTreeDescendantTest)
   // Now check that the NumDescendants() count and each Descendant() is right
   // using the recursive function above.
   CheckDescendants(&tree);
-}
-
-/*
- * Make sure that constructor for cosine tree is working.
- */
-BOOST_AUTO_TEST_CASE(CosineTreeConstructorTest)
-{
-  // Create test data.
-  arma::mat data = arma::randu<arma::mat>(5, 5);
-  arma::rowvec centroid = arma::randu<arma::rowvec>(1, 5);
-  arma::vec probabilities = arma::randu<arma::vec>(5, 1);
-
-  // Creating a cosine tree.
-  CosineTree ct(data, centroid, probabilities);
-
-  const arma::mat& dataRet = ct.Data();
-  const arma::rowvec& centroidRet = ct.Centroid();
-  const arma::vec& probabilitiesRet = ct.Probabilities();
-
-  // Check correctness of dimensionality of data matrix.
-  BOOST_REQUIRE_EQUAL(data.n_cols, dataRet.n_rows);
-  BOOST_REQUIRE_EQUAL(data.n_rows, dataRet.n_cols);
-
-  // Check the data matrix.
-  for (size_t i = 0; i < data.n_cols; i++)
-    for (size_t j = 0; j < data.n_rows; j++)
-      BOOST_REQUIRE_CLOSE((double) dataRet(j, i), (double) data(i, j), 1e-5);
-
-  // Check correctness of dimensionality of centroid.
-  BOOST_REQUIRE_EQUAL(centroid.n_cols, centroidRet.n_cols);
-  BOOST_REQUIRE_EQUAL(centroid.n_rows, centroidRet.n_rows);
-
-  // Check centroid.
-  for (size_t i = 0; i < centroid.n_cols; i++)
-    BOOST_REQUIRE_CLOSE((double) centroidRet(0, i), (double) centroid(0,i),
-        1e-5);
-
-  // Check correctness of dimentionality of sampling probabilities.
-  BOOST_REQUIRE_EQUAL(probabilities.n_cols, probabilitiesRet.n_cols);
-  BOOST_REQUIRE_EQUAL(probabilities.n_rows, probabilitiesRet.n_rows);
-
-  // Check sampling probabilities.
-  for (size_t i = 0; i < probabilities.n_rows; i++)
-    BOOST_REQUIRE_CLOSE((double) probabilitiesRet(i, 0), (double)
-        probabilities(i, 0), 1e-5);
-
-  // Check pointers of children nodes.
-  BOOST_REQUIRE(ct.Right() == NULL);
-  BOOST_REQUIRE(ct.Left() == NULL);
-}
-
-/**
- * Make sure that CTNode function in Cosine tree builder is working.
- */
-BOOST_AUTO_TEST_CASE(CosineTreeEmptyConstructorTest)
-{
-  // Create a tree through the empty constructor.
-  CosineTree ct;
-
-  // Check to make sure it has no children.
-  BOOST_REQUIRE(ct.Right() == NULL);
-  BOOST_REQUIRE(ct.Left() == NULL);
-}
-
-/**
- * Make sure that CTNode function in CosineTreeBuilder is working.
- * This test just validates the dimentionality and data.
- */
-BOOST_AUTO_TEST_CASE(CosineTreeBuilderCTNodeTest)
-{
-  // Create dummy test data.
-  arma::mat data = arma::randu<arma::mat>(5, 5);
-
-  // Create a cosine tree builder object.
-  CosineTreeBuilder builder;
-
-  // Create a cosine tree object.
-  CosineTree ct;
-
-  // Use the builder to create the tree.
-  builder.CTNode(data, ct);
-
-  const arma::mat& dataRet = ct.Data();
-  const arma::rowvec& centroidRet = ct.Centroid();
-  const arma::vec& probabilitiesRet = ct.Probabilities();
-
-  // Check correctness of dimentionality of data.
-  BOOST_REQUIRE_EQUAL(data.n_cols, dataRet.n_cols);
-  BOOST_REQUIRE_EQUAL(data.n_rows, dataRet.n_rows);
-
-  // Check data.
-  for (size_t i = 0; i < data.n_cols; i++)
-    for (size_t j = 0; j < data.n_rows; j++)
-      BOOST_REQUIRE_CLOSE((double) dataRet(j, i), (double) data(i, j), 1e-5);
-
-  // Check correctness of dimensionality of centroid.
-  BOOST_REQUIRE_EQUAL(data.n_rows, centroidRet.n_cols);
-  BOOST_REQUIRE_EQUAL(1, centroidRet.n_rows);
-
-  // Check correctness of dimensionality of sampling probabilities.
-  BOOST_REQUIRE_EQUAL(1, probabilitiesRet.n_cols);
-  BOOST_REQUIRE_EQUAL(data.n_rows, probabilitiesRet.n_rows);
-
-  // Check pointers of children nodes.
-  BOOST_REQUIRE(ct.Right() == NULL);
-  BOOST_REQUIRE(ct.Left() == NULL);
-
-}
-
-/**
- * Make sure that the centroid is calculated correctly when the cosine tree is
- * built.
- */
-BOOST_AUTO_TEST_CASE(CosineTreeBuilderCentroidTest)
-{
-  // Create dummy test data.
-  arma::mat data;
-  data << 1.0 << 2.0 << 3.0 << arma::endr
-       << 4.0 << 2.0 << 3.0 << arma::endr
-       << 2.5 << 3.0 << 2.0 << arma::endr;
-
-  // Expected centroid.
-  arma::vec c;
-  c << 2.0 << 3.0 << 2.5 << arma::endr;
-
-  // Build the cosine tree.
-  CosineTreeBuilder builder;
-  CosineTree ct;
-  builder.CTNode(data, ct);
-
-  // Get the centroid.
-  arma::rowvec centroid = ct.Centroid();
-
-  // Check correctness of the centroid.
-  BOOST_REQUIRE_CLOSE((double) c(0, 0), (double) centroid(0, 0), 1e-5);
-  BOOST_REQUIRE_CLOSE((double) c(1, 0), (double) centroid(0, 1), 1e-5);
-  BOOST_REQUIRE_CLOSE((double) c(2, 0), (double) centroid(0, 2), 1e-5);
-}
-
-/**
- * Make sure that the sampling probabilities are calculated correctly when the
- * cosine tree is built.
- */
-BOOST_AUTO_TEST_CASE(CosineTreeBuilderProbabilitiesTest)
-{
-  // Create dummy test data.
-  arma::mat data;
-  data << 100.0 <<   2.0 <<   3.0 << arma::endr
-       << 400.0 <<   2.0 <<   3.0 << arma::endr
-       << 200.5 <<   3.0 <<   2.0 << arma::endr;
-
-  // Expected sample probability.
-  arma::vec p;
-  p << 0.999907 << 0.00899223 << 0.0102295 << arma::endr;
-
-  // Create the cosine tree.
-  CosineTreeBuilder builder;
-  CosineTree ct;
-  builder.CTNode(data, ct);
-
-  // Get the probabilities.
-  const arma::vec& probabilities = ct.Probabilities();
-
-  // Check correctness of sampling probabilities.
-  BOOST_REQUIRE_CLOSE((double) p(0, 0), (double) probabilities(0, 0), 1e-4);
-  BOOST_REQUIRE_CLOSE((double) p(1, 0), (double) probabilities(1, 0), 1e-4);
-  BOOST_REQUIRE_CLOSE((double) p(2, 0), (double) probabilities(2, 0), 1e-4);
-}
-
-/**
- * Make sure that the cosine tree builder is splitting nodes.
- */
-BOOST_AUTO_TEST_CASE(CosineTreeBuilderCTNodeSplitTest)
-{
-  // Create dummy test data.
-  arma::mat data;
-  data << 100.0 <<   2.0 <<   3.0 << arma::endr
-       << 400.0 <<   2.0 <<   3.0 << arma::endr
-       << 200.5 <<   3.0 <<   2.0 << arma::endr;
-
-  // Build a cosine tree root node, and then split it.
-  CosineTreeBuilder builder;
-  CosineTree root, left, right;
-  builder.CTNode(data, root);
-  builder.CTNodeSplit(root, left, right);
-
-  // Ensure that there is no data loss.
-  BOOST_REQUIRE_EQUAL((left.NumPoints() + right.NumPoints()), root.NumPoints());
-
-  // Ensure that the dimensionality is correct.
-  BOOST_REQUIRE_EQUAL(left.Data().n_cols, data.n_cols);
-  BOOST_REQUIRE_EQUAL(right.Data().n_cols, data.n_cols);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

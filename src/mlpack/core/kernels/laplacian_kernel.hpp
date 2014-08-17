@@ -4,7 +4,7 @@
  *
  * Implementation of the Laplacian kernel (LaplacianKernel).
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -91,6 +91,15 @@ class LaplacianKernel
   double Bandwidth() const { return bandwidth; }
   //! Modify the bandwidth.
   double& Bandwidth() { return bandwidth; }
+
+  //! Return a string representation of the kernel.
+  std::string ToString() const
+  {
+    std::ostringstream convert;
+    convert << "LaplacianKernel [" << this << "]" << std::endl;
+    convert << "  Bandwidth: " << bandwidth << std::endl;
+    return convert.str();
+  }
 
  private:
   //! Kernel bandwidth.

@@ -5,7 +5,7 @@
  * Implementation of the AllkNN executable.  Allows some number of standard
  * options.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -39,7 +39,7 @@ using namespace mlpack::tree;
 PROGRAM_INFO("All K-Nearest-Neighbors",
     "This program will calculate the all k-nearest-neighbors of a set of "
     "points using kd-trees or cover trees (cover tree support is experimental "
-    "and may not be optimally fast). You may specify a separate set of "
+    "and may be slow). You may specify a separate set of "
     "reference points and query points, or just a reference set which will be "
     "used as both the reference and query set."
     "\n\n"
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
   }
 
   // Sanity check on k value: must be greater than 0, must be less than the
-  // number of reference points.
+  // number of reference points.  Since it is unsigned, we only test the upper bound.
   if (k > referenceData.n_cols)
   {
     Log::Fatal << "Invalid k: " << k << "; must be greater than 0 and less ";
@@ -125,10 +125,10 @@ int main(int argc, char *argv[])
   }
 
   // Sanity check on leaf size.
-  if (lsInt < 0)
+  if (lsInt < 1)
   {
     Log::Fatal << "Invalid leaf size: " << lsInt << ".  Must be greater "
-        "than or equal to 0." << endl;
+        "than 0." << endl;
   }
   size_t leafSize = lsInt;
 
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
   {
     Log::Warn << "--single_mode ignored because --naive is present." << endl;
   }
-
+ 
   if (naive)
     leafSize = referenceData.n_cols;
 

@@ -5,7 +5,7 @@
  * Implementation of Neighbor-Search class to perform all-nearest-neighbors on
  * two specified data sets.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -27,43 +27,80 @@
 
 #include "neighbor_search_rules.hpp"
 
-using namespace mlpack::neighbor;
+namespace mlpack {
+namespace neighbor {
+
+//! Call the tree constructor that does mapping.
+template<typename TreeType>
+TreeType* BuildTree(
+    typename TreeType::Mat& dataset,
+    std::vector<size_t>& oldFromNew,
+    typename boost::enable_if_c<
+        tree::TreeTraits<TreeType>::RearrangesDataset == true, TreeType*
+    >::type = 0)
+{
+  return new TreeType(dataset, oldFromNew);
+}
+
+//! Call the tree constructor that does not do mapping.
+template<typename TreeType>
+TreeType* BuildTree(
+    const typename TreeType::Mat& dataset,
+    const std::vector<size_t>& /* oldFromNew */,
+    const typename boost::enable_if_c<
+        tree::TreeTraits<TreeType>::RearrangesDataset == false, TreeType*
+    >::type = 0)
+{
+  return new TreeType(dataset);
+}
 
 // Construct the object.
 template<typename SortPolicy, typename MetricType, typename TreeType>
 NeighborSearch<SortPolicy, MetricType, TreeType>::
-NeighborSearch(const typename TreeType::Mat& referenceSet,
-               const typename TreeType::Mat& querySet,
+NeighborSearch(const typename TreeType::Mat& referenceSetIn,
+               const typename TreeType::Mat& querySetIn,
                const bool naive,
                const bool singleMode,
-               const size_t leafSize,
                const MetricType metric) :
-    referenceCopy(referenceSet),
-    queryCopy(querySet),
-    referenceSet(referenceCopy),
-    querySet(queryCopy),
+    referenceSet(tree::TreeTraits<TreeType>::RearrangesDataset ? referenceCopy
+        : referenceSetIn),
+    querySet(tree::TreeTraits<TreeType>::RearrangesDataset ? queryCopy
+        : querySetIn),
     referenceTree(NULL),
     queryTree(NULL),
-    treeOwner(true), // False if a tree was passed.
+    treeOwner(!naive), // False if a tree was passed.  If naive, then no trees.
     hasQuerySet(true),
     naive(naive),
     singleMode(!naive && singleMode), // No single mode if naive.
-    metric(metric),
-    numberOfPrunes(0)
+    metric(metric)
 {
   // C++11 will allow us to call out to other constructors so we can avoid this
-  // copypasta problem.
+  // copy/paste problem.
 
   // We'll time tree building, but only if we are building trees.
   Timer::Start("tree_building");
 
-  // Construct as a naive object if we need to.
-  referenceTree = new TreeType(referenceCopy, oldFromNewReferences,
-      (naive ? referenceCopy.n_cols : leafSize));
+  // Copy the datasets, if they will be modified during tree building.
+  if (tree::TreeTraits<TreeType>::RearrangesDataset)
+  {
+    referenceCopy = referenceSetIn;
+    queryCopy = querySetIn;
+  }
 
-  if (!singleMode)
-    queryTree = new TreeType(queryCopy, oldFromNewQueries,
-        (naive ? querySet.n_cols : leafSize));
+  // If not in naive mode, then we need to build trees.
+  if (!naive)
+  {
+    // The const_cast is safe; if RearrangesDataset == false, then it'll be
+    // casted back to const anyway, and if not, referenceSet points to
+    // referenceCopy, which isn't const.
+    referenceTree = BuildTree<TreeType>(
+        const_cast<typename TreeType::Mat&>(referenceSet),
+        oldFromNewReferences);
+
+    if (!singleMode)
+      queryTree = BuildTree<TreeType>(
+          const_cast<typename TreeType::Mat&>(querySet), oldFromNewQueries);
+  }
 
   // Stop the timer we started above (if we need to).
   Timer::Stop("tree_building");
@@ -72,31 +109,42 @@ NeighborSearch(const typename TreeType::Mat& referenceSet,
 // Construct the object.
 template<typename SortPolicy, typename MetricType, typename TreeType>
 NeighborSearch<SortPolicy, MetricType, TreeType>::
-NeighborSearch(const typename TreeType::Mat& referenceSet,
+NeighborSearch(const typename TreeType::Mat& referenceSetIn,
                const bool naive,
                const bool singleMode,
-               const size_t leafSize,
                const MetricType metric) :
-    referenceCopy(referenceSet),
-    referenceSet(referenceCopy),
-    querySet(referenceCopy),
+    referenceSet(tree::TreeTraits<TreeType>::RearrangesDataset ? referenceCopy
+        : referenceSetIn),
+    querySet(tree::TreeTraits<TreeType>::RearrangesDataset ? referenceCopy
+        : referenceSetIn),
     referenceTree(NULL),
     queryTree(NULL),
-    treeOwner(true),
+    treeOwner(!naive), // If naive, then we are not building any trees.
     hasQuerySet(false),
     naive(naive),
     singleMode(!naive && singleMode), // No single mode if naive.
-    metric(metric),
-    numberOfPrunes(0)
+    metric(metric)
 {
   // We'll time tree building, but only if we are building trees.
   Timer::Start("tree_building");
 
-  // Construct as a naive object if we need to.
-  referenceTree = new TreeType(referenceCopy, oldFromNewReferences,
-      (naive ? referenceSet.n_cols : leafSize));
-  if (!singleMode)
-    queryTree = new TreeType(*referenceTree);
+  // Copy the dataset, if it will be modified during tree building.
+  if (tree::TreeTraits<TreeType>::RearrangesDataset)
+    referenceCopy = referenceSetIn;
+
+  // If not in naive mode, then we may need to construct trees.
+  if (!naive)
+  {
+    // The const_cast is safe; if RearrangesDataset == false, then it'll be
+    // casted back to const anyway, and if not, referenceSet points to
+    // referenceCopy, which isn't const.
+    referenceTree = BuildTree<TreeType>(
+        const_cast<typename TreeType::Mat&>(referenceSet),
+        oldFromNewReferences);
+
+    if (!singleMode)
+      queryTree = new TreeType(*referenceTree);
+  }
 
   // Stop the timer we started above.
   Timer::Stop("tree_building");
@@ -119,8 +167,7 @@ NeighborSearch<SortPolicy, MetricType, TreeType>::NeighborSearch(
     hasQuerySet(true),
     naive(false),
     singleMode(singleMode),
-    metric(metric),
-    numberOfPrunes(0)
+    metric(metric)
 {
   // Nothing else to initialize.
 }
@@ -140,8 +187,7 @@ NeighborSearch<SortPolicy, MetricType, TreeType>::NeighborSearch(
     hasQuerySet(false), // In this case we will own a tree, if singleMode.
     naive(false),
     singleMode(singleMode),
-    metric(metric),
-    numberOfPrunes(0)
+    metric(metric)
 {
   Timer::Start("tree_building");
 
@@ -166,7 +212,7 @@ NeighborSearch<SortPolicy, MetricType, TreeType>::~NeighborSearch()
     if (queryTree)
       delete queryTree;
   }
-  else if (!treeOwner && !hasQuerySet && !singleMode)
+  else if (!treeOwner && !hasQuerySet && !(singleMode || naive))
   {
     // We replicated the reference tree to create a query tree.
     delete queryTree;
@@ -192,24 +238,40 @@ void NeighborSearch<SortPolicy, MetricType, TreeType>::Search(
   arma::Mat<size_t>* neighborPtr = &resultingNeighbors;
   arma::mat* distancePtr = &distances;
 
-  if (treeOwner && !(singleMode && hasQuerySet))
-    distancePtr = new arma::mat; // Query indices need to be mapped.
-  if (treeOwner)
-    neighborPtr = new arma::Mat<size_t>; // All indices need mapping.
+  // Mapping is only necessary if the tree rearranges points.
+  if (tree::TreeTraits<TreeType>::RearrangesDataset)
+  {
+    if (treeOwner && !(singleMode && hasQuerySet))
+      distancePtr = new arma::mat; // Query indices need to be mapped.
+
+    if (treeOwner)
+      neighborPtr = new arma::Mat<size_t>; // All indices need mapping.
+  }
 
   // Set the size of the neighbor and distance matrices.
   neighborPtr->set_size(k, querySet.n_cols);
+  neighborPtr->fill(size_t() - 1);
   distancePtr->set_size(k, querySet.n_cols);
   distancePtr->fill(SortPolicy::WorstDistance());
-
-  size_t numPrunes = 0;
 
   // Create the helper object for the tree traversal.
   typedef NeighborSearchRules<SortPolicy, MetricType, TreeType> RuleType;
   RuleType rules(referenceSet, querySet, *neighborPtr, *distancePtr, metric);
 
-  if (singleMode)
+  if (naive)
   {
+    // The naive brute-force traversal.
+    for (size_t i = 0; i < querySet.n_cols; ++i)
+      for (size_t j = 0; j < referenceSet.n_cols; ++j)
+        rules.BaseCase(i, j);
+  }
+  else if (singleMode)
+  {
+
+    // The search doesn't work if the root node is also a leaf node.
+    // if this is the case, it is suggested that you use the naive method.
+    assert(!(referenceTree->IsLeaf()));
+    
     // Create the traverser.
     typename TreeType::template SingleTreeTraverser<RuleType> traverser(rules);
 
@@ -217,22 +279,21 @@ void NeighborSearch<SortPolicy, MetricType, TreeType>::Search(
     for (size_t i = 0; i < querySet.n_cols; ++i)
       traverser.Traverse(i, *referenceTree);
   }
-  else // Dual-tree recursion.
+  else // Dual-tree recursion.referenceTree
   {
     // Create the traverser.
     typename TreeType::template DualTreeTraverser<RuleType> traverser(rules);
 
     traverser.Traverse(*queryTree, *referenceTree);
 
-    Log::Info << traverser.NumVisited() << " node combinations were visited.\n";
-    Log::Info << traverser.NumScores() << " node combinations were scored.\n";
-    Log::Info << traverser.NumBaseCases() << " base cases were calculated.\n";
+    Log::Info << rules.Scores() << " node combinations were scored.\n";
+    Log::Info << rules.BaseCases() << " base cases were calculated.\n";
   }
 
   Timer::Stop("computing_neighbors");
 
   // Now, do we need to do mapping of indices?
-  if (!treeOwner)
+  if (!treeOwner || !tree::TreeTraits<TreeType>::RearrangesDataset)
   {
     // No mapping needed.  We are done.
     return;
@@ -300,5 +361,30 @@ void NeighborSearch<SortPolicy, MetricType, TreeType>::Search(
     delete neighborPtr;
   }
 } // Search
+
+
+//Return a String of the Object.
+template<typename SortPolicy, typename MetricType, typename TreeType>
+std::string NeighborSearch<SortPolicy, MetricType, TreeType>::ToString() const
+{
+  std::ostringstream convert;
+  convert << "NearestNeighborSearch [" << this << "]" << std::endl;
+  convert << "  Reference Set: " << referenceSet.n_rows << "x" ;
+  convert <<  referenceSet.n_cols << std::endl;
+  if (&referenceSet != &querySet)
+    convert << "  QuerySet: " << querySet.n_rows << "x" << querySet.n_cols
+        << std::endl;
+  convert << "  Reference Tree: " << referenceTree << std::endl;
+  if (&referenceTree != &queryTree)
+    convert << "  QueryTree: " << queryTree << std::endl;
+  convert << "  Tree Owner: " << treeOwner << std::endl;
+  convert << "  Naive: " << naive << std::endl;
+  convert << "  Metric: " << std::endl;
+  convert << mlpack::util::Indent(metric.ToString(),2);
+  return convert.str();
+}
+
+}; // namespace neighbor
+}; // namespace mlpack
 
 #endif

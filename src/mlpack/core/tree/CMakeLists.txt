@@ -7,14 +7,14 @@ set(SOURCES
   binary_space_tree/binary_space_tree_impl.hpp
   binary_space_tree/dual_tree_traverser.hpp
   binary_space_tree/dual_tree_traverser_impl.hpp
+  binary_space_tree/mean_split.hpp
+  binary_space_tree/mean_split_impl.hpp
   binary_space_tree/single_tree_traverser.hpp
   binary_space_tree/single_tree_traverser_impl.hpp
   binary_space_tree/traits.hpp
   bounds.hpp
-  cosine_tree/cosine_tree_impl.hpp
   cosine_tree/cosine_tree.hpp
-  cosine_tree/cosine_tree_builder.hpp
-  cosine_tree/cosine_tree_builder_impl.hpp
+  cosine_tree/cosine_tree.cpp
   cover_tree/cover_tree.hpp
   cover_tree/cover_tree_impl.hpp
   cover_tree/first_point_is_root.hpp
@@ -23,14 +23,14 @@ set(SOURCES
   cover_tree/dual_tree_traverser.hpp
   cover_tree/dual_tree_traverser_impl.hpp
   cover_tree/traits.hpp
+  example_tree.hpp
   hrectbound.hpp
   hrectbound_impl.hpp
   mrkd_statistic.hpp
   mrkd_statistic_impl.hpp
   mrkd_statistic.cpp
-  periodichrectbound.hpp
-  periodichrectbound_impl.hpp
   statistic.hpp
+  traversal_info.hpp
   tree_traits.hpp
 )
 
