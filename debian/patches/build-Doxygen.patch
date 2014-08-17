@@ -2,7 +2,7 @@ From: "Barak A. Pearlmutter" <barak+git@cs.nuim.ie>
 Date: Sat, 5 Apr 2014 13:18:23 +0100
 Subject: build Doxygen
 
-This patch runs causes the build system to generate refman.tex.
+This patch causes the build system to generate refman.tex.
 The same effect can be had by adding the command
  $(MAKE) -C obj-* doc
 to the debian/rules override_dh_auto_build target.
@@ -11,10 +11,10 @@ to the debian/rules override_dh_auto_build target.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 0bbf8f7..6347af2 100644
+index b1c6b7d..c6ad610 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -281,7 +281,7 @@ if (DOXYGEN_FOUND)
+@@ -267,7 +267,7 @@ if (DOXYGEN_FOUND)
    )
  
    # Generate documentation.
