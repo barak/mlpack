@@ -1,3 +1,10 @@
+mlpack (1.0.8-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Support hdf5 1.8.13 new packaging layout (closes: #756706).
+
+ -- Gilles Filippini <pini@debian.org>  Wed, 06 Aug 2014 19:41:52 +0200
+
 mlpack (1.0.8-1) unstable; urgency=medium
 
   * Initial release (closes: #660925, #743710)

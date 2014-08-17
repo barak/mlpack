@@ -2,6 +2,10 @@
 
 # export DH_VERBOSE=1
 
+ifneq ($(wildcard /usr/lib/$(DEB_HOST_MULTIARCH)/hdf5/serial/libhdf5.so),)
+  export DEB_CXXFLAGS_MAINT_APPEND := -I/usr/include/hdf5/serial
+endif
+
 %:
 	dh $@ --parallel
 
