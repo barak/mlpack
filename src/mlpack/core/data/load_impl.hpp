@@ -4,7 +4,7 @@
  *
  * Implementation of templatized load() function defined in load.hpp.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -43,6 +43,7 @@ bool Load(const std::string& filename,
   size_t ext = filename.rfind('.');
   if (ext == std::string::npos)
   {
+    Timer::Stop("loading_data");
     if (fatal)
       Log::Fatal << "Cannot determine type of file '" << filename << "'; "
           << "no extension is present." << std::endl;
@@ -50,7 +51,6 @@ bool Load(const std::string& filename,
       Log::Warn << "Cannot determine type of file '" << filename << "'; "
           << "no extension is present.  Load failed." << std::endl;
 
-    Timer::Stop("loading_data");
     return false;
   }
 
@@ -65,13 +65,13 @@ bool Load(const std::string& filename,
 
   if (!stream.is_open())
   {
+    Timer::Stop("loading_data");
     if (fatal)
       Log::Fatal << "Cannot open file '" << filename << "'. " << std::endl;
     else
       Log::Warn << "Cannot open file '" << filename << "'; load failed."
           << std::endl;
 
-    Timer::Stop("loading_data");
     return false;
   }
 
@@ -158,6 +158,7 @@ bool Load(const std::string& filename,
     loadType = arma::hdf5_binary;
     stringType = "HDF5 data";
 #else
+    Timer::Stop("loading_data");
     if (fatal)
       Log::Fatal << "Attempted to load '" << filename << "' as HDF5 data, but "
           << "Armadillo was compiled without HDF5 support.  Load failed."
@@ -167,7 +168,6 @@ bool Load(const std::string& filename,
           << "Armadillo was compiled without HDF5 support.  Load failed."
           << std::endl;
 
-    Timer::Stop("loading_data");
     return false;
 #endif
   }
@@ -181,6 +181,7 @@ bool Load(const std::string& filename,
   // Provide error if we don't know the type.
   if (unknownType)
   {
+    Timer::Stop("loading_data");
     if (fatal)
       Log::Fatal << "Unable to detect type of '" << filename << "'; "
           << "incorrect extension?" << std::endl;
@@ -188,7 +189,6 @@ bool Load(const std::string& filename,
       Log::Warn << "Unable to detect type of '" << filename << "'; load failed."
           << " Incorrect extension?" << std::endl;
 
-    Timer::Stop("loading_data");
     return false;
   }
 
@@ -205,10 +205,13 @@ bool Load(const std::string& filename,
   if (!success)
   {
     Log::Info << std::endl;
+    Timer::Stop("loading_data");
     if (fatal)
       Log::Fatal << "Loading from '" << filename << "' failed." << std::endl;
     else
       Log::Warn << "Loading from '" << filename << "' failed." << std::endl;
+
+    return false;
   }
   else
     Log::Info << "Size is " << (transpose ? matrix.n_cols : matrix.n_rows)

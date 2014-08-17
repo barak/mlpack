@@ -4,7 +4,7 @@
  *
  * Linear algebra utilities.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -20,8 +20,7 @@
  * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "lin_alg.hpp"
-
-#define max_rand_i 100000
+#include <mlpack/core.hpp>
 
 using namespace mlpack;
 using namespace math;
@@ -31,7 +30,7 @@ using namespace math;
  * is ignored in the power operation and then re-added.  Useful for
  * eigenvalues.
  */
-void mlpack::math::VectorPower(arma::vec& vec, double power)
+void mlpack::math::VectorPower(arma::vec& vec, const double power)
 {
   for (size_t i = 0; i < vec.n_elem; i++)
   {

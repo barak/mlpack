@@ -4,7 +4,7 @@
  *
  * Main executable for maximum inner product search.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -20,13 +20,6 @@
  * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/core/kernels/linear_kernel.hpp>
-#include <mlpack/core/kernels/polynomial_kernel.hpp>
-#include <mlpack/core/kernels/cosine_distance.hpp>
-#include <mlpack/core/kernels/gaussian_kernel.hpp>
-#include <mlpack/core/kernels/hyperbolic_tangent_kernel.hpp>
-#include <mlpack/core/kernels/triangular_kernel.hpp>
-#include <mlpack/core/kernels/epanechnikov_kernel.hpp>
 
 #include "fastmks.hpp"
 

@@ -4,7 +4,7 @@
  *
  * Definition of CoverTree, which can be used in place of the BinarySpaceTree.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -334,6 +334,10 @@ class CoverTree
   //! Modify the distance from the center of the node to the furthest
   //! descendant.
   double& FurthestDescendantDistance() { return furthestDescendantDistance; }
+
+  //! Get the minimum distance from the center to any bound edge (this is the
+  //! same as furthestDescendantDistance).
+  double MinimumBoundDistance() const { return furthestDescendantDistance; }
 
   //! Get the centroid of the node and store it in the given vector.
   void Centroid(arma::vec& centroid) const { centroid = dataset.col(point); }

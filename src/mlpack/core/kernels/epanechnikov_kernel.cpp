@@ -4,7 +4,7 @@
  *
  * Implementation of non-template Epanechnikov kernels.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -44,4 +44,15 @@ double EpanechnikovKernel::Normalizer(const size_t dimension)
 double EpanechnikovKernel::Evaluate(const double distance) const
 {
   return std::max(0.0, 1 - std::pow(distance, 2.0) * inverseBandwidthSquared);
+}
+
+// Return string of object.
+std::string EpanechnikovKernel::ToString() const
+{
+  std::ostringstream convert;
+  convert << "EpanechnikovKernel [" << this << "]" << std::endl;
+  convert << "  Bandwidth: " << bandwidth << std::endl;
+  convert << "  Inverse squared bandwidth: ";
+  convert << inverseBandwidthSquared << std::endl;
+  return convert.str();
 }

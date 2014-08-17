@@ -5,7 +5,7 @@
  * Implementation of the LogisticRegression class.  This implementation supports
  * L2-regularization.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -137,6 +137,16 @@ double LogisticRegression<OptimizerType>::ComputeAccuracy(
       count++;
 
   return (double) (count * 100) / responses.n_rows;
+}
+
+template <template<typename> class OptimizerType>
+std::string LogisticRegression<OptimizerType>::ToString() const
+{
+  std::ostringstream convert;
+  convert << "Logistic Regression [" << this << "]" << std::endl;
+  convert << "  Parameters: " << parameters.n_rows << std::endl;
+  convert << "  Lambda: " << lambda << std::endl;
+  return convert.str();
 }
 
 }; // namespace regression

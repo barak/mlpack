@@ -1,9 +1,10 @@
 /**
  * @file local_coordinate_coding_test.cpp
+ * @author Nishant Mehta
  *
- * Test for Local Coordinate Coding
+ * Test for Local Coordinate Coding.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -21,7 +22,6 @@
 
 // Note: We don't use BOOST_REQUIRE_CLOSE in the code below because we need
 // to use FPC_WEAK, and it's not at all intuitive how to do that.
-#include <armadillo>
 #include <mlpack/methods/local_coordinate_coding/lcc.hpp>
 
 #include <boost/test/unit_test.hpp>

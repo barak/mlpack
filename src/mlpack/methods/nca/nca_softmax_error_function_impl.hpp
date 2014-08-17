@@ -4,7 +4,7 @@
  *
  * Implementation of the Softmax error function.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -280,6 +280,18 @@ void SoftmaxErrorFunction<MetricType>::Precalculate(
 
   // We've done a precalculation.  Mark it as done.
   precalculated = true;
+}
+
+template<typename MetricType>
+std::string SoftmaxErrorFunction<MetricType>::ToString() const{
+  std::ostringstream convert;
+  convert << "Sofmax Error Function [" << this << "]" << std::endl;
+  convert << "  Dataset: " << dataset.n_rows << "x" << dataset.n_cols 
+      << std::endl;
+  convert << "  Labels: " << labels.n_elem << std::endl;
+  //convert << "Metric: " << metric << std::endl;
+  convert << "  Precalculated: " << precalculated << std::endl;
+  return convert.str();
 }
 
 }; // namespace nca

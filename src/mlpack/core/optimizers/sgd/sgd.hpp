@@ -4,7 +4,7 @@
  *
  * Stochastic Gradient Descent (SGD).
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -21,6 +21,8 @@
  */
 #ifndef __MLPACK_CORE_OPTIMIZERS_SGD_SGD_HPP
 #define __MLPACK_CORE_OPTIMIZERS_SGD_SGD_HPP
+
+#include <mlpack/core.hpp>
 
 namespace mlpack {
 namespace optimization {
@@ -135,6 +137,9 @@ class SGD
   bool Shuffle() const { return shuffle; }
   //! Modify whether or not the individual functions are shuffled.
   bool& Shuffle() { return shuffle; }
+
+  // convert the obkect into a string
+  std::string ToString() const;
 
  private:
   //! The instantiated function.

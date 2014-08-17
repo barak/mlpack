@@ -6,7 +6,7 @@
  * tree-based rank-approximate search (with an arbitrary tree) for the RASearch
  * class.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -23,6 +23,9 @@
  */
 #ifndef __MLPACK_METHODS_RANN_RA_SEARCH_RULES_HPP
 #define __MLPACK_METHODS_RANN_RA_SEARCH_RULES_HPP
+
+#include "../neighbor_search/ns_traversal_info.hpp"
+#include "ra_search.hpp" // For friend declaration.
 
 namespace mlpack {
 namespace neighbor {
@@ -46,28 +49,6 @@ class RASearchRules
 
 
   double BaseCase(const size_t queryIndex, const size_t referenceIndex);
-
-  /**
-   * TOFIX: This function is specified for the cover tree (usually) so
-   *   I need to think about it more algorithmically and keep its
-   *   implementation mostly empty.
-   *   Also, since the access to the points in the subtree of a cover tree
-   *   is non-trivial, we might have to re-work this.
-   *   FOR NOW: I am just using as for a BSP-tree, I will fix it when
-   *   we figure out cover trees.
-   *
-   */
-
-  double Prescore(TreeType& queryNode,
-                  TreeType& referenceNode,
-                  TreeType& referenceChildNode,
-                  const double baseCaseResult) const;
-  double PrescoreQ(TreeType& queryNode,
-                   TreeType& queryChildNode,
-                   TreeType& referenceNode,
-                   const double baseCaseResult) const;
-
-
 
   /**
    * Get the score for recursion order.  A low score indicates priority for
@@ -221,6 +202,11 @@ class RASearchRules
       return arma::sum(numSamplesMade);
   }
 
+  typedef neighbor::NeighborSearchTraversalInfo<TreeType> TraversalInfoType;
+
+  const TraversalInfoType& TraversalInfo() const { return traversalInfo; }
+  TraversalInfoType& TraversalInfo() { return traversalInfo; }
+
  private:
   //! The reference set.
   const arma::mat& referenceSet;
@@ -257,6 +243,8 @@ class RASearchRules
 
   // TO REMOVE: just for testing
   size_t numDistComputations;
+
+  TraversalInfoType traversalInfo;
 
   /**
    * Insert a point into the neighbors and distances matrices; this is a helper
@@ -329,6 +317,10 @@ class RASearchRules
                const double distance,
                const double bestDistance);
 
+  // So that RASearch can access ObtainDistinctSamples() and
+  // MinimumSamplesReqd().  Maybe refactoring is a better solution but this is
+  // okay for now.
+  friend class RASearch<SortPolicy, MetricType, TreeType>;
 }; // class RASearchRules
 
 }; // namespace neighbor

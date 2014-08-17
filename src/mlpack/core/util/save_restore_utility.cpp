@@ -5,7 +5,7 @@
  * The SaveRestoreUtility provides helper functions in saving and
  *   restoring models.  The current output file type is XML.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -20,7 +20,7 @@
  * You should have received a copy of the GNU General Public License along with
  * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "save_restore_utility.hpp"
+#include <mlpack/core.hpp>
 
 using namespace mlpack;
 using namespace mlpack::util;
@@ -191,9 +191,9 @@ void SaveRestoreUtility::SaveParameter(const arma::mat& mat,
   {
     for (size_t c = 0; c < columns - 1; ++c)
     {
-      output << mat(r,c) << ",";
+      output << std::setprecision(15) << mat(r, c) << ",";
     }
-    output << mat(r,columns - 1) << std::endl;
+    output << std::setprecision(15) << mat(r, columns - 1) << std::endl;
   }
   parameters[name] = output.str();
 }

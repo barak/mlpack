@@ -4,7 +4,7 @@
  *
  * Main function for least-squares linear regression.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -185,7 +185,6 @@ int main(int argc, char* argv[])
     Timer::Stop("prediction");
 
     // Save predictions.
-    predictions = arma::trans(predictions);
-    data::Save(outputPredictions, predictions, true);
+    data::Save(outputPredictions, predictions, true, false);
   }
 }

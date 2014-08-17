@@ -4,7 +4,7 @@
  *
  * Main executable to run CF.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -43,7 +43,8 @@ PROGRAM_INFO("Collaborating Filtering", "This program performs collaborative "
     "The input file should contain a 3-column matrix of ratings, where the "
     "first column is the user, the second column is the item, and the third "
     "column is that user's rating of that item.  Both the users and items "
-    "should be numeric indices, not names.");
+    "should be numeric indices, not names. The indices are assumed to start "
+    "from 0.");
 
 // Parameters for program.
 PARAM_STRING_REQ("input_file", "Input dataset to perform CF on.", "i");
@@ -65,6 +66,8 @@ PARAM_INT("recommendations", "Number of recommendations to generate for each "
 PARAM_INT("neighborhood", "Size of the neighborhood of similar users to "
     "consider for each query user.", "n", 5);
 
+PARAM_INT("rank", "Rank of decomposed matrices.", "R", 2);
+
 int main(int argc, char** argv)
 {
   // Parse command line options.
@@ -81,12 +84,13 @@ int main(int argc, char** argv)
   // Get parameters.
   const size_t numRecs = (size_t) CLI::GetParam<int>("recommendations");
   const size_t neighborhood = (size_t) CLI::GetParam<int>("neighborhood");
+  const size_t rank = (size_t) CLI::GetParam<int>("rank");
 
   // Perform decomposition to prepare for recommendations.
   Log::Info << "Performing CF matrix decomposition on dataset..." << endl;
-  CF c(dataset);
-  c.NumRecs(numRecs);
+  CF<> c(dataset);
   c.NumUsersForSimilarity(neighborhood);
+  c.Rank(rank);
 
   // Reading users.
   const string queryFile = CLI::GetParam<string>("query_file");
@@ -100,12 +104,12 @@ int main(int argc, char** argv)
 
     Log::Info << "Generating recommendations for " << users.n_elem << " users "
         << "in '" << queryFile << "'." << endl;
-    c.GetRecommendations(recommendations, users);
+    c.GetRecommendations(numRecs, recommendations, users);
   }
   else
   {
     Log::Info << "Generating recommendations for all users." << endl;
-    c.GetRecommendations(recommendations);
+    c.GetRecommendations(numRecs, recommendations);
   }
 
   const string outputFile = CLI::GetParam<string>("output_file");

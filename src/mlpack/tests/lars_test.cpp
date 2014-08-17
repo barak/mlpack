@@ -1,9 +1,10 @@
 /**
  * @file lars_test.cpp
+ * @author Nishant Mehta
  *
- * Test for LARS
+ * Test for LARS.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -21,9 +22,6 @@
 
 // Note: We don't use BOOST_REQUIRE_CLOSE in the code below because we need
 // to use FPC_WEAK, and it's not at all intuitive how to do that.
-
-
-#include <armadillo>
 #include <mlpack/methods/lars/lars.hpp>
 
 #include <boost/test/unit_test.hpp>
@@ -119,6 +117,56 @@ BOOST_AUTO_TEST_CASE(LARSTestElasticNetCholesky)
 BOOST_AUTO_TEST_CASE(LARSTestElasticNetGram)
 {
   LassoTest(100, 10, true, false);
+}
+
+// Ensure that LARS doesn't crash when the data has linearly dependent features
+// (meaning that there is a singularity).  This test uses the Cholesky
+// factorization.
+BOOST_AUTO_TEST_CASE(CholeskySingularityTest)
+{
+  arma::mat X;
+  arma::mat Y;
+
+  data::Load("lars_dependent_x.csv", X);
+  data::Load("lars_dependent_y.csv", Y);
+
+  arma::vec y = Y.row(0).t();
+
+  // Test for a couple values of lambda1.
+  for (double lambda1 = 0.0; lambda1 < 1.0; lambda1 += 0.1)
+  {
+    LARS lars(true, lambda1, 0.0);
+    arma::vec betaOpt;
+    lars.Regress(X, y, betaOpt);
+
+    arma::vec errCorr = (X * X.t()) * betaOpt - X * y;
+
+    LARSVerifyCorrectness(betaOpt, errCorr, lambda1);
+  }
+}
+
+// Same as the above test but with no cholesky factorization.
+BOOST_AUTO_TEST_CASE(NoCholeskySingularityTest)
+{
+  arma::mat X;
+  arma::mat Y;
+
+  data::Load("lars_dependent_x.csv", X);
+  data::Load("lars_dependent_y.csv", Y);
+
+  arma::vec y = Y.row(0).t();
+
+  // Test for a couple values of lambda1.
+  for (double lambda1 = 0.0; lambda1 < 1.0; lambda1 += 0.1)
+  {
+    LARS lars(false, lambda1, 0.0);
+    arma::vec betaOpt;
+    lars.Regress(X, y, betaOpt);
+
+    arma::vec errCorr = (X * X.t()) * betaOpt - X * y;
+
+    LARSVerifyCorrectness(betaOpt, errCorr, lambda1);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END();

@@ -4,7 +4,7 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 PROJECT_NAME           = MLPACK
-PROJECT_NUMBER         = 1.0.8
+PROJECT_NUMBER         = 1.0.9
 OUTPUT_DIRECTORY       = ./doc
 CREATE_SUBDIRS         = NO
 OUTPUT_LANGUAGE        = English
@@ -155,12 +155,13 @@ LATEX_CMD_NAME         = latex
 MAKEINDEX_CMD_NAME     = makeindex
 COMPACT_LATEX          = NO
 PAPER_TYPE             = letter
-EXTRA_PACKAGES         =
+EXTRA_PACKAGES         = amsmath amssymb mathrsfs
 LATEX_HEADER           =
 PDF_HYPERLINKS         = NO
 USE_PDFLATEX           = NO
 LATEX_BATCHMODE        = NO
 LATEX_HIDE_INDICES     = NO
+FORMULA_FONTSIZE       = 12
 #---------------------------------------------------------------------------
 # configuration options related to the RTF output
 #---------------------------------------------------------------------------

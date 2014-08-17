@@ -4,7 +4,7 @@
  *
  * Implementation of the LSHSearch class.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -141,7 +141,9 @@ BaseCase(const size_t queryIndex, const size_t referenceIndex)
   // If this distance is better than any of the current candidates, the
   // SortDistance() function will give us the position to insert it into.
   arma::vec queryDist = distancePtr->unsafe_col(queryIndex);
-  size_t insertPosition = SortPolicy::SortDistance(queryDist, distance);
+  arma::Col<size_t> queryIndices = neighborPtr->unsafe_col(queryIndex);
+  size_t insertPosition = SortPolicy::SortDistance(queryDist, queryIndices,
+      distance);
 
   // SortDistance() returns (size_t() - 1) if we shouldn't add it.
   if (insertPosition != (size_t() - 1))
@@ -401,6 +403,24 @@ BuildHash()
   Log::Info << "Final hash table size: (" << numRowsInTable << " x "
             << maxBucketSize << ")" << std::endl;
   secondHashTable.resize(numRowsInTable, maxBucketSize);
+}
+
+template<typename SortPolicy>
+std::string LSHSearch<SortPolicy>::ToString() const
+{
+  std::ostringstream convert;
+  convert << "LSHSearch [" << this << "]" << std::endl;
+  convert << "  Reference Set: " << referenceSet.n_rows << "x" ;
+  convert <<  referenceSet.n_cols << std::endl;
+  if (&referenceSet != &querySet)
+    convert << "  QuerySet: " << querySet.n_rows << "x" << querySet.n_cols 
+        << std::endl;
+  convert << "  Number of Projections: " << numProj << std::endl;
+  convert << "  Number of Tables: " << numTables << std::endl;
+  convert << "  Hash Width: " << hashWidth << std::endl;
+  convert << "  Metric: " << std::endl;
+  convert << mlpack::util::Indent(metric.ToString(),2);
+  return convert.str();
 }
 
 }; // namespace neighbor

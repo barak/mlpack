@@ -4,7 +4,7 @@
  *
  * This file provides an example use of the DET
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -123,9 +123,9 @@ int main(int argc, char *argv[])
   // Compute densities for the training points in the optimal tree.
   FILE *fp = NULL;
 
-  if (CLI::GetParam<string>("training_set_estimate_file") != "")
+  if (CLI::GetParam<string>("training_set_estimates_file") != "")
   {
-    fp = fopen(CLI::GetParam<string>("training_set_estimate_file").c_str(),
+    fp = fopen(CLI::GetParam<string>("training_set_estimates_file").c_str(),
         "w");
 
     // Compute density estimates for each point in the training set.

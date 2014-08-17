@@ -6,7 +6,6 @@ project(mlpack C CXX)
 option(DEBUG "Compile with debugging information" OFF)
 option(PROFILE "Compile with profiling information" OFF)
 option(ARMA_EXTRA_DEBUG "Compile with extra Armadillo debugging symbols." OFF)
-option(MATLAB_BINDINGS "Compile MATLAB bindings if MATLAB is found." OFF)
 
 # This is as of yet unused.
 #option(PGO "Use profile-guided optimization if not a debug build" ON)
@@ -14,10 +13,17 @@ option(MATLAB_BINDINGS "Compile MATLAB bindings if MATLAB is found." OFF)
 # Set the CFLAGS and CXXFLAGS depending on the options the user specified.
 # Only GCC-like compilers support -Wextra, and other compilers give tons of
 # output for -Wall, so only -Wall and -Wextra on GCC.
-if(CMAKE_COMPILER_IS_GNUCC)
+if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
-endif(CMAKE_COMPILER_IS_GNUCC)
+endif(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+
+# If using clang, we have to link against libstdc++ (at least on some systems).
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -lstdc++")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -lstdc++")
+endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
 # Debugging CFLAGS.  Turn optimizations off; turn debugging symbols on.
 if(DEBUG)
@@ -163,36 +169,16 @@ include_directories(${LIBXML2_INCLUDE_DIR})
 # Unfortunately this configuration variable is necessary and will need to be
 # updated as time goes on and new versions are released.
 set(Boost_ADDITIONAL_VERSIONS
-  "1.41" "1.41.0" "1.42" "1.42.0" "1.43" "1.43.0" "1.44" "1.44.0" "1.45.0"
-  "1.46.0" "1.46.1" "1.47.0" "1.48.0" "1.49.0")
-find_package(Boost
+  "1.49.0" "1.50.0" "1.51.0" "1.52.0" "1.53.0" "1.54.0" "1.55.0")
+find_package(Boost 1.49
     COMPONENTS
       program_options
       unit_test_framework
+      random
     REQUIRED
 )
 include_directories(${Boost_INCLUDE_DIRS})
 
-# Save the actual link paths (because they will get overwritten if we discover
-# we need to find Boost.Random too).
-set(Boost_BACKUP_LIBRARIES ${Boost_LIBRARIES})
-
-# We need to include Boost.Random, but only if newer than 1.45 (as of 1.46 it
-# became a separate package with its own linkable library object).
-if(Boost_MAJOR_VERSION EQUAL 1 AND Boost_MINOR_VERSION GREATER 45)
-  find_package(Boost
-      COMPONENTS
-          random
-      REQUIRED
-  )
-
-  # Restore actual link locations of the other Boost libraries.
-  set(Boost_LIBRARIES ${Boost_LIBRARIES} ${Boost_BACKUP_LIBRARIES})
-
-  # This may be redundant.
-  include_directories(${Boost_INCLUDE_DIRS})
-
-endif(Boost_MAJOR_VERSION EQUAL 1 AND Boost_MINOR_VERSION GREATER 45)
 link_directories(${Boost_LIBRARY_DIRS})
 
 # On Windows, automatic linking is performed, so we don't need to worry about

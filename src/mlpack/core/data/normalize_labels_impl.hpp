@@ -5,7 +5,7 @@
  * Implementation of label normalization functions; these are useful for mapping
  * labels to the range [0, n).
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -23,7 +23,8 @@
 #ifndef __MLPACK_CORE_DATA_NORMALIZE_LABELS_IMPL_HPP
 #define __MLPACK_CORE_DATA_NORMALIZE_LABELS_IMPL_HPP
 
-#include <mlpack/core.hpp>
+// In case it hasn't been included yet.
+#include "normalize_labels.hpp"
 
 namespace mlpack {
 namespace data {

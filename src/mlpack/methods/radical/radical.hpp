@@ -5,7 +5,7 @@
  * Declaration of Radical class (RADICAL is Robust, Accurate, Direct ICA
  * aLgorithm).
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -120,6 +120,9 @@ class Radical
   size_t Sweeps() const { return sweeps; }
   //! Modify the number of sweeps.
   size_t& Sweeps() { return sweeps; }
+
+  // Returns a string representation of this object. 
+  std::string ToString() const;
 
  private:
   //! Standard deviation of the Gaussian noise added to the replicates of

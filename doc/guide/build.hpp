@@ -7,14 +7,15 @@ configuration options.  One can consult any of numerous CMake tutorials for
 further documentation, but this tutorial should be enough to get MLPACK built
 and installed.
 
-@section Download latest mlpack build Download latest mlpack build from here : <a href="http://www.mlpack.org/files/mlpack-1.0.8.tar.gz">mlpack-1.0.8</a>
+@section Download latest mlpack build
+Download latest mlpack build from here : <a href="http://www.mlpack.org/files/mlpack-1.0.9.tar.gz">mlpack-1.0.9</a>
 
 @section builddir Creating Build Directory
 
 Once the MLPACK source is unpacked, you should create a build directory.
 
 @code
-$ cd mlpack-1.0.8
+$ cd mlpack-1.0.9
 $ mkdir build
 @endcode
 
@@ -28,7 +29,7 @@ system and have headers present:
 
  - Armadillo >= 3.6.0 (with LAPACK support)
  - LibXML2 >= 2.6.0
- - Boost (math_c99, program_options, unit_test_framework, random)
+ - Boost (math_c99, program_options, unit_test_framework, random, heap) >= 1.49
 
 In Ubuntu and Debian, you can get all of these dependencies through apt:
 

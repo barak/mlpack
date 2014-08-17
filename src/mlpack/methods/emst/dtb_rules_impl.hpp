@@ -4,7 +4,7 @@
  *
  * Tree traverser rules for the DualTreeBoruvka algorithm.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -39,7 +39,9 @@ DTBRules(const arma::mat& dataSet,
   neighborsDistances(neighborsDistances),
   neighborsInComponent(neighborsInComponent),
   neighborsOutComponent(neighborsOutComponent),
-  metric(metric)
+  metric(metric),
+  baseCases(0),
+  scores(0)
 {
   // Nothing else to do.
 }
@@ -61,6 +63,7 @@ double DTBRules<MetricType, TreeType>::BaseCase(const size_t queryIndex,
 
   if (queryComponentIndex != referenceComponentIndex)
   {
+    ++baseCases;
     double distance = metric.Evaluate(dataSet.col(queryIndex),
                                       dataSet.col(referenceIndex));
 
@@ -142,7 +145,7 @@ double DTBRules<MetricType, TreeType>::Rescore(const size_t queryIndex,
 
 template<typename MetricType, typename TreeType>
 double DTBRules<MetricType, TreeType>::Score(TreeType& queryNode,
-                                             TreeType& referenceNode) const
+                                             TreeType& referenceNode)
 {
   // If all the queries belong to the same component as all the references
   // then we prune.
@@ -151,6 +154,7 @@ double DTBRules<MetricType, TreeType>::Score(TreeType& queryNode,
            referenceNode.Stat().ComponentMembership()))
     return DBL_MAX;
 
+  ++scores;
   const double distance = queryNode.MinDistance(&referenceNode);
   const double bound = CalculateBound(queryNode);
 
@@ -162,7 +166,7 @@ double DTBRules<MetricType, TreeType>::Score(TreeType& queryNode,
 template<typename MetricType, typename TreeType>
 double DTBRules<MetricType, TreeType>::Score(TreeType& queryNode,
                                              TreeType& referenceNode,
-                                             const double baseCaseResult) const
+                                             const double baseCaseResult)
 {
   // If all the queries belong to the same component as all the references
   // then we prune.
@@ -171,6 +175,7 @@ double DTBRules<MetricType, TreeType>::Score(TreeType& queryNode,
            referenceNode.Stat().ComponentMembership()))
     return DBL_MAX;
 
+  ++scores;
   const double distance = queryNode.MinDistance(referenceNode, baseCaseResult);
   const double bound = CalculateBound(queryNode);
 

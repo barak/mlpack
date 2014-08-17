@@ -4,7 +4,7 @@
  *
  * Executable for running K-Means.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -69,10 +69,6 @@ PARAM_INT("max_iterations", "Maximum number of iterations before K-Means "
 PARAM_INT("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
 PARAM_STRING("initial_centroids", "Start with the specified initial centroids.",
              "I", "");
-
-// This is known to not work (#251).
-//PARAM_FLAG("fast_kmeans", "Use the experimental fast k-means algorithm by "
-//    "Pelleg and Moore.", "f");
 
 // Parameters for "refined start" k-means.
 PARAM_FLAG("refined_start", "Use the refined initial point strategy by Bradley "
@@ -152,7 +148,7 @@ int main(int argc, char** argv)
     if (CLI::HasParam("refined_start"))
     {
       const int samplings = CLI::GetParam<int>("samplings");
-      const double percentage = CLI::GetParam<int>("percentage");
+      const double percentage = CLI::GetParam<double>("percentage");
 
       if (samplings < 0)
         Log::Fatal << "Number of samplings (" << samplings << ") must be "
@@ -166,9 +162,6 @@ int main(int argc, char** argv)
           RefinedStart(samplings, percentage));
 
       Timer::Start("clustering");
-//      if (CLI::HasParam("fast_kmeans"))
-//        k.FastCluster(dataset, clusters, assignments);
-//      else
       k.Cluster(dataset, clusters, assignments, centroids);
       Timer::Stop("clustering");
     }
@@ -178,9 +171,6 @@ int main(int argc, char** argv)
           AllowEmptyClusters> k(maxIterations, overclustering);
 
       Timer::Start("clustering");
-//      if (CLI::HasParam("fast_kmeans"))
-//        k.FastCluster(dataset, clusters, assignments);
-//      else
       k.Cluster(dataset, clusters, assignments, centroids, false,
           initialCentroidGuess);
       Timer::Stop("clustering");
@@ -191,7 +181,7 @@ int main(int argc, char** argv)
     if (CLI::HasParam("refined_start"))
     {
       const int samplings = CLI::GetParam<int>("samplings");
-      const double percentage = CLI::GetParam<int>("percentage");
+      const double percentage = CLI::GetParam<double>("percentage");
 
       if (samplings < 0)
         Log::Fatal << "Number of samplings (" << samplings << ") must be "
@@ -205,10 +195,7 @@ int main(int argc, char** argv)
           RefinedStart(samplings, percentage));
 
       Timer::Start("clustering");
-//      if (CLI::HasParam("fast_kmeans"))
-//        k.FastCluster(dataset, clusters, assignments);
-//      else
-        k.Cluster(dataset, clusters, assignments, centroids);
+      k.Cluster(dataset, clusters, assignments, centroids);
       Timer::Stop("clustering");
     }
     else
@@ -216,11 +203,8 @@ int main(int argc, char** argv)
       KMeans<> k(maxIterations, overclustering);
 
       Timer::Start("clustering");
-//      if (CLI::HasParam("fast_kmeans"))
-//        k.FastCluster(dataset, clusters, assignments);
-//      else
-        k.Cluster(dataset, clusters, assignments, centroids, false,
-            initialCentroidGuess);
+      k.Cluster(dataset, clusters, assignments, centroids, false,
+          initialCentroidGuess);
       Timer::Stop("clustering");
     }
   }

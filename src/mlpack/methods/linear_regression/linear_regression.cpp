@@ -4,7 +4,7 @@
  *
  * Implementation of simple linear regression.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -134,4 +134,12 @@ double LinearRegression::ComputeError(const arma::mat& predictors,
   const double cost = arma::dot(temp, temp) / nCols;
 
   return cost;
+}
+
+std::string LinearRegression::ToString() const
+{
+  std::ostringstream convert;
+  convert << "Linear Regression [" << this << "]" << std::endl;
+  convert << "  Lambda: " << lambda << std::endl;
+  return convert.str();
 }

@@ -2,9 +2,9 @@
  * @file radical_main.cpp
  * @author Nishant Mehta
  *
- * Executable for RADICAL
+ * Test for RADICAL.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -19,7 +19,6 @@
  * You should have received a copy of the GNU General Public License along with
  * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <armadillo>
 #include <mlpack/core.hpp>
 #include <mlpack/methods/radical/radical.hpp>
 #include <boost/test/unit_test.hpp>

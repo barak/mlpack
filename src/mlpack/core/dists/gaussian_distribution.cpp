@@ -4,7 +4,7 @@
  *
  * Implementation of Gaussian distribution class.
  *
- * This file is part of MLPACK 1.0.8.
+ * This file is part of MLPACK 1.0.9.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -154,8 +154,13 @@ void GaussianDistribution::Estimate(const arma::mat& observations,
 std::string GaussianDistribution::ToString() const
 {
   std::ostringstream convert;
-  convert << "GaussianDistribution: " << this << std::endl;
-  convert << "mean: " << std::endl << mean << std::endl;
-  convert << "covariance: " << std::endl << covariance << std::endl;
+  convert << "GaussianDistribution [" << this << "]" << std::endl;
+
+  // Secondary ostringstream so things can be indented right.
+  std::ostringstream data;
+  data << "Mean: " << std::endl << mean;
+  data << "Covariance: " << std::endl << covariance;
+
+  convert << util::Indent(data.str());
   return convert.str();
 }
