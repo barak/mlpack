@@ -13,7 +13,7 @@ Subject: spelling
  7 files changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/src/mlpack/core/kernels/example_kernel.hpp b/src/mlpack/core/kernels/example_kernel.hpp
-index 96e1a96..750f5ed 100644
+index 270d7eb..40cc135 100644
 --- a/src/mlpack/core/kernels/example_kernel.hpp
 +++ b/src/mlpack/core/kernels/example_kernel.hpp
 @@ -119,7 +119,7 @@ class ExampleKernel
@@ -26,7 +26,7 @@ index 96e1a96..750f5ed 100644
    std::string ToString() const
    {
 diff --git a/src/mlpack/core/tree/cosine_tree/cosine_tree.cpp b/src/mlpack/core/tree/cosine_tree/cosine_tree.cpp
-index 8324504..b0f9f97 100644
+index cde8c60..ae3288a 100644
 --- a/src/mlpack/core/tree/cosine_tree/cosine_tree.cpp
 +++ b/src/mlpack/core/tree/cosine_tree/cosine_tree.cpp
 @@ -331,7 +331,7 @@ void CosineTree::ColumnSamplesLS(std::vector<size_t>& sampledIndices,
@@ -39,7 +39,7 @@ index 8324504..b0f9f97 100644
    probabilities.zeros(numSamples);
    
 diff --git a/src/mlpack/methods/amf/init_rules/random_acol_init.hpp b/src/mlpack/methods/amf/init_rules/random_acol_init.hpp
-index db2780b..089f1ea 100644
+index fef05a7..6f4c213 100644
 --- a/src/mlpack/methods/amf/init_rules/random_acol_init.hpp
 +++ b/src/mlpack/methods/amf/init_rules/random_acol_init.hpp
 @@ -2,7 +2,7 @@
@@ -52,7 +52,7 @@ index db2780b..089f1ea 100644
   * the paper 'Algorithms, Initializations and Convergence' by Langville et al.
   * This method sets each of the columns of W by averaging p randomly chosen
 diff --git a/src/mlpack/methods/amf/init_rules/random_init.hpp b/src/mlpack/methods/amf/init_rules/random_init.hpp
-index 91b47c5..6b2744c 100644
+index 0e4b89a..dcd868a 100644
 --- a/src/mlpack/methods/amf/init_rules/random_init.hpp
 +++ b/src/mlpack/methods/amf/init_rules/random_init.hpp
 @@ -2,7 +2,7 @@
@@ -63,7 +63,7 @@ index 91b47c5..6b2744c 100644
 + * Initialization rule for Non-Negative Matrix Factorization (NMF). This simple
   * initialization is performed by assigning a random matrix to W and H.
   *
-  * This file is part of MLPACK 1.0.9.
+  * This file is part of MLPACK 1.0.10.
 @@ -44,7 +44,7 @@ class RandomInitialization
      size_t n = V.n_rows;
      size_t m = V.n_cols;
@@ -74,7 +74,7 @@ index 91b47c5..6b2744c 100644
      H.randu(r, m);
    }
 diff --git a/src/mlpack/methods/lsh/lsh_search.hpp b/src/mlpack/methods/lsh/lsh_search.hpp
-index db0ec6a..874907d 100644
+index 469503d..8d50fd5 100644
 --- a/src/mlpack/methods/lsh/lsh_search.hpp
 +++ b/src/mlpack/methods/lsh/lsh_search.hpp
 @@ -152,8 +152,8 @@ class LSHSearch
@@ -89,7 +89,7 @@ index db0ec6a..874907d 100644
    void BuildHash();
  
 diff --git a/src/mlpack/methods/sparse_autoencoder/sparse_autoencoder_function.hpp b/src/mlpack/methods/sparse_autoencoder/sparse_autoencoder_function.hpp
-index c6f1cb9..e909dc3 100644
+index 6812729..44a730b 100644
 --- a/src/mlpack/methods/sparse_autoencoder/sparse_autoencoder_function.hpp
 +++ b/src/mlpack/methods/sparse_autoencoder/sparse_autoencoder_function.hpp
 @@ -157,7 +157,7 @@ class SparseAutoencoderFunction
@@ -102,7 +102,7 @@ index c6f1cb9..e909dc3 100644
    //! Size of the visible layer.
    size_t visibleSize;
 diff --git a/src/mlpack/tests/cosine_tree_test.cpp b/src/mlpack/tests/cosine_tree_test.cpp
-index 52ed159..2baac4d 100644
+index 1e410f1..510a2c0 100644
 --- a/src/mlpack/tests/cosine_tree_test.cpp
 +++ b/src/mlpack/tests/cosine_tree_test.cpp
 @@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(CosineTreeNoSplit)
