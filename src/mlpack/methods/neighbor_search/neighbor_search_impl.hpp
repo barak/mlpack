@@ -5,7 +5,7 @@
  * Implementation of Neighbor-Search class to perform all-nearest-neighbors on
  * two specified data sets.
  *
- * This file is part of MLPACK 1.0.9.
+ * This file is part of MLPACK 1.0.10.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -267,19 +267,21 @@ void NeighborSearch<SortPolicy, MetricType, TreeType>::Search(
   }
   else if (singleMode)
   {
-
     // The search doesn't work if the root node is also a leaf node.
     // if this is the case, it is suggested that you use the naive method.
     assert(!(referenceTree->IsLeaf()));
-    
+
     // Create the traverser.
     typename TreeType::template SingleTreeTraverser<RuleType> traverser(rules);
 
     // Now have it traverse for each point.
     for (size_t i = 0; i < querySet.n_cols; ++i)
       traverser.Traverse(i, *referenceTree);
+
+    Log::Info << rules.Scores() << " node combinations were scored.\n";
+    Log::Info << rules.BaseCases() << " base cases were calculated.\n";
   }
-  else // Dual-tree recursion.referenceTree
+  else // Dual-tree recursion.
   {
     // Create the traverser.
     typename TreeType::template DualTreeTraverser<RuleType> traverser(rules);
