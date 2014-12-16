@@ -4,7 +4,7 @@
  *
  * Test the RegularizedSVDFunction class.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -191,8 +191,15 @@ BOOST_AUTO_TEST_CASE(RegularizedSVDFunctionGradient)
       parameters(i, j) += epsilon;
 
       // Compare numerical and backpropagation gradient values.
-      BOOST_REQUIRE_CLOSE(numGradient1, gradient1(i, j), 1e-2);
-      BOOST_REQUIRE_CLOSE(numGradient2, gradient2(i, j), 1e-2);
+      if (std::abs(gradient1(i, j)) <= 1e-6)
+        BOOST_REQUIRE_SMALL(numGradient1, 1e-5);
+      else
+        BOOST_REQUIRE_CLOSE(numGradient1, gradient1(i, j), 1e-2);
+
+      if (std::abs(gradient2(i, j)) <= 1e-6)
+        BOOST_REQUIRE_SMALL(numGradient2, 1e-5);
+      else
+        BOOST_REQUIRE_CLOSE(numGradient2, gradient2(i, j), 1e-2);
     }
   }
 }

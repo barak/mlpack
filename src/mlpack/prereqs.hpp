@@ -3,7 +3,7 @@
  *
  * The core includes that mlpack expects; standard C++ includes and Armadillo.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -62,5 +62,12 @@ problems.  It should only be necessary to include <mlpack/core.hpp> and not\
 
 // Now include Armadillo through the special mlpack extensions.
 #include <mlpack/core/arma_extend/arma_extend.hpp>
+
+// On Visual Studio, disable C4519 (default arguments for function templates)
+// since it's by default an error, which doesn't even make any sense because
+// it's part of the C++11 standard.
+#ifdef _MSC_VER
+  #pragma warning(disable : 4519)
+#endif
 
 #endif

@@ -3,7 +3,7 @@
  *
  * Test for Sparse Coding
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(SparseCodingTestCodingStepElasticNet)
 
 BOOST_AUTO_TEST_CASE(SparseCodingTestDictionaryStep)
 {
-  const double tol = 2e-7;
+  const double tol = 1e-6;
 
   double lambda1 = 0.1;
   uword nAtoms = 25;
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(SparseCodingTestDictionaryStep)
   mat Z = sc.Codes();
 
   uvec adjacencies = find(Z);
-  double normGradient = sc.OptimizeDictionary(adjacencies, 1e-12);
+  double normGradient = sc.OptimizeDictionary(adjacencies, 1e-15);
 
   BOOST_REQUIRE_SMALL(normGradient, tol);
 }

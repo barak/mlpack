@@ -5,7 +5,7 @@
  * Implementation of Sparse Coding with Dictionary Learning using l1 (LASSO) or
  * l1+l2 (Elastic Net) regularization.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -134,7 +134,8 @@ void SparseCoding<DictionaryInitializer>::OptimizeCode()
 template<typename DictionaryInitializer>
 double SparseCoding<DictionaryInitializer>::OptimizeDictionary(
     const arma::uvec& adjacencies,
-    const double newtonTolerance)
+    const double newtonTolerance,
+    const size_t maxIterations)
 {
   // Count the number of atomic neighbors for each point x^i.
   arma::uvec neighborCounts = arma::zeros<arma::uvec>(data.n_cols, 1);
@@ -221,9 +222,9 @@ double SparseCoding<DictionaryInitializer>::OptimizeDictionary(
     codesZT = matActiveZ * trans(matActiveZ);
   }
 
-  double normGradient;
-  double improvement;
-  for (size_t t = 1; !converged; ++t)
+  double normGradient = 0;
+  double improvement = 0;
+  for (size_t t = 1; (t != maxIterations) && !converged; ++t)
   {
     arma::mat A = codesZT + diagmat(dualVars);
 
@@ -243,6 +244,8 @@ double SparseCoding<DictionaryInitializer>::OptimizeDictionary(
     const double rho = 0.9;
     double sufficientDecrease = c * dot(gradient, searchDirection);
 
+    // A maxIterations parameter for the Armijo line search may be a good idea,
+    // but it doesn't seem to be causing any problems for now.
     while (true)
     {
       // Calculate objective.
@@ -270,7 +273,7 @@ double SparseCoding<DictionaryInitializer>::OptimizeDictionary(
         << "." << std::endl;
     Log::Debug << "  Improvement: " << std::scientific << improvement << ".\n";
 
-    if (improvement < newtonTolerance)
+    if (normGradient < newtonTolerance)
       converged = true;
   }
 
@@ -307,7 +310,7 @@ double SparseCoding<DictionaryInitializer>::OptimizeDictionary(
       }
     }
   }
-  //printf("final reconstruction error: %e\n", norm(data - dictionary * codes, "fro"));
+
   return normGradient;
 }
 
@@ -353,9 +356,9 @@ std::string SparseCoding<DictionaryInitializer>::ToString() const
   convert << "Sparse Coding  [" << this << "]" << std::endl;
   convert << "  Data: " << data.n_rows << "x" ;
   convert <<  data.n_cols << std::endl;
-  convert << "  Atoms: " << atoms << std::endl; 
-  convert << "  Lambda 1: " << lambda1 << std::endl; 
-  convert << "  Lambda 2: " << lambda2 << std::endl; 
+  convert << "  Atoms: " << atoms << std::endl;
+  convert << "  Lambda 1: " << lambda1 << std::endl;
+  convert << "  Lambda 2: " << lambda2 << std::endl;
   return convert.str();
 }
 

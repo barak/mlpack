@@ -4,7 +4,7 @@
  *
  * Implementation of templatized load() function defined in load.hpp.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -157,6 +157,22 @@ bool Load(const std::string& filename,
 #ifdef ARMA_USE_HDF5
     loadType = arma::hdf5_binary;
     stringType = "HDF5 data";
+  #if ARMA_VERSION_MAJOR == 4 && \
+      (ARMA_VERSION_MINOR >= 300 && ARMA_VERSION_MINOR <= 400)
+    Timer::Stop("loading_data");
+    if (fatal)
+      Log::Fatal << "Attempted to load '" << filename << "' as HDF5 data, but "
+          << "Armadillo 4.300.0 through Armadillo 4.400.1 are known to have "
+          << "bugs and one of these versions is in use.  Load failed."
+          << std::endl;
+    else
+      Log::Warn << "Attempted to load '" << filename << "' as HDF5 data, but "
+          << "Armadillo 4.300.0 through Armadillo 4.400.1 are known to have "
+          << "bugs and one of these versions is in use.  Load failed."
+          << std::endl;
+
+    return false;
+  #endif
 #else
     Timer::Stop("loading_data");
     if (fatal)

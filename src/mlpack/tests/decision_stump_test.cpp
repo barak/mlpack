@@ -4,7 +4,7 @@
  *
  * Tests for DecisionStump class.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -21,7 +21,7 @@
  */
 #include <mlpack/core.hpp>
 #include <mlpack/methods/decision_stump/decision_stump.hpp>
- 
+
 #include <boost/test/unit_test.hpp>
 #include "old_boost_test_definitions.hpp"
 
@@ -221,9 +221,9 @@ BOOST_AUTO_TEST_CASE(MultiClassSplit)
 
   BOOST_CHECK_EQUAL(predictedLabels(0, 0), 0);
   BOOST_CHECK_EQUAL(predictedLabels(0, 1), 0);
-  BOOST_CHECK_EQUAL(predictedLabels(0, 2), 0);
-  BOOST_CHECK_EQUAL(predictedLabels(0, 3), 0);
-  BOOST_CHECK_EQUAL(predictedLabels(0, 4), 0);
+  BOOST_CHECK_EQUAL(predictedLabels(0, 2), 1);
+  BOOST_CHECK_EQUAL(predictedLabels(0, 3), 1);
+  BOOST_CHECK_EQUAL(predictedLabels(0, 4), 1);
   BOOST_CHECK_EQUAL(predictedLabels(0, 5), 1);
   BOOST_CHECK_EQUAL(predictedLabels(0, 6), 2);
   BOOST_CHECK_EQUAL(predictedLabels(0, 7), 2);

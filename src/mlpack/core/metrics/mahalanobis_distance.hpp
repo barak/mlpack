@@ -4,7 +4,7 @@
  *
  * The Mahalanobis distance.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -55,9 +55,11 @@ namespace metric {
  * which is faster to evaluate.
  *
  * @tparam TakeRoot If true, takes the root of the output.  It is slightly
- *   faster to leave this at the default of false.
+ *   faster to leave this at the default of false, but this means the metric may
+ *   not satisfy the triangle inequality and may not be usable for methods that
+ *   expect a true metric.
  */
-template<bool TakeRoot = false>
+template<bool TakeRoot = true>
 class MahalanobisDistance
 {
  public:

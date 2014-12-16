@@ -7,7 +7,7 @@
  * compile time, which is useful for changing functionality depending on what
  * operations an object is capable of performing.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -27,6 +27,7 @@
 
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits.hpp>
+#include <mlpack/prereqs.hpp>
 
 /*
  * Constructs a template supporting the SFINAE pattern.

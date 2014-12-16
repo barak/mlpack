@@ -4,7 +4,7 @@
  *
  * Implementation of DecisionStump class.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -26,9 +26,6 @@
 // In case it hasn't been included yet.
 #include "decision_stump.hpp"
 
-#include <set>
-#include <algorithm>
-
 namespace mlpack {
 namespace decision_stump {
 
@@ -49,11 +46,28 @@ DecisionStump<MatType>::DecisionStump(const MatType& data,
   numClass = classes;
   bucketSize = inpBucketSize;
 
+  arma::rowvec weightD;
+
+  Train<false>(data, labels, weightD);
+}
+
+/**
+ * Train the decision stump on the given data and labels.
+ *
+ * @param data Dataset to train on.
+ * @param labels Labels for dataset.
+ * @param isWeight Whether we need to run a weighted Decision Stump.
+ */
+template<typename MatType>
+template <bool isWeight>
+void DecisionStump<MatType>::Train(const MatType& data, const arma::Row<size_t>& labels,
+                                    const arma::rowvec& weightD)
+{
   // If classLabels are not all identical, proceed with training.
-  size_t bestAtt = 0;
+  int bestAtt = 0;
   double entropy;
-  const double rootEntropy = CalculateEntropy<size_t>(
-      labels.subvec(0, labels.n_elem - 1));
+  const double rootEntropy = CalculateEntropy<size_t, isWeight>(
+      labels.subvec(0, labels.n_elem - 1), 0, weightD);
 
   double gain, bestGain = 0.0;
   for (size_t i = 0; i < data.n_rows; i++)
@@ -63,9 +77,8 @@ DecisionStump<MatType>::DecisionStump(const MatType& data,
     {
       // For each attribute with non-identical values, treat it as a potential
       // splitting attribute and calculate entropy if split on it.
-      entropy = SetupSplitAttribute(data.row(i), labels);
+      entropy = SetupSplitAttribute<isWeight>(data.row(i), labels, weightD);
 
-      // Log::Debug << "Entropy for attribute " << i << " is " << entropy << ".\n";
       gain = rootEntropy - entropy;
       // Find the attribute with the best entropy so that the gain is
       // maximized.
@@ -119,36 +132,33 @@ void DecisionStump<MatType>::Classify(const MatType& test,
 }
 
 /**
+ * Alternate constructor which copies parameters bucketSize and numClass
+ * from an already initiated decision stump, other. It appropriately
+ * sets the Weight vector.
  *
- *
- *
- *
- *
+ * @param other The other initiated Decision Stump object from
+ *      which we copy the values from.
+ * @param data The data on which to train this object on.
+ * @param D Weight vector to use while training. For boosting purposes.
+ * @param labels The labels of data.
+ * @param isWeight Whether we need to run a weighted Decision Stump.
  */
 template <typename MatType>
-DecisionStump<MatType>::DecisionStump(const DecisionStump<>& ds)
+DecisionStump<MatType>::DecisionStump(
+                        const DecisionStump<>& other,
+                        const MatType& data,
+                        const arma::rowvec& weights,
+                        const arma::Row<size_t>& labels
+                        )
 {
-  numClass = ds.numClass;
+  numClass = other.numClass;
+  bucketSize = other.bucketSize;
 
-  splitAttribute = ds.splitAttribute;
+  // weightD = weights;
+  // tempD = weightD;
 
-  bucketSize = ds.bucketSize;
-
-  split = ds.split;
-
-  binLabels = ds.binLabels;
+  Train<true>(data, labels, weights);
 }
-
-/**
- *
- *
- *
- *
- *
- *
-template <typename MatType>
-DecisionStump<MatType>::ModifyData(MatType& data, const arma::Row<double>& D)
- */
 
 /**
  * Sets up attribute as if it were splitting on it and finds entropy when
@@ -156,11 +166,14 @@ DecisionStump<MatType>::ModifyData(MatType& data, const arma::Row<double>& D)
  *
  * @param attribute A row from the training data, which might be a candidate for
  *      the splitting attribute.
+ * @param isWeight Whether we need to run a weighted Decision Stump.
  */
 template <typename MatType>
+template <bool isWeight>
 double DecisionStump<MatType>::SetupSplitAttribute(
     const arma::rowvec& attribute,
-    const arma::Row<size_t>& labels)
+    const arma::Row<size_t>& labels,
+    const arma::rowvec& weightD)
 {
   size_t i, count, begin, end;
   double entropy = 0.0;
@@ -175,8 +188,15 @@ double DecisionStump<MatType>::SetupSplitAttribute(
   arma::Row<size_t> sortedLabels(attribute.n_elem);
   sortedLabels.fill(0);
 
+  arma::rowvec tempD = arma::rowvec(weightD.n_cols);
+
   for (i = 0; i < attribute.n_elem; i++)
+  {
     sortedLabels(i) = labels(sortedIndexAtt(i));
+
+    if(isWeight)
+      tempD(i) = weightD(sortedIndexAtt(i));
+  }
 
   i = 0;
   count = 0;
@@ -196,8 +216,8 @@ double DecisionStump<MatType>::SetupSplitAttribute(
       // Use ratioEl to calculate the ratio of elements in this split.
       const double ratioEl = ((double) (end - begin + 1) / sortedLabels.n_elem);
 
-      entropy += ratioEl * CalculateEntropy<size_t>(
-          sortedLabels.subvec(begin, end));
+      entropy += ratioEl * CalculateEntropy<size_t, isWeight>(
+          sortedLabels.subvec(begin, end), begin, tempD);
       i++;
     }
     else if (sortedLabels(i) != sortedLabels(i + 1))
@@ -223,8 +243,8 @@ double DecisionStump<MatType>::SetupSplitAttribute(
       }
       const double ratioEl = ((double) (end - begin + 1) / sortedLabels.n_elem);
 
-      entropy += ratioEl * CalculateEntropy<size_t>(
-          sortedLabels.subvec(begin, end));
+      entropy += ratioEl * CalculateEntropy<size_t, isWeight>(
+          sortedLabels.subvec(begin, end), begin, tempD);
 
       i = end + 1;
       count = 0;
@@ -351,44 +371,34 @@ template <typename MatType>
 template <typename rType>
 rType DecisionStump<MatType>::CountMostFreq(const arma::Row<rType>& subCols)
 {
-  // Sort subCols for easier processing.
-  arma::Row<rType> sortCounts = arma::sort(subCols);
-  rType element = sortCounts[0];
-  size_t count = 0, localCount = 0;
+  // We'll create a map of elements and the number of times that each element is
+  // seen.
+  std::map<rType, size_t> countMap;
 
-  if (sortCounts.n_elem == 1)
-    return sortCounts[0];
-
-  // An O(n) loop which counts the most frequent element in sortCounts.
-  for (size_t i = 0; i < sortCounts.n_elem; ++i)
+  for (size_t i = 0; i < subCols.n_elem; ++i)
   {
-    if (i == sortCounts.n_elem - 1)
-    {
-      if (sortCounts(i - 1) == sortCounts(i))
-      {
-        // element = sortCounts(i - 1);
-        localCount++;
-      }
-      else if (localCount > count)
-        count = localCount;
-    }
-    else if (sortCounts(i) != sortCounts(i + 1))
-    {
-      localCount = 0;
-      count++;
-    }
+    if (countMap.count(subCols[i]) == 0)
+      countMap[subCols[i]] = 1;
     else
-    {
-      localCount++;
-      if (localCount > count)
-      {
-        count = localCount;
-        if (localCount == 1)
-          element = sortCounts(i);
-      }
-    }
+      ++countMap[subCols[i]];
   }
-  return element;
+
+  // Now find the maximum value.
+  typename std::map<rType, size_t>::iterator it = countMap.begin();
+  rType mostFreq = it->first;
+  size_t mostFreqCount = it->second;
+  while (it != countMap.end())
+  {
+    if (it->second >= mostFreqCount)
+    {
+      mostFreq = it->first;
+      mostFreqCount = it->second;
+    }
+
+    ++it;
+  }
+
+  return mostFreq;
 }
 
 /**
@@ -412,10 +422,13 @@ int DecisionStump<MatType>::IsDistinct(const arma::Row<rType>& featureRow)
  *
  * @param attribute The attribute for which we calculate the entropy.
  * @param labels Corresponding labels of the attribute.
+ * @param isWeight Whether we need to run a weighted Decision Stump.
  */
 template<typename MatType>
-template<typename AttType, typename LabelType>
-double DecisionStump<MatType>::CalculateEntropy(arma::subview_row<LabelType> labels)
+template<typename LabelType, bool isWeight>
+double DecisionStump<MatType>::CalculateEntropy(
+    arma::subview_row<LabelType> labels,
+    int begin, const arma::rowvec& tempD)
 {
   double entropy = 0.0;
   size_t j;
@@ -423,19 +436,43 @@ double DecisionStump<MatType>::CalculateEntropy(arma::subview_row<LabelType> lab
   arma::Row<size_t> numElem(numClass);
   numElem.fill(0);
 
-  // Populate numElem; they are used as helpers to calculate
-  // entropy.
-  for (j = 0; j < labels.n_elem; j++)
-    numElem(labels(j))++;
+  // Variable to accumulate the weight in this subview_row.
+  double accWeight = 0.0;
+  // Populate numElem; they are used as helpers to calculate entropy.
 
-  // The equation for entropy uses log2(), but log2() is from C99 and thus
-  // Visual Studio will not have it.  Therefore, we will use std::log(), and
-  // then apply the change-of-base formula at the end of the calculation.
-  for (j = 0; j < numClass; j++)
+  if (isWeight)
   {
-    const double p1 = ((double) numElem(j) / labels.n_elem);
+    for (j = 0; j < labels.n_elem; j++)
+    {
+      numElem(labels(j)) += tempD(j + begin);
+      accWeight += tempD(j + begin);
+    }
+      // numElem(labels(j))++;
 
-    entropy += (p1 == 0) ? 0 : p1 * std::log(p1);
+    for (j = 0; j < numClass; j++)
+    {
+      const double p1 = ((double) numElem(j) / accWeight);
+
+      // Instead of using log2(), which is C99 and may not exist on some
+      // compilers, use std::log(), then use the change-of-base formula to make
+      // the result correct.
+      entropy += (p1 == 0) ? 0 : p1 * std::log(p1);
+    }
+  }
+  else
+  {
+    for (j = 0; j < labels.n_elem; j++)
+      numElem(labels(j))++;
+
+    for (j = 0; j < numClass; j++)
+    {
+      const double p1 = ((double) numElem(j) / labels.n_elem);
+
+      // Instead of using log2(), which is C99 and may not exist on some
+      // compilers, use std::log(), then use the change-of-base formula to make
+      // the result correct.
+      entropy += (p1 == 0) ? 0 : p1 * std::log(p1);
+    }
   }
 
   return entropy / std::log(2.0);

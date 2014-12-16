@@ -5,7 +5,7 @@
  * Definition of the SparseCoding class, which performs L1 (LASSO) or
  * L1+L2 (Elastic Net)-regularized sparse coding with dictionary learning
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -159,11 +159,14 @@ class SparseCoding
    *    the coding matrix Z that are non-zero (the adjacency matrix for the
    *    bipartite graph of points and atoms).
    * @param newtonTolerance Tolerance of the Newton's method optimizer.
+   * @param maxIterations Maximum number of iterations to run the Newton's method.
+   *     If 0, the method will run until convergence (or forever).
    * @return the norm of the gradient of the Lagrange dual with respect to
    *    the dual variables
    */
   double OptimizeDictionary(const arma::uvec& adjacencies,
-                            const double newtonTolerance = 1e-6);
+                            const double newtonTolerance = 1e-6,
+                            const size_t maxIterations = 50);
 
   /**
    * Project each atom of the dictionary back onto the unit ball, if necessary.

@@ -3,7 +3,7 @@
  *
  * Miscellaneous math random-related routines.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -64,6 +64,12 @@ inline void RandomSeed(const size_t seed)
 {
   randGen.seed((uint32_t) seed);
   srand((unsigned int) seed);
+#if ARMA_VERSION_MAJOR > 3 || \
+    (ARMA_VERSION_MAJOR == 3 && ARMA_VERSION_MINOR >= 930)
+  // Armadillo >= 3.930 has its own random number generator internally that we
+  // need to set the seed for also.
+  arma::arma_rng::set_seed(seed);
+#endif
 }
 
 /**

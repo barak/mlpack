@@ -4,7 +4,7 @@
  *
  * Test for RADICAL.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(Radical_Test_Radical3D)
     valBest += rad.Vasicek(y);
   }
 
-  BOOST_REQUIRE_CLOSE(valBest, valEst, 0.2);
+  BOOST_REQUIRE_CLOSE(valBest, valEst, 0.25);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

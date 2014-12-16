@@ -4,7 +4,7 @@
  *
  * Test file for QUIC-SVD class.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -40,18 +40,31 @@ BOOST_AUTO_TEST_CASE(QUICSVDReconstructionError)
   arma::mat dataset;
   data::Load("test_data_3_1000.csv", dataset);
 
-  // Obtain the SVD using default parameters.
-  arma::mat u, v, sigma;
-  QUIC_SVD quicsvd(dataset, u, v, sigma);
-  
-  // Reconstruct the matrix using the SVD.
-  arma::mat reconstruct;
-  reconstruct = u * sigma * v.t();
-  
-  // The relative reconstruction error should be small.
-  double relativeError = arma::norm(dataset - reconstruct, "frob") /
-                         arma::norm(dataset, "frob");                         
-  BOOST_REQUIRE_SMALL(relativeError, 1e-5);
+  // Since QUIC-SVD may have random errors, run up to three trials to get a good
+  // results.
+  size_t successes = 0;
+  size_t trial = 0;
+
+  while (trial < 3 && successes < 1)
+  {
+    // Obtain the SVD using default parameters.
+    arma::mat u, v, sigma;
+    QUIC_SVD quicsvd(dataset, u, v, sigma);
+
+    // Reconstruct the matrix using the SVD.
+    arma::mat reconstruct;
+    reconstruct = u * sigma * v.t();
+
+    // The relative reconstruction error should be small.
+    double relativeError = arma::norm(dataset - reconstruct, "frob") /
+                           arma::norm(dataset, "frob");
+    if (relativeError < 1e-5)
+      ++successes;
+
+    ++trial;
+  }
+
+  BOOST_REQUIRE_GE(successes, 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
