@@ -4,7 +4,7 @@
  *
  * Very simple test function for SGD.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -29,9 +29,9 @@ namespace optimization {
 namespace test {
 
 //! Very, very simple test function which is the composite of three other
-//! functions.  It turns out that although this function is very simple,
-//! optimizing it fully can take a very long time.  It seems to take in excess
-//! of 10 million iterations with a step size of 0.0005.
+//! functions.  The gradient is not very steep far away from the optimum, so a
+//! larger step size may be required to optimize it in a reasonable number of
+//! iterations.
 class SGDTestFunction
 {
  public:

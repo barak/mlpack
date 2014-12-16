@@ -5,7 +5,7 @@
  * Implementation of PCA class to perform Principal Components Analysis on the
  * specified data set.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -22,8 +22,6 @@
  */
 #include "pca.hpp"
 #include <mlpack/core.hpp>
-#include <iostream>
-#include <complex>
 
 using namespace std;
 using namespace mlpack;
@@ -139,8 +137,12 @@ double PCA::Apply(arma::mat& data, const size_t newDimension) const
     // Drop unnecessary rows.
     data.shed_rows(newDimension, data.n_rows - 1);
 
+  // The svd method returns only non-zero eigenvalues so we have to calculate
+  // the right dimension before calculating the amount of variance retained.
+  double eigDim = std::min(newDimension - 1, (size_t) eigVal.n_elem - 1);
+
   // Calculate the total amount of variance retained.
-  return (sum(eigVal.subvec(0, newDimension - 1)) / sum(eigVal));
+  return (sum(eigVal.subvec(0, eigDim)) / sum(eigVal));
 }
 
 /**

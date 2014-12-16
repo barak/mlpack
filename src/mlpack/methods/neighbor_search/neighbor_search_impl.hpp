@@ -5,7 +5,7 @@
  * Implementation of Neighbor-Search class to perform all-nearest-neighbors on
  * two specified data sets.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -370,7 +370,7 @@ template<typename SortPolicy, typename MetricType, typename TreeType>
 std::string NeighborSearch<SortPolicy, MetricType, TreeType>::ToString() const
 {
   std::ostringstream convert;
-  convert << "NearestNeighborSearch [" << this << "]" << std::endl;
+  convert << "NeighborSearch [" << this << "]" << std::endl;
   convert << "  Reference Set: " << referenceSet.n_rows << "x" ;
   convert <<  referenceSet.n_cols << std::endl;
   if (&referenceSet != &querySet)

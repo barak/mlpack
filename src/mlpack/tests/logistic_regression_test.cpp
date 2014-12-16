@@ -4,7 +4,7 @@
  *
  * Test for LogisticFunction and LogisticRegression.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -510,8 +510,11 @@ BOOST_AUTO_TEST_CASE(LogisticRegressionSGDSimpleTest)
                  "1 2 3");
   arma::vec responses("1 1 0");
 
-  // Create a logistic regression object using SGD.
-  LogisticRegression<SGD> lr(data, responses);
+  // Create a logistic regression object using a custom SGD object with a much
+  // smaller tolerance.
+  LogisticRegressionFunction lrf(data, responses, 0.001);
+  SGD<LogisticRegressionFunction> sgd(lrf, 0.005, 500000, 1e-10);
+  LogisticRegression<SGD> lr(sgd);
 
   // Test sigmoid function.
   arma::vec sigmoids = 1 / (1 + arma::exp(-lr.Parameters()[0]
@@ -556,8 +559,11 @@ BOOST_AUTO_TEST_CASE(LogisticRegressionSGDRegularizationSimpleTest)
                  "1 2 3");
   arma::vec responses("1 1 0");
 
-  // Create a logistic regression object using SGD.
-  LogisticRegression<SGD> lr(data, responses, 0.001);
+  // Create a logistic regression object using custom SGD with a much smaller
+  // tolerance.
+  LogisticRegressionFunction lrf(data, responses, 0.001);
+  SGD<LogisticRegressionFunction> sgd(lrf, 0.005, 500000, 1e-10);
+  LogisticRegression<SGD> lr(sgd);
 
   // Test sigmoid function.
   arma::vec sigmoids = 1 / (1 + arma::exp(-lr.Parameters()[0]
@@ -597,7 +603,6 @@ BOOST_AUTO_TEST_CASE(LogisticRegressionLBFGSGaussianTest)
 
   // Ensure that the error is close to zero.
   const double acc = lr.ComputeAccuracy(data, responses);
-
   BOOST_REQUIRE_CLOSE(acc, 100.0, 0.3); // 0.3% error tolerance.
 
   // Create a test set.

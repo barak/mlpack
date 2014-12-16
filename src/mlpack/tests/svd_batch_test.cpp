@@ -1,6 +1,26 @@
+/**
+ * @file svd_batch_test.cpp
+ * @author Sumedh Ghaisas
+ *
+ * This file is part of MLPACK 1.0.11.
+ *
+ * MLPACK is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include <mlpack/core.hpp>
 #include <mlpack/methods/amf/amf.hpp>
 #include <mlpack/methods/amf/update_rules/svd_batch_learning.hpp>
+#include <mlpack/methods/amf/init_rules/average_init.hpp>
 #include <mlpack/methods/amf/init_rules/random_init.hpp>
 #include <mlpack/methods/amf/termination_policies/validation_RMSE_termination.hpp>
 #include <mlpack/methods/amf/termination_policies/simple_tolerance_termination.hpp>
@@ -17,35 +37,19 @@ using namespace arma;
 
 /**
  * Make sure the SVD Batch lerning is converging.
- *
- * This file is part of MLPACK 1.0.10.
- *
- * MLPACK is free software: you can redistribute it and/or modify it under the
- * terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
- *
- * MLPACK is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
- * details (LICENSE.txt).
- *
- * You should have received a copy of the GNU General Public License along with
- * MLPACK.  If not, see <http://www.gnu.org/licenses/>.
  */
 BOOST_AUTO_TEST_CASE(SVDBatchConvergenceElementTest)
 {
-  mlpack::math::RandomSeed(10);
   sp_mat data;
   data.sprandn(1000, 1000, 0.2);
-  AMF<SimpleToleranceTermination<sp_mat>, 
-      RandomInitialization, 
+  AMF<SimpleToleranceTermination<sp_mat>,
+      AverageInitialization,
       SVDBatchLearning> amf;
-  mat m1,m2;
+  mat m1, m2;
   amf.Apply(data, 2, m1, m2);
-  
-  BOOST_REQUIRE_NE(amf.TerminationPolicy().Iteration(), 
-                    amf.TerminationPolicy().MaxIterations());
+
+  BOOST_REQUIRE_NE(amf.TerminationPolicy().Iteration(),
+                   amf.TerminationPolicy().MaxIterations());
 }
 
 /**
@@ -75,6 +79,8 @@ BOOST_AUTO_TEST_CASE(SVDBatchMomentumTest)
   // Fill sparse matrix.
   sp_mat cleanedData = arma::sp_mat(locations, values, maxUserID, maxItemID);
 
+  // Explicitly setting the random seed forces the random initialization to be
+  // the same.  There may be a better way to do this.
   mlpack::math::RandomSeed(10);
   ValidationRMSETermination<sp_mat> vrt(cleanedData, 2000);
   AMF<ValidationRMSETermination<sp_mat>,
@@ -136,7 +142,7 @@ BOOST_AUTO_TEST_CASE(SVDBatchRegularizationTest)
                               RandomInitialization(),
                               SVDBatchLearning(0.0009, 0, 0, 0));
 
-  mat m1,m2;
+  mat m1, m2;
   double RMSE_1 = amf_1.Apply(cleanedData, 2, m1, m2);
 
   mlpack::math::RandomSeed(10);
@@ -156,35 +162,31 @@ BOOST_AUTO_TEST_CASE(SVDBatchRegularizationTest)
  */
 BOOST_AUTO_TEST_CASE(SVDBatchNegativeElementTest)
 {
-  mat test;
-  test.zeros(3,3);
-  test(0, 0) = 1;
-  test(0, 1) = -2;
-  test(0, 2) = 3;
-  test(1, 0) = 2;
-  test(1, 1) = -1;
-  test(1, 2) = 2;
-  test(2, 0) = 2;
-  test(2, 1) = 2;
-  test(2, 2) = 2;
+  mlpack::math::RandomSeed(std::time(NULL));
+  // Create two 5x3 matrices that we should be able to recover.
+  mat testLeft;
+  testLeft.randu(5, 3);
+  testLeft -= 0.5; // Shift so elements are negative.
+
+  mat testRight;
+  testRight.randu(3, 5);
+  testRight -= 0.5; // Shift so elements are negative.
+
+  // Assemble a rank-3 matrix that is 5x5.
+  mat test = testLeft * testRight;
 
   AMF<SimpleToleranceTermination<mat>,
       RandomInitialization,
       SVDBatchLearning> amf(SimpleToleranceTermination<mat>(),
                             RandomInitialization(),
-                            SVDBatchLearning(0.3, 0.001, 0.001, 0));
+                            SVDBatchLearning(0.1, 0.001, 0.001, 0));
   mat m1, m2;
-  amf.Apply(test, 2, m1, m2);
+  amf.Apply(test, 3, m1, m2);
 
   arma::mat result = m1 * m2;
 
-  for(size_t i = 0;i < 3;i++)
-  {
-    for(size_t j = 0;j < 3;j++)
-    {
-      BOOST_REQUIRE_LE(abs(test(i,j) - result(i,j)), 0.5);
-    }
-  }
+  // 5% tolerance on the norm.
+  BOOST_REQUIRE_CLOSE(arma::norm(test, "fro"), arma::norm(result, "fro"), 5.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

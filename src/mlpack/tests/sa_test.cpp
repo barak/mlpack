@@ -4,7 +4,7 @@
  *
  * Test file for SA (simulated annealing).
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -42,18 +42,29 @@ BOOST_AUTO_TEST_SUITE(SATest);
 
 BOOST_AUTO_TEST_CASE(GeneralizedRosenbrockTest)
 {
+  mlpack::math::RandomSeed(std::time(NULL));
   size_t dim = 50;
   GeneralizedRosenbrockFunction f(dim);
 
-  ExponentialSchedule schedule(1e-5);
-  SA<GeneralizedRosenbrockFunction, ExponentialSchedule>
-      sa(f, schedule, 10000000, 1000., 1000, 100, 1e-9, 3, 20, 0.3, 0.3);
-  arma::mat coordinates = f.GetInitialPoint();
-  const double result = sa.Optimize(coordinates);
+  double iteration = 0;
+  double result = DBL_MAX;
+  arma::mat coordinates;
+  while (result > 1e-6)
+  {
+    ExponentialSchedule schedule(1e-5);
+    SA<GeneralizedRosenbrockFunction, ExponentialSchedule>
+        sa(f, schedule, 10000000, 1000., 1000, 100, 1e-10, 3, 20, 0.3, 0.3);
+    coordinates = f.GetInitialPoint();
+    result = sa.Optimize(coordinates);
+    ++iteration;
 
+    BOOST_REQUIRE_LT(iteration, 4); // No more than three tries.
+  }
+
+  // 0.1% tolerance for each coordinate.
   BOOST_REQUIRE_SMALL(result, 1e-6);
   for (size_t j = 0; j < dim; ++j)
-      BOOST_REQUIRE_CLOSE(coordinates[j], (double) 1.0, 1e-2);
+      BOOST_REQUIRE_CLOSE(coordinates[j], (double) 1.0, 0.1);
 }
 
 // The Rosenbrock function is a simple function to optimize.
@@ -106,16 +117,16 @@ class RastrigrinFunction
 BOOST_AUTO_TEST_CASE(RastrigrinFunctionTest)
 {
   // Simulated annealing isn't guaranteed to converge (except in very specific
-  // situations).  If this works 1 of 3 times, I'm fine with that.  All I want
+  // situations).  If this works 1 of 5 times, I'm fine with that.  All I want
   // to know is that this implementation will escape from local minima.
   size_t successes = 0;
 
-  for (size_t trial = 0; trial < 3; ++trial)
+  for (size_t trial = 0; trial < 5; ++trial)
   {
     RastrigrinFunction f;
     ExponentialSchedule schedule(3e-6);
     SA<RastrigrinFunction> //sa(f, schedule);
-        sa(f, schedule, 20000000, 100, 50, 1000, 1e-9, 2, 0.2, 0.01, 0.1);
+        sa(f, schedule, 20000000, 100, 50, 1000, 1e-12, 2, 0.2, 0.01, 0.1);
     arma::mat coordinates = f.GetInitialPoint();
 
     const double result = sa.Optimize(coordinates);

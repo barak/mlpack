@@ -4,7 +4,7 @@
  *
  * Tests for data::Load() and data::Save().
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -393,7 +393,9 @@ BOOST_AUTO_TEST_CASE(SavePGMBinaryTest)
   remove("test_file.pgm");
 }
 
-#ifdef ARMA_USE_HDF5
+#if defined(ARMA_USE_HDF5) && (ARMA_VERSION_MAJOR == 3 \
+    || (ARMA_VERSION_MAJOR == 4 && (ARMA_VERSION_MINOR < 300 \
+    ||  ARMA_VERSION_MINOR > 400)))
 /**
  * Make sure load as HDF5 is successful.
  */

@@ -4,7 +4,7 @@
  * Include all of the base components required to write MLPACK methods, and the
  * main MLPACK Doxygen documentation.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -193,6 +193,9 @@
 #include <mlpack/core/kernels/spherical_kernel.hpp>
 #include <mlpack/core/kernels/triangular_kernel.hpp>
 
+// Use Armadillo's C++ version detection.
+#ifdef ARMA_USE_CXX11
+  #define MLPACK_USE_CX11
 #endif
 
 // Clean up unfortunate Windows preprocessor definitions, even if this file was
@@ -205,4 +208,6 @@
   #ifdef max
     #undef max
   #endif
+#endif
+
 #endif

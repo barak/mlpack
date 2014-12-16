@@ -4,7 +4,7 @@
  *
  * Test for the CLI input parameter system.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -136,8 +136,8 @@ BOOST_AUTO_TEST_CASE(TestBooleanOption)
   // Now, if we specify this flag, it should be true.
   int argc = 2;
   char* argv[2];
-  argv[0] = strcpy(new char[strlen("programname")], "programname");
-  argv[1] = strcpy(new char[strlen("--flag_test")], "--flag_test");
+  argv[0] = strcpy(new char[strlen("programname") + 1], "programname");
+  argv[1] = strcpy(new char[strlen("--flag_test") + 1], "--flag_test");
 
   CLI::ParseCommandLine(argc, argv);
 

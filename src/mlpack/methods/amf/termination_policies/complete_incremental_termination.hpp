@@ -4,7 +4,7 @@
  *
  * Complete incremental learning termination policy.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -31,6 +31,11 @@ template <class TerminationPolicy>
 class CompleteIncrementalTermination
 {
  public:
+  /**
+   * Empty constructor
+   *
+   * @param t_policy object of wrapped class.
+   */
   CompleteIncrementalTermination(TerminationPolicy t_policy = TerminationPolicy())
             : t_policy(t_policy) {}
 
@@ -67,7 +72,7 @@ class CompleteIncrementalTermination
   {
     return iteration;
   }
-  
+
   const size_t& MaxIterations()
   {
     return t_policy.MaxIterations();

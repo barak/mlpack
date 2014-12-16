@@ -5,7 +5,7 @@
  *
  * A class that represents the objective function which LRSDP optimizes.
  *
- * This file is part of MLPACK 1.0.10.
+ * This file is part of MLPACK 1.0.11.
  *
  * MLPACK is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free
@@ -110,6 +110,16 @@ class LRSDPFunction
   //! 1 if entries in matrix, 0 for normal.
   arma::uvec aModes;
 };
+
+// Declare specializations in lrsdp_function.cpp.
+template<>
+double AugLagrangianFunction<LRSDPFunction>::Evaluate(
+    const arma::mat& coordinates) const;
+
+template<>
+void AugLagrangianFunction<LRSDPFunction>::Gradient(
+    const arma::mat& coordinates,
+    arma::mat& gradient) const;
 
 };
 };

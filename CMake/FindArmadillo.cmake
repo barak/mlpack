@@ -37,7 +37,6 @@ find_path(ARMADILLO_INCLUDE_DIR
 
 
 if(ARMADILLO_INCLUDE_DIR)
-
   # ------------------------------------------------------------------------
   #  Extract version information from <armadillo>
   # ------------------------------------------------------------------------
@@ -80,16 +79,16 @@ if(EXISTS "${ARMADILLO_INCLUDE_DIR}/armadillo_bits/config.hpp")
   string(REGEX MATCH "\r?\n[\t ]*#define[ \t]+ARMA_USE_WRAPPER[ \t]*\r?\n" ARMA_USE_WRAPPER "${_armadillo_CONFIG_CONTENTS}")
 
   # ARMA_USE_LAPACK
-  string(REGEX MATCH "\r?\n[\t ]*#define[ \t]+ARMA_USE_LAPACK[ \t]*\r?\n" ARMA_USE_LAPACK "${_armadillo_CONFIG_CONTENTS}")
+  string(REGEX MATCH "\r?\n[\t ]*#if[\t ]+!defined[(]ARMA_USE_LAPACK[)][\t ]*\r?\n[\t ]*#define[ \t]+ARMA_USE_LAPACK[ \t]*\r?\n" ARMA_USE_LAPACK "${_armadillo_CONFIG_CONTENTS}")
 
   # ARMA_USE_BLAS
-  string(REGEX MATCH "\r?\n[\t ]*#define[ \t]+ARMA_USE_BLAS[ \t]*\r?\n" ARMA_USE_BLAS "${_armadillo_CONFIG_CONTENTS}")
+  string(REGEX MATCH "\r?\n[\t ]*#if[\t ]+!defined[(]ARMA_USE_BLAS[)][\t ]*\r?\n[\t ]*#define[ \t]+ARMA_USE_BLAS[ \t]*\r?\n" ARMA_USE_BLAS "${_armadillo_CONFIG_CONTENTS}")
     # ARMA_USE_ARPACK
   # ARMA_USE_ARPACK
-  string(REGEX MATCH "\r?\n[\t ]*#define[ \t]+ARMA_USE_ARPACK[ \t]*\r?\n" ARMA_USE_ARPACK "${_armadillo_CONFIG_CONTENTS}")
+  string(REGEX MATCH "\r?\n[\t ]*#if[\t ]+!defined[(]ARMA_USE_ARPACK[)][\t ]*\r?\n[\t ]*#define[ \t]+ARMA_USE_ARPACK[ \t]*\r?\n" ARMA_USE_ARPACK "${_armadillo_CONFIG_CONTENTS}")
 
   # Look for #define ARMA_USE_HDF5.
-  string(REGEX MATCH "\r?\n[\t ]*#define[ \t]+ARMA_USE_HDF5[ \t]*\r?\n" ARMA_USE_HDF5 "${_armadillo_CONFIG_CONTENTS}")
+  string(REGEX MATCH "\r?\n[\t ]*#if[\t ]+!defined[(]ARMA_USE_HDF5[)][\t ]*\r?\n[\t ]*#define[ \t]+ARMA_USE_HDF5[ \t]*\r?\n" ARMA_USE_HDF5 "${_armadillo_CONFIG_CONTENTS}")
 
   # If we aren't wrapping, things get a little more complex.
   if("${ARMA_USE_WRAPPER}" STREQUAL "")
@@ -221,7 +220,33 @@ if(EXISTS "${ARMADILLO_INCLUDE_DIR}/armadillo_bits/config.hpp")
 
     # Search for HDF5 (or replacement).
     if (NOT "${ARMA_USE_HDF5}" STREQUAL "")
-      find_package(HDF5 REQUIRED)
+      find_package(HDF5 QUIET)
+
+      if(NOT HDF5_FOUND)
+        # On Debian systems, the HDF5 package has been split into multiple
+        # packages so that it is co-installable.  But this may mean that the
+        # include files are hidden somewhere very odd that the FindHDF5.cmake
+        # script will not find.  Thus, we'll also quickly check pkgconfig to see
+        # if there is information on what to use there.
+        find_package(PkgConfig)
+        if (PKG_CONFIG_FOUND)
+          pkg_check_modules(HDF5 hdf5)
+          # But using pkgconfig is a little weird because HDF5_LIBRARIES won't
+          # be filled with exact library paths, like the other scripts.  So
+          # instead what we get is HDF5_LIBRARY_DIRS which is the equivalent of
+          # what we'd pass to -L.
+          if (HDF5_FOUND)
+            # I'm not sure what I think of doing this here...
+            link_directories("${HDF5_LIBRARY_DIRS}")
+          endif()
+        endif()
+      endif()
+
+      if(NOT HDF5_FOUND)
+        # We tried but didn't find it.
+        message(FATAL_ERROR "Armadillo HDF5 support is enabled, but HDF5 "
+            "cannot be found on the system.  Consider disabling HDF5 support.")
+      endif()
 
       set(SUPPORT_INCLUDE_DIRS "${SUPPORT_INCLUDE_DIRS}" "${HDF5_INCLUDE_DIRS}")
       set(SUPPORT_LIBRARIES "${SUPPORT_LIBRARIES}" "${HDF5_LIBRARIES}")
@@ -229,17 +254,72 @@ if(EXISTS "${ARMADILLO_INCLUDE_DIR}/armadillo_bits/config.hpp")
 
   else("${ARMA_USE_WRAPPER}" STREQUAL "")
     # Some older versions still require linking against HDF5 since they did not
-    # wrap libhdf5.  This was true until 4.300 (check this!).
-
-    if(NOT "${ARMA_USE_HDF5}" STREQUAL "")
+    # wrap libhdf5.  This was true for versions older than 4.300.
+    if(NOT "${ARMA_USE_HDF5}" STREQUAL "" AND
+       "${ARMADILLO_VERSION_STRING}" VERSION_LESS "4.300.0")
       message(STATUS "Armadillo HDF5 support is enabled and manual linking is "
                      "required.")
       # We have HDF5 support and need to link against HDF5.
-      find_package(HDF5 REQUIRED)
+      find_package(HDF5)
+
+      if(NOT HDF5_FOUND)
+        # On Debian systems, the HDF5 package has been split into multiple
+        # packages so that it is co-installable.  But this may mean that the
+        # include files are hidden somewhere very odd that the FindHDF5.cmake
+        # script will not find.  Thus, we'll also quickly check pkgconfig to see
+        # if there is information on what to use there.
+        find_package(PkgConfig)
+        if (PKG_CONFIG_FOUND)
+          pkg_check_modules(HDF5 hdf5)
+          # But using pkgconfig is a little weird because HDF5_LIBRARIES won't
+          # be filled with exact library paths, like the other scripts.  So
+          # instead what we get is HDF5_LIBRARY_DIRS which is the equivalent of
+          # what we'd pass to -L.
+          if (HDF5_FOUND)
+            # I'm not sure what I think of doing this here...
+            link_directories("${HDF5_LIBRARY_DIRS}")
+          endif()
+        endif()
+      endif()
+
+      if(NOT HDF5_FOUND)
+        # We tried but didn't find it.
+        message(FATAL_ERROR "Armadillo HDF5 support is enabled, but HDF5 "
+            "cannot be found on the system.  Consider disabling HDF5 support.")
+      endif()
 
       set(SUPPORT_INCLUDE_DIRS "${HDF5_INCLUDE_DIRS}")
       set(SUPPORT_LIBRARIES "${HDF5_LIBRARIES}")
-    endif(NOT "${ARMA_USE_HDF5}" STREQUAL "")
+    endif()
+
+    # Versions between 4.300 and 4.500 did successfully wrap HDF5, but didn't have good support for setting the include directory correctly.
+    if(NOT "${ARMA_USE_HDF5}" STREQUAL "" AND
+       "${ARMADILLO_VERSION_STRING}" VERSION_GREATER "4.299.0" AND
+       "${ARMADILLO_VERSION_STRING}" VERSION_LESS "4.450.0")
+      message(STATUS "Armadillo HDF5 support is enabled and include "
+                     "directories must be found.")
+      find_package(HDF5)
+
+      if(NOT HDF5_FOUND)
+        # On Debian systems, the HDF5 package has been split into multiple
+        # packages so that it is co-installable.  But this may mean that the
+        # include files are hidden somewhere very odd that the FindHDF5.cmake
+        # script will not find.  Thus, we'll also quickly check pkgconfig to see
+        # if there is information on what to use there.
+        find_package(PkgConfig)
+        if (PKG_CONFIG_FOUND)
+          pkg_check_modules(HDF5 hdf5)
+        endif()
+      endif()
+
+      if(NOT HDF5_FOUND)
+        # We tried but didn't find it.
+        message(FATAL_ERROR "Armadillo HDF5 support is enabled, but HDF5 "
+            "cannot be found on the system.  Consider disabling HDF5 support.")
+      endif()
+
+      set(SUPPORT_INCLUDE_DIRS "${HDF5_INCLUDE_DIRS}")
+    endif()
 
   endif("${ARMA_USE_WRAPPER}" STREQUAL "")
 
@@ -270,7 +350,11 @@ if (ARMADILLO_FOUND)
   # Also include support include directories.
   set(ARMADILLO_INCLUDE_DIRS ${ARMADILLO_INCLUDE_DIR} ${SUPPORT_INCLUDE_DIRS})
   # Also include support libraries to link against.
-  set(ARMADILLO_LIBRARIES ${ARMADILLO_LIBRARY} ${SUPPORT_LIBRARIES})
+  if (ARMA_NEED_LIBRARY)
+    set(ARMADILLO_LIBRARIES ${ARMADILLO_LIBRARY} ${SUPPORT_LIBRARIES})
+  else (ARMA_NEED_LIBRARY)
+    set(ARMADILLO_LIBRARIES ${SUPPORT_LIBRARIES})
+  endif (ARMA_NEED_LIBRARY)
   message(STATUS "Armadillo libraries: ${ARMADILLO_LIBRARIES}")
 endif (ARMADILLO_FOUND)
 
