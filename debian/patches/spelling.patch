@@ -3,15 +3,48 @@ Date: Sun, 17 Aug 2014 09:03:13 +0200
 Subject: spelling
 
 ---
- src/mlpack/core/kernels/example_kernel.hpp                            | 2 +-
- src/mlpack/core/tree/cosine_tree/cosine_tree.cpp                      | 2 +-
- src/mlpack/methods/amf/init_rules/random_acol_init.hpp                | 2 +-
- src/mlpack/methods/amf/init_rules/random_init.hpp                     | 4 ++--
- src/mlpack/methods/lsh/lsh_search.hpp                                 | 4 ++--
- src/mlpack/methods/sparse_autoencoder/sparse_autoencoder_function.hpp | 2 +-
- src/mlpack/tests/cosine_tree_test.cpp                                 | 2 +-
- 7 files changed, 9 insertions(+), 9 deletions(-)
+ doc/tutorials/amf/amf.txt                                           | 6 +++---
+ src/mlpack/core/kernels/example_kernel.hpp                          | 2 +-
+ src/mlpack/core/tree/ballbound_impl.hpp                             | 2 +-
+ src/mlpack/core/tree/cosine_tree/cosine_tree.cpp                    | 2 +-
+ src/mlpack/methods/amf/init_rules/random_acol_init.hpp              | 2 +-
+ src/mlpack/methods/amf/init_rules/random_init.hpp                   | 4 ++--
+ .../amf/termination_policies/simple_tolerance_termination.hpp       | 2 +-
+ src/mlpack/methods/lsh/lsh_search.hpp                               | 4 ++--
+ .../methods/sparse_autoencoder/sparse_autoencoder_function.hpp      | 2 +-
+ src/mlpack/tests/cosine_tree_test.cpp                               | 2 +-
+ 10 files changed, 14 insertions(+), 14 deletions(-)
 
+diff --git a/doc/tutorials/amf/amf.txt b/doc/tutorials/amf/amf.txt
+index 6b4bf9a..ea5d4c3 100644
+--- a/doc/tutorials/amf/amf.txt
++++ b/doc/tutorials/amf/amf.txt
+@@ -72,14 +72,14 @@ the threshold or the number of iterations goes beyond the threshold, positive
+ termination signal is passed to AMF. 
+ 
+ In SimpleToleranceTermination, termination criterion is met when increase in 
+-residue value drops below the given tolerance. To accomodate spikes, certain 
++residue value drops below the given tolerance. To accommodate spikes, certain 
+ number of successive residue drops are accepted. Secondary termination criterion 
+ terminates algorithm when iteration count goes beyond the threshold. 
+ 
+ ValidationRMSETermination divids the data into 2 sets, training set and 
+ validation set. Entries of validation set are nullifed in the input matrix. 
+ Termination criterion is met when increase in validation set RMSe value drops 
+-below the given tolerance. To accomodate spikes certain number of successive 
++below the given tolerance. To accommodate spikes certain number of successive 
+ validation RMSE drops are accepted. This upper imit on successive drops can be 
+ adjusted with reverseStepCount. Secondary termination criterion terminates 
+ algorithm when iteration count goes above the threshold. Though this termination
+@@ -160,7 +160,7 @@ int main()
+ }
+ @endcode
+ 
+-NMFALSFactorizer uses SimpleResidueTermination which is most prefered with 
++NMFALSFactorizer uses SimpleResidueTermination which is most preferred with 
+ Non-Negative Matrix factorizers. Initialization of W and H in NMFALSFactorizer
+ is random. The Apply function returns the residue obtained by comparing the 
+ constructed matrix W * H with the original matrix V.
 diff --git a/src/mlpack/core/kernels/example_kernel.hpp b/src/mlpack/core/kernels/example_kernel.hpp
 index fe3794e..0c7e3ec 100644
 --- a/src/mlpack/core/kernels/example_kernel.hpp
@@ -25,6 +58,19 @@ index fe3794e..0c7e3ec 100644
     **/
    std::string ToString() const
    {
+diff --git a/src/mlpack/core/tree/ballbound_impl.hpp b/src/mlpack/core/tree/ballbound_impl.hpp
+index 64e222b..9dcf872 100644
+--- a/src/mlpack/core/tree/ballbound_impl.hpp
++++ b/src/mlpack/core/tree/ballbound_impl.hpp
+@@ -248,7 +248,7 @@ BallBound<VecType, TMetricType>::operator|=(const MatType& data)
+     if (dist > radius)
+     {
+       // Move towards the new point and increase the radius just enough to
+-      // accomodate the new point.
++      // accommodate the new point.
+       arma::vec diff = data.col(i) - center;
+       center += ((dist - radius) / (2 * dist)) * diff;
+       radius = 0.5 * (dist + radius);
 diff --git a/src/mlpack/core/tree/cosine_tree/cosine_tree.cpp b/src/mlpack/core/tree/cosine_tree/cosine_tree.cpp
 index 006bad6..15fc02d 100644
 --- a/src/mlpack/core/tree/cosine_tree/cosine_tree.cpp
@@ -73,6 +119,19 @@ index 993897e..aa94101 100644
      W.randu(n, r);
      H.randu(r, m);
    }
+diff --git a/src/mlpack/methods/amf/termination_policies/simple_tolerance_termination.hpp b/src/mlpack/methods/amf/termination_policies/simple_tolerance_termination.hpp
+index db74af3..58de3d7 100644
+--- a/src/mlpack/methods/amf/termination_policies/simple_tolerance_termination.hpp
++++ b/src/mlpack/methods/amf/termination_policies/simple_tolerance_termination.hpp
+@@ -22,7 +22,7 @@ namespace amf {
+ /**
+  * This class implements residue tolerance termination policy. Termination
+  * criterion is met when increase in residue value drops below the given tolerance.
+- * To accomodate spikes certain number of successive residue drops are accepted.
++ * To accommodate spikes certain number of successive residue drops are accepted.
+  * This upper imit on successive drops can be adjusted with reverseStepCount.
+  * Secondary termination criterion terminates algorithm when iteration count
+  * goes above the threshold.
 diff --git a/src/mlpack/methods/lsh/lsh_search.hpp b/src/mlpack/methods/lsh/lsh_search.hpp
 index 0c51593..88e7e80 100644
 --- a/src/mlpack/methods/lsh/lsh_search.hpp
