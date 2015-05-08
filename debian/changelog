@@ -1,3 +1,9 @@
+mlpack (1.0.12-3) unstable; urgency=medium
+
+  * actually type "unstable" where I meant to
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Fri, 08 May 2015 11:00:31 +0100
+
 mlpack (1.0.12-2) experimental; urgency=medium
 
   * freeze is over, target to unstable
