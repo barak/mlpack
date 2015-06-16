@@ -1,0 +1,27 @@
+From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
+Date: Tue, 16 Jun 2015 11:15:38 +0100
+Subject: Doxygen timestamp
+
+Remove timestamp from files output by doxygen, to satisfy the czars of
+Debian ReproducibleBuilds.  See
+https://wiki.debian.org/ReproducibleBuilds/TimestampsInDocumentationGeneratedByDoxygen
+---
+ Doxyfile | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/Doxyfile b/Doxyfile
+index b2b23a9..78a59e6 100644
+--- a/Doxyfile
++++ b/Doxyfile
+@@ -71,6 +71,11 @@ SHOW_USED_FILES        = YES
+ SHOW_DIRECTORIES       = YES
+ FILE_VERSION_FILTER    =
+ #---------------------------------------------------------------------------
++# Debian ReproducibleBuilds configuration option, see
++# https://wiki.debian.org/ReproducibleBuilds/TimestampsInDocumentationGeneratedByDoxygen
++#---------------------------------------------------------------------------
++HTML_TIMESTAMP         = NO
++#---------------------------------------------------------------------------
+ # configuration options related to warning and progress messages
+ #---------------------------------------------------------------------------
+ QUIET                  = NO
