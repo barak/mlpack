@@ -1,2 +1,3 @@
-build-Doxygen.patch
-spelling.patch
+0001-build-Doxygen.patch
+0002-spelling.patch
+0003-Doxygen-timestamp.patch
