@@ -1,3 +1,9 @@
+mlpack (1.0.12-4) unstable; urgency=medium
+
+  * patch to remove timestamp from Doxygen output
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 16 Jun 2015 11:19:53 +0100
+
 mlpack (1.0.12-3) unstable; urgency=medium
 
   * actually type "unstable" where I meant to
