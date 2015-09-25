@@ -11,9 +11,11 @@ Subject: spelling
  src/mlpack/methods/amf/init_rules/random_init.hpp                   | 4 ++--
  .../amf/termination_policies/simple_tolerance_termination.hpp       | 2 +-
  src/mlpack/methods/lsh/lsh_search.hpp                               | 4 ++--
+ src/mlpack/methods/neighbor_search/neighbor_search.hpp              | 2 +-
+ src/mlpack/methods/rann/ra_search.hpp                               | 2 +-
  .../methods/sparse_autoencoder/sparse_autoencoder_function.hpp      | 2 +-
  src/mlpack/tests/cosine_tree_test.cpp                               | 2 +-
- 10 files changed, 14 insertions(+), 14 deletions(-)
+ 12 files changed, 16 insertions(+), 16 deletions(-)
 
 diff --git a/doc/tutorials/amf/amf.txt b/doc/tutorials/amf/amf.txt
 index 6b4bf9a..ea5d4c3 100644
@@ -147,6 +149,32 @@ index 0c51593..88e7e80 100644
     */
    void BuildHash();
  
+diff --git a/src/mlpack/methods/neighbor_search/neighbor_search.hpp b/src/mlpack/methods/neighbor_search/neighbor_search.hpp
+index fa16c02..a2964a9 100644
+--- a/src/mlpack/methods/neighbor_search/neighbor_search.hpp
++++ b/src/mlpack/methods/neighbor_search/neighbor_search.hpp
+@@ -64,7 +64,7 @@ class NeighborSearch
+    *
+    * This method will copy the matrices to internal copies, which are rearranged
+    * during tree-building.  You can avoid this extra copy by pre-constructing
+-   * the trees and passing them using a diferent constructor.
++   * the trees and passing them using a different constructor.
+    *
+    * @param referenceSet Set of reference points.
+    * @param querySet Set of query points.
+diff --git a/src/mlpack/methods/rann/ra_search.hpp b/src/mlpack/methods/rann/ra_search.hpp
+index c7a06e4..9106cce 100644
+--- a/src/mlpack/methods/rann/ra_search.hpp
++++ b/src/mlpack/methods/rann/ra_search.hpp
+@@ -72,7 +72,7 @@ class RASearch
+    *
+    * This method will copy the matrices to internal copies, which are rearranged
+    * during tree-building.  You can avoid this extra copy by pre-constructing
+-   * the trees and passing them using a diferent constructor.
++   * the trees and passing them using a different constructor.
+    *
+    * @param referenceSet Set of reference points.
+    * @param querySet Set of query points.
 diff --git a/src/mlpack/methods/sparse_autoencoder/sparse_autoencoder_function.hpp b/src/mlpack/methods/sparse_autoencoder/sparse_autoencoder_function.hpp
 index 6b4a135..f93a2f7 100644
 --- a/src/mlpack/methods/sparse_autoencoder/sparse_autoencoder_function.hpp
