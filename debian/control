@@ -12,7 +12,7 @@ Build-Depends: cmake, debhelper (>=9), dh-exec,
 		libxml2-dev,
 		libarmadillo-dev,
 		txt2man,
-		doxygen, doxygen-latex
+		doxygen, doxygen-latex, graphviz
 Standards-Version: 3.9.6
 Homepage: http://www.mlpack.org/
 Vcs-Git: git://anonscm.debian.org/debian-science/packages/mlpack.git
