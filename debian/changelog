@@ -1,3 +1,9 @@
+mlpack (1.0.12-5) unstable; urgency=medium
+
+  * Add build dependency for /usr/bin/dot (closes: #798840)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Fri, 25 Sep 2015 08:56:20 +0100
+
 mlpack (1.0.12-4) unstable; urgency=medium
 
   * patch to remove timestamp from Doxygen output
