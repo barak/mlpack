@@ -1,5 +1,5 @@
 # reference manual in PDF
 obj-*/doc/latex/refman.pdf
-README.txt
+README.md
 doc/guide
 doc/tutorials
