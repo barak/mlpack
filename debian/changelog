@@ -1,3 +1,30 @@
+mlpack (2.0.0-1) unstable; urgency=medium
+
+  * New upstream version
+    - upstream repo moved from SVN to git
+  * quilt patches
+    - forward port
+    - augment spelling patch
+  * debian/control
+    - bump to libmlpack.so.2
+    - build dependency on libboost-serialization-dev
+    - remove obsolete field DM-Upload-Allowed
+    - canonicalize name as "mlpack" not "MLpack" or "MLPACK", per upstream
+  * debian/rules
+    - remove hdf5 include directory tweak
+    - remove code to prefix binaries with mlpack_, as this is now done upstream
+    - dh_install --list-missing
+  * debian/*.docs
+    - upstream README.txt now README.md
+    - document not installing html/*.map and .md5
+  * debian/copyright
+    - Upstream COPYRIGHT.txt is appropriately formatted, so just copy it
+      to debian/copyright, add a debian/* stanza, and add an upstream
+      git repo pointer.
+  * debian/clean, for some generated include files
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 18 Jan 2016 16:22:30 +0000
+
 mlpack (1.0.12-5) unstable; urgency=medium
 
   * Add build dependency for /usr/bin/dot (closes: #798840)
