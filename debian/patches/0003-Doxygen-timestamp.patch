@@ -10,7 +10,7 @@ https://wiki.debian.org/ReproducibleBuilds/TimestampsInDocumentationGeneratedByD
  1 file changed, 5 insertions(+)
 
 diff --git a/Doxyfile b/Doxyfile
-index b2b23a9..78a59e6 100644
+index 9b96e99..6a7b79b 100644
 --- a/Doxyfile
 +++ b/Doxyfile
 @@ -71,6 +71,11 @@ SHOW_USED_FILES        = YES

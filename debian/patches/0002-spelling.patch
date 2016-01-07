@@ -3,68 +3,64 @@ Date: Sun, 17 Aug 2014 09:03:13 +0200
 Subject: spelling
 
 ---
- doc/tutorials/amf/amf.txt                                           | 6 +++---
- src/mlpack/core/kernels/example_kernel.hpp                          | 2 +-
- src/mlpack/core/tree/ballbound_impl.hpp                             | 2 +-
- src/mlpack/core/tree/cosine_tree/cosine_tree.cpp                    | 2 +-
- src/mlpack/methods/amf/init_rules/random_acol_init.hpp              | 2 +-
- src/mlpack/methods/amf/init_rules/random_init.hpp                   | 4 ++--
- .../amf/termination_policies/simple_tolerance_termination.hpp       | 2 +-
- src/mlpack/methods/lsh/lsh_search.hpp                               | 4 ++--
- src/mlpack/methods/neighbor_search/neighbor_search.hpp              | 2 +-
- src/mlpack/methods/rann/ra_search.hpp                               | 2 +-
- .../methods/sparse_autoencoder/sparse_autoencoder_function.hpp      | 2 +-
- src/mlpack/tests/cosine_tree_test.cpp                               | 2 +-
- 12 files changed, 16 insertions(+), 16 deletions(-)
+ doc/tutorials/amf/amf.txt                                         | 8 ++++----
+ src/mlpack/core/tree/ballbound_impl.hpp                           | 2 +-
+ src/mlpack/core/tree/cosine_tree/cosine_tree.cpp                  | 2 +-
+ src/mlpack/methods/amf/init_rules/average_init.hpp                | 4 ++--
+ src/mlpack/methods/amf/init_rules/random_acol_init.hpp            | 2 +-
+ src/mlpack/methods/amf/init_rules/random_init.hpp                 | 4 ++--
+ .../amf/termination_policies/simple_tolerance_termination.hpp     | 2 +-
+ .../amf/termination_policies/validation_RMSE_termination.hpp      | 2 +-
+ src/mlpack/methods/lsh/lsh_search.hpp                             | 4 ++--
+ .../methods/softmax_regression/softmax_regression_function.cpp    | 2 +-
+ .../methods/sparse_autoencoder/sparse_autoencoder_function.hpp    | 2 +-
+ src/mlpack/tests/cosine_tree_test.cpp                             | 2 +-
+ 12 files changed, 18 insertions(+), 18 deletions(-)
 
 diff --git a/doc/tutorials/amf/amf.txt b/doc/tutorials/amf/amf.txt
-index 6b4bf9a..ea5d4c3 100644
+index abb4c03..bc4f8ed 100644
 --- a/doc/tutorials/amf/amf.txt
 +++ b/doc/tutorials/amf/amf.txt
 @@ -72,14 +72,14 @@ the threshold or the number of iterations goes beyond the threshold, positive
- termination signal is passed to AMF. 
+ termination signal is passed to AMF.
  
- In SimpleToleranceTermination, termination criterion is met when increase in 
--residue value drops below the given tolerance. To accomodate spikes, certain 
-+residue value drops below the given tolerance. To accommodate spikes, certain 
- number of successive residue drops are accepted. Secondary termination criterion 
- terminates algorithm when iteration count goes beyond the threshold. 
+ In SimpleToleranceTermination, termination criterion is met when increase in
+-residue value drops below the given tolerance. To accomodate spikes, certain
++residue value drops below the given tolerance. To accommodate spikes, certain
+ number of successive residue drops are accepted. Secondary termination criterion
+ terminates algorithm when iteration count goes beyond the threshold.
  
- ValidationRMSETermination divids the data into 2 sets, training set and 
- validation set. Entries of validation set are nullifed in the input matrix. 
- Termination criterion is met when increase in validation set RMSe value drops 
--below the given tolerance. To accomodate spikes certain number of successive 
-+below the given tolerance. To accommodate spikes certain number of successive 
- validation RMSE drops are accepted. This upper imit on successive drops can be 
- adjusted with reverseStepCount. Secondary termination criterion terminates 
+ ValidationRMSETermination divids the data into 2 sets, training set and
+ validation set. Entries of validation set are nullifed in the input matrix.
+ Termination criterion is met when increase in validation set RMSe value drops
+-below the given tolerance. To accomodate spikes certain number of successive
++below the given tolerance. To accommodate spikes certain number of successive
+ validation RMSE drops are accepted. This upper imit on successive drops can be
+ adjusted with reverseStepCount. Secondary termination criterion terminates
  algorithm when iteration count goes above the threshold. Though this termination
+@@ -101,7 +101,7 @@ The AMF class comes with 2 initialization policies
+ 
+ RandomInitialization initializes matrices W and H with random uniform distribution
+ while RandomAcolInitialization initializes the W matrix by averaging p randomly
+-chosen columns of V.  In case of RandomAcolIntialization, p is a template parameter.
++chosen columns of V.  In case of RandomAcolInitialization, p is a template parameter.
+ 
+ To implement their own initialization policy, users need to define the following
+ function in their class.
 @@ -160,7 +160,7 @@ int main()
  }
  @endcode
  
--NMFALSFactorizer uses SimpleResidueTermination which is most prefered with 
-+NMFALSFactorizer uses SimpleResidueTermination which is most preferred with 
+-NMFALSFactorizer uses SimpleResidueTermination which is most prefered with
++NMFALSFactorizer uses SimpleResidueTermination which is most preferred with
  Non-Negative Matrix factorizers. Initialization of W and H in NMFALSFactorizer
- is random. The Apply function returns the residue obtained by comparing the 
+ is random. The Apply function returns the residue obtained by comparing the
  constructed matrix W * H with the original matrix V.
-diff --git a/src/mlpack/core/kernels/example_kernel.hpp b/src/mlpack/core/kernels/example_kernel.hpp
-index fe3794e..0c7e3ec 100644
---- a/src/mlpack/core/kernels/example_kernel.hpp
-+++ b/src/mlpack/core/kernels/example_kernel.hpp
-@@ -111,7 +111,7 @@ class ExampleKernel
-   /**
-    * Returns a string for the kernel object; in this case, with only the memory
-    * address for the kernel. If your kernel has any members, your ToString()
--   * method should include those as neccessary as well.
-+   * method should include those as necessary as well.
-    **/
-   std::string ToString() const
-   {
 diff --git a/src/mlpack/core/tree/ballbound_impl.hpp b/src/mlpack/core/tree/ballbound_impl.hpp
-index 64e222b..9dcf872 100644
+index 78bf2f1..97226e1 100644
 --- a/src/mlpack/core/tree/ballbound_impl.hpp
 +++ b/src/mlpack/core/tree/ballbound_impl.hpp
-@@ -248,7 +248,7 @@ BallBound<VecType, TMetricType>::operator|=(const MatType& data)
+@@ -271,7 +271,7 @@ BallBound<VecType, TMetricType>::operator|=(const MatType& data)
      if (dist > radius)
      {
        // Move towards the new point and increase the radius just enough to
@@ -74,10 +70,10 @@ index 64e222b..9dcf872 100644
        center += ((dist - radius) / (2 * dist)) * diff;
        radius = 0.5 * (dist + radius);
 diff --git a/src/mlpack/core/tree/cosine_tree/cosine_tree.cpp b/src/mlpack/core/tree/cosine_tree/cosine_tree.cpp
-index 006bad6..15fc02d 100644
+index 7343c4b..3b23226 100644
 --- a/src/mlpack/core/tree/cosine_tree/cosine_tree.cpp
 +++ b/src/mlpack/core/tree/cosine_tree/cosine_tree.cpp
-@@ -334,7 +334,7 @@ void CosineTree::ColumnSamplesLS(std::vector<size_t>& sampledIndices,
+@@ -340,7 +340,7 @@ void CosineTree::ColumnSamplesLS(std::vector<size_t>& sampledIndices,
      cDistribution(i+1) = cDistribution(i) + l2NormsSquared(i) / frobNormSquared;
    }
  
@@ -86,35 +82,57 @@ index 006bad6..15fc02d 100644
    sampledIndices.resize(numSamples);
    probabilities.zeros(numSamples);
  
+diff --git a/src/mlpack/methods/amf/init_rules/average_init.hpp b/src/mlpack/methods/amf/init_rules/average_init.hpp
+index 49fbe07..15d08c6 100644
+--- a/src/mlpack/methods/amf/init_rules/average_init.hpp
++++ b/src/mlpack/methods/amf/init_rules/average_init.hpp
+@@ -2,7 +2,7 @@
+  * @file averge_init.hpp
+  * @author Sumedh Ghaisas
+  *
+- * Intialization rule for Alternating Matrix Factorization.
++ * Initialization rule for Alternating Matrix Factorization.
+  *
+  * This file is part of mlpack 2.0.0.
+  *
+@@ -76,7 +76,7 @@ class AverageInitialization
+ 
+     avgV = sqrt(((avgV / (n * m)) - min) / r);
+ 
+-    // Intialize to random values.
++    // Initialize to random values.
+     W.randu(n, r);
+     H.randu(r, m);
+ 
 diff --git a/src/mlpack/methods/amf/init_rules/random_acol_init.hpp b/src/mlpack/methods/amf/init_rules/random_acol_init.hpp
-index 36352a1..2ec97be 100644
+index 5362481..5b87dbf 100644
 --- a/src/mlpack/methods/amf/init_rules/random_acol_init.hpp
 +++ b/src/mlpack/methods/amf/init_rules/random_acol_init.hpp
 @@ -2,7 +2,7 @@
   * @file random_acol_init.hpp
   * @author Mohan Rajendran
   *
-- * Intialization rule for Alternating Matrix Factorization. 
+- * Intialization rule for Alternating Matrix Factorization.
 + * Initialization rule for Alternating Matrix Factorization.
   *
-  * This file is part of mlpack 1.0.12.
+  * This file is part of mlpack 2.0.0.
   *
 diff --git a/src/mlpack/methods/amf/init_rules/random_init.hpp b/src/mlpack/methods/amf/init_rules/random_init.hpp
-index 993897e..aa94101 100644
+index a0a64db..f6655eb 100644
 --- a/src/mlpack/methods/amf/init_rules/random_init.hpp
 +++ b/src/mlpack/methods/amf/init_rules/random_init.hpp
 @@ -2,7 +2,7 @@
   * @file random_init.hpp
   * @author Mohan Rajendran
   *
-- * Intialization rule for Non-Negative Matrix Factorization (NMF). This simple
-+ * Initialization rule for Non-Negative Matrix Factorization (NMF). This simple
+- * Intialization rule for alternating matrix forization (AMF). This simple
++ * Initialization rule for alternating matrix forization (AMF). This simple
   * initialization is performed by assigning a random matrix to W and H.
   *
-  * This file is part of mlpack 1.0.12.
-@@ -36,7 +36,7 @@ class RandomInitialization
-     size_t n = V.n_rows;
-     size_t m = V.n_cols;
+  * This file is part of mlpack 2.0.0.
+@@ -56,7 +56,7 @@ class RandomInitialization
+     const size_t n = V.n_rows;
+     const size_t m = V.n_cols;
  
 -    // Intialize to random values.
 +    // Initialize to random values.
@@ -122,10 +140,10 @@ index 993897e..aa94101 100644
      H.randu(r, m);
    }
 diff --git a/src/mlpack/methods/amf/termination_policies/simple_tolerance_termination.hpp b/src/mlpack/methods/amf/termination_policies/simple_tolerance_termination.hpp
-index db74af3..58de3d7 100644
+index 509d06d..0920e9b 100644
 --- a/src/mlpack/methods/amf/termination_policies/simple_tolerance_termination.hpp
 +++ b/src/mlpack/methods/amf/termination_policies/simple_tolerance_termination.hpp
-@@ -22,7 +22,7 @@ namespace amf {
+@@ -30,7 +30,7 @@ namespace amf {
  /**
   * This class implements residue tolerance termination policy. Termination
   * criterion is met when increase in residue value drops below the given tolerance.
@@ -134,11 +152,24 @@ index db74af3..58de3d7 100644
   * This upper imit on successive drops can be adjusted with reverseStepCount.
   * Secondary termination criterion terminates algorithm when iteration count
   * goes above the threshold.
+diff --git a/src/mlpack/methods/amf/termination_policies/validation_RMSE_termination.hpp b/src/mlpack/methods/amf/termination_policies/validation_RMSE_termination.hpp
+index 80c5bf9..1ad1853 100644
+--- a/src/mlpack/methods/amf/termination_policies/validation_RMSE_termination.hpp
++++ b/src/mlpack/methods/amf/termination_policies/validation_RMSE_termination.hpp
+@@ -34,7 +34,7 @@ namespace amf
+  * The input data matrix is divided into 2 sets, training set and validation set.
+  * Entries of validation set are nullifed in the input matrix. Termination
+  * criterion is met when increase in validation set RMSe value drops below the
+- * given tolerance. To accomodate spikes certain number of successive validation
++ * given tolerance. To accommodate spikes certain number of successive validation
+  * RMSE drops are accepted. This upper imit on successive drops can be adjusted
+  * with reverseStepCount. Secondary termination criterion terminates algorithm
+  * when iteration count goes above the threshold.
 diff --git a/src/mlpack/methods/lsh/lsh_search.hpp b/src/mlpack/methods/lsh/lsh_search.hpp
-index 0c51593..88e7e80 100644
+index 0a7b550..ea5728b 100644
 --- a/src/mlpack/methods/lsh/lsh_search.hpp
 +++ b/src/mlpack/methods/lsh/lsh_search.hpp
-@@ -144,8 +144,8 @@ class LSHSearch
+@@ -200,8 +200,8 @@ class LSHSearch
     * standard hash.
     *
     * This function does not have any parameters and relies on parameters which
@@ -149,37 +180,24 @@ index 0c51593..88e7e80 100644
     */
    void BuildHash();
  
-diff --git a/src/mlpack/methods/neighbor_search/neighbor_search.hpp b/src/mlpack/methods/neighbor_search/neighbor_search.hpp
-index fa16c02..a2964a9 100644
---- a/src/mlpack/methods/neighbor_search/neighbor_search.hpp
-+++ b/src/mlpack/methods/neighbor_search/neighbor_search.hpp
-@@ -64,7 +64,7 @@ class NeighborSearch
-    *
-    * This method will copy the matrices to internal copies, which are rearranged
-    * during tree-building.  You can avoid this extra copy by pre-constructing
--   * the trees and passing them using a diferent constructor.
-+   * the trees and passing them using a different constructor.
-    *
-    * @param referenceSet Set of reference points.
-    * @param querySet Set of query points.
-diff --git a/src/mlpack/methods/rann/ra_search.hpp b/src/mlpack/methods/rann/ra_search.hpp
-index c7a06e4..9106cce 100644
---- a/src/mlpack/methods/rann/ra_search.hpp
-+++ b/src/mlpack/methods/rann/ra_search.hpp
-@@ -72,7 +72,7 @@ class RASearch
-    *
-    * This method will copy the matrices to internal copies, which are rearranged
-    * during tree-building.  You can avoid this extra copy by pre-constructing
--   * the trees and passing them using a diferent constructor.
-+   * the trees and passing them using a different constructor.
-    *
-    * @param referenceSet Set of reference points.
-    * @param querySet Set of query points.
+diff --git a/src/mlpack/methods/softmax_regression/softmax_regression_function.cpp b/src/mlpack/methods/softmax_regression/softmax_regression_function.cpp
+index 005dd2a..fe473c6 100644
+--- a/src/mlpack/methods/softmax_regression/softmax_regression_function.cpp
++++ b/src/mlpack/methods/softmax_regression/softmax_regression_function.cpp
+@@ -35,7 +35,7 @@ SoftmaxRegressionFunction::SoftmaxRegressionFunction(
+     lambda(lambda),
+     fitIntercept(fitIntercept)
+ {
+-  // Intialize the parameters to suitable values.
++  // Initialize the parameters to suitable values.
+   initialPoint = InitializeWeights();
+ 
+   // Calculate the label matrix.
 diff --git a/src/mlpack/methods/sparse_autoencoder/sparse_autoencoder_function.hpp b/src/mlpack/methods/sparse_autoencoder/sparse_autoencoder_function.hpp
-index 6b4a135..f93a2f7 100644
+index f3fe967..8dae8f5 100644
 --- a/src/mlpack/methods/sparse_autoencoder/sparse_autoencoder_function.hpp
 +++ b/src/mlpack/methods/sparse_autoencoder/sparse_autoencoder_function.hpp
-@@ -149,7 +149,7 @@ class SparseAutoencoderFunction
+@@ -157,7 +157,7 @@ class SparseAutoencoderFunction
   private:
    //! The matrix of data points.
    const arma::mat& data;
@@ -189,10 +207,10 @@ index 6b4a135..f93a2f7 100644
    //! Size of the visible layer.
    size_t visibleSize;
 diff --git a/src/mlpack/tests/cosine_tree_test.cpp b/src/mlpack/tests/cosine_tree_test.cpp
-index 9248951..3c17a3f 100644
+index 2da2465..1e5eda9 100644
 --- a/src/mlpack/tests/cosine_tree_test.cpp
 +++ b/src/mlpack/tests/cosine_tree_test.cpp
-@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(CosineTreeNoSplit)
+@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(CosineTreeNoSplit)
   */
  BOOST_AUTO_TEST_CASE(CosineNodeCosineSplit)
  {
