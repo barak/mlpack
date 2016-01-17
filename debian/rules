@@ -20,7 +20,7 @@ override_dh_auto_test:
 	@echo do not ask do not tell do not test
 
 override_dh_install:
-	dh_install
+	dh_install --list-missing
 	for d in				\
 	  debian/mlpack-bin/usr/bin		\
 	  debian/mlpack-bin/usr/share/man/man1;	\
