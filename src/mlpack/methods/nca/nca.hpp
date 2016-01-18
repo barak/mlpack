@@ -4,12 +4,20 @@
  *
  * Declaration of NCA class (Neighborhood Components Analysis).
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_NCA_NCA_HPP
 #define __MLPACK_METHODS_NCA_NCA_HPP
@@ -65,7 +73,7 @@ class NCA
    * @param metric Instantiated metric to use.
    */
   NCA(const arma::mat& dataset,
-      const arma::Col<size_t>& labels,
+      const arma::Row<size_t>& labels,
       MetricType metric = MetricType());
 
   /**
@@ -82,7 +90,7 @@ class NCA
   //! Get the dataset reference.
   const arma::mat& Dataset() const { return dataset; }
   //! Get the labels reference.
-  const arma::Col<size_t>& Labels() const { return labels; }
+  const arma::Row<size_t>& Labels() const { return labels; }
 
   //! Get the optimizer.
   const OptimizerType<SoftmaxErrorFunction<MetricType> >& Optimizer() const
@@ -90,14 +98,11 @@ class NCA
   OptimizerType<SoftmaxErrorFunction<MetricType> >& Optimizer()
   { return optimizer; }
 
-  // Returns a string representation of this object. 
-  std::string ToString() const;
-
  private:
   //! Dataset reference.
   const arma::mat& dataset;
   //! Labels reference.
-  const arma::Col<size_t>& labels;
+  const arma::Row<size_t>& labels;
 
   //! Metric to be used.
   MetricType metric;
@@ -109,8 +114,8 @@ class NCA
   OptimizerType<SoftmaxErrorFunction<MetricType> > optimizer;
 };
 
-}; // namespace nca
-}; // namespace mlpack
+} // namespace nca
+} // namespace mlpack
 
 // Include the implementation.
 #include "nca_impl.hpp"

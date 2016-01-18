@@ -4,12 +4,20 @@
  *
  * The implementation of the SA optimizer.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_OPTIMIZERS_SA_SA_IMPL_HPP
 #define __MLPACK_CORE_OPTIMIZERS_SA_SA_IMPL_HPP
@@ -206,31 +214,7 @@ void SA<FunctionType, CoolingScheduleType>::MoveControl(const size_t nMoves,
   accept.zeros();
 }
 
-template<
-    typename FunctionType,
-    typename CoolingScheduleType
->
-std::string SA<FunctionType, CoolingScheduleType>::
-ToString() const
-{
-  std::ostringstream convert;
-  convert << "SA [" << this << "]" << std::endl;
-  convert << "  Function:" << std::endl;
-  convert << util::Indent(function.ToString(), 2);
-  convert << "  Cooling Schedule:" << std::endl;
-  convert << util::Indent(coolingSchedule.ToString(), 2);
-  convert << "  Temperature: " << temperature << std::endl;
-  convert << "  Initial moves: " << initMoves << std::endl;
-  convert << "  Sweeps per move control: " << moveCtrlSweep << std::endl;
-  convert << "  Tolerance: " << tolerance << std::endl;
-  convert << "  Maximum sweeps below tolerance: " << maxToleranceSweep
-      << std::endl;
-  convert << "  Move control gain: " << gain << std::endl;
-  convert << "  Maximum iterations: " << maxIterations << std::endl;
-  return convert.str();
-}
-
-}; // namespace optimization
-}; // namespace mlpack
+} // namespace optimization
+} // namespace mlpack
 
 #endif

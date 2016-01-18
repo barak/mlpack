@@ -4,12 +4,20 @@
  *
  * Main function for least-squares linear regression.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include "linear_regression.hpp"
@@ -32,18 +40,17 @@ PROGRAM_INFO("Simple Linear Regression and Prediction",
     "(--output_predictions).  This type of regression is related to least-angle"
     " regression, which mlpack implements with the 'lars' executable.");
 
-PARAM_STRING("input_file", "File containing X (regressors).", "i", "");
-PARAM_STRING("input_responses", "Optional file containing y (responses). If "
+PARAM_STRING("training_file", "File containing training set X (regressors).",
+    "t", "");
+PARAM_STRING("training_responses", "Optional file containing y (responses). If "
     "not given, the responses are assumed to be the last row of the input "
     "file.", "r", "");
 
-PARAM_STRING("model_file", "File containing existing model (parameters).", "m",
-    "");
+PARAM_STRING("input_model_file", "File containing existing model (parameters).",
+    "m", "");
+PARAM_STRING("output_model_file", "File to save trained model to.", "M", "");
 
-PARAM_STRING("output_file", "File where parameters (b) will be saved.",
-    "o", "parameters.csv");
-
-PARAM_STRING("test_file", "File containing X' (test regressors).", "t", "");
+PARAM_STRING("test_file", "File containing X' (test regressors).", "T", "");
 PARAM_STRING("output_predictions", "If --test_file is specified, this file is "
     "where the predicted responses will be saved.", "p", "predictions.csv");
 
@@ -57,15 +64,15 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-  // Handle parameters
+  // Handle parameters.
   CLI::ParseCommandLine(argc, argv);
 
-  const string modelName = CLI::GetParam<string>("model_file");
-  const string outputFile = CLI::GetParam<string>("output_file");
+  const string inputModelFile = CLI::GetParam<string>("input_model_file");
+  const string outputModelFile = CLI::GetParam<string>("output_model_file");
   const string outputPredictions = CLI::GetParam<string>("output_predictions");
-  const string responseName = CLI::GetParam<string>("input_responses");
+  const string responseName = CLI::GetParam<string>("training_responses");
   const string testName = CLI::GetParam<string>("test_file");
-  const string trainName = CLI::GetParam<string>("input_file");
+  const string trainName = CLI::GetParam<string>("training_file");
   const double lambda = CLI::GetParam<double>("lambda");
 
   mat regressors;
@@ -79,14 +86,14 @@ int main(int argc, char* argv[])
   // We want to determine if an input file XOR model file were given.
   if (trainName.empty()) // The user specified no input file.
   {
-    if (modelName.empty()) // The user specified no model file, error and exit.
+    if (inputModelFile.empty()) // The user specified no model file; error.
       Log::Fatal << "You must specify either --input_file or --model_file."
           << endl;
     else // The model file was specified, no problems.
       computeModel = false;
   }
   // The user specified an input file but no model file, no problems.
-  else if (modelName.empty())
+  else if (inputModelFile.empty())
     computeModel = true;
   // The user specified both an input file and model file.
   // This is ambiguous -- which model should we use? A generated one or given
@@ -103,6 +110,11 @@ int main(int argc, char* argv[])
   {
     Log::Fatal << "When specifying --model_file, you must also specify "
         << "--test_file." << endl;
+  }
+
+  if (!computeModel && CLI::HasParam("lambda"))
+  {
+    Log::Warn << "--lambda ignored because no model is being trained." << endl;
   }
 
   // An input file was given and we need to generate the model.
@@ -142,7 +154,8 @@ int main(int argc, char* argv[])
     Timer::Stop("regression");
 
     // Save the parameters.
-    data::Save(outputFile, lr.Parameters(), true);
+    if (!outputModelFile.empty())
+      data::Save(outputModelFile, "linearRegressionModel", lr);
   }
 
   // Did we want to predict, too?
@@ -152,7 +165,7 @@ int main(int argc, char* argv[])
     if (!computeModel)
     {
       Timer::Start("load_model");
-      lr = LinearRegression(modelName);
+      data::Load(inputModelFile, "linearRegressionModel", lr, true);
       Timer::Stop("load_model");
     }
 

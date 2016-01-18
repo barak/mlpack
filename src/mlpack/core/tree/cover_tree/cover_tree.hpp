@@ -4,20 +4,28 @@
  *
  * Definition of CoverTree, which can be used in place of the BinarySpaceTree.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_TREE_COVER_TREE_COVER_TREE_HPP
 #define __MLPACK_CORE_TREE_COVER_TREE_COVER_TREE_HPP
 
 #include <mlpack/core.hpp>
-#include <mlpack/core/metrics/lmetric.hpp>
-#include "first_point_is_root.hpp"
+
 #include "../statistic.hpp"
+#include "first_point_is_root.hpp"
 
 namespace mlpack {
 namespace tree {
@@ -88,14 +96,17 @@ namespace tree {
  * @tparam MetricType Metric type to use during tree construction.
  * @tparam RootPointPolicy Determines which point to use as the root node.
  * @tparam StatisticType Statistic to be used during tree creation.
+ * @tparam MatType Type of matrix to build the tree on (generally mat or
+ *      sp_mat).
  */
 template<typename MetricType = metric::LMetric<2, true>,
-         typename RootPointPolicy = FirstPointIsRoot,
-         typename StatisticType = EmptyStatistic>
+         typename StatisticType = EmptyStatistic,
+         typename MatType = arma::mat,
+         typename RootPointPolicy = FirstPointIsRoot>
 class CoverTree
 {
  public:
-  typedef arma::mat Mat;
+  typedef MatType Mat;
 
   /**
    * Create the cover tree with the given dataset and given base.
@@ -107,7 +118,7 @@ class CoverTree
    * @param dataset Reference to the dataset to build a tree on.
    * @param base Base to use during tree building (default 2.0).
    */
-  CoverTree(const arma::mat& dataset,
+  CoverTree(const MatType& dataset,
             const double base = 2.0,
             MetricType* metric = NULL);
 
@@ -120,7 +131,29 @@ class CoverTree
    * @param metric Instantiated metric to use during tree building.
    * @param base Base to use during tree building (default 2.0).
    */
-  CoverTree(const arma::mat& dataset,
+  CoverTree(const MatType& dataset,
+            MetricType& metric,
+            const double base = 2.0);
+
+  /**
+   * Create the cover tree with the given dataset, taking ownership of the
+   * dataset.  Optionally, set the base.
+   *
+   * @param dataset Reference to the dataset to build a tree on.
+   * @param base Base to use during tree building (default 2.0).
+   */
+  CoverTree(MatType&& dataset,
+            const double base = 2.0);
+
+  /**
+   * Create the cover tree with the given dataset and the given instantiated
+   * metric, taking ownership of the dataset.  Optionally, set the base.
+   *
+   * @param dataset Reference to the dataset to build a tree on.
+   * @param metric Instantiated metric to use during tree building.
+   * @param base Base to use during tree building (default 2.0).
+   */
+  CoverTree(MatType&& dataset,
             MetricType& metric,
             const double base = 2.0);
 
@@ -155,7 +188,7 @@ class CoverTree
    *     any points in the far set).
    * @param usedSetSize The number of points used will be added to this number.
    */
-  CoverTree(const arma::mat& dataset,
+  CoverTree(const MatType& dataset,
             const double base,
             const size_t pointIndex,
             const int scale,
@@ -184,7 +217,7 @@ class CoverTree
    * @param furthestDescendantDistance Distance to furthest descendant point.
    * @param metric Instantiated metric (optional).
    */
-  CoverTree(const arma::mat& dataset,
+  CoverTree(const MatType& dataset,
             const double base,
             const size_t pointIndex,
             const int scale,
@@ -195,11 +228,19 @@ class CoverTree
 
   /**
    * Create a cover tree from another tree.  Be careful!  This may use a lot of
-   * memory and take a lot of time.
+   * memory and take a lot of time.  This will also make a copy of the dataset.
    *
    * @param other Cover tree to copy from.
    */
   CoverTree(const CoverTree& other);
+
+  /**
+   * Create a cover tree from a boost::serialization archive.
+   */
+  template<typename Archive>
+  CoverTree(
+      Archive& ar,
+      const typename boost::enable_if<typename Archive::is_loading>::type* = 0);
 
   /**
    * Delete this cover tree node and its children.
@@ -215,8 +256,11 @@ class CoverTree
   template<typename RuleType>
   class DualTreeTraverser;
 
+  template<typename RuleType>
+  using BreadthFirstDualTreeTraverser = DualTreeTraverser<RuleType>;
+
   //! Get a reference to the dataset.
-  const arma::mat& Dataset() const { return dataset; }
+  const MatType& Dataset() const { return *dataset; }
 
   //! Get the index of the point which this node represents.
   size_t Point() const { return point; }
@@ -230,6 +274,8 @@ class CoverTree
   const CoverTree& Child(const size_t index) const { return *children[index]; }
   //! Modify a particular child node.
   CoverTree& Child(const size_t index) { return *children[index]; }
+
+  CoverTree*& ChildPtr(const size_t index) { return children[index]; }
 
   //! Get the number of children.
   size_t NumChildren() const { return children.size(); }
@@ -331,46 +377,40 @@ class CoverTree
   //! same as furthestDescendantDistance).
   double MinimumBoundDistance() const { return furthestDescendantDistance; }
 
-  //! Get the centroid of the node and store it in the given vector.
-  void Centroid(arma::vec& centroid) const { centroid = dataset.col(point); }
+  //! Get the center of the node and store it in the given vector.
+  void Center(arma::vec& center) const
+  {
+    center = arma::vec(dataset->col(point));
+  }
 
   //! Get the instantiated metric.
   MetricType& Metric() const { return *metric; }
 
  private:
   //! Reference to the matrix which this tree is built on.
-  const arma::mat& dataset;
-
+  const MatType* dataset;
   //! Index of the point in the matrix which this node represents.
   size_t point;
-
   //! The list of children; the first is the self-child.
   std::vector<CoverTree*> children;
-
   //! Scale level of the node.
   int scale;
-
   //! The base used to construct the tree.
   double base;
-
   //! The instantiated statistic.
   StatisticType stat;
-
   //! The number of descendant points.
   size_t numDescendants;
-
   //! The parent node (NULL if this is the root of the tree).
   CoverTree* parent;
-
   //! Distance to the parent.
   double parentDistance;
-
   //! Distance to the furthest descendant.
   double furthestDescendantDistance;
-
   //! Whether or not we need to destroy the metric in the destructor.
   bool localMetric;
-
+  //! If true, we own the dataset and need to destroy it in the destructor.
+  bool localDataset;
   //! The metric used for this tree.
   MetricType* metric;
 
@@ -462,11 +502,24 @@ class CoverTree
    */
   void RemoveNewImplicitNodes();
 
+ protected:
+  /**
+   * A default constructor.  This is meant to only be used with
+   * boost::serialization, which is allowed with the friend declaration below.
+   * This does not return a valid tree!  This method must be protected, so that
+   * the serialization shim can work with the default constructor.
+   */
+  CoverTree();
+
+  //! Friend access is given for the default constructor.
+  friend class boost::serialization::access;
+
  public:
   /**
-   * Returns a string representation of this object.
+   * Serialize the tree.
    */
-  std::string ToString() const;
+  template<typename Archive>
+  void Serialize(Archive& ar, const unsigned int /* version */);
 
   size_t DistanceComps() const { return distanceComps; }
   size_t& DistanceComps() { return distanceComps; }
@@ -475,10 +528,13 @@ class CoverTree
   size_t distanceComps;
 };
 
-}; // namespace tree
-}; // namespace mlpack
+} // namespace tree
+} // namespace mlpack
 
 // Include implementation.
 #include "cover_tree_impl.hpp"
+
+// Include the rest of the pieces, if necessary.
+#include "../cover_tree.hpp"
 
 #endif

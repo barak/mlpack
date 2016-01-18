@@ -1,16 +1,25 @@
 /**
  * @author Parikshit Ram (pram@cc.gatech.edu)
+ * @author Michael Fox
  * @file gmm.hpp
  *
  * Defines a Gaussian Mixture model and
  * estimates the parameters of the model
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_MOG_MOG_EM_HPP
 #define __MLPACK_METHODS_MOG_MOG_EM_HPP
@@ -28,21 +37,20 @@ namespace gmm /** Gaussian Mixture Models. */ {
  * functions to estimate the parameters of the GMM on a given dataset via the
  * given fitting mechanism, defined by the FittingType template parameter.  The
  * GMM can be trained using normal data, or data with probabilities of being
- * from this GMM (see GMM::Estimate() for more information).
+ * from this GMM (see GMM::Train() for more information).
  *
- * The FittingType template class must provide a way for the GMM to train on
- * data.  It must provide the following two functions:
+ * The Train() method uses a template type 'FittingType'.  The FittingType
+ * template class must provide a way for the GMM to train on data.  It must
+ * provide the following two functions:
  *
  * @code
  * void Estimate(const arma::mat& observations,
- *               std::vector<arma::vec>& means,
- *               std::vector<arma::mat>& covariances,
+ *               std::vector<distribution::GaussianDistribution>& dists,
  *               arma::vec& weights);
  *
  * void Estimate(const arma::mat& observations,
  *               const arma::vec& probabilities,
- *               std::vector<arma::vec>& means,
- *               std::vector<arma::mat>& covariances,
+ *               std::vector<distribution::GaussianDistribution>& dists,
  *               arma::vec& weights);
  * @endcode
  *
@@ -53,7 +61,8 @@ namespace gmm /** Gaussian Mixture Models. */ {
  * the GMM as specified in the constructor.
  *
  * For a sample implementation, see the EMFit class; this class uses the EM
- * algorithm to train a GMM, and is the default fitting type.
+ * algorithm to train a GMM, and is the default fitting type for the Train()
+ * method.
  *
  * The GMM, once trained, can be used to generate random points from the
  * distribution and estimate the probability of points being from the
@@ -63,12 +72,12 @@ namespace gmm /** Gaussian Mixture Models. */ {
  * Example use:
  *
  * @code
- * // Set up a mixture of 5 gaussians in a 4-dimensional space (uses the default
- * // EM fitting mechanism).
- * GMM<> g(5, 4);
+ * // Set up a mixture of 5 gaussians in a 4-dimensional space.
+ * GMM g(5, 4);
  *
- * // Train the GMM given the data observations.
- * g.Estimate(data);
+ * // Train the GMM given the data observations, using the default EM fitting
+ * // mechanism.
+ * g.Train(data);
  *
  * // Get the probability of 'observation' being observed from this GMM.
  * double probability = g.Probability(observation);
@@ -77,7 +86,6 @@ namespace gmm /** Gaussian Mixture Models. */ {
  * arma::vec observation = g.Random();
  * @endcode
  */
-template<typename FittingType = EMFit<> >
 class GMM
 {
  private:
@@ -85,10 +93,10 @@ class GMM
   size_t gaussians;
   //! The dimensionality of the model.
   size_t dimensionality;
-  //! Vector of means; one for each Gaussian.
-  std::vector<arma::vec> means;
-  //! Vector of covariances; one for each Gaussian.
-  std::vector<arma::mat> covariances;
+
+  //! Vector of Gaussians
+  std::vector<distribution::GaussianDistribution> dists;
+
   //! Vector of a priori weights for each Gaussian.
   arma::vec weights;
 
@@ -98,9 +106,7 @@ class GMM
    */
   GMM() :
       gaussians(0),
-      dimensionality(0),
-      localFitter(FittingType()),
-      fitter(localFitter)
+      dimensionality(0)
   {
     // Warn the user.  They probably don't want to do this.  If this constructor
     // is being used (because it is required by some template classes), the user
@@ -119,127 +125,47 @@ class GMM
   GMM(const size_t gaussians, const size_t dimensionality);
 
   /**
-   * Create a GMM with the given number of Gaussians, each of which have the
-   * specified dimensionality.  Also, pass in an initialized FittingType class;
-   * this is useful in cases where the FittingType class needs to store some
-   * state.
+   * Create a GMM with the given dists and weights.
    *
-   * @param gaussians Number of Gaussians in this GMM.
-   * @param dimensionality Dimensionality of each Gaussian.
-   * @param fitter Initialized fitting mechanism.
-   */
-  GMM(const size_t gaussians,
-      const size_t dimensionality,
-      FittingType& fitter);
-
-  /**
-   * Create a GMM with the given means, covariances, and weights.
-   *
-   * @param means Means of the model.
-   * @param covariances Covariances of the model.
+   * @param dists Distributions of the model.
    * @param weights Weights of the model.
    */
-  GMM(const std::vector<arma::vec>& means,
-      const std::vector<arma::mat>& covariances,
+  GMM(const std::vector<distribution::GaussianDistribution> & dists,
       const arma::vec& weights) :
-      gaussians(means.size()),
-      dimensionality((!means.empty()) ? means[0].n_elem : 0),
-      means(means),
-      covariances(covariances),
-      weights(weights),
-      localFitter(FittingType()),
-      fitter(localFitter) { /* Nothing to do. */ }
+      gaussians(dists.size()),
+      dimensionality((!dists.empty()) ? dists[0].Mean().n_elem : 0),
+      dists(dists),
+      weights(weights) { /* Nothing to do. */ }
 
-  /**
-   * Create a GMM with the given means, covariances, and weights, and use the
-   * given initialized FittingType class.  This is useful in cases where the
-   * FittingType class needs to store some state.
-   *
-   * @param means Means of the model.
-   * @param covariances Covariances of the model.
-   * @param weights Weights of the model.
-   */
-  GMM(const std::vector<arma::vec>& means,
-      const std::vector<arma::mat>& covariances,
-      const arma::vec& weights,
-      FittingType& fitter) :
-      gaussians(means.size()),
-      dimensionality((!means.empty()) ? means[0].n_elem : 0),
-      means(means),
-      covariances(covariances),
-      weights(weights),
-      fitter(fitter) { /* Nothing to do. */ }
-
-  /**
-   * Copy constructor for GMMs which use different fitting types.
-   */
-  template<typename OtherFittingType>
-  GMM(const GMM<OtherFittingType>& other);
-
-  /**
-   * Copy constructor for GMMs using the same fitting type.  This also copies
-   * the fitter.
-   */
+  //! Copy constructor for GMMs.
   GMM(const GMM& other);
 
-  /**
-   * Copy operator for GMMs which use different fitting types.
-   */
-  template<typename OtherFittingType>
-  GMM& operator=(const GMM<OtherFittingType>& other);
-
-  /**
-   * Copy operator for GMMs which use the same fitting type.  This also copies
-   * the fitter.
-   */
+  //! Copy operator for GMMs.
   GMM& operator=(const GMM& other);
-
-  /**
-   * Load a GMM from an XML file.  The format of the XML file should be the same
-   * as is generated by the Save() method.
-   *
-   * @param filename Name of XML file containing model to be loaded.
-   */
-  void Load(const std::string& filename);
-
-  /**
-   * Save a GMM to an XML file.
-   *
-   * @param filename Name of XML file to write to.
-   */
-  void Save(const std::string& filename) const;
 
   //! Return the number of gaussians in the model.
   size_t Gaussians() const { return gaussians; }
-  //! Modify the number of gaussians in the model.  Careful!  You will have to
-  //! resize the means, covariances, and weights yourself.
-  size_t& Gaussians() { return gaussians; }
-
   //! Return the dimensionality of the model.
   size_t Dimensionality() const { return dimensionality; }
-  //! Modify the dimensionality of the model.  Careful!  You will have to update
-  //! each mean and covariance matrix yourself.
-  size_t& Dimensionality() { return dimensionality; }
 
-  //! Return a const reference to the vector of means (mu).
-  const std::vector<arma::vec>& Means() const { return means; }
-  //! Return a reference to the vector of means (mu).
-  std::vector<arma::vec>& Means() { return means; }
-
-  //! Return a const reference to the vector of covariance matrices (sigma).
-  const std::vector<arma::mat>& Covariances() const { return covariances; }
-  //! Return a reference to the vector of covariance matrices (sigma).
-  std::vector<arma::mat>& Covariances() { return covariances; }
+  /**
+   * Return a const reference to a component distribution.
+   *
+   * @param i index of component.
+   */
+  const distribution::GaussianDistribution& Component(size_t i) const {
+      return dists[i]; }
+  /**
+   * Return a reference to a component distribution.
+   *
+   * @param i index of component.
+   */
+  distribution::GaussianDistribution& Component(size_t i) { return dists[i]; }
 
   //! Return a const reference to the a priori weights of each Gaussian.
   const arma::vec& Weights() const { return weights; }
   //! Return a reference to the a priori weights of each Gaussian.
   arma::vec& Weights() { return weights; }
-
-  //! Return a const reference to the fitting type.
-  const FittingType& Fitter() const { return fitter; }
-  //! Return a reference to the fitting type.
-  FittingType& Fitter() { return fitter; }
 
   /**
    * Return the probability that the given observation came from this
@@ -289,9 +215,11 @@ class GMM
    *      model for the estimation.
    * @return The log-likelihood of the best fit.
    */
-  double Estimate(const arma::mat& observations,
-                  const size_t trials = 1,
-                  const bool useExistingModel = false);
+  template<typename FittingType = EMFit<>>
+  double Train(const arma::mat& observations,
+               const size_t trials = 1,
+               const bool useExistingModel = false,
+               FittingType fitter = FittingType());
 
   /**
    * Estimate the probability distribution directly from the given observations,
@@ -317,10 +245,12 @@ class GMM
    *     model for the estimation.
    * @return The log-likelihood of the best fit.
    */
-  double Estimate(const arma::mat& observations,
-                  const arma::vec& probabilities,
-                  const size_t trials = 1,
-                  const bool useExistingModel = false);
+  template<typename FittingType = EMFit<>>
+  double Train(const arma::mat& observations,
+               const arma::vec& probabilities,
+               const size_t trials = 1,
+               const bool useExistingModel = false,
+               FittingType fitter = FittingType());
 
   /**
    * Classify the given observations as being from an individual component in
@@ -339,37 +269,32 @@ class GMM
    * @param labels Object which will be filled with labels.
    */
   void Classify(const arma::mat& observations,
-                arma::Col<size_t>& labels) const;
+                arma::Row<size_t>& labels) const;
 
   /**
-   * Returns a string representation of this object.
+   * Serialize the GMM.
    */
-  std::string ToString() const;
+  template<typename Archive>
+  void Serialize(Archive& ar, const unsigned int /* version */);
 
  private:
   /**
    * This function computes the loglikelihood of the given model.  This function
-   * is used by GMM::Estimate().
+   * is used by GMM::Train().
    *
    * @param dataPoints Observations to calculate the likelihood for.
    * @param means Means of the given mixture model.
    * @param covars Covariances of the given mixture model.
    * @param weights Weights of the given mixture model.
    */
-  double LogLikelihood(const arma::mat& dataPoints,
-                       const std::vector<arma::vec>& means,
-                       const std::vector<arma::mat>& covars,
-                       const arma::vec& weights) const;
-
-  //! Locally-stored fitting object; in case the user did not pass one.
-  FittingType localFitter;
-
-  //! Reference to the fitting object we should use.
-  FittingType& fitter;
+  double LogLikelihood(
+      const arma::mat& dataPoints,
+      const std::vector<distribution::GaussianDistribution>& distsL,
+      const arma::vec& weights) const;
 };
 
-}; // namespace gmm
-}; // namespace mlpack
+} // namespace gmm
+} // namespace mlpack
 
 // Include implementation.
 #include "gmm_impl.hpp"

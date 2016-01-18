@@ -4,12 +4,20 @@
  *
  * Constrain a covariance matrix to have a certain ratio of eigenvalues.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_GMM_EIGENVALUE_RATIO_CONSTRAINT_HPP
 #define __MLPACK_METHODS_GMM_EIGENVALUE_RATIO_CONSTRAINT_HPP
@@ -23,7 +31,8 @@ namespace gmm {
  * Given a vector of eigenvalue ratios, ensure that the covariance matrix always
  * has those eigenvalue ratios.  When you create this object, make sure that the
  * vector of ratios that you pass does not go out of scope, because this object
- * holds a reference to that vector instead of copying it.
+ * holds a reference to that vector instead of copying it.  (This doesn't apply
+ * if you are deserializing the object from a file.)
  */
 class EigenvalueRatioConstraint
 {
@@ -35,7 +44,8 @@ class EigenvalueRatioConstraint
    * be 1.  In addition, all other elements should be less than or equal to 1.
    */
   EigenvalueRatioConstraint(const arma::vec& ratios) :
-      ratios(ratios)
+      // Make an alias of the ratios vector.  It will never be modified here.
+      ratios(const_cast<double*>(ratios.memptr()), ratios.n_elem, false)
   {
     // Check validity of ratios.
     if (std::abs(ratios[0] - 1.0) > 1e-20)
@@ -76,12 +86,21 @@ class EigenvalueRatioConstraint
     covariance = eigenvectors * arma::diagmat(eigenvalues) * eigenvectors.t();
   }
 
+  //! Serialize the constraint.
+  template<typename Archive>
+  void Serialize(Archive& ar, const unsigned int /* version */)
+  {
+    // Strip the const for the sake of loading/saving.  This is the only time it
+    // is modified (other than the constructor).
+    ar & data::CreateNVP(const_cast<arma::vec&>(ratios), "ratios");
+  }
+
  private:
   //! Ratios for eigenvalues.
-  const arma::vec& ratios;
+  const arma::vec ratios;
 };
 
-}; // namespace gmm
-}; // namespace mlpack
+} // namespace gmm
+} // namespace mlpack
 
 #endif

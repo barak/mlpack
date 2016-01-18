@@ -6,18 +6,25 @@
  * the features.  It is assumed that the features have been sampled from a
  * Gaussian PDF.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_NAIVE_BAYES_NAIVE_BAYES_CLASSIFIER_HPP
 #define __MLPACK_METHODS_NAIVE_BAYES_NAIVE_BAYES_CLASSIFIER_HPP
 
 #include <mlpack/core.hpp>
-#include <mlpack/methods/gmm/phi.hpp>
 
 namespace mlpack {
 namespace naive_bayes /** The Naive Bayes Classifier. */ {
@@ -49,27 +56,15 @@ namespace naive_bayes /** The Naive Bayes Classifier. */ {
 template<typename MatType = arma::mat>
 class NaiveBayesClassifier
 {
- private:
-  //! Sample mean for each class.
-  MatType means;
-
-  //! Sample variances for each class.
-  MatType variances;
-
-  //! Class probabilities.
-  arma::vec probabilities;
-
  public:
   /**
    * Initializes the classifier as per the input and then trains it by
-   * calculating the sample mean and variances.  The input data is expected to
-   * have integer labels as the last row (starting with 0 and not greater than
-   * the number of classes).
+   * calculating the sample mean and variances.
    *
    * Example use:
    * @code
    * extern arma::mat training_data, testing_data;
-   * extern arma::Col<size_t> labels;
+   * extern arma::Row<size_t> labels;
    * NaiveBayesClassifier nbc(training_data, labels, 5);
    * @endcode
    *
@@ -81,9 +76,48 @@ class NaiveBayesClassifier
    *     cases, but will be somewhat slower to calculate.
    */
   NaiveBayesClassifier(const MatType& data,
-                       const arma::Col<size_t>& labels,
+                       const arma::Row<size_t>& labels,
                        const size_t classes,
                        const bool incrementalVariance = false);
+
+  /**
+   * Initialize the Naive Bayes classifier without performing training.  All of
+   * the parameters of the model will be initialized to zero.  Be sure to use
+   * Train() before calling Classify(), otherwise the results may be
+   * meaningless.
+   */
+  NaiveBayesClassifier(const size_t dimensionality = 0,
+                       const size_t classes = 0);
+
+  /**
+   * Train the Naive Bayes classifier on the given dataset.  If the incremental
+   * algorithm is used, the current model is used as a starting point (this is
+   * the default).  If the incremental algorithm is not used, then the current
+   * model is ignored and the new model will be trained only on the given data.
+   * Note that even if the incremental algorithm is not used, the data must have
+   * the same dimensionality and number of classes that the model was
+   * initialized with.  If you want to change the dimensionality or number of
+   * classes, either re-initialize or call Means(), Variances(), and
+   * Probabilities() individually to set them to the right size.
+   *
+   * @param data The dataset to train on.
+   * @param incremental Whether or not to use the incremental algorithm for
+   *      training.
+   */
+  void Train(const MatType& data,
+             const arma::Row<size_t>& labels,
+             const bool incremental = true);
+
+  /**
+   * Train the Naive Bayes classifier on the given point.  This will use the
+   * incremental algorithm for updating the model parameters.  The data must be
+   * the same dimensionality as the existing model parameters.
+   *
+   * @param point Data point to train on.
+   * @param label Label of data point.
+   */
+  template<typename VecType>
+  void Train(const VecType& point, const size_t label);
 
   /**
    * Given a bunch of data points, this function evaluates the class of each of
@@ -91,7 +125,7 @@ class NaiveBayesClassifier
    *
    * @code
    * arma::mat test_data; // each column is a test point
-   * arma::Col<size_t> results;
+   * arma::Row<size_t> results;
    * ...
    * nbc.Classify(test_data, &results);
    * @endcode
@@ -99,7 +133,7 @@ class NaiveBayesClassifier
    * @param data List of data points.
    * @param results Vector that class predictions will be placed into.
    */
-  void Classify(const MatType& data, arma::Col<size_t>& results);
+  void Classify(const MatType& data, arma::Row<size_t>& results);
 
   //! Get the sample means for each class.
   const MatType& Means() const { return means; }
@@ -115,10 +149,24 @@ class NaiveBayesClassifier
   const arma::vec& Probabilities() const { return probabilities; }
   //! Modify the prior probabilities for each class.
   arma::vec& Probabilities() { return probabilities; }
+
+  //! Serialize the classifier.
+  template<typename Archive>
+  void Serialize(Archive& ar, const unsigned int /* version */);
+
+ private:
+  //! Sample mean for each class.
+  MatType means;
+  //! Sample variances for each class.
+  MatType variances;
+  //! Class probabilities.
+  arma::vec probabilities;
+  //! Number of training points seen so far.
+  size_t trainingPoints;
 };
 
-}; // namespace naive_bayes
-}; // namespace mlpack
+} // namespace naive_bayes
+} // namespace mlpack
 
 // Include implementation.
 #include "naive_bayes_classifier_impl.hpp"

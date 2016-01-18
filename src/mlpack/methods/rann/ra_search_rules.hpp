@@ -6,18 +6,25 @@
  * tree-based rank-approximate search (with an arbitrary tree) for the RASearch
  * class.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_RANN_RA_SEARCH_RULES_HPP
 #define __MLPACK_METHODS_RANN_RA_SEARCH_RULES_HPP
 
 #include "../neighbor_search/ns_traversal_info.hpp"
-#include "ra_search.hpp" // For friend declaration.
 
 namespace mlpack {
 namespace neighbor {
@@ -36,9 +43,8 @@ class RASearchRules
                 const bool naive = false,
                 const bool sampleAtLeaves = false,
                 const bool firstLeafExact = false,
-                const size_t singleSampleLimit = 20);
-
-
+                const size_t singleSampleLimit = 20,
+                const bool sameSet = false);
 
   double BaseCase(const size_t queryIndex, const size_t referenceIndex);
 
@@ -236,6 +242,9 @@ class RASearchRules
   // TO REMOVE: just for testing
   size_t numDistComputations;
 
+  //! If the query and reference set are identical, this is true.
+  bool sameSet;
+
   TraversalInfoType traversalInfo;
 
   /**
@@ -253,47 +262,6 @@ class RASearchRules
                       const double distance);
 
   /**
-   * Compute the minimum number of samples required to guarantee
-   * the given rank-approximation and success probability.
-   *
-   * @param n Size of the set to be sampled from.
-   * @param k The number of neighbors required within the rank-approximation.
-   * @param tau The rank-approximation in percentile of the data.
-   * @param alpha The success probability desired.
-   */
-  size_t MinimumSamplesReqd(const size_t n,
-                            const size_t k,
-                            const double tau,
-                            const double alpha) const;
-
-  /**
-   * Compute the success probability of obtaining 'k'-neighbors from a
-   * set of size 'n' within the top 't' neighbors if 'm' samples are made.
-   *
-   * @param n Size of the set being sampled from.
-   * @param k The number of neighbors required within the rank-approximation.
-   * @param m The number of random samples.
-   * @param t The desired rank-approximation.
-   */
-  double SuccessProbability(const size_t n,
-                            const size_t k,
-                            const size_t m,
-                            const size_t t) const;
-
-  /**
-   * Pick up desired number of samples (with replacement) from a given range
-   * of integers so that only the distinct samples are returned from
-   * the range [0 - specified upper bound)
-   *
-   * @param numSamples Number of random samples.
-   * @param rangeUpperBound The upper bound on the range of integers.
-   * @param distinctSamples The list of the distinct samples.
-   */
-  void ObtainDistinctSamples(const size_t numSamples,
-                             const size_t rangeUpperBound,
-                             arma::uvec& distinctSamples) const;
-
-  /**
    * Perform actual scoring for single-tree case.
    */
   double Score(const size_t queryIndex,
@@ -308,15 +276,10 @@ class RASearchRules
                TreeType& referenceNode,
                const double distance,
                const double bestDistance);
-
-  // So that RASearch can access ObtainDistinctSamples() and
-  // MinimumSamplesReqd().  Maybe refactoring is a better solution but this is
-  // okay for now.
-  friend class RASearch<SortPolicy, MetricType, TreeType>;
 }; // class RASearchRules
 
-}; // namespace neighbor
-}; // namespace mlpack
+} // namespace neighbor
+} // namespace mlpack
 
 // Include implementation.
 #include "ra_search_rules_impl.hpp"

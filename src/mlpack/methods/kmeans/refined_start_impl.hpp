@@ -6,12 +6,20 @@
  * K-Means clustering".  This class is meant to provide better initial points
  * for the k-means algorithm.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_KMEANS_REFINED_START_IMPL_HPP
 #define __MLPACK_METHODS_KMEANS_REFINED_START_IMPL_HPP
@@ -26,7 +34,7 @@ namespace kmeans {
 template<typename MatType>
 void RefinedStart::Cluster(const MatType& data,
                            const size_t clusters,
-                           arma::Col<size_t>& assignments) const
+                           arma::Row<size_t>& assignments) const
 {
   math::RandomSeed(std::time(NULL));
 
@@ -38,9 +46,8 @@ void RefinedStart::Cluster(const MatType& data,
   arma::mat sampledCentroids(data.n_rows, samplings * clusters);
 
   // We will use these objects repeatedly for clustering.
-  arma::Col<size_t> sampledAssignments;
+  arma::Row<size_t> sampledAssignments;
   arma::mat centroids;
-  KMeans<> kmeans;
 
   for (size_t i = 0; i < samplings; ++i)
   {
@@ -64,6 +71,7 @@ void RefinedStart::Cluster(const MatType& data,
     // cluster, we re-initialize that cluster as the point furthest away from
     // the cluster with maximum variance.  This is not *exactly* what the paper
     // implements, but it is quite similar, and we'll call it "good enough".
+    KMeans<> kmeans;
     kmeans.Cluster(sampledData, clusters, sampledAssignments, centroids);
 
     // Store the sampled centroids.
@@ -73,6 +81,7 @@ void RefinedStart::Cluster(const MatType& data,
   }
 
   // Now, we run k-means on the sampled centroids to get our final clusters.
+  KMeans<> kmeans;
   kmeans.Cluster(sampledCentroids, clusters, sampledAssignments, centroids);
 
   // Turn the final centroids into assignments.
@@ -100,7 +109,7 @@ void RefinedStart::Cluster(const MatType& data,
   }
 }
 
-}; // namespace kmeans
-}; // namespace mlpack
+} // namespace kmeans
+} // namespace mlpack
 
 #endif

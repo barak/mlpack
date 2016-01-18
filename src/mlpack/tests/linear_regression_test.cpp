@@ -3,12 +3,20 @@
  *
  * Test for linear regression.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/methods/linear_regression/linear_regression.hpp>
@@ -178,6 +186,27 @@ BOOST_AUTO_TEST_CASE(RidgeRegressionTestCase)
   // for each point.
   for (size_t i = 0; i < predictions.n_cols; ++i)
     BOOST_REQUIRE_SMALL(predictions(i) - responses(i), .05);
+}
+
+/**
+ * Test that a LinearRegression model trained in the constructor and trained in
+ * the Train() method give the same model.
+ */
+BOOST_AUTO_TEST_CASE(LinearRegressionTrainTest)
+{
+  // Random dataset.
+  arma::mat dataset = arma::randu<arma::mat>(5, 1000);
+  arma::vec responses = arma::randu<arma::vec>(1000);
+
+  LinearRegression lr(dataset, responses, 0.3);
+  LinearRegression lrTrain;
+  lrTrain.Lambda() = 0.3;
+
+  lrTrain.Train(dataset, responses);
+
+  BOOST_REQUIRE_EQUAL(lr.Parameters().n_elem, lrTrain.Parameters().n_elem);
+  for (size_t i = 0; i < lr.Parameters().n_elem; ++i)
+    BOOST_REQUIRE_CLOSE(lr.Parameters()[i], lrTrain.Parameters()[i], 1e-5);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

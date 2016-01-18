@@ -6,23 +6,33 @@
  * Implementation of the RangeSearch executable.  Allows some number of standard
  * options.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/core/metrics/lmetric.hpp>
 #include <mlpack/core/tree/cover_tree.hpp>
 
 #include "range_search.hpp"
+#include "rs_model.hpp"
 
 using namespace std;
 using namespace mlpack;
 using namespace mlpack::range;
 using namespace mlpack::tree;
+using namespace mlpack::metric;
 
 // Information about the program itself.
 PROGRAM_INFO("Range Search",
@@ -55,289 +65,257 @@ PROGRAM_INFO("Range Search",
     "regardless of the given extension.");
 
 // Define our input parameters that this program will take.
-PARAM_STRING_REQ("reference_file", "File containing the reference dataset.",
-    "r");
-PARAM_STRING_REQ("distances_file", "File to output distances into.", "d");
-PARAM_STRING_REQ("neighbors_file", "File to output neighbors into.", "n");
+PARAM_STRING("reference_file", "File containing the reference dataset.", "r",
+    "");
+PARAM_STRING("distances_file", "File to output distances into.", "d", "");
+PARAM_STRING("neighbors_file", "File to output neighbors into.", "n", "");
 
-PARAM_DOUBLE_REQ("max", "Upper bound in range.", "M");
-PARAM_DOUBLE("min", "Lower bound in range.", "m", 0.0);
+// The option exists to load or save models.
+PARAM_STRING("input_model_file", "File containing pre-trained range search "
+    "model.", "m", "");
+PARAM_STRING("output_model_file", "If specified, the range search model will be"
+    " saved to the given file.", "M", "");
 
+// The user may specify a query file of query points and a range to search for.
 PARAM_STRING("query_file", "File containing query points (optional).", "q", "");
+PARAM_DOUBLE("max", "Upper bound in range (if not specified, +inf will be "
+    "used.", "U", 0.0);
+PARAM_DOUBLE("min", "Lower bound in range.", "L", 0.0);
 
+// The user may specify the type of tree to use, and a few parameters for tree
+// building.
+PARAM_STRING("tree_type", "Type of tree to use: 'kd', 'cover', 'r', 'r-star', "
+    "'ball'.", "t", "kd");
 PARAM_INT("leaf_size", "Leaf size for tree building.", "l", 20);
+PARAM_FLAG("random_basis", "Before tree-building, project the data onto a "
+    "random orthogonal basis.", "R");
+PARAM_INT("seed", "Random seed (if 0, std::time(NULL) is used).", "s", 0);
+
+// Search settings.
 PARAM_FLAG("naive", "If true, O(n^2) naive mode is used for computation.", "N");
 PARAM_FLAG("single_mode", "If true, single-tree search is used (as opposed to "
     "dual-tree search).", "s");
-PARAM_FLAG("cover_tree", "If true, use a cover tree for range searching "
-    "(instead of a kd-tree).", "c");
 
 typedef RangeSearch<> RSType;
-typedef CoverTree<metric::EuclideanDistance, tree::FirstPointIsRoot,
-    RangeSearchStat> CoverTreeType;
-typedef RangeSearch<metric::EuclideanDistance, CoverTreeType> RSCoverType;
+typedef CoverTree<EuclideanDistance, RangeSearchStat> CoverTreeType;
+typedef RangeSearch<EuclideanDistance, arma::mat, StandardCoverTree>
+    RSCoverType;
 
 int main(int argc, char *argv[])
 {
   // Give CLI the command line parameters the user passed in.
   CLI::ParseCommandLine(argc, argv);
 
-  // Get all the parameters.
-  string referenceFile = CLI::GetParam<string>("reference_file");
+  if (CLI::GetParam<int>("seed") != 0)
+    math::RandomSeed((size_t) CLI::GetParam<int>("seed"));
+  else
+    math::RandomSeed((size_t) std::time(NULL));
 
-  string distancesFile = CLI::GetParam<string>("distances_file");
-  string neighborsFile = CLI::GetParam<string>("neighbors_file");
+  // A user cannot specify both reference data and a model.
+  if (CLI::HasParam("reference_file") && CLI::HasParam("input_model_file"))
+    Log::Fatal << "Only one of --reference_file (-r) or --input_model_file (-m)"
+        << " may be specified!" << endl;
 
-  int lsInt = CLI::GetParam<int>("leaf_size");
+  // A user must specify one of them...
+  if (!CLI::HasParam("reference_file") && !CLI::HasParam("input_model_file"))
+    Log::Fatal << "No model specified (--input_model_file) and no reference "
+        << "data specified (--reference_file)!  One must be provided." << endl;
 
-  double max = CLI::GetParam<double>("max");
-  double min = CLI::GetParam<double>("min");
-
-  const bool naive = CLI::HasParam("naive");
-  const bool singleMode = CLI::HasParam("single_mode");
-  bool coverTree = CLI::HasParam("cover_tree");
-
-  arma::mat referenceData;
-  arma::mat queryData; // So it doesn't go out of scope.
-  if (!data::Load(referenceFile, referenceData))
-    Log::Fatal << "Reference file " << referenceFile << "not found." << endl;
-
-  Log::Info << "Loaded reference data from '" << referenceFile << "'." << endl;
-
-  // Sanity check on range value: max must be greater than min.
-  if (max <= min)
+  if (CLI::HasParam("input_model_file"))
   {
-    Log::Fatal << "Invalid range: maximum (" << max << ") must be greater than "
-        << "minimum (" << min << ")." << endl;
+    // Notify the user of parameters that will be ignored.
+    if (CLI::HasParam("tree_type"))
+      Log::Warn << "--tree_type (-t) will be ignored because --input_model_file"
+          << " is specified." << endl;
+    if (CLI::HasParam("leaf_size"))
+      Log::Warn << "--leaf_size (-l) will be ignored because --input_model_file"
+          << " is specified." << endl;
+    if (CLI::HasParam("random_basis"))
+      Log::Warn << "--random_basis (-R) will be ignored because "
+          << "--input_model_file is specified." << endl;
+    if (CLI::HasParam("naive"))
+      Log::Warn << "--naive (-N) will be ignored because --input_model_file is "
+          << "specified." << endl;
   }
+
+  // The user must give something to do...
+  if (!CLI::HasParam("min") && !CLI::HasParam("max") &&
+      !CLI::HasParam("output_model_file"))
+    Log::Warn << "Neither --min, --max, nor --output_model_file are specified, "
+        << "so no results from this program will be saved!" << endl;
+
+  // If the user specifies a range but not output files, they should be warned.
+  if ((CLI::HasParam("min") || CLI::HasParam("max")) &&
+      !(CLI::HasParam("neighbors_file") || CLI::HasParam("distances_file")))
+    Log::Warn << "Neither --neighbors_file nor --distances_file is specified, "
+        << "so the range search results will not be saved!" << endl;
+
+  // If the user specifies output files but no range, they should be warned.
+  if ((CLI::HasParam("neighbors_file") || CLI::HasParam("distances_file")) &&
+      !(CLI::HasParam("min") || CLI::HasParam("max")))
+    Log::Warn << "An output file for range search is given (--neighbors_file "
+        << "or --distances_file), but range search is not being performed "
+        << "because neither --min nor --max are specified!  No results will be "
+        << "saved." << endl;
 
   // Sanity check on leaf size.
-  if (lsInt < 0)
+  int lsInt = CLI::GetParam<int>("leaf_size");
+  if (lsInt < 1)
+    Log::Fatal << "Invalid leaf size: " << lsInt << ".  Must be greater than 0."
+        << endl;
+
+  // We either have to load the reference data, or we have to load the model.
+  RSModel rs;
+  const bool naive = CLI::HasParam("naive");
+  const bool singleMode = CLI::HasParam("single_mode");
+  if (CLI::HasParam("reference_file"))
   {
-    Log::Fatal << "Invalid leaf size: " << lsInt << ".  Must be greater "
-        "than or equal to 0." << endl;
-  }
-  size_t leafSize = lsInt;
+    // Get all the parameters.
+    const string referenceFile = CLI::GetParam<string>("reference_file");
+    const string treeType = CLI::GetParam<string>("tree_type");
+    const bool randomBasis = CLI::HasParam("random_basis");
 
-  // Naive mode overrides single mode.
-  if (singleMode && naive)
-  {
-    Log::Warn << "--single_mode ignored because --naive is present." << endl;
-  }
-
-  if (naive)
-    leafSize = referenceData.n_cols;
-
-  if (coverTree && naive)
-  {
-    Log::Warn << "--cover_tree ignored because --naive is present." << endl;
-    coverTree = false;
-  }
-
-  vector<vector<size_t> > neighbors;
-  vector<vector<double> > distances;
-
-  // The cover tree implies different types, so we must split this section.
-  if (coverTree)
-  {
-    Log::Info << "Using cover trees." << endl;
-
-    // This is significantly simpler than kd-tree construction because the data
-    // matrix is not modified.
-    RSCoverType* rangeSearch = NULL;
-    CoverTreeType referenceTree(referenceData);
-    CoverTreeType* queryTree = NULL;
-
-    if (CLI::GetParam<string>("query_file") == "")
-    {
-      // Single dataset.
-      rangeSearch = new RSCoverType(&referenceTree, referenceData, singleMode);
-    }
+    int tree = 0;
+    if (treeType == "kd")
+      tree = RSModel::KD_TREE;
+    else if (treeType == "cover")
+      tree = RSModel::COVER_TREE;
+    else if (treeType == "r")
+      tree = RSModel::R_TREE;
+    else if (treeType == "r-star")
+      tree = RSModel::R_STAR_TREE;
+    else if (treeType == "ball")
+      tree = RSModel::BALL_TREE;
     else
+      Log::Fatal << "Unknown tree type '" << treeType << "; valid choices are "
+          << "'kd', 'cover', 'r', 'r-star', and 'ball'." << endl;
+
+    rs.TreeType() = tree;
+    rs.RandomBasis() = randomBasis;
+
+    arma::mat referenceSet;
+    data::Load(referenceFile, referenceSet, true);
+
+    Log::Info << "Loaded reference data from '" << referenceFile << "' ("
+        << referenceSet.n_rows << "x" << referenceSet.n_cols << ")." << endl;
+
+    const size_t leafSize = size_t(lsInt);
+
+    rs.BuildModel(std::move(referenceSet), leafSize, naive, singleMode);
+  }
+  else
+  {
+    // Load the model from file.
+    const string inputModelFile = CLI::GetParam<string>("input_model_file");
+    data::Load(inputModelFile, "rs_model", rs, true); // Fatal on failure.
+
+    Log::Info << "Loaded range search model from '" << inputModelFile << "' ("
+        << "trained on " << rs.Dataset().n_rows << "x" << rs.Dataset().n_cols
+        << " dataset)." << endl;
+
+    // Adjust singleMode and naive if necessary.
+    rs.SingleMode() = CLI::HasParam("single_mode");
+    rs.Naive() = CLI::HasParam("naive");
+    rs.LeafSize() = size_t(lsInt);
+  }
+
+  // Perform search, if desired.
+  if (CLI::HasParam("min") || CLI::HasParam("max"))
+  {
+    const string queryFile = CLI::GetParam<string>("query_file");
+    const double min = CLI::GetParam<double>("min");
+    const double max = CLI::HasParam("max") ? CLI::GetParam<double>("max") :
+        DBL_MAX;
+
+    math::Range r(min, max);
+
+    arma::mat queryData;
+    if (queryFile != "")
     {
-      // Two datasets.
-      const string queryFile = CLI::GetParam<string>("query_file");
       data::Load(queryFile, queryData, true);
-      queryTree = new CoverTreeType(queryData);
-
-      rangeSearch = new RSCoverType(&referenceTree, queryTree, referenceData,
-          queryData, singleMode);
+      Log::Info << "Loaded query data from '" << queryFile << "' ("
+          << queryData.n_rows << "x" << queryData.n_cols << ")." << endl;
     }
 
-    Log::Info << "Trees built." << endl;
+    // Naive mode overrides single mode.
+    if (singleMode && naive)
+      Log::Warn << "--single_mode ignored because --naive is present." << endl;
 
-    const math::Range r(min, max);
-    rangeSearch->Search(r, neighbors, distances);
+    // Now run the search.
+    vector<vector<size_t>> neighbors;
+    vector<vector<double>> distances;
 
-    if (queryTree)
-      delete queryTree;
-    delete rangeSearch;
-  }
-  else
-  {
-    // Because we may construct it differently, we need a pointer.
-    RSType* rangeSearch = NULL;
-
-    // Mappings for when we build the tree.
-    vector<size_t> oldFromNewRefs;
-
-    // Build trees by hand, so we can save memory: if we pass a tree to
-    // NeighborSearch, it does not copy the matrix.
-    Log::Info << "Building reference tree..." << endl;
-    Timer::Start("tree_building");
-
-    BinarySpaceTree<bound::HRectBound<2>, RangeSearchStat>
-        refTree(referenceData, oldFromNewRefs, leafSize);
-    BinarySpaceTree<bound::HRectBound<2>, RangeSearchStat>*
-        queryTree = NULL; // Empty for now.
-
-    Timer::Stop("tree_building");
-
-    vector<size_t> oldFromNewQueries;
-
-    if (CLI::GetParam<string>("query_file") != "")
-    {
-      const string queryFile = CLI::GetParam<string>("query_file");
-      data::Load(queryFile, queryData, true);
-
-      if (naive && leafSize < queryData.n_cols)
-        leafSize = queryData.n_cols;
-
-      Log::Info << "Loaded query data from '" << queryFile << "'." << endl;
-
-      Log::Info << "Building query tree..." << endl;
-
-      // Build trees by hand, so we can save memory: if we pass a tree to
-      // NeighborSearch, it does not copy the matrix.
-      Timer::Start("tree_building");
-
-      queryTree = new BinarySpaceTree<bound::HRectBound<2>,
-          RangeSearchStat>(queryData, oldFromNewQueries, leafSize);
-
-      Timer::Stop("tree_building");
-
-      rangeSearch = new RSType(&refTree, queryTree, referenceData, queryData,
-          singleMode);
-
-      Log::Info << "Tree built." << endl;
-    }
+    if (CLI::HasParam("query_file"))
+      rs.Search(std::move(queryData), r, neighbors, distances);
     else
+      rs.Search(r, neighbors, distances);
+
+    Log::Info << "Search complete." << endl;
+
+    // Save output, if desired.  We have to do this by hand.
+    if (CLI::HasParam("distances_file"))
     {
-      rangeSearch = new RSType(&refTree, referenceData, singleMode);
-
-      Log::Info << "Trees built." << endl;
-    }
-
-    Log::Info << "Computing neighbors within range [" << min << ", " << max
-        << "]." << endl;
-
-    // Collect the results in these vectors before remapping.
-    vector<vector<double> > distancesOut;
-    vector<vector<size_t> > neighborsOut;
-
-    const math::Range r(min, max);
-    rangeSearch->Search(r, neighborsOut, distancesOut);
-
-    Log::Info << "Neighbors computed." << endl;
-
-    // We have to map back to the original indices from before the tree
-    // construction.
-    Log::Info << "Re-mapping indices..." << endl;
-
-    distances.resize(distancesOut.size());
-    neighbors.resize(neighborsOut.size());
-
-    // Do the actual remapping.
-    if (CLI::GetParam<string>("query_file") != "")
-    {
-      for (size_t i = 0; i < distances.size(); ++i)
+      const string distancesFile = CLI::GetParam<string>("distances_file");
+      fstream distancesStr(distancesFile.c_str(), fstream::out);
+      if (!distancesStr.is_open())
       {
-        // Map distances (copy a column).
-        distances[oldFromNewQueries[i]] = distancesOut[i];
-
-        // Map indices of neighbors.
-        neighbors[oldFromNewQueries[i]].resize(neighborsOut[i].size());
-        for (size_t j = 0; j < distancesOut[i].size(); ++j)
+        Log::Warn << "Cannot open file '" << distancesFile << "' to save output"
+            << " distances to!" << endl;
+      }
+      else
+      {
+        // Loop over each point.
+        for (size_t i = 0; i < distances.size(); ++i)
         {
-          neighbors[oldFromNewQueries[i]][j] =
-              oldFromNewRefs[neighborsOut[i][j]];
+          // Store the distances of each point.  We may have 0 points to store,
+          // so we must account for that possibility.
+          for (size_t j = 0; j + 1 < distances[i].size(); ++j)
+            distancesStr << distances[i][j] << ", ";
+
+          if (distances[i].size() > 0)
+            distancesStr << distances[i][distances[i].size() - 1];
+
+          distancesStr << endl;
         }
+
+        distancesStr.close();
       }
     }
-    else
-    {
-      for (size_t i = 0; i < distances.size(); ++i)
-      {
-        // Map distances (copy a column).
-        distances[oldFromNewRefs[i]] = distancesOut[i];
 
-        // Map indices of neighbors.
-        neighbors[oldFromNewRefs[i]].resize(neighborsOut[i].size());
-        for (size_t j = 0; j < distancesOut[i].size(); ++j)
+    if (CLI::HasParam("neighbors_file"))
+    {
+      const string neighborsFile = CLI::GetParam<string>("neighbors_file");
+      fstream neighborsStr(neighborsFile.c_str(), fstream::out);
+      if (!neighborsStr.is_open())
+      {
+        Log::Warn << "Cannot open file '" << neighborsFile << "' to save output"
+            << " neighbor indices to!" << endl;
+      }
+      else
+      {
+        // Loop over each point.
+        for (size_t i = 0; i < neighbors.size(); ++i)
         {
-          neighbors[oldFromNewRefs[i]][j] = oldFromNewRefs[neighborsOut[i][j]];
+          // Store the neighbors of each point.  We may have 0 points to store,
+          // so we must account for that possibility.
+          for (size_t j = 0; j + 1 < neighbors[i].size(); ++j)
+            neighborsStr << neighbors[i][j] << ", ";
+
+          if (neighbors[i].size() > 0)
+            neighborsStr << neighbors[i][neighbors[i].size() - 1];
+
+          neighborsStr << endl;
         }
+
+        neighborsStr.close();
       }
     }
-
-    // Clean up.
-    if (queryTree)
-      delete queryTree;
-    delete rangeSearch;
   }
 
-  // Save output.  We have to do this by hand.
-  fstream distancesStr(distancesFile.c_str(), fstream::out);
-  if (!distancesStr.is_open())
+  // Save the output model, if desired.
+  if (CLI::HasParam("output_model_file"))
   {
-    Log::Warn << "Cannot open file '" << distancesFile << "' to save output "
-        << "distances to!" << endl;
-  }
-  else
-  {
-    // Loop over each point.
-    for (size_t i = 0; i < distances.size(); ++i)
-    {
-      // Store the distances of each point.  We may have 0 points to store, so
-      // we must account for that possibility.
-      for (size_t j = 0; j + 1 < distances[i].size(); ++j)
-      {
-        distancesStr << distances[i][j] << ", ";
-      }
-
-      if (distances[i].size() > 0)
-        distancesStr << distances[i][distances[i].size() - 1];
-
-      distancesStr << endl;
-    }
-
-    distancesStr.close();
-  }
-
-  fstream neighborsStr(neighborsFile.c_str(), fstream::out);
-  if (!neighborsStr.is_open())
-  {
-    Log::Warn << "Cannot open file '" << neighborsFile << "' to save output "
-        << "neighbor indices to!" << endl;
-  }
-  else
-  {
-    // Loop over each point.
-    for (size_t i = 0; i < neighbors.size(); ++i)
-    {
-      // Store the neighbors of each point.  We may have 0 points to store, so
-      // we must account for that possibility.
-      for (size_t j = 0; j + 1 < neighbors[i].size(); ++j)
-      {
-        neighborsStr << neighbors[i][j] << ", ";
-      }
-
-      if (neighbors[i].size() > 0)
-        neighborsStr << neighbors[i][neighbors[i].size() - 1];
-
-      neighborsStr << endl;
-    }
-
-    neighborsStr.close();
+    const string outputModelFile = CLI::GetParam<string>("output_model_file");
+    data::Save(outputModelFile, "rs_model", rs);
   }
 }

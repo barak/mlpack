@@ -4,14 +4,21 @@
  *
  * Definition of Cosine Tree.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #ifndef __MLPACK_CORE_TREE_COSINE_TREE_COSINE_TREE_HPP
 #define __MLPACK_CORE_TREE_COSINE_TREE_COSINE_TREE_HPP
 
@@ -32,7 +39,6 @@ typedef boost::heap::priority_queue<CosineTree*,
 class CosineTree
 {
  public:
-
   /**
    * CosineTree constructor for the root node of the tree. It initializes the
    * necessary variables required for splitting of the node, and building the
@@ -73,8 +79,7 @@ class CosineTree
              const double delta);
 
   /**
-   * Destroy the cosine tree and all of its children (take care of the memory
-   * allocations too).
+   * Clean up the CosineTree: release allocated memory (including children).
    */
   ~CosineTree();
 
@@ -181,7 +186,6 @@ class CosineTree
 
   //! Set the Monte Carlo error.
   void L2Error(const double error) { this->l2Error = error; }
-
   //! Get the Monte Carlo error.
   double L2Error() const { return l2Error; }
 
@@ -194,11 +198,20 @@ class CosineTree
   //! Get the basis vector of the node.
   arma::vec& BasisVector() { return basisVector; }
 
+  //! Get pointer to the parent node.
+  CosineTree* Parent() const { return parent; }
+  //! Modify the pointer to the parent node.
+  CosineTree*& Parent() { return parent; }
+
   //! Get pointer to the left child of the node.
-  CosineTree* Left() { return left; }
+  CosineTree* Left() const { return left; }
+  //! Modify the pointer to the left child of the node.
+  CosineTree*& Left() { return left; }
 
   //! Get pointer to the right child of the node.
-  CosineTree* Right() { return right; }
+  CosineTree* Right() const { return right; }
+  //! Modify the pointer to the left child of the node.
+  CosineTree*& Right() { return right; }
 
   //! Get number of columns of input matrix in the node.
   size_t NumColumns() const { return numColumns; }
@@ -212,8 +225,6 @@ class CosineTree
  private:
   //! Matrix for which cosine tree is constructed.
   const arma::mat& dataset;
-  //! Error tolerance fraction for calculated subspace.
-  double epsilon;
   //! Cumulative probability for Monte Carlo error lower bound.
   double delta;
   //! Subspace basis of the input dataset.
@@ -253,7 +264,7 @@ class CompareCosineNode
   }
 };
 
-}; // namespace tree
-}; // namespace mlpack
+} // namespace tree
+} // namespace mlpack
 
 #endif

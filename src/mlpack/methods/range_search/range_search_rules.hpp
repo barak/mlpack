@@ -4,12 +4,20 @@
  *
  * Rules for range search, so that it can be done with arbitrary tree types.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_RANGE_SEARCH_RANGE_SEARCH_RULES_HPP
 #define __MLPACK_METHODS_RANGE_SEARCH_RANGE_SEARCH_RULES_HPP
@@ -34,13 +42,16 @@ class RangeSearchRules
    * @param neighbors Vector to store resulting neighbors in.
    * @param distances Vector to store resulting distances in.
    * @param metric Instantiated metric.
+   * @param sameSet If true, the query and reference set are taken to be the
+   *      same, and a query point will not return itself in the results.
    */
   RangeSearchRules(const arma::mat& referenceSet,
                    const arma::mat& querySet,
                    const math::Range& range,
                    std::vector<std::vector<size_t> >& neighbors,
                    std::vector<std::vector<double> >& distances,
-                   MetricType& metric);
+                   MetricType& metric,
+                   const bool sameSet = false);
 
   /**
    * Compute the base case between the given query point and reference point.
@@ -105,6 +116,11 @@ class RangeSearchRules
   const TraversalInfoType& TraversalInfo() const { return traversalInfo; }
   TraversalInfoType& TraversalInfo() { return traversalInfo; }
 
+  //! Get the number of base cases.
+  size_t BaseCases() const { return baseCases; }
+  //! Get the number of scores (that is, calls to RangeDistance()).
+  size_t Scores() const { return scores; }
+
  private:
   //! The reference set.
   const arma::mat& referenceSet;
@@ -124,6 +140,9 @@ class RangeSearchRules
   //! The instantiated metric.
   MetricType& metric;
 
+  //! If true, the query and reference set are taken to be the same.
+  bool sameSet;
+
   //! The last query index.
   size_t lastQueryIndex;
   //! The last reference index.
@@ -136,10 +155,15 @@ class RangeSearchRules
                  TreeType& referenceNode);
 
   TraversalInfoType traversalInfo;
+
+  //! The number of base cases.
+  size_t baseCases;
+  //! THe number of scores.
+  size_t scores;
 };
 
-}; // namespace range
-}; // namespace mlpack
+} // namespace range
+} // namespace mlpack
 
 // Include implementation.
 #include "range_search_rules_impl.hpp"

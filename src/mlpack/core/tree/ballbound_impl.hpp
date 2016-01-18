@@ -6,12 +6,20 @@
  *
  * @experimental
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_TREE_BALLBOUND_IMPL_HPP
 #define __MLPACK_CORE_TREE_BALLBOUND_IMPL_HPP
@@ -69,7 +77,7 @@ BallBound<VecType, TMetricType>::BallBound(const BallBound& other) :
     ownsMetric(false)
 { /* Nothing to do. */ }
 
-//! For the same reason as the Copy Constructor. To prevent memory leaks.
+//! For the same reason as the copy constructor: to prevent memory leaks.
 template<typename VecType, typename TMetricType>
 BallBound<VecType, TMetricType>& BallBound<VecType, TMetricType>::operator=(
     const BallBound& other)
@@ -78,6 +86,21 @@ BallBound<VecType, TMetricType>& BallBound<VecType, TMetricType>::operator=(
   center = other.center;
   metric = other.metric;
   ownsMetric = false;
+}
+
+//! Move constructor.
+template<typename VecType, typename TMetricType>
+BallBound<VecType, TMetricType>::BallBound(BallBound&& other) :
+    radius(other.radius),
+    center(other.center),
+    metric(other.metric),
+    ownsMetric(other.ownsMetric)
+{
+  // Fix the other bound.
+  other.radius = 0.0;
+  other.center = VecType();
+  other.metric = NULL;
+  other.ownsMetric = false;
 }
 
 //! Destructor to release allocated memory.
@@ -258,22 +281,28 @@ BallBound<VecType, TMetricType>::operator|=(const MatType& data)
   return *this;
 }
 
-/**
- * Returns a string representation of this object.
- */
+//! Serialize the BallBound.
 template<typename VecType, typename TMetricType>
-std::string BallBound<VecType, TMetricType>::ToString() const
+template<typename Archive>
+void BallBound<VecType, TMetricType>::Serialize(
+    Archive& ar,
+    const unsigned int /* version */)
 {
-  std::ostringstream convert;
-  convert << "BallBound [" << this << "]" << std::endl;
-  convert << "  Radius:  " << radius << std::endl;
-  convert << "  Center:" << std::endl << center;
-  convert << "  ownsMetric: " << ownsMetric << std::endl;
-  convert << "  Metric:" << std::endl << metric->ToString();
-  return convert.str();
+  ar & data::CreateNVP(radius, "radius");
+  ar & data::CreateNVP(center, "center");
+
+  if (Archive::is_loading::value)
+  {
+    // If we're loading, delete the local metric since we'll have a new one.
+    if (ownsMetric)
+      delete metric;
+  }
+
+  ar & data::CreateNVP(metric, "metric");
+  ar & data::CreateNVP(ownsMetric, "ownsMetric");
 }
 
-}; // namespace bound
-}; // namespace mlpack
+} // namespace bound
+} // namespace mlpack
 
 #endif // __MLPACK_CORE_TREE_DBALLBOUND_IMPL_HPP

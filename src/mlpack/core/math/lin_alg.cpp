@@ -4,12 +4,20 @@
  *
  * Linear algebra utilities.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "lin_alg.hpp"
 #include <mlpack/core.hpp>
@@ -212,6 +220,93 @@ void mlpack::math::RemoveRows(const arma::mat& input,
     {
       output.rows(curRow, nKeep - 1) = input.rows(rowsToRemove[removeInd] + 1,
           input.n_rows - 1);
+    }
+  }
+}
+
+void mlpack::math::Svec(const arma::mat& input, arma::vec& output)
+{
+  const size_t n = input.n_rows;
+  const size_t n2bar = n * (n + 1) / 2;
+
+  output.zeros(n2bar);
+
+  size_t idx = 0;
+  for (size_t i = 0; i < n; i++)
+  {
+    for (size_t j = i; j < n; j++)
+    {
+      if (i == j)
+        output(idx++) = input(i, j);
+      else
+        output(idx++) = M_SQRT2 * input(i, j);
+    }
+  }
+}
+
+void mlpack::math::Svec(const arma::sp_mat& input, arma::sp_vec& output)
+{
+  const size_t n = input.n_rows;
+  const size_t n2bar = n * (n + 1) / 2;
+
+  output.zeros(n2bar, 1);
+
+  for (auto it = input.begin(); it != input.end(); ++it)
+  {
+    const size_t i = it.row();
+    const size_t j = it.col();
+    if (i > j)
+      continue;
+    if (i == j)
+      output(SvecIndex(i, j, n)) = *it;
+    else
+      output(SvecIndex(i, j, n)) = M_SQRT2 * (*it);
+  }
+}
+
+void mlpack::math::Smat(const arma::vec& input, arma::mat& output)
+{
+  const size_t n = static_cast<size_t>(ceil((-1. + sqrt(1. + 8. * input.n_elem))/2.));
+
+  output.zeros(n, n);
+
+  size_t idx = 0;
+  for (size_t i = 0; i < n; i++)
+  {
+    for (size_t j = i; j < n; j++)
+    {
+      if (i == j)
+        output(i, j) = input(idx++);
+      else
+        output(i, j) = output(j, i) = M_SQRT1_2 * input(idx++);
+    }
+  }
+}
+
+void mlpack::math::SymKronId(const arma::mat& A, arma::mat& op)
+{
+  // TODO(stephentu): there's probably an easier way to build this operator
+
+  const size_t n = A.n_rows;
+  const size_t n2bar = n * (n + 1) / 2;
+  op.zeros(n2bar, n2bar);
+
+  size_t idx = 0;
+  for (size_t i = 0; i < n; i++)
+  {
+    for (size_t j = i; j < n; j++)
+    {
+      for (size_t k = 0; k < n; k++)
+      {
+        op(idx, SvecIndex(k, j, n)) +=
+          ((k == j) ? 1. : M_SQRT1_2) * A(i, k);
+        op(idx, SvecIndex(i, k, n)) +=
+          ((k == i) ? 1. : M_SQRT1_2) * A(k, j);
+      }
+      op.row(idx) *= 0.5;
+      if (i != j)
+        op.row(idx) *= M_SQRT2;
+      idx++;
     }
   }
 }

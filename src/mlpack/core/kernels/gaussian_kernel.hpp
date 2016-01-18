@@ -6,12 +6,20 @@
  *
  * Implementation of the Gaussian kernel (GaussianKernel).
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_KERNELS_GAUSSIAN_KERNEL_HPP
 #define __MLPACK_CORE_KERNELS_GAUSSIAN_KERNEL_HPP
@@ -62,8 +70,8 @@ class GaussianKernel
    * @return K(a, b) using the bandwidth (@f$\mu@f$) specified in the
    *   constructor.
    */
-  template<typename VecType>
-  double Evaluate(const VecType& a, const VecType& b) const
+  template<typename VecTypeA, typename VecTypeB>
+  double Evaluate(const VecTypeA& a, const VecTypeB& b) const
   {
     // The precalculation of gamma saves us a little computation time.
     return exp(gamma * metric::SquaredEuclideanDistance::Evaluate(a, b));
@@ -81,6 +89,30 @@ class GaussianKernel
     // The precalculation of gamma saves us a little computation time.
     return exp(gamma * std::pow(t, 2.0));
   }
+  
+  /**
+   * Evaluation of the gradient of Gaussian kernel 
+   * given the distance between two points.
+   *
+   * @param t The distance between the two points the kernel is evaluated on.
+   * @return K(t) using the bandwidth (@f$\mu@f$) specified in the
+   *     constructor.
+   */
+  double Gradient(const double t) const {
+    return 2 * t * gamma * exp(gamma * std::pow(t, 2.0));
+  }
+  
+  /**
+   * Evaluation of the gradient of Gaussian kernel
+   * given the squared distance between two points.
+   *
+   * @param t The squared distance between the two points
+   * @return K(t) using the bandwidth (@f$\mu@f$) specified in the
+   *     constructor.
+   */
+  double GradientForSquaredDistance(const double t) const {
+    return gamma * exp(gamma * t);
+  }
 
   /**
    * Obtain the normalization constant of the Gaussian kernel.
@@ -96,15 +128,15 @@ class GaussianKernel
   /**
    * Obtain a convolution integral of the Gaussian kernel.
    *
-   * @param a, first vector
-   * @param b, second vector
-   * @return the convolution integral
+   * @param a First vector.
+   * @param b Second vector.
+   * @return The convolution integral.
    */
-  template<typename VecType>
-  double ConvolutionIntegral(const VecType& a, const VecType& b)
+  template<typename VecTypeA, typename VecTypeB>
+  double ConvolutionIntegral(const VecTypeA& a, const VecTypeB& b)
   {
     return Evaluate(sqrt(metric::SquaredEuclideanDistance::Evaluate(a, b) / 2.0)) /
-      (Normalizer(a.n_rows) * pow(2.0, (double) a.n_rows / 2.0));
+        (Normalizer(a.n_rows) * pow(2.0, (double) a.n_rows / 2.0));
   }
 
 
@@ -122,13 +154,12 @@ class GaussianKernel
   //! Get the precalculated constant.
   double Gamma() const { return gamma; }
 
-  //! Convert object to string.
-  std::string ToString() const
+  //! Serialize the kernel.
+  template<typename Archive>
+  void Serialize(Archive& ar, const unsigned int /* version */)
   {
-    std::ostringstream convert;
-    convert << "GaussianKernel [" << this << "]" << std::endl;
-    convert << "  Bandwidth: " << bandwidth << std::endl;
-    return convert.str();
+    ar & data::CreateNVP(bandwidth, "bandwidth");
+    ar & data::CreateNVP(gamma, "gamma");
   }
 
  private:
@@ -147,9 +178,11 @@ class KernelTraits<GaussianKernel>
  public:
   //! The Gaussian kernel is normalized: K(x, x) = 1 for all x.
   static const bool IsNormalized = true;
+  //! The Gaussian kernel includes a squared distance.
+  static const bool UsesSquaredDistance = true;
 };
 
-}; // namespace kernel
-}; // namespace mlpack
+} // namespace kernel
+} // namespace mlpack
 
 #endif

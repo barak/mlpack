@@ -2,21 +2,38 @@
  * @file incomplete_incremental_termination.hpp
  * @author Sumedh Ghaisas
  *
- * This file is part of mlpack 1.0.12.
+ * Termination policy used in AMF (Alternating Matrix Factorization).
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * This file is part of mlpack 2.0.0.
+ *
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _INCOMPLETE_INCREMENTAL_TERMINATION_HPP_INCLUDED
-#define _INCOMPLETE_INCREMENTAL_TERMINATION_HPP_INCLUDED
+#ifndef _MLPACK_METHODS_AMF_INCOMPLETE_INCREMENTAL_TERMINATION_HPP
+#define _MLPACK_METHODS_AMF_INCOMPLETE_INCREMENTAL_TERMINATION_HPP
 
 #include <mlpack/core.hpp>
 
 namespace mlpack {
 namespace amf {
 
+/**
+ * This class acts as a wrapper for basic termination policies to be used by
+ * SVDIncompleteIncrementalLearning. This class calls the wrapped class functions
+ * after every n calls to main class functions where n is the number of rows.
+ *
+ * @see AMF, SVDIncompleteIncrementalLearning
+ */
 template <class TerminationPolicy>
 class IncompleteIncrementalTermination
 {
@@ -24,50 +41,73 @@ class IncompleteIncrementalTermination
   /**
    * Empty constructor
    *
-   * @param t_policy object of wrapped class.
+   * @param tPolicy object of wrapped class.
    */
-  IncompleteIncrementalTermination(TerminationPolicy t_policy = TerminationPolicy())
-            : t_policy(t_policy) {}
+  IncompleteIncrementalTermination(
+      TerminationPolicy tPolicy = TerminationPolicy()) :
+      tPolicy(tPolicy) { }
 
-  template <class MatType>
+  /**
+   * Initializes the termination policy before stating the factorization.
+   *
+   * @param V Input matrix to be factorized.
+   */
+  template<class MatType>
   void Initialize(const MatType& V)
   {
-    t_policy.Initialize(V);
+    tPolicy.Initialize(V);
 
+    // Initialize incremental index to number of rows.
     incrementalIndex = V.n_rows;
     iteration = 0;
   }
 
+  /**
+   * Check if termination criterio is met.
+   *
+   * @param W Basis matrix of output.
+   * @param H Encoding matrix of output.
+   */
   bool IsConverged(arma::mat& W, arma::mat& H)
   {
+    // increment iteration count
     iteration++;
-    if(iteration % incrementalIndex == 0)
-      return t_policy.IsConverged(W, H);
-    else return false;
+
+    // If the iteration count is a multiple of incremental index, return the
+    // wrapped termination policy result.
+    if (iteration % incrementalIndex == 0)
+      return tPolicy.IsConverged(W, H);
+    else
+      return false;
   }
 
-  const double& Index()
-  {
-    return t_policy.Index();
-  }
-  const size_t& Iteration()
-  {
-    return iteration;
-  }
-  const size_t& MaxIterations()
-  {
-    return t_policy.MaxIterations();
-  }
+  //! Get current value of residue.
+  const double& Index() const { return tPolicy.Index(); }
+
+  //! Get current iteration count.
+  const size_t& Iteration() const { return iteration; }
+
+  //! Access maximum number of iterations.
+  size_t MaxIterations() const { return tPolicy.MaxIterations(); }
+  //! Modify maximum number of iterations.
+  size_t& MaxIterations() { return tPolicy.MaxIterations(); }
+
+  //! Access the wrapped termination policy.
+  const TerminationPolicy& TPolicy() const { return tPolicy; }
+  //! Modify the wrapped termination policy.
+  TerminationPolicy& TPolicy() { return tPolicy; }
 
  private:
-  TerminationPolicy t_policy;
+  //! Wrapped termination policy.
+  TerminationPolicy tPolicy;
 
+  //! Number of iterations after which wrapped class object will be called.
   size_t incrementalIndex;
+  //! Current iteration count.
   size_t iteration;
-};
+}; // class IncompleteIncrementalTermination
 
-}; // namespace amf
-}; // namespace mlpack
+} // namespace amf
+} // namespace mlpack
 
 #endif
-

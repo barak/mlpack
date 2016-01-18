@@ -4,12 +4,20 @@
  *
  * This implements the cosine distance.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_KERNELS_COSINE_DISTANCE_IMPL_HPP
 #define __MLPACK_CORE_KERNELS_COSINE_DISTANCE_IMPL_HPP
@@ -19,8 +27,8 @@
 namespace mlpack {
 namespace kernel {
 
-template<typename VecType>
-double CosineDistance::Evaluate(const VecType& a, const VecType& b)
+template<typename VecTypeA, typename VecTypeB>
+double CosineDistance::Evaluate(const VecTypeA& a, const VecTypeB& b)
 {
   // Since we are using the L2 inner product, this is easy.  But we have to make
   // sure we aren't dividing by zero (if we are, then the cosine similarity is
@@ -34,7 +42,7 @@ double CosineDistance::Evaluate(const VecType& a, const VecType& b)
     return dot(a, b) / denominator;
 }
 
-}; // namespace kernel
-}; // namespace mlpack
+} // namespace kernel
+} // namespace mlpack
 
 #endif

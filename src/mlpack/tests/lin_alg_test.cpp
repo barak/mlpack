@@ -6,12 +6,20 @@
  * Partly so I can be sure that my changes are working.
  * Move to boost unit testing framework at some point.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/core/math/lin_alg.hpp>
@@ -189,6 +197,105 @@ BOOST_AUTO_TEST_CASE(TestRemoveRows)
         ++outputRow;
       }
     }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(TestSvecSmat)
+{
+  arma::mat X(3, 3);
+  X(0, 0) = 0; X(0, 1) = 1, X(0, 2) = 2;
+  X(1, 0) = 1; X(1, 1) = 3, X(1, 2) = 4;
+  X(2, 0) = 2; X(2, 1) = 4, X(2, 2) = 5;
+
+  arma::vec sx;
+  Svec(X, sx);
+  BOOST_REQUIRE_CLOSE(sx(0), 0, 1e-7);
+  BOOST_REQUIRE_CLOSE(sx(1), M_SQRT2 * 1., 1e-7);
+  BOOST_REQUIRE_CLOSE(sx(2), M_SQRT2 * 2., 1e-7);
+  BOOST_REQUIRE_CLOSE(sx(3), 3., 1e-7);
+  BOOST_REQUIRE_CLOSE(sx(4), M_SQRT2 * 4., 1e-7);
+  BOOST_REQUIRE_CLOSE(sx(5), 5., 1e-7);
+
+  arma::mat Xtest;
+  Smat(sx, Xtest);
+  BOOST_REQUIRE_EQUAL(Xtest.n_rows, 3);
+  BOOST_REQUIRE_EQUAL(Xtest.n_cols, 3);
+  for (size_t i = 0; i < 3; i++)
+    for (size_t j = 0; j < 3; j++)
+      BOOST_REQUIRE_CLOSE(X(i, j), Xtest(i, j), 1e-7);
+}
+
+BOOST_AUTO_TEST_CASE(TestSparseSvec)
+{
+  arma::sp_mat X;
+  X.zeros(3, 3);
+  X(1, 0) = X(0, 1) = 1;
+
+  arma::sp_vec sx;
+  Svec(X, sx);
+
+  const double v0 = sx(0);
+  const double v1 = sx(1);
+  const double v2 = sx(2);
+  const double v3 = sx(3);
+  const double v4 = sx(4);
+  const double v5 = sx(5);
+
+  BOOST_REQUIRE_CLOSE(v0, 0, 1e-7);
+  BOOST_REQUIRE_CLOSE(v1, M_SQRT2 * 1., 1e-7);
+  BOOST_REQUIRE_CLOSE(v2, 0, 1e-7);
+  BOOST_REQUIRE_CLOSE(v3, 0, 1e-7);
+  BOOST_REQUIRE_CLOSE(v4, 0, 1e-7);
+  BOOST_REQUIRE_CLOSE(v5, 0, 1e-7);
+}
+
+BOOST_AUTO_TEST_CASE(TestSymKronIdSimple)
+{
+  arma::mat A(3, 3);
+  A(0, 0) = 1; A(0, 1) = 2, A(0, 2) = 3;
+  A(1, 0) = 2; A(1, 1) = 4, A(1, 2) = 5;
+  A(2, 0) = 3; A(2, 1) = 5, A(2, 2) = 6;
+  arma::mat Op;
+  SymKronId(A, Op);
+
+  const arma::mat X = A + arma::ones<arma::mat>(3, 3);
+  arma::vec sx;
+  Svec(X, sx);
+
+  const arma::vec lhs = Op * sx;
+  const arma::mat Rhs = 0.5 * (A * X + X * A);
+  arma::vec rhs;
+  Svec(Rhs, rhs);
+
+  BOOST_REQUIRE_EQUAL(lhs.n_elem, rhs.n_elem);
+  for (size_t j = 0; j < lhs.n_elem; j++)
+    BOOST_REQUIRE_CLOSE(lhs(j), rhs(j), 1e-5);
+}
+
+BOOST_AUTO_TEST_CASE(TestSymKronId)
+{
+  const size_t n = 10;
+  arma::mat A = arma::randu<arma::mat>(n, n);
+  A += A.t();
+
+  arma::mat Op;
+  SymKronId(A, Op);
+
+  for (size_t i = 0; i < 5; i++)
+  {
+    arma::mat X = arma::randu<arma::mat>(n, n);
+    X += X.t();
+    arma::vec sx;
+    Svec(X, sx);
+
+    const arma::vec lhs = Op * sx;
+    const arma::mat Rhs = 0.5 * (A * X + X * A);
+    arma::vec rhs;
+    Svec(Rhs, rhs);
+
+    BOOST_REQUIRE_EQUAL(lhs.n_elem, rhs.n_elem);
+    for (size_t j = 0; j < lhs.n_elem; j++)
+      BOOST_REQUIRE_CLOSE(lhs(j), rhs(j), 1e-5);
   }
 }
 

@@ -5,12 +5,20 @@
  * Implementation of the stochastic neighbor assignment probability error
  * function (the "softmax error").
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_NCA_NCA_SOFTMAX_ERROR_FUNCTION_HPP
 #define __MLPACK_METHODS_NCA_NCA_SOFTMAX_ERROR_FUNCTION_HPP
@@ -35,7 +43,7 @@ namespace nca {
  * the squared Euclidean distance is not the only allowed metric for NCA.
  * However, that is probably the best way to use this class.
  *
- * In addition to the standard Evaluate() and Gradient() functions which MLPACK
+ * In addition to the standard Evaluate() and Gradient() functions which mlpack
  * optimizers use, overloads of Evaluate() and Gradient() are given which only
  * operate on one point in the dataset.  This is useful for optimizers like
  * stochastic gradient descent (see mlpack::optimization::SGD).
@@ -55,7 +63,7 @@ class SoftmaxErrorFunction
    * @param kernel Instantiated kernel (optional).
    */
   SoftmaxErrorFunction(const arma::mat& dataset,
-                       const arma::Col<size_t>& labels,
+                       const arma::Row<size_t>& labels,
                        MetricType metric = MetricType());
 
   /**
@@ -115,14 +123,11 @@ class SoftmaxErrorFunction
    */
   size_t NumFunctions() const { return dataset.n_cols; }
 
-  // convert the obkect into a string
-  std::string ToString() const;
-
  private:
   //! The dataset.
   const arma::mat& dataset;
   //! Labels for each point in the dataset.
-  const arma::Col<size_t>& labels;
+  const arma::Row<size_t>& labels;
 
   //! The instantiated metric.
   MetricType metric;
@@ -156,8 +161,8 @@ class SoftmaxErrorFunction
   void Precalculate(const arma::mat& coordinates);
 };
 
-}; // namespace nca
-}; // namespace mlpack
+} // namespace nca
+} // namespace mlpack
 
 // Include implementation.
 #include "nca_softmax_error_function_impl.hpp"

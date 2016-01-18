@@ -1,8 +1,10 @@
 # Define the files we need to compile.
-# Anything not in this list will not be compiled into MLPACK.
+# Anything not in this list will not be compiled into mlpack.
 set(SOURCES
   hmm.hpp
   hmm_impl.hpp
+  hmm_regression.hpp
+  hmm_regression_impl.hpp
   hmm_util.hpp
   hmm_util_impl.hpp
 )
@@ -12,37 +14,41 @@ set(DIR_SRCS)
 foreach(file ${SOURCES})
   set(DIR_SRCS ${DIR_SRCS} ${CMAKE_CURRENT_SOURCE_DIR}/${file})
 endforeach()
-# Append sources (with directory name) to list of all MLPACK sources (used at
+# Append sources (with directory name) to list of all mlpack sources (used at
 # the parent scope).
 set(MLPACK_SRCS ${MLPACK_SRCS} ${DIR_SRCS} PARENT_SCOPE)
 
-add_executable(hmm_train
+add_executable(mlpack_hmm_train
   hmm_train_main.cpp
 )
-target_link_libraries(hmm_train
+target_link_libraries(mlpack_hmm_train
   mlpack
 )
 
-add_executable(hmm_loglik
+add_executable(mlpack_hmm_loglik
   hmm_loglik_main.cpp
 )
-target_link_libraries(hmm_loglik
+target_link_libraries(mlpack_hmm_loglik
   mlpack
 )
 
-add_executable(hmm_viterbi
+add_executable(mlpack_hmm_viterbi
   hmm_viterbi_main.cpp
 )
-target_link_libraries(hmm_viterbi
+target_link_libraries(mlpack_hmm_viterbi
   mlpack
 )
 
-add_executable(hmm_generate
+add_executable(mlpack_hmm_generate
   hmm_generate_main.cpp
 )
-target_link_libraries(hmm_generate
+target_link_libraries(mlpack_hmm_generate
   mlpack
 )
 
-install(TARGETS hmm_train hmm_loglik hmm_viterbi hmm_generate
+install(TARGETS
+    mlpack_hmm_train
+    mlpack_hmm_loglik
+    mlpack_hmm_viterbi
+    mlpack_hmm_generate
   RUNTIME DESTINATION bin)

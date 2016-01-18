@@ -4,12 +4,20 @@
  *
  * Implementation of templated NCA class.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_NCA_NCA_IMPL_HPP
 #define __MLPACK_METHODS_NCA_NCA_IMPL_HPP
@@ -23,7 +31,7 @@ namespace nca {
 // Just set the internal matrix reference.
 template<typename MetricType, template<typename> class OptimizerType>
 NCA<MetricType, OptimizerType>::NCA(const arma::mat& dataset,
-                                    const arma::Col<size_t>& labels,
+                                    const arma::Row<size_t>& labels,
                                     MetricType metric) :
     dataset(dataset),
     labels(labels),
@@ -47,20 +55,7 @@ void NCA<MetricType, OptimizerType>::LearnDistance(arma::mat& outputMatrix)
   Timer::Stop("nca_sgd_optimization");
 }
 
-template<typename MetricType, template<typename> class OptimizerType>
-std::string NCA<MetricType, OptimizerType>::ToString() const
-{
-  std::ostringstream convert;
-  convert << "NCA  [" << this << "]" << std::endl;
-  convert << "  Dataset: " << dataset.n_rows << "x" << dataset.n_cols 
-      << std::endl;
-  convert << "  Metric: " << std::endl << 
-      mlpack::util::Indent(metric.ToString(),2);
-  return convert.str();
-}
-
-
-}; // namespace nca
-}; // namespace mlpack
+} // namespace nca
+} // namespace mlpack
 
 #endif

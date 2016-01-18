@@ -1,19 +1,8 @@
-/**
- * @file svd_batch_test.cpp
- * @author Sumedh Ghaisas
- *
- * This file is part of mlpack 1.0.12.
- *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
- */
 #include <mlpack/core.hpp>
 #include <mlpack/methods/amf/amf.hpp>
 #include <mlpack/methods/amf/update_rules/svd_batch_learning.hpp>
-#include <mlpack/methods/amf/init_rules/average_init.hpp>
 #include <mlpack/methods/amf/init_rules/random_init.hpp>
+#include <mlpack/methods/amf/init_rules/average_init.hpp>
 #include <mlpack/methods/amf/termination_policies/validation_RMSE_termination.hpp>
 #include <mlpack/methods/amf/termination_policies/simple_tolerance_termination.hpp>
 
@@ -29,6 +18,21 @@ using namespace arma;
 
 /**
  * Make sure the SVD Batch lerning is converging.
+ *
+ * This file is part of mlpack 2.0.0.
+ *
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 BOOST_AUTO_TEST_CASE(SVDBatchConvergenceElementTest)
 {
@@ -43,6 +47,29 @@ BOOST_AUTO_TEST_CASE(SVDBatchConvergenceElementTest)
   BOOST_REQUIRE_NE(amf.TerminationPolicy().Iteration(),
                    amf.TerminationPolicy().MaxIterations());
 }
+
+//! This is used to ensure we start from the same initial point.
+class SpecificRandomInitialization
+{
+ public:
+  SpecificRandomInitialization(const size_t n, const size_t r, const size_t m) :
+      W(arma::randu<arma::mat>(n, r)),
+      H(arma::randu<arma::mat>(r, m)) { }
+
+  template<typename MatType>
+  inline void Initialize(const MatType& /* V */,
+                         const size_t /* r */,
+                         arma::mat& W,
+                         arma::mat& H)
+  {
+    W = this->W;
+    H = this->H;
+  }
+
+ private:
+  arma::mat W;
+  arma::mat H;
+};
 
 /**
  * Make sure the momentum is working okay.
@@ -71,32 +98,24 @@ BOOST_AUTO_TEST_CASE(SVDBatchMomentumTest)
   // Fill sparse matrix.
   sp_mat cleanedData = arma::sp_mat(locations, values, maxUserID, maxItemID);
 
-  // Explicitly setting the random seed forces the random initialization to be
-  // the same.  There may be a better way to do this.
-  mlpack::math::RandomSeed(10);
+  // Create the initial matrices.
+  SpecificRandomInitialization sri(cleanedData.n_rows, 2, cleanedData.n_cols);
+
   ValidationRMSETermination<sp_mat> vrt(cleanedData, 2000);
   AMF<ValidationRMSETermination<sp_mat>,
-      RandomInitialization,
-      SVDBatchLearning> amf_1(vrt,
-                              RandomInitialization(),
-                              SVDBatchLearning(0.0009, 0, 0, 0));
+      SpecificRandomInitialization,
+      SVDBatchLearning> amf1(vrt, sri, SVDBatchLearning(0.0009, 0, 0, 0));
 
-  mat m1,m2;
-  double RMSE_1 = amf_1.Apply(cleanedData, 2, m1, m2);
-  size_t iter_1 = amf_1.TerminationPolicy().Iteration();
+  mat m1, m2;
+  const double regularRMSE = amf1.Apply(cleanedData, 2, m1, m2);
 
-  mlpack::math::RandomSeed(10);
   AMF<ValidationRMSETermination<sp_mat>,
-      RandomInitialization,
-      SVDBatchLearning> amf_2(vrt,
-                              RandomInitialization(),
-                              SVDBatchLearning(0.0009, 0, 0, 0.8));
+      SpecificRandomInitialization,
+      SVDBatchLearning> amf2(vrt, sri, SVDBatchLearning(0.0009, 0, 0, 0.8));
 
-  double RMSE_2 = amf_2.Apply(cleanedData, 2, m1, m2);
-  size_t iter_2 = amf_2.TerminationPolicy().Iteration();
+  const double momentumRMSE = amf2.Apply(cleanedData, 2, m1, m2);
 
-  BOOST_REQUIRE_LE(RMSE_2, RMSE_1);
-  BOOST_REQUIRE_LE(iter_2, iter_1);
+  BOOST_REQUIRE_LE(momentumRMSE, regularRMSE + 0.05);
 }
 
 /**
@@ -126,27 +145,24 @@ BOOST_AUTO_TEST_CASE(SVDBatchRegularizationTest)
   // Fill sparse matrix.
   sp_mat cleanedData = arma::sp_mat(locations, values, maxUserID, maxItemID);
 
-  mlpack::math::RandomSeed(10);
+  // Create the initial matrices.
+  SpecificRandomInitialization sri(cleanedData.n_rows, 2, cleanedData.n_cols);
+
   ValidationRMSETermination<sp_mat> vrt(cleanedData, 2000);
   AMF<ValidationRMSETermination<sp_mat>,
-      RandomInitialization,
-      SVDBatchLearning> amf_1(vrt,
-                              RandomInitialization(),
-                              SVDBatchLearning(0.0009, 0, 0, 0));
+      SpecificRandomInitialization,
+      SVDBatchLearning> amf1(vrt, sri, SVDBatchLearning(0.0009, 0, 0, 0));
 
   mat m1, m2;
-  double RMSE_1 = amf_1.Apply(cleanedData, 2, m1, m2);
+  double regularRMSE = amf1.Apply(cleanedData, 2, m1, m2);
 
-  mlpack::math::RandomSeed(10);
   AMF<ValidationRMSETermination<sp_mat>,
-      RandomInitialization,
-      SVDBatchLearning> amf_2(vrt,
-                              RandomInitialization(),
-                              SVDBatchLearning(0.0009, 0.5, 0.5, 0.8));
+      SpecificRandomInitialization,
+      SVDBatchLearning> amf2(vrt, sri, SVDBatchLearning(0.0009, 0.5, 0.5, 0.8));
 
-  double RMSE_2 = amf_2.Apply(cleanedData, 2, m1, m2);
+  double momentumRMSE = amf2.Apply(cleanedData, 2, m1, m2);
 
-  BOOST_REQUIRE_LE(RMSE_2, RMSE_1);
+  BOOST_REQUIRE_LE(momentumRMSE, regularRMSE + 0.05);
 }
 
 /**
@@ -154,7 +170,6 @@ BOOST_AUTO_TEST_CASE(SVDBatchRegularizationTest)
  */
 BOOST_AUTO_TEST_CASE(SVDBatchNegativeElementTest)
 {
-  mlpack::math::RandomSeed(std::time(NULL));
   // Create two 5x3 matrices that we should be able to recover.
   mat testLeft;
   testLeft.randu(5, 3);

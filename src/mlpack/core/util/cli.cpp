@@ -4,12 +4,20 @@
  *
  * Implementation of the CLI module for parsing parameters.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <list>
 #include <boost/program_options.hpp>
@@ -61,8 +69,15 @@ CLI::CLI(const CLI& other) : desc(other.desc),
 
 CLI::~CLI()
 {
-  // Terminate the program timer.
-  Timer::Stop("total_time");
+  // Terminate the program timers.
+  std::map<std::string, timeval>::iterator it;
+  for (it = timer.GetAllTimers().begin(); it != timer.GetAllTimers().end();
+       ++it)
+  {
+    std::string i = (*it).first;
+    if (timer.GetState(i) == 1)
+      Timer::Stop(i);
+  }
 
   // Did the user ask for verbose output?  If so we need to print everything.
   // But only if the user did not ask for help or info.
@@ -602,10 +617,7 @@ void CLI::PrintHelp(const std::string& param)
 
   for (size_t pass = 0; pass < 2; ++pass)
   {
-    if (pass == 0)
-      std::cout << "Required options:" << std::endl << std::endl;
-    else
-      std::cout << "Options: " << std::endl << std::endl;
+    bool printedHeader = false;
 
     // Print out the descriptions of everything else.
     for (iter = gmap.begin(); iter != gmap.end(); ++iter)
@@ -628,6 +640,15 @@ void CLI::PrintHelp(const std::string& param)
         continue; // Don't print this one.
       if ((pass == 1) && required)
         continue; // Don't print this one.
+
+      if (!printedHeader)
+      {
+        printedHeader = true;
+        if (pass == 0)
+          std::cout << "Required options:" << std::endl << std::endl;
+        else
+          std::cout << "Options: " << std::endl << std::endl;
+      }
 
       if (pass == 1) // Append default value to description.
       {
@@ -680,7 +701,7 @@ void CLI::PrintHelp(const std::string& param)
   // citations and better documentation (if necessary).  See ticket #201.
   std::cout << HyphenateString("For further information, including relevant "
       "papers, citations, and theory, consult the documentation found at "
-      "http://www.mlpack.org or included with your distribution of MLPACK.", 0)
+      "http://www.mlpack.org or included with your distribution of mlpack.", 0)
       << std::endl;
 }
 

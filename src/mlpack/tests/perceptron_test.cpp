@@ -4,12 +4,20 @@
  *
  * Tests for perceptron.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/methods/perceptron/perceptron.hpp>
@@ -35,7 +43,7 @@ BOOST_AUTO_TEST_CASE(And)
   Mat<size_t> labels;
   labels << 0 << 0 << 1 << 0;
 
-  Perceptron<> p(trainData, labels.row(0), 1000);
+  Perceptron<> p(trainData, labels.row(0), 2, 1000);
 
   mat testData;
   testData << 0 << 1 << 1 << 0 << endr
@@ -61,7 +69,7 @@ BOOST_AUTO_TEST_CASE(Or)
   Mat<size_t> labels;
   labels << 1 << 1 << 1 << 0;
 
-  Perceptron<> p(trainData, labels.row(0), 1000);
+  Perceptron<> p(trainData, labels.row(0), 2, 1000);
 
   mat testData;
   testData << 0 << 1 << 1 << 0 << endr
@@ -88,7 +96,7 @@ BOOST_AUTO_TEST_CASE(Random3)
   Mat<size_t> labels;
   labels << 0 << 0 << 0 << 1 << 1 << 1 << 2 << 2 << 2;
 
-  Perceptron<> p(trainData, labels.row(0), 1000);
+  Perceptron<> p(trainData, labels.row(0), 3, 1000);
 
   mat testData;
   testData << 0 << 1 << 1 << endr
@@ -114,7 +122,7 @@ BOOST_AUTO_TEST_CASE(TwoPoints)
   Mat<size_t> labels;
   labels << 0 << 1;
 
-  Perceptron<> p(trainData, labels.row(0), 1000);
+  Perceptron<> p(trainData, labels.row(0), 2, 1000);
 
   mat testData;
   testData << 0 << 1 << endr
@@ -141,8 +149,8 @@ BOOST_AUTO_TEST_CASE(NonLinearlySeparableDataset)
   Mat<size_t> labels;
   labels << 0 << 0 << 0 << 1 << 0 << 1 << 1 << 1
          << 0 << 0 << 0 << 1 << 0 << 1 << 1 << 1;
-         
-  Perceptron<> p(trainData, labels.row(0), 1000);
+
+  Perceptron<> p(trainData, labels.row(0), 2, 1000);
 
   mat testData;
   testData << 3 << 4   << 5   << 6   << endr
@@ -167,8 +175,8 @@ BOOST_AUTO_TEST_CASE(SecondaryConstructor)
   Mat<size_t> labels;
   labels << 0 << 0 << 0 << 1 << 0 << 1 << 1 << 1
          << 0 << 0 << 0 << 1 << 0 << 1 << 1 << 1;
-         
-  Perceptron<> p1(trainData, labels.row(0), 1000);
+
+  Perceptron<> p1(trainData, labels.row(0), 2, 1000);
 
   Perceptron<> p2(p1);
 }

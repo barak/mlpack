@@ -7,12 +7,20 @@
  * There are many variations on how to do this, so template parameters allow the
  * selection of many different techniques.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_NYSTROEM_METHOD_NYSTROEM_METHOD_HPP
 #define __MLPACK_METHODS_NYSTROEM_METHOD_NYSTROEM_METHOD_HPP
@@ -55,8 +63,8 @@ class NystroemMethod
    * @param miniKernel to store the constructed mini-kernel matrix in.
    * @param miniKernel to store the constructed semi-kernel matrix in.
    */
-  void GetKernelMatrix(const arma::mat* data, 
-                       arma::mat& miniKernel, 
+  void GetKernelMatrix(const arma::mat* data,
+                       arma::mat& miniKernel,
                        arma::mat& semiKernel);
 
   /**
@@ -66,8 +74,8 @@ class NystroemMethod
    * @param miniKernel to store the constructed mini-kernel matrix in.
    * @param miniKernel to store the constructed semi-kernel matrix in.
    */
-  void GetKernelMatrix(const arma::Col<size_t>& selectedPoints, 
-                       arma::mat& miniKernel, 
+  void GetKernelMatrix(const arma::Col<size_t>& selectedPoints,
+                       arma::mat& miniKernel,
                        arma::mat& semiKernel);
 
  private:
@@ -79,8 +87,8 @@ class NystroemMethod
   const size_t rank;
 };
 
-}; // namespace kernel
-}; // namespace mlpack
+} // namespace kernel
+} // namespace mlpack
 
 // Include implementation.
 #include "nystroem_method_impl.hpp"

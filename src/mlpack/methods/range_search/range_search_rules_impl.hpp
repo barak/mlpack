@@ -4,12 +4,20 @@
  *
  * Implementation of rules for range search with generic trees.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_RANGE_SEARCH_RANGE_SEARCH_RULES_IMPL_HPP
 #define __MLPACK_METHODS_RANGE_SEARCH_RANGE_SEARCH_RULES_IMPL_HPP
@@ -27,15 +35,19 @@ RangeSearchRules<MetricType, TreeType>::RangeSearchRules(
     const math::Range& range,
     std::vector<std::vector<size_t> >& neighbors,
     std::vector<std::vector<double> >& distances,
-    MetricType& metric) :
+    MetricType& metric,
+    const bool sameSet) :
     referenceSet(referenceSet),
     querySet(querySet),
     range(range),
     neighbors(neighbors),
     distances(distances),
     metric(metric),
+    sameSet(sameSet),
     lastQueryIndex(querySet.n_cols),
-    lastReferenceIndex(referenceSet.n_cols)
+    lastReferenceIndex(referenceSet.n_cols),
+    baseCases(0),
+    scores(0)
 {
   // Nothing to do.
 }
@@ -49,7 +61,7 @@ double RangeSearchRules<MetricType, TreeType>::BaseCase(
     const size_t referenceIndex)
 {
   // If the datasets are the same, don't return the point as in its own range.
-  if ((&referenceSet == &querySet) && (queryIndex == referenceIndex))
+  if (sameSet && (queryIndex == referenceIndex))
     return 0.0;
 
   // If we have just performed this base case, don't do it again.
@@ -58,6 +70,7 @@ double RangeSearchRules<MetricType, TreeType>::BaseCase(
 
   const double distance = metric.Evaluate(querySet.unsafe_col(queryIndex),
       referenceSet.unsafe_col(referenceIndex));
+  ++baseCases;
 
   // Update last indices, so we don't accidentally perform a base case twice.
   lastQueryIndex = queryIndex;
@@ -112,6 +125,7 @@ double RangeSearchRules<MetricType, TreeType>::Score(const size_t queryIndex,
   else
   {
     distances = referenceNode.RangeDistance(querySet.unsafe_col(queryIndex));
+    ++scores;
   }
 
   // If the ranges do not overlap, prune this node.
@@ -181,6 +195,7 @@ double RangeSearchRules<MetricType, TreeType>::Score(TreeType& queryNode,
   {
     // Just perform the calculation.
     distances = referenceNode.RangeDistance(&queryNode);
+    ++scores;
   }
 
   // If the ranges do not overlap, prune this node.
@@ -254,7 +269,7 @@ void RangeSearchRules<MetricType, TreeType>::AddResult(const size_t queryIndex,
   }
 }
 
-}; // namespace range
-}; // namespace mlpack
+} // namespace range
+} // namespace mlpack
 
 #endif

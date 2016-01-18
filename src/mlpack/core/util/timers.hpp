@@ -5,12 +5,20 @@
  *
  * Timers for MLPACK.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_UTILITIES_TIMERS_HPP
 #define __MLPACK_CORE_UTILITIES_TIMERS_HPP
@@ -31,10 +39,14 @@
   #include <sys/time.h>   // timeval, gettimeofday()
   #include <unistd.h>     // flags like  _POSIX_VERSION
 #elif defined(_WIN32)
-  #include <windows.h>  //GetSystemTimeAsFileTime(),
+  #ifndef NOMINMAX
+    #define NOMINMAX // Don't define min and max macros.
+  #endif
+  #include <windows.h>  // GetSystemTimeAsFileTime(),
                         // QueryPerformanceFrequency(),
                         // QueryPerformanceCounter()
-  #include <winsock.h>  //timeval on windows
+  #include <winsock.h>  // timeval on windows
+  #undef NOMINMAX
 
   // uint64_t isn't defined on every windows.
   #if !defined(HAVE_UINT64_T)
@@ -58,7 +70,7 @@
 namespace mlpack {
 
 /**
- * The timer class provides a way for MLPACK methods to be timed.  The three
+ * The timer class provides a way for mlpack methods to be timed.  The three
  * methods contained in this class allow a named timer to be started and
  * stopped, and its value to be obtained.
  */
@@ -68,10 +80,11 @@ class Timer
   /**
    * Start the given timer.  If a timer is started, then stopped, then
    * re-started, then re-stopped, the final value of the timer is the length of
-   * both runs -- that is, MLPACK timers are additive for each time they are
+   * both runs -- that is, mlpack timers are additive for each time they are
    * run, and do not reset.
    *
-   * @note Undefined behavior will occur if a timer is started twice.
+   * @note A std::runtime_error exception will be thrown if a timer is started
+   * twice.
    *
    * @param name Name of timer to be started.
    */
@@ -80,7 +93,8 @@ class Timer
   /**
    * Stop the given timer.
    *
-   * @note Undefined behavior will occur if a timer is started twice.
+   * @note A std::runtime_error exception will be thrown if a timer is started
+   * twice.
    *
    * @param name Name of timer to be stopped.
    */
@@ -138,13 +152,23 @@ class Timers
    */
   void StopTimer(const std::string& timerName);
 
+  /**
+   * Returns state of the given timer.
+   * 
+   * @param timerName The name of the timer in question.
+   */
+  bool GetState(std::string timerName);
+  
  private:
+  //! A map of all the timers that are being tracked.
   std::map<std::string, timeval> timers;
+  //! A map that contains whether or not each timer is currently running.
+  std::map<std::string, bool> timerState;
 
   void FileTimeToTimeVal(timeval* tv);
   void GetTime(timeval* tv);
 };
 
-}; // namespace mlpack
+} // namespace mlpack
 
 #endif // __MLPACK_CORE_UTILITIES_TIMERS_HPP

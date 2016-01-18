@@ -16,6 +16,20 @@
 #define ARMA_EXTRA_SPMAT_PROTO mlpack/core/arma_extend/SpMat_extra_bones.hpp
 #define ARMA_EXTRA_SPMAT_MEAT  mlpack/core/arma_extend/SpMat_extra_meat.hpp
 
+// Add row_col_iterator and row_col_const_iterator for Mat.
+#define ARMA_EXTRA_MAT_PROTO mlpack/core/arma_extend/Mat_extra_bones.hpp
+#define ARMA_EXTRA_MAT_MEAT mlpack/core/arma_extend/Mat_extra_meat.hpp
+
+// Make sure that U64 and S64 support is enabled.
+#ifndef ARMA_USE_U64S64
+  #define ARMA_USE_U64S64
+#endif
+
+// Include everything we'll need for serialize().
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/nvp.hpp>
+#include <boost/serialization/array.hpp>
+
 #include <armadillo>
 
 namespace arma {
@@ -35,6 +49,9 @@ namespace arma {
 
   // inplace_reshape()
   #include "fn_inplace_reshape.hpp"
+
+  // unary minus for sparse matrices
+  #include "operator_minus.hpp"
 };
 
 #endif

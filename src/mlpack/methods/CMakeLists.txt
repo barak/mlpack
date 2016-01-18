@@ -1,6 +1,6 @@
 # Recurse into each method mlpack provides.
 set(DIRS
-#  adaboost
+  adaboost
   amf
   cf
   decision_stump
@@ -9,19 +9,20 @@ set(DIRS
   fastmks
   gmm
   hmm
+  hoeffding_trees
   kernel_pca
   kmeans
+  mean_shift
   lars
   linear_regression
   local_coordinate_coding
   logistic_regression
   lsh
-#  mvu
+  matrix_completion
   naive_bayes
   nca
   neighbor_search
   nmf
-#  lmf
   pca
   perceptron
   quic_svd
@@ -29,6 +30,7 @@ set(DIRS
   range_search
   rann
   regularized_svd
+  softmax_regression
   sparse_autoencoder
   sparse_coding
   nystroem_method

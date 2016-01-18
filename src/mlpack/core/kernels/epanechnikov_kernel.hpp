@@ -4,12 +4,20 @@
  *
  * Definition of the Epanechnikov kernel.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_KERNELS_EPANECHNIKOV_KERNEL_HPP
 #define __MLPACK_CORE_KERNELS_EPANECHNIKOV_KERNEL_HPP
@@ -44,11 +52,13 @@ class EpanechnikovKernel
   /**
    * Evaluate the Epanechnikov kernel on the given two inputs.
    *
+   * @tparam VecTypeA Type of first vector.
+   * @tparam VecTypeB Type of second vector.
    * @param a One input vector.
    * @param b The other input vector.
    */
-  template<typename Vec1Type, typename Vec2Type>
-  double Evaluate(const Vec1Type& a, const Vec2Type& b) const;
+  template<typename VecTypeA, typename VecTypeB>
+  double Evaluate(const VecTypeA& a, const VecTypeB& b) const;
 
   /**
    * Evaluate the Epanechnikov kernel given that the distance between the two
@@ -56,6 +66,19 @@ class EpanechnikovKernel
    */
   double Evaluate(const double distance) const;
 
+  /**
+   * Evaluate the Gradient of Epanechnikov kernel 
+   * given that the distance between the two
+   * input points is known.
+   */
+  double Gradient(const double distance) const;
+  
+  /**
+   * Evaluate the Gradient of Epanechnikov kernel
+   * given that the squared distance between the two
+   * input points is known.
+   */
+  double GradientForSquaredDistance(const double distanceSquared) const;
   /**
    * Obtains the convolution integral [integral of K(||x-a||) K(||b-x||) dx]
    * for the two vectors.
@@ -65,9 +88,8 @@ class EpanechnikovKernel
    * @param b Second vector.
    * @return the convolution integral value.
    */
-  
-  template<typename VecType>
-  double ConvolutionIntegral(const VecType& a, const VecType& b);
+  template<typename VecTypeA, typename VecTypeB>
+  double ConvolutionIntegral(const VecTypeA& a, const VecTypeB& b);
 
   /**
    * Compute the normalizer of this Epanechnikov kernel for the given dimension.
@@ -75,9 +97,12 @@ class EpanechnikovKernel
    * @param dimension Dimension to calculate the normalizer for.
    */
   double Normalizer(const size_t dimension);
-  
-  // Returns String of O bject
-  std::string ToString() const;
+
+  /**
+   * Serialize the kernel.
+   */
+  template<typename Archive>
+  void Serialize(Archive& ar, const unsigned int version);
 
  private:
   //! Bandwidth of the kernel.
@@ -94,10 +119,12 @@ class KernelTraits<EpanechnikovKernel>
  public:
   //! The Epanechnikov kernel is normalized: K(x, x) = 1 for all x.
   static const bool IsNormalized = true;
+  //! The Epanechnikov kernel includes a squared distance.
+  static const bool UsesSquaredDistance = true;
 };
 
-}; // namespace kernel
-}; // namespace mlpack
+} // namespace kernel
+} // namespace mlpack
 
 // Include implementation.
 #include "epanechnikov_kernel_impl.hpp"

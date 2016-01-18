@@ -5,12 +5,20 @@
  * Very simple partitioner which partitions the data randomly into the number of
  * desired clusters.  Used as the default InitialPartitionPolicy for KMeans.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_KMEANS_RANDOM_PARTITION_HPP
 #define __MLPACK_METHODS_KMEANS_RANDOM_PARTITION_HPP
@@ -45,15 +53,19 @@ class RandomPartition
   template<typename MatType>
   inline static void Cluster(const MatType& data,
                              const size_t clusters,
-                             arma::Col<size_t>& assignments)
+                             arma::Row<size_t>& assignments)
   {
     // Implementation is so simple we'll put it here in the header file.
-    assignments = arma::shuffle(arma::linspace<arma::Col<size_t> >(0,
+    assignments = arma::shuffle(arma::linspace<arma::Row<size_t>>(0,
         (clusters - 1), data.n_cols));
   }
+
+  //! Serialize the partitioner (nothing to do).
+  template<typename Archive>
+  void Serialize(Archive& /* ar */, const unsigned int /* version */) { }
 };
 
-};
-};
+}
+}
 
 #endif

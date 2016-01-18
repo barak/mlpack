@@ -5,12 +5,20 @@
  *
  * The implementation of the L_BFGS optimizer.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_OPTIMIZERS_LBFGS_LBFGS_IMPL_HPP
 #define __MLPACK_CORE_OPTIMIZERS_LBFGS_LBFGS_IMPL_HPP
@@ -41,6 +49,7 @@ L_BFGS<FunctionType>::L_BFGS(FunctionType& function,
                              const double armijoConstant,
                              const double wolfe,
                              const double minGradientNorm,
+                             const double factr,
                              const size_t maxLineSearchTrials,
                              const double minStep,
                              const double maxStep) :
@@ -50,6 +59,7 @@ L_BFGS<FunctionType>::L_BFGS(FunctionType& function,
     armijoConstant(armijoConstant),
     wolfe(wolfe),
     minGradientNorm(minGradientNorm),
+    factr(factr),
     maxLineSearchTrials(maxLineSearchTrials),
     minStep(minStep),
     maxStep(maxStep)
@@ -222,10 +232,18 @@ bool L_BFGS<FunctionType>::LineSearch(double& functionValue,
 
     // Terminate when the step size gets too small or too big or it
     // exceeds the max number of iterations.
-    if ((stepSize < minStep) || (stepSize > maxStep) ||
-        (numIterations >= maxLineSearchTrials))
+    const bool cond1 = (stepSize < minStep);
+    const bool cond2 = (stepSize > maxStep);
+    const bool cond3 = (numIterations >= maxLineSearchTrials);
+    if (cond1 || cond2 || cond3)
     {
-      return false;
+      if (cond1)
+        Log::Debug << "stepSize < minStep" << std::endl;
+      if (cond2)
+        Log::Debug << "stepSize > maxStep" << std::endl;
+      if (cond3)
+        Log::Debug << "numIterations >= maxLineSearchTrials (stepSize=" << stepSize << ")" << std::endl;
+      break;
     }
 
     // Scale the step size.
@@ -362,6 +380,7 @@ double L_BFGS<FunctionType>::Optimize(arma::mat& iterate,
 
   // The initial function value.
   double functionValue = Evaluate(iterate);
+  double prevFunctionValue = functionValue;
 
   // The gradient: the current and the old.
   arma::mat gradient;
@@ -381,10 +400,18 @@ double L_BFGS<FunctionType>::Optimize(arma::mat& iterate,
        ++itNum)
   {
     Log::Debug << "L-BFGS iteration " << itNum << "; objective " <<
-        function.Evaluate(iterate) << "." << std::endl;
+        function.Evaluate(iterate) << ", gradient norm " <<
+        arma::norm(gradient, 2) << ", " <<
+        ((prevFunctionValue - functionValue) /
+         std::max(std::max(fabs(prevFunctionValue), fabs(functionValue)), 1.0)) << "." << std::endl;
+
+    prevFunctionValue = functionValue;
 
     // Break when the norm of the gradient becomes too small.
-    if (GradientNormTooSmall(gradient))
+    //
+    // But don't do this on the first iteration to ensure we always take at
+    // least one descent step.
+    if (itNum > 0 && GradientNormTooSmall(gradient))
     {
       Log::Debug << "L-BFGS gradient norm too small (terminating successfully)."
           << std::endl;
@@ -418,6 +445,19 @@ double L_BFGS<FunctionType>::Optimize(arma::mat& iterate,
       break;
     }
 
+    // If we can't make progress on the gradient, then we'll also accept
+    // a stable function value
+    const double denom =
+      std::max(
+        std::max(fabs(prevFunctionValue), fabs(functionValue)),
+        1.0);
+    if ((prevFunctionValue - functionValue) / denom <= factr)
+    {
+      Log::Debug << "L-BFGS function value stable (terminating successfully)."
+          << std::endl;
+      break;
+    }
+
     // Overwrite an old basis set.
     UpdateBasisSet(itNum, iterate, oldIterate, gradient, oldGradient);
 
@@ -426,28 +466,8 @@ double L_BFGS<FunctionType>::Optimize(arma::mat& iterate,
   return function.Evaluate(iterate);
 }
 
-// Convert the object to a string.
-template<typename FunctionType>
-std::string L_BFGS<FunctionType>::ToString() const
-{
-  std::ostringstream convert;
-  convert << "L_BFGS [" << this << "]" << std::endl;
-  convert << "  Function:" << std::endl;
-  convert << util::Indent(function.ToString(), 2);
-  convert << "  Memory size: " << numBasis << std::endl;
-  convert << "  Cube size: " << s.n_rows << "x" << s.n_cols << "x"
-      << s.n_slices << std::endl;
-  convert << "  Maximum iterations: " << maxIterations << std::endl;
-  convert << "  Armijo condition constant: " << armijoConstant << std::endl;
-  convert << "  Wolfe parameter: " << wolfe << std::endl;
-  convert << "  Minimum gradient norm: " << minGradientNorm << std::endl;
-  convert << "  Minimum step for line search: " << minStep << std::endl;
-  convert << "  Maximum step for line search: " << maxStep << std::endl;
-  return convert.str();
-}
-
-}; // namespace optimization
-}; // namespace mlpack
+} // namespace optimization
+} // namespace mlpack
 
 #endif // __MLPACK_CORE_OPTIMIZERS_LBFGS_LBFGS_IMPL_HPP
 

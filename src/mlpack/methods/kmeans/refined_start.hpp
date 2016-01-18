@@ -6,12 +6,20 @@
  * K-Means clustering".  This class is meant to provide better initial points
  * for the k-means algorithm.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_KMEANS_REFINED_START_HPP
 #define __MLPACK_METHODS_KMEANS_REFINED_START_HPP
@@ -61,7 +69,7 @@ class RefinedStart
   template<typename MatType>
   void Cluster(const MatType& data,
                const size_t clusters,
-               arma::Col<size_t>& assignments) const;
+               arma::Row<size_t>& assignments) const;
 
   //! Get the number of samplings that will be performed.
   size_t Samplings() const { return samplings; }
@@ -73,6 +81,14 @@ class RefinedStart
   //! Modify the percentage of the data used by each subsampling.
   double& Percentage() { return percentage; }
 
+  //! Serialize the object.
+  template<typename Archive>
+  void Serialize(Archive& ar, const unsigned int /* version */)
+  {
+    ar & data::CreateNVP(samplings, "samplings");
+    ar & data::CreateNVP(percentage, "percentage");
+  }
+
  private:
   //! The number of samplings to perform.
   size_t samplings;
@@ -80,8 +96,8 @@ class RefinedStart
   double percentage;
 };
 
-}; // namespace kmeans
-}; // namespace mlpack
+} // namespace kmeans
+} // namespace mlpack
 
 // Include implementation.
 #include "refined_start_impl.hpp"

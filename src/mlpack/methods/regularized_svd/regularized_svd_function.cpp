@@ -4,12 +4,20 @@
  *
  * An implementation of the RegularizedSVDFunction class.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "regularized_svd_function.hpp"
@@ -27,7 +35,7 @@ RegularizedSVDFunction::RegularizedSVDFunction(const arma::mat& data,
   // Number of users and items in the data.
   numUsers = max(data.row(0)) + 1;
   numItems = max(data.row(1)) + 1;
-  
+
   // Initialize the parameters.
   initialPoint.randu(rank, numUsers + numItems);
 }
@@ -54,16 +62,16 @@ double RegularizedSVDFunction::Evaluate(const arma::mat& parameters) const
     double ratingError = rating - arma::dot(parameters.col(user),
                                             parameters.col(item));
     double ratingErrorSquared = ratingError * ratingError;
-  
+
     // Calculate the regularization penalty corresponding to the parameters.
     double userVecNorm = arma::norm(parameters.col(user), 2);
     double itemVecNorm = arma::norm(parameters.col(item), 2);
     double regularizationError = lambda * (userVecNorm * userVecNorm +
                                            itemVecNorm * itemVecNorm);
-                                           
+
     cost += (ratingErrorSquared + regularizationError);
   }
-  
+
   return cost;
 }
 
@@ -73,19 +81,19 @@ double RegularizedSVDFunction::Evaluate(const arma::mat& parameters,
   // Indices for accessing the the correct parameter columns.
   const size_t user = data(0, i);
   const size_t item = data(1, i) + numUsers;
-  
+
   // Calculate the squared error in the prediction.
   const double rating = data(2, i);
   double ratingError = rating - arma::dot(parameters.col(user),
                                           parameters.col(item));
   double ratingErrorSquared = ratingError * ratingError;
-  
+
   // Calculate the regularization penalty corresponding to the parameters.
   double userVecNorm = arma::norm(parameters.col(user), 2);
   double itemVecNorm = arma::norm(parameters.col(item), 2);
   double regularizationError = lambda * (userVecNorm * userVecNorm +
                                          itemVecNorm * itemVecNorm);
-                                         
+
   return (ratingErrorSquared + regularizationError);
 }
 
@@ -123,8 +131,8 @@ void RegularizedSVDFunction::Gradient(const arma::mat& parameters,
   }
 }
 
-}; // namespace svd
-}; // namespace mlpack
+} // namespace svd
+} // namespace mlpack
 
 // Template specialization for the SGD optimizer.
 namespace mlpack {
@@ -143,7 +151,7 @@ double SGD<mlpack::svd::RegularizedSVDFunction>::Optimize(arma::mat& parameters)
   // Calculate the first objective function.
   for(size_t i = 0; i < numFunctions; i++)
     overallObjective += function.Evaluate(parameters, i);
-    
+
   const arma::mat data = function.Dataset();
 
   // Now iterate!
@@ -167,7 +175,7 @@ double SGD<mlpack::svd::RegularizedSVDFunction>::Optimize(arma::mat& parameters)
     const double rating = data(2, currentFunction);
     double ratingError = rating - arma::dot(parameters.col(user),
                                             parameters.col(item));
-                                            
+
     double lambda = function.Lambda();
 
     // Gradient is non-zero only for the parameter columns corresponding to the
@@ -184,5 +192,5 @@ double SGD<mlpack::svd::RegularizedSVDFunction>::Optimize(arma::mat& parameters)
   return overallObjective;
 }
 
-}; // namespace optimization
-}; // namespace mlpack
+} // namespace optimization
+} // namespace mlpack

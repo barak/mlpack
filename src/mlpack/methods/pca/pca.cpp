@@ -5,12 +5,20 @@
  * Implementation of PCA class to perform Principal Components Analysis on the
  * specified data set.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "pca.hpp"
 #include <mlpack/core.hpp>
@@ -177,14 +185,4 @@ double PCA::Apply(arma::mat& data, const double varRetained) const
     data.shed_rows(newDimension, data.n_rows - 1);
 
   return varSum;
-}
-
-// return a string of this object.
-std::string PCA::ToString() const
-{
-  std::ostringstream convert;
-  convert << "Principal Component Analysis  [" << this << "]" << std::endl;
-  if (scaleData)  
-    convert << "  Scaling Data: TRUE" << std::endl;
-  return convert.str();
 }

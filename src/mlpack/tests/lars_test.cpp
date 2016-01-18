@@ -4,12 +4,20 @@
  *
  * Test for LARS.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 // Note: We don't use BOOST_REQUIRE_CLOSE in the code below because we need
@@ -31,11 +39,10 @@ void GenerateProblem(arma::mat& X, arma::vec& y, size_t nPoints, size_t nDims)
   y = trans(X) * beta;
 }
 
-
 void LARSVerifyCorrectness(arma::vec beta, arma::vec errCorr, double lambda)
 {
   size_t nDims = beta.n_elem;
-  const double tol = 1e-12;
+  const double tol = 1e-10;
   for(size_t j = 0; j < nDims; j++)
   {
     if (beta(j) == 0)
@@ -56,13 +63,12 @@ void LARSVerifyCorrectness(arma::vec beta, arma::vec errCorr, double lambda)
   }
 }
 
-
 void LassoTest(size_t nPoints, size_t nDims, bool elasticNet, bool useCholesky)
 {
   arma::mat X;
   arma::vec y;
 
-  for(size_t i = 0; i < 100; i++)
+  for (size_t i = 0; i < 100; i++)
   {
     GenerateProblem(X, y, nPoints, nDims);
 
@@ -78,7 +84,7 @@ void LassoTest(size_t nPoints, size_t nDims, bool elasticNet, bool useCholesky)
 
     LARS lars(useCholesky, lambda1, lambda2);
     arma::vec betaOpt;
-    lars.Regress(X, y, betaOpt);
+    lars.Train(X, y, betaOpt);
 
     arma::vec errCorr = (X * trans(X) + lambda2 *
         arma::eye(nDims, nDims)) * betaOpt - X * y;
@@ -86,7 +92,6 @@ void LassoTest(size_t nPoints, size_t nDims, bool elasticNet, bool useCholesky)
     LARSVerifyCorrectness(betaOpt, errCorr, lambda1);
   }
 }
-
 
 BOOST_AUTO_TEST_CASE(LARSTestLassoCholesky)
 {
@@ -99,12 +104,10 @@ BOOST_AUTO_TEST_CASE(LARSTestLassoGram)
   LassoTest(100, 10, false, false);
 }
 
-
 BOOST_AUTO_TEST_CASE(LARSTestElasticNetCholesky)
 {
   LassoTest(100, 10, true, true);
 }
-
 
 BOOST_AUTO_TEST_CASE(LARSTestElasticNetGram)
 {
@@ -129,7 +132,7 @@ BOOST_AUTO_TEST_CASE(CholeskySingularityTest)
   {
     LARS lars(true, lambda1, 0.0);
     arma::vec betaOpt;
-    lars.Regress(X, y, betaOpt);
+    lars.Train(X, y, betaOpt);
 
     arma::vec errCorr = (X * X.t()) * betaOpt - X * y;
 
@@ -153,13 +156,136 @@ BOOST_AUTO_TEST_CASE(NoCholeskySingularityTest)
   {
     LARS lars(false, lambda1, 0.0);
     arma::vec betaOpt;
-    lars.Regress(X, y, betaOpt);
+    lars.Train(X, y, betaOpt);
 
     arma::vec errCorr = (X * X.t()) * betaOpt - X * y;
 
     // #373: this test fails on i386 only sometimes.
 //    LARSVerifyCorrectness(betaOpt, errCorr, lambda1);
   }
+}
+
+// Make sure that Predict() provides reasonable enough solutions.
+BOOST_AUTO_TEST_CASE(PredictTest)
+{
+  for (size_t i = 0; i < 2; ++i)
+  {
+    // Run with both true and false.
+    bool useCholesky = bool(i);
+
+    arma::mat X;
+    arma::vec y;
+
+    GenerateProblem(X, y, 1000, 100);
+
+    for (double lambda1 = 0.0; lambda1 < 1.0; lambda1 += 0.2)
+    {
+      for (double lambda2 = 0.0; lambda2 < 1.0; lambda2 += 0.2)
+      {
+        LARS lars(useCholesky, lambda1, lambda2);
+        arma::vec betaOpt;
+        lars.Train(X, y, betaOpt);
+
+        // Calculate what the actual error should be with these regression
+        // parameters.
+        arma::vec betaOptPred = (X * X.t()) * betaOpt;
+        arma::vec predictions;
+        lars.Predict(X, predictions);
+        arma::vec adjPred = X * predictions;
+
+        BOOST_REQUIRE_EQUAL(predictions.n_elem, 1000);
+        for (size_t i = 0; i < betaOptPred.n_elem; ++i)
+        {
+          if (std::abs(betaOptPred[i]) < 1e-5)
+            BOOST_REQUIRE_SMALL(adjPred[i], 1e-5);
+          else
+            BOOST_REQUIRE_CLOSE(adjPred[i], betaOptPred[i], 1e-5);
+        }
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(PredictRowMajorTest)
+{
+  arma::mat X;
+  arma::vec y;
+  GenerateProblem(X, y, 1000, 100);
+
+  // Set lambdas to 0.
+
+  LARS lars(false, 0, 0);
+  arma::vec betaOpt;
+  lars.Train(X, y, betaOpt);
+
+  // Get both row-major and column-major predictions.  Make sure they are the
+  // same.
+  arma::vec rowMajorPred, colMajorPred;
+
+  lars.Predict(X, colMajorPred);
+  lars.Predict(X.t(), rowMajorPred, true);
+
+  BOOST_REQUIRE_EQUAL(colMajorPred.n_elem, rowMajorPred.n_elem);
+  for (size_t i = 0; i < colMajorPred.n_elem; ++i)
+  {
+    if (std::abs(colMajorPred[i]) < 1e-5)
+      BOOST_REQUIRE_SMALL(rowMajorPred[i], 1e-5);
+    else
+      BOOST_REQUIRE_CLOSE(colMajorPred[i], rowMajorPred[i], 1e-5);
+  }
+}
+
+/**
+ * Make sure that if we train twice, there is no issue.
+ */
+BOOST_AUTO_TEST_CASE(RetrainTest)
+{
+  arma::mat origX;
+  arma::vec origY;
+  GenerateProblem(origX, origY, 1000, 50);
+
+  arma::mat newX;
+  arma::vec newY;
+  GenerateProblem(newX, newY, 750, 75);
+
+  LARS lars(false, 0.1, 0.1);
+  arma::vec betaOpt;
+  lars.Train(origX, origY, betaOpt);
+
+  // Now train on new data.
+  lars.Train(newX, newY, betaOpt);
+
+  arma::vec errCorr = (newX * trans(newX) + 0.1 *
+        arma::eye(75, 75)) * betaOpt - newX * newY;
+
+  LARSVerifyCorrectness(betaOpt, errCorr, 0.1);
+}
+
+/**
+ * Make sure if we train twice using the Cholesky decomposition, there is no
+ * issue.
+ */
+BOOST_AUTO_TEST_CASE(RetrainCholeskyTest)
+{
+  arma::mat origX;
+  arma::vec origY;
+  GenerateProblem(origX, origY, 1000, 50);
+
+  arma::mat newX;
+  arma::vec newY;
+  GenerateProblem(newX, newY, 750, 75);
+
+  LARS lars(true, 0.1, 0.1);
+  arma::vec betaOpt;
+  lars.Train(origX, origY, betaOpt);
+
+  // Now train on new data.
+  lars.Train(newX, newY, betaOpt);
+
+  arma::vec errCorr = (newX * trans(newX) + 0.1 *
+        arma::eye(75, 75)) * betaOpt - newX * newY;
+
+  LARSVerifyCorrectness(betaOpt, errCorr, 0.1);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

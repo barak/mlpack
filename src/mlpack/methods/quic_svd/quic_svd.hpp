@@ -4,12 +4,20 @@
  *
  * An implementation of QUIC-SVD.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_QUIC_SVD_QUIC_SVD_HPP
 #define __MLPACK_METHODS_QUIC_SVD_QUIC_SVD_HPP
@@ -20,10 +28,41 @@
 namespace mlpack {
 namespace svd {
 
+/**
+ * QUIC-SVD is a matrix factorization technique, which operates in a subspace
+ * such that A's approximation in that subspace has minimum error(A being the
+ * data matrix). The subspace is constructed using a cosine tree, which ensures
+ * minimum representative rank(and thus a fast running time). It follows a
+ * splitting policy based on Length-squared(LS) sampling and constructs the
+ * child nodes based on the absolute cosines of the remaining points relative to
+ * the pivot. The centroids of the points in the child nodes are added to the
+ * subspace span in each step. Each node is then placed into a queue prioritized
+ * by its residual error. The subspace approximation error of A after each step
+ * is calculated using a Monte Carlo estimate. If the error is below a certain
+ * threshold, the method proceeds to calculate the Singular Value Decomposition
+ * in the obtained subspace. Otherwise, the same procedure is repeated until we
+ * obtain a subspace of sufficiently low error. Technical details can be found
+ * in the following paper:
+ *
+ * http://www.cc.gatech.edu/~isbell/papers/isbell-quicsvd-nips-2008.pdf
+ *
+ * An example of how to use the interface is shown below:
+ *
+ * @code
+ * arma::mat data; // Data matrix.
+ *
+ * const double epsilon = 0.01; // Relative error limit of data in subspace.
+ * const double delta = 0.1 // Lower error bound for Monte Carlo estimate.
+ *
+ * arma::mat u, v, sigma; // Matrices for the factors. data = u * sigma * v.t()
+ *
+ * // Get the factorization in the constructor.
+ * QUIC_SVD(data, u, v, sigma, epsilon, delta);
+ * @endcode
+ */
 class QUIC_SVD
 {
  public:
-
   /**
    * Constructor which implements the QUIC-SVD algorithm. The function calls the
    * CosineTree constructor to create a subspace basis, where the original
@@ -60,16 +99,12 @@ class QUIC_SVD
  private:
   //! Matrix for which cosine tree is constructed.
   const arma::mat& dataset;
-  //! Error tolerance fraction for calculated subspace.
-  double epsilon;
-  //! Cumulative probability for Monte Carlo error lower bound.
-  double delta;
   //! Subspace basis of the input dataset.
   arma::mat basis;
 };
 
-}; // namespace svd
-}; // namespace mlpack
+} // namespace svd
+} // namespace mlpack
 
 // Include implementation.
 #include "quic_svd_impl.hpp"

@@ -3,12 +3,20 @@
  *
  * Test file for EMST methods.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/methods/emst/dtb.hpp>
@@ -51,13 +59,13 @@ BOOST_AUTO_TEST_CASE(ExhaustiveSyntheticTest)
   arma::mat results;
 
   // Build the tree by hand to get a leaf size of 1.
-  typedef BinarySpaceTree<HRectBound<2>, DTBStat> TreeType;
+  typedef KDTree<EuclideanDistance, DTBStat, arma::mat> TreeType;
   std::vector<size_t> oldFromNew;
   std::vector<size_t> newFromOld;
   TreeType tree(data, oldFromNew, newFromOld, 1);
 
   // Create the DTB object and run the calculation.
-  DualTreeBoruvka<> dtb(&tree, data);
+  DualTreeBoruvka<> dtb(&tree);
   dtb.ComputeMST(results);
 
   // Now the exhaustive check for correctness.
@@ -233,8 +241,8 @@ BOOST_AUTO_TEST_CASE(CoverTreeTest)
     BOOST_FAIL("Cannot load test dataset test_data_3_1000.csv!");
 
   DualTreeBoruvka<> bst(inputData);
-  DualTreeBoruvka<EuclideanDistance, CoverTree<EuclideanDistance,
-      FirstPointIsRoot, DTBStat> > ct(inputData);
+  DualTreeBoruvka<EuclideanDistance, arma::mat, StandardCoverTree>
+      ct(inputData);
 
   arma::mat bstResults;
   arma::mat coverResults;
@@ -261,12 +269,10 @@ BOOST_AUTO_TEST_CASE(BallTreeTest)
   if (!data::Load("test_data_3_1000.csv", inputData))
     BOOST_FAIL("Cannot load test dataset test_data_3_1000.csv!");
 
-  typedef BinarySpaceTree<BallBound<>, DTBStat> TreeType;
-
   // naive mode.
   DualTreeBoruvka<> bst(inputData, true);
   // Ball tree.
-  DualTreeBoruvka<EuclideanDistance, TreeType> ballt(inputData);
+  DualTreeBoruvka<EuclideanDistance, arma::mat, BallTree> ballt(inputData);
 
   arma::mat bstResults;
   arma::mat ballResults;

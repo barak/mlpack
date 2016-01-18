@@ -5,12 +5,20 @@
  * Test the NystroemMethod class and ensure that the reconstructed kernel matrix
  * errors are comparable with those in the literature.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 
@@ -84,7 +92,8 @@ BOOST_AUTO_TEST_CASE(Rank10Test)
   arma::svd(U, s, V, data);
 
   // Don't set completely to 0; the hope is that K is still positive definite.
-  s.subvec(10, s.n_elem - 1).fill(1e-10);
+  s.subvec(0, 9) += 1.0; // Make sure the first 10 singular vectors are large.
+  s.subvec(10, s.n_elem - 1).fill(1e-6);
   arma::mat dataMod = U * arma::diagmat(s) * V.t();
 
   // Add some noise.
@@ -152,7 +161,7 @@ BOOST_AUTO_TEST_CASE(GermanTest)
 
   for (size_t trial = 0; trial < 5; ++trial)
   {
-    // We will repeat each trial 20 times. 
+    // We will repeat each trial 20 times.
     double avgError = 0.0;
     for (size_t z = 0; z < 20; ++z)
     {

@@ -16,12 +16,20 @@
  * Although this option currently is not implemented, it will be implemented
  * very soon.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_LARS_LARS_HPP
 #define __MLPACK_METHODS_LARS_LARS_HPP
@@ -125,7 +133,7 @@ class LARS
        const double tolerance = 1e-16);
 
   /**
-   * Run LARS.  The input matrix (like all MLPACK matrices) should be
+   * Run LARS.  The input matrix (like all mlpack matrices) should be
    * column-major -- each column is an observation and each row is a dimension.
    * However, because LARS is more efficient on a row-major matrix, this method
    * will (internally) transpose the matrix.  If this transposition is not
@@ -136,12 +144,25 @@ class LARS
    *     true).
    * @param responses A vector of targets.
    * @param beta Vector to store the solution (the coefficients) in.
-   * @param rowMajor Set to false if the data is row-major.
+   * @param transposeData Set to false if the data is row-major.
    */
-  void Regress(const arma::mat& data,
-               const arma::vec& responses,
-               arma::vec& beta,
-               const bool transposeData = true);
+  void Train(const arma::mat& data,
+             const arma::vec& responses,
+             arma::vec& beta,
+             const bool transposeData = true);
+
+  /**
+   * Predict y_i for each data point in the given data matrix, using the
+   * currently-trained LARS model (so make sure you run Regress() first).  If
+   * the data matrix is row-major (as opposed to the usual column-major format
+   * for mlpack matrices), set rowMajor = true to avoid an extra transpose.
+   *
+   * @param points The data points to regress on.
+   * @param predictions y, which will contained calculated values on completion.
+   */
+  void Predict(const arma::mat& points,
+               arma::vec& predictions,
+               const bool rowMajor = false) const;
 
   //! Access the set of active dimensions.
   const std::vector<size_t>& ActiveSet() const { return activeSet; }
@@ -154,18 +175,21 @@ class LARS
   //! the last element.
   const std::vector<double>& LambdaPath() const { return lambdaPath; }
 
-  //! Access the upper triangular cholesky factor
+  //! Access the upper triangular cholesky factor.
   const arma::mat& MatUtriCholFactor() const { return matUtriCholFactor; }
 
-  // Returns a string representation of this object.
-  std::string ToString() const;
+  /**
+   * Serialize the LARS model.
+   */
+  template<typename Archive>
+  void Serialize(Archive& ar, const unsigned int /* version */);
 
  private:
   //! Gram matrix.
   arma::mat matGramInternal;
 
-  //! Reference to the Gram matrix we will use.
-  const arma::mat& matGram;
+  //! Pointer to the Gram matrix we will use.
+  const arma::mat* matGram;
 
   //! Upper triangular cholesky factor; initially 0x0 matrix.
   arma::mat matUtriCholFactor;
@@ -246,7 +270,10 @@ class LARS
   void CholeskyDelete(const size_t colToKill);
 };
 
-}; // namespace regression
-}; // namespace mlpack
+} // namespace regression
+} // namespace mlpack
+
+// Include implementation of Serialize().
+#include "lars_impl.hpp"
 
 #endif

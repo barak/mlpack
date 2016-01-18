@@ -6,12 +6,20 @@
  * This can be used more or less regardless of context.  In the future,
  * it might be expanded to include file I/O.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_UTIL_CLI_HPP
 #define __MLPACK_CORE_UTIL_CLI_HPP
@@ -61,7 +69,7 @@
  * compilers have this support--most notably, gcc < 4.3. In that case, the
  * __LINE__ macro is used as an attempt to get a unique global identifier, but
  * collisions are still possible, and they produce bizarre error messages.  See
- * http://mlpack.org/trac/ticket/74 for more information.
+ * https://github.com/mlpack/mlpack/issues/100 for more information.
  */
 #define PARAM_FLAG(ID, DESC, ALIAS) \
     PARAM_FLAG_INTERNAL(ID, DESC, ALIAS);
@@ -85,7 +93,7 @@
  * compilers have this support--most notably, gcc < 4.3. In that case, the
  * __LINE__ macro is used as an attempt to get a unique global identifier, but
  * collisions are still possible, and they produce bizarre error messages.  See
- * http://mlpack.org/trac/ticket/74 for more information.
+ * https://github.com/mlpack/mlpack/issues/100 for more information.
  */
 #define PARAM_INT(ID, DESC, ALIAS, DEF) \
     PARAM(int, ID, DESC, ALIAS, DEF, false)
@@ -109,7 +117,7 @@
  * compilers have this support--most notably, gcc < 4.3. In that case, the
  * __LINE__ macro is used as an attempt to get a unique global identifier, but
  * collisions are still possible, and they produce bizarre error messages.  See
- * http://mlpack.org/trac/ticket/74 for more information.
+ * https://github.com/mlpack/mlpack/issues/100 for more information.
  */
 #define PARAM_FLOAT(ID, DESC, ALIAS, DEF) \
     PARAM(float, ID, DESC, ALIAS, DEF, false)
@@ -133,7 +141,7 @@
  * compilers have this support--most notably, gcc < 4.3. In that case, the
  * __LINE__ macro is used as an attempt to get a unique global identifier, but
  * collisions are still possible, and they produce bizarre error messages.  See
- * http://mlpack.org/trac/ticket/74 for more information.
+ * https://github.com/mlpack/mlpack/issues/100 for more information.
  */
 #define PARAM_DOUBLE(ID, DESC, ALIAS, DEF) \
     PARAM(double, ID, DESC, ALIAS, DEF, false)
@@ -158,7 +166,7 @@
  * compilers have this support--most notably, gcc < 4.3. In that case, the
  * __LINE__ macro is used as an attempt to get a unique global identifier, but
  * collisions are still possible, and they produce bizarre error messages.  See
- * http://mlpack.org/trac/ticket/74 for more information.
+ * https://github.com/mlpack/mlpack/issues/100 for more information.
  */
 #define PARAM_STRING(ID, DESC, ALIAS, DEF) \
     PARAM(std::string, ID, DESC, ALIAS, DEF, false)
@@ -182,7 +190,7 @@
  * compilers have this support--most notably, gcc < 4.3. In that case, the
  * __LINE__ macro is used as an attempt to get a unique global identifier, but
  * collisions are still possible, and they produce bizarre error messages.  See
- * http://mlpack.org/trac/ticket/74 for more information.
+ * https://github.com/mlpack/mlpack/issues/100 for more information.
  */
 #define PARAM_VECTOR(T, ID, DESC, ALIAS) \
     PARAM(std::vector<T>, ID, DESC, ALIAS, std::vector<T>(), false)
@@ -207,7 +215,7 @@
  * compilers have this support--most notably, gcc < 4.3. In that case, the
  * __LINE__ macro is used as an attempt to get a unique global identifier, but
  * collisions are still possible, and they produce bizarre error messages.  See
- * http://mlpack.org/trac/ticket/74 for more information.
+ * https://github.com/mlpack/mlpack/issues/100 for more information.
  */
 #define PARAM_INT_REQ(ID, DESC, ALIAS) PARAM(int, ID, DESC, ALIAS, 0, true)
 
@@ -231,7 +239,7 @@
  * compilers have this support--most notably, gcc < 4.3. In that case, the
  * __LINE__ macro is used as an attempt to get a unique global identifier, but
  * collisions are still possible, and they produce bizarre error messages.  See
- * http://mlpack.org/trac/ticket/74 for more information.
+ * https://github.com/mlpack/mlpack/issues/100 for more information.
  */
 #define PARAM_FLOAT_REQ(ID, DESC, ALIAS) PARAM(float, ID, DESC, ALIAS, 0.0f, \
     true)
@@ -254,7 +262,7 @@
  * compilers have this support--most notably, gcc < 4.3. In that case, the
  * __LINE__ macro is used as an attempt to get a unique global identifier, but
  * collisions are still possible, and they produce bizarre error messages.  See
- * http://mlpack.org/trac/ticket/74 for more information.
+ * https://github.com/mlpack/mlpack/issues/100 for more information.
  */
 #define PARAM_DOUBLE_REQ(ID, DESC, ALIAS) PARAM(double, ID, DESC, ALIAS, \
     0.0f, true)
@@ -277,7 +285,7 @@
  * compilers have this support--most notably, gcc < 4.3. In that case, the
  * __LINE__ macro is used as an attempt to get a unique global identifier, but
  * collisions are still possible, and they produce bizarre error messages.  See
- * http://mlpack.org/trac/ticket/74 for more information.
+ * https://github.com/mlpack/mlpack/issues/100 for more information.
  */
 #define PARAM_STRING_REQ(ID, DESC, ALIAS) PARAM(std::string, ID, DESC, \
     ALIAS, "", true);
@@ -300,7 +308,7 @@
  * compilers have this support--most notably, gcc < 4.3. In that case, the
  * __LINE__ macro is used as an attempt to get a unique global identifier, but
  * collisions are still possible, and they produce bizarre error messages.  See
- * http://mlpack.org/trac/ticket/74 for more information.
+ * https://github.com/mlpack/mlpack/issues/100 for more information.
  */
 #define PARAM_VECTOR_REQ(T, ID, DESC, ALIAS) PARAM(std::vector<T>, ID, DESC, \
     ALIAS, std::vector<T>(), true);
@@ -373,7 +381,7 @@ namespace util {
 // program being run.
 class ProgramDoc;
 
-}; // namespace util
+} // namespace util
 
 /**
  * Aids in the extensibility of CLI by focusing potential
@@ -402,7 +410,7 @@ struct ParamData
  * The CLI class is a subsystem by which parameters for machine learning methods
  * can be specified and accessed.  In conjunction with the macros PARAM_DOUBLE,
  * PARAM_INT, PARAM_STRING, PARAM_FLAG, and others, this class aims to make user
- * configurability of MLPACK methods very easy.  There are only three methods in
+ * configurability of mlpack methods very easy.  There are only three methods in
  * CLI that a user should need:  CLI::ParseCommandLine(), CLI::GetParam(), and
  * CLI::HasParam() (in addition to the PARAM_*() macros).
  *
@@ -518,7 +526,7 @@ struct ParamData
  * compilers have this support--most notably, gcc < 4.3.  In that case, the
  * __LINE__ macro is used as an attempt to get a unique global identifier, but
  * collisions are still possible, and they produce bizarre error messages. See
- * http://mlpack.org/trac/ticket/74 for more information.
+ * https://github.com/mlpack/mlpack/issues/100 for more information.
  */
 class CLI
 {
@@ -774,7 +782,7 @@ class CLI
   CLI(const CLI& other);
 };
 
-}; // namespace mlpack
+} // namespace mlpack
 
 // Include the actual definitions of templated methods
 #include "cli_impl.hpp"

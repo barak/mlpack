@@ -4,12 +4,20 @@
  *
  * Tests for DecisionStump class.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/methods/decision_stump/decision_stump.hpp>
@@ -48,7 +56,7 @@ BOOST_AUTO_TEST_CASE(OneClass)
 
   DecisionStump<> ds(trainingData, labelsIn.row(0), numClasses, inpBucketSize);
 
-  Row<size_t> predictedLabels(testingData.n_cols);
+  Row<size_t> predictedLabels;
   ds.Classify(testingData, predictedLabels);
 
   for (size_t i = 0; i < predictedLabels.size(); i++ )
@@ -59,16 +67,16 @@ BOOST_AUTO_TEST_CASE(OneClass)
 /**
  * This tests whether the entropy is being correctly calculated by checking the
  * correct value of the splitting column value.  This test is for an
- * inpBucketSize of 4 and the correct value of the splitting attribute is 0.
+ * inpBucketSize of 4 and the correct value of the splitting dimension is 0.
  */
-BOOST_AUTO_TEST_CASE(CorrectAttributeChosen)
+BOOST_AUTO_TEST_CASE(CorrectDimensionChosen)
 {
   const size_t numClasses = 2;
   const size_t inpBucketSize = 4;
 
   // This dataset comes from Chapter 6 of the book "Data Mining: Concepts,
   // Models, Methods, and Algorithms" (2nd Edition) by Mehmed Kantardzic.  It is
-  // found on page 176 (and a description of the correct splitting attribute is
+  // found on page 176 (and a description of the correct splitting dimension is
   // given below that).
   mat trainingData;
   trainingData << 0  << 0  << 0  << 0  << 0  << 1  << 1  << 1  << 1
@@ -85,8 +93,9 @@ BOOST_AUTO_TEST_CASE(CorrectAttributeChosen)
 
   DecisionStump<> ds(trainingData, labelsIn.row(0), numClasses, inpBucketSize);
 
-  // Only need to check the value of the splitting column, no need of classification.
-  BOOST_CHECK_EQUAL(ds.SplitAttribute(), 0);
+  // Only need to check the value of the splitting column, no need of
+  // classification.
+  BOOST_CHECK_EQUAL(ds.SplitDimension(), 0);
 }
 
 /**
@@ -112,7 +121,7 @@ BOOST_AUTO_TEST_CASE(PerfectSplitOnZero)
 
   DecisionStump<> ds(trainingData, labelsIn.row(0), numClasses, inpBucketSize);
 
-  Row<size_t> predictedLabels(testingData.n_cols);
+  Row<size_t> predictedLabels;
   ds.Classify(testingData, predictedLabels);
 
   BOOST_CHECK_EQUAL(predictedLabels(0, 0), 0);
@@ -143,7 +152,7 @@ BOOST_AUTO_TEST_CASE(BinningTesting)
 
   DecisionStump<> ds(trainingData, labelsIn.row(0), numClasses, inpBucketSize);
 
-  Row<size_t> predictedLabels(testingData.n_cols);
+  Row<size_t> predictedLabels;
   ds.Classify(testingData, predictedLabels);
 
   BOOST_CHECK_EQUAL(predictedLabels(0, 0), 0);
@@ -173,7 +182,7 @@ BOOST_AUTO_TEST_CASE(PerfectMultiClassSplit)
 
   DecisionStump<> ds(trainingData, labelsIn.row(0), numClasses, inpBucketSize);
 
-  Row<size_t> predictedLabels(testingData.n_cols);
+  Row<size_t> predictedLabels;
   ds.Classify(testingData, predictedLabels);
 
   BOOST_CHECK_EQUAL(predictedLabels(0, 0), 0);
@@ -208,7 +217,7 @@ BOOST_AUTO_TEST_CASE(MultiClassSplit)
 
   DecisionStump<> ds(trainingData, labelsIn.row(0), numClasses, inpBucketSize);
 
-  Row<size_t> predictedLabels(testingData.n_cols);
+  Row<size_t> predictedLabels;
   ds.Classify(testingData, predictedLabels);
 
   BOOST_CHECK_EQUAL(predictedLabels(0, 0), 0);
@@ -301,7 +310,7 @@ BOOST_AUTO_TEST_CASE(DimensionSelectionTest)
   DecisionStump<> ds(dataset, labels, numClasses, inpBucketSize);
 
   // Make sure it split on the dimension that is most separable.
-  BOOST_CHECK_EQUAL(ds.SplitAttribute(), 1);
+  BOOST_CHECK_EQUAL(ds.SplitDimension(), 1);
 
   // Make sure every bin below -1 classifies as label 0, and every bin above 1
   // classifies as label 1 (What happens in [-1, 1] isn't that big a deal.).
@@ -312,6 +321,51 @@ BOOST_AUTO_TEST_CASE(DimensionSelectionTest)
     else if (ds.Split()[i] >= 3.0)
       BOOST_CHECK_EQUAL(ds.BinLabels()[i], 1);
   }
+}
+
+/**
+ * Ensure that the default constructor works and that it classifies things as 0
+ * always.
+ */
+BOOST_AUTO_TEST_CASE(EmptyConstructorTest)
+{
+  DecisionStump<> d;
+
+  arma::mat data = arma::randu<arma::mat>(3, 10);
+  arma::Row<size_t> labels;
+
+  d.Classify(data, labels);
+
+  for (size_t i = 0; i < 10; ++i)
+    BOOST_REQUIRE_EQUAL(labels[i], 0);
+
+  // Now train on another dataset and make sure something kind of makes sense.
+  mat trainingData;
+  trainingData << -7 << -6 << -5 << -4 << -3 << -2 << -1 << 0 << 1
+               << 2  << 3  << 4  << 5  << 6  << 7  << 8  << 9 << 10;
+
+  // No need to normalize labels here.
+  Mat<size_t> labelsIn;
+  labelsIn << 0 << 0 << 0 << 0 << 1 << 1 << 0 << 0
+           << 1 << 1 << 1 << 2 << 1 << 2 << 2 << 2 << 2 << 2;
+
+
+  mat testingData;
+  testingData << -6.1 << -5.9 << -2.1 << -0.7 << 2.5 << 4.7 << 7.2 << 9.1;
+
+  DecisionStump<> ds(trainingData, labelsIn.row(0), 4, 3);
+
+  Row<size_t> predictedLabels(testingData.n_cols);
+  ds.Classify(testingData, predictedLabels);
+
+  BOOST_CHECK_EQUAL(predictedLabels(0, 0), 0);
+  BOOST_CHECK_EQUAL(predictedLabels(0, 1), 0);
+  BOOST_CHECK_EQUAL(predictedLabels(0, 2), 1);
+  BOOST_CHECK_EQUAL(predictedLabels(0, 3), 1);
+  BOOST_CHECK_EQUAL(predictedLabels(0, 4), 1);
+  BOOST_CHECK_EQUAL(predictedLabels(0, 5), 1);
+  BOOST_CHECK_EQUAL(predictedLabels(0, 6), 2);
+  BOOST_CHECK_EQUAL(predictedLabels(0, 7), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

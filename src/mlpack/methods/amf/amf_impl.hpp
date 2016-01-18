@@ -6,12 +6,20 @@
  *
  * Implementation of AMF class.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace mlpack {
 namespace amf {
@@ -54,9 +62,12 @@ Apply(const MatType& V,
 
   Log::Info << "Initialized W and H." << std::endl;
 
+  // initialize the update rule
   update.Initialize(V, r);
+  // initialize the termination policy
   terminationPolicy.Initialize(V);
 
+  // check if termination conditions are met
   while (!terminationPolicy.IsConverged(W, H))
   {
     // Update the values of W and H based on the update rules provided.
@@ -64,6 +75,7 @@ Apply(const MatType& V,
     update.HUpdate(V, W, H);
   }
 
+  // get final residue and iteration count from termination policy
   const double residue = terminationPolicy.Index();
   const size_t iteration = terminationPolicy.Iteration();
 
@@ -73,5 +85,5 @@ Apply(const MatType& V,
   return residue;
 }
 
-}; // namespace amf
-}; // namespace mlpack
+} // namespace amf
+} // namespace mlpack

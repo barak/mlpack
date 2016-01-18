@@ -6,12 +6,20 @@
  * optimized by a separate optimizer class that takes LogisticRegressionFunction
  * as its FunctionType class.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_LOGISTIC_REGRESSION_LOGISTIC_REGRESSION_FUNCTION_HPP
 #define __MLPACK_METHODS_LOGISTIC_REGRESSION_LOGISTIC_REGRESSION_FUNCTION_HPP
@@ -26,16 +34,17 @@ namespace regression {
  * This is used by various mlpack optimizers to train a logistic regression
  * model.
  */
+template<typename MatType = arma::mat>
 class LogisticRegressionFunction
 {
  public:
-  LogisticRegressionFunction(const arma::mat& predictors,
-                             const arma::vec& responses,
+  LogisticRegressionFunction(const MatType& predictors,
+                             const arma::Row<size_t>& responses,
                              const double lambda = 0);
 
-  LogisticRegressionFunction(const arma::mat& predictors,
-                             const arma::vec& responses,
-                             const arma::mat& initialPoint,
+  LogisticRegressionFunction(const MatType& predictors,
+                             const arma::Row<size_t>& responses,
+                             const arma::vec& initialPoint,
                              const double lambda = 0);
 
   //! Return the initial point for the optimization.
@@ -49,7 +58,7 @@ class LogisticRegressionFunction
   double& Lambda() { return lambda; }
 
   //! Return the matrix of predictors.
-  const arma::mat& Predictors() const { return predictors; }
+  const MatType& Predictors() const { return predictors; }
   //! Return the vector of responses.
   const arma::vec& Responses() const { return responses; }
 
@@ -115,14 +124,17 @@ class LogisticRegressionFunction
   //! The initial point, from which to start the optimization.
   arma::mat initialPoint;
   //! The matrix of data points (predictors).
-  const arma::mat& predictors;
+  const MatType& predictors;
   //! The vector of responses to the input data points.
-  const arma::vec& responses;
+  const arma::Row<size_t>& responses;
   //! The regularization parameter for L2-regularization.
   double lambda;
 };
 
-}; // namespace regression
-}; // namespace mlpack
+} // namespace regression
+} // namespace mlpack
+
+// Include implementation.
+#include "logistic_regression_function_impl.hpp"
 
 #endif // __MLPACK_METHODS_LOGISTIC_REGRESSION_LOGISTIC_REGRESSION_FUNCTION_HPP

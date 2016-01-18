@@ -5,12 +5,20 @@
  *
  * Implementation of class(MeanSplit) to split a binary space partition tree.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_TREE_BINARY_SPACE_TREE_MEAN_SPLIT_IMPL_HPP
 #define __MLPACK_CORE_TREE_BINARY_SPACE_TREE_MEAN_SPLIT_IMPL_HPP
@@ -25,29 +33,68 @@ bool MeanSplit<BoundType, MatType>::SplitNode(const BoundType& bound,
                                               MatType& data,
                                               const size_t begin,
                                               const size_t count,
-                                              size_t& splitDimension,
                                               size_t& splitCol)
 {
-  splitDimension = data.n_rows; // Indicate invalid.
+  size_t splitDimension = data.n_rows; // Indicate invalid.
   double maxWidth = -1;
 
-  // Find the split dimension.
-  for (size_t d = 0; d < data.n_rows; d++)
+  // Find the split dimension.  If the bound is tight, we only need to consult
+  // the bound's width.
+  if (bound::BoundTraits<BoundType>::HasTightBounds)
   {
-    double width = bound[d].Width();
-
-    if (width > maxWidth)
+    for (size_t d = 0; d < data.n_rows; d++)
     {
-      maxWidth = width;
-      splitDimension = d;
+      const double width = bound[d].Width();
+
+      if (width > maxWidth)
+      {
+        maxWidth = width;
+        splitDimension = d;
+      }
     }
+  }
+  else
+  {
+    // We must individually calculate bounding boxes.
+    math::Range* ranges = new math::Range[data.n_rows];
+    for (size_t i = begin; i < begin + count; ++i)
+    {
+      // Expand each dimension as necessary.
+      for (size_t d = 0; d < data.n_rows; ++d)
+      {
+        const double val = data(d, i);
+        if (val < ranges[d].Lo())
+          ranges[d].Lo() = val;
+        if (val > ranges[d].Hi())
+          ranges[d].Hi() = val;
+      }
+    }
+
+    // Now, which is the widest?
+    for (size_t d = 0; d < data.n_rows; d++)
+    {
+      const double width = ranges[d].Width();
+      if (width > maxWidth)
+      {
+        maxWidth = width;
+        splitDimension = d;
+      }
+    }
+
+    delete[] ranges;
   }
 
   if (maxWidth == 0) // All these points are the same.  We can't split.
     return false;
 
-  // Split in the middle of that dimension.
-  double splitVal = bound[splitDimension].Mid();
+  // Split in the mean of that dimension.
+  double splitVal = 0.0;
+  for (size_t i = begin; i < begin + count; ++i)
+    splitVal += data(splitDimension, i);
+  splitVal /= count;
+
+  Log::Assert(splitVal >= bound[splitDimension].Lo());
+  Log::Assert(splitVal <= bound[splitDimension].Hi());
 
   // Perform the actual splitting.  This will order the dataset such that points
   // with value in dimension splitDimension less than or equal to splitVal are
@@ -63,30 +110,70 @@ bool MeanSplit<BoundType, MatType>::SplitNode(const BoundType& bound,
                                               MatType& data,
                                               const size_t begin,
                                               const size_t count,
-                                              size_t& splitDimension,
                                               size_t& splitCol,
                                               std::vector<size_t>& oldFromNew)
 {
-  splitDimension = data.n_rows; // Indicate invalid.
+  size_t splitDimension = data.n_rows; // Indicate invalid.
   double maxWidth = -1;
 
-  // Find the split dimension.
-  for (size_t d = 0; d < data.n_rows; d++)
+  // Find the split dimension.  If the bound is tight, we only need to consult
+  // the bound's width.
+  if (bound::BoundTraits<BoundType>::HasTightBounds)
   {
-    double width = bound[d].Width();
-
-    if (width > maxWidth)
+    for (size_t d = 0; d < data.n_rows; d++)
     {
-      maxWidth = width;
-      splitDimension = d;
+      const double width = bound[d].Width();
+
+      if (width > maxWidth)
+      {
+        maxWidth = width;
+        splitDimension = d;
+      }
     }
+  }
+  else
+  {
+    // We must individually calculate bounding boxes.
+    math::Range* ranges = new math::Range[data.n_rows];
+    for (size_t i = begin; i < begin + count; ++i)
+    {
+      // Expand each dimension as necessary.
+      for (size_t d = 0; d < data.n_rows; ++d)
+      {
+        const double val = data(d, i);
+        if (val < ranges[d].Lo())
+          ranges[d].Lo() = val;
+        if (val > ranges[d].Hi())
+          ranges[d].Hi() = val;
+      }
+    }
+
+    // Now, which is the widest?
+    for (size_t d = 0; d < data.n_rows; d++)
+    {
+      const double width = ranges[d].Width();
+
+      if (width > maxWidth)
+      {
+        maxWidth = width;
+        splitDimension = d;
+      }
+    }
+
+    delete[] ranges;
   }
 
   if (maxWidth == 0) // All these points are the same.  We can't split.
     return false;
 
-  // Split in the middle of that dimension.
-  double splitVal = bound[splitDimension].Mid();
+  // Split in the mean of that dimension.
+  double splitVal = 0.0;
+  for (size_t i = begin; i < begin + count; ++i)
+    splitVal += data(splitDimension, i);
+  splitVal /= count;
+
+  Log::Assert(splitVal >= bound[splitDimension].Lo());
+  Log::Assert(splitVal <= bound[splitDimension].Hi());
 
   // Perform the actual splitting.  This will order the dataset such that points
   // with value in dimension splitDimension less than or equal to splitVal are
@@ -117,7 +204,7 @@ size_t MeanSplit<BoundType, MatType>::
   // condition is in the middle.
   while ((data(splitDimension, left) < splitVal) && (left <= right))
     left++;
-  while ((data(splitDimension, right) >= splitVal) && (left <= right))
+  while ((data(splitDimension, right) >= splitVal) && (left <= right) && (right > 0))
     right--;
 
   while (left <= right)
@@ -164,7 +251,7 @@ size_t MeanSplit<BoundType, MatType>::
   // condition is in the middle.
   while ((data(splitDimension, left) < splitVal) && (left <= right))
     left++;
-  while ((data(splitDimension, right) >= splitVal) && (left <= right))
+  while ((data(splitDimension, right) >= splitVal) && (left <= right) && (right > 0))
     right--;
 
   while (left <= right)
@@ -175,7 +262,7 @@ size_t MeanSplit<BoundType, MatType>::
     // Update the indices for what we changed.
     size_t t = oldFromNew[left];
     oldFromNew[left] = oldFromNew[right];
-    oldFromNew[right] = t;  
+    oldFromNew[right] = t;
 
     // See how many points on the left are correct.  When they are correct,
     // increase the left counter accordingly.  When we encounter one that isn't
@@ -196,7 +283,7 @@ size_t MeanSplit<BoundType, MatType>::
   return left;
 }
 
-}; // namespace tree
-}; // namespace mlpack
+} // namespace tree
+} // namespace mlpack
 
 #endif

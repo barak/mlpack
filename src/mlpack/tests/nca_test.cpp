@@ -5,12 +5,20 @@
  * Unit tests for Neighborhood Components Analysis and related code (including
  * the softmax error function).
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/core/metrics/lmetric.hpp>
@@ -40,7 +48,7 @@ BOOST_AUTO_TEST_CASE(SoftmaxInitialPoint)
   // Cheap fake dataset.
   arma::mat data;
   data.randu(5, 5);
-  arma::Col<size_t> labels;
+  arma::Row<size_t> labels;
   labels.zeros(5);
 
   SoftmaxErrorFunction<SquaredEuclideanDistance> sef(data, labels);
@@ -68,7 +76,7 @@ BOOST_AUTO_TEST_CASE(SoftmaxInitialEvaluation)
   // Useful but simple dataset with six points and two classes.
   arma::mat data           = "-0.1 -0.1 -0.1  0.1  0.1  0.1;"
                              " 1.0  0.0 -1.0  1.0  0.0 -1.0 ";
-  arma::Col<size_t> labels = " 0    0    0    1    1    1   ";
+  arma::Row<size_t> labels = " 0    0    0    1    1    1   ";
 
   SoftmaxErrorFunction<SquaredEuclideanDistance> sef(data, labels);
 
@@ -89,7 +97,7 @@ BOOST_AUTO_TEST_CASE(SoftmaxInitialGradient)
   // Useful but simple dataset with six points and two classes.
   arma::mat data           = "-0.1 -0.1 -0.1  0.1  0.1  0.1;"
                              " 1.0  0.0 -1.0  1.0  0.0 -1.0 ";
-  arma::Col<size_t> labels = " 0    0    0    1    1    1   ";
+  arma::Row<size_t> labels = " 0    0    0    1    1    1   ";
 
   SoftmaxErrorFunction<SquaredEuclideanDistance> sef(data, labels);
 
@@ -115,7 +123,7 @@ BOOST_AUTO_TEST_CASE(SoftmaxOptimalEvaluation)
   // Simple optimal dataset.
   arma::mat data           = " 500  500 -500 -500;"
                              "   1    0    1    0 ";
-  arma::Col<size_t> labels = "   0    0    1    1 ";
+  arma::Row<size_t> labels = "   0    0    1    1 ";
 
   SoftmaxErrorFunction<SquaredEuclideanDistance> sef(data, labels);
 
@@ -134,7 +142,7 @@ BOOST_AUTO_TEST_CASE(SoftmaxOptimalGradient)
   // Simple optimal dataset.
   arma::mat data           = " 500  500 -500 -500;"
                              "   1    0    1    0 ";
-  arma::Col<size_t> labels = "   0    0    1    1 ";
+  arma::Row<size_t> labels = "   0    0    1    1 ";
 
   SoftmaxErrorFunction<SquaredEuclideanDistance> sef(data, labels);
 
@@ -155,7 +163,7 @@ BOOST_AUTO_TEST_CASE(SoftmaxSeparableObjective)
   // Useful but simple dataset with six points and two classes.
   arma::mat data           = "-0.1 -0.1 -0.1  0.1  0.1  0.1;"
                              " 1.0  0.0 -1.0  1.0  0.0 -1.0 ";
-  arma::Col<size_t> labels = " 0    0    0    1    1    1   ";
+  arma::Row<size_t> labels = " 0    0    0    1    1    1   ";
 
   SoftmaxErrorFunction<SquaredEuclideanDistance> sef(data, labels);
 
@@ -179,7 +187,7 @@ BOOST_AUTO_TEST_CASE(OptimalSoftmaxSeparableObjective)
   // Simple optimal dataset.
   arma::mat data           = " 500  500 -500 -500;"
                              "   1    0    1    0 ";
-  arma::Col<size_t> labels = "   0    0    1    1 ";
+  arma::Row<size_t> labels = "   0    0    1    1 ";
 
   SoftmaxErrorFunction<SquaredEuclideanDistance> sef(data, labels);
 
@@ -201,7 +209,7 @@ BOOST_AUTO_TEST_CASE(SoftmaxSeparableGradient)
   // Useful but simple dataset with six points and two classes.
   arma::mat data           = "-0.1 -0.1 -0.1  0.1  0.1  0.1;"
                              " 1.0  0.0 -1.0  1.0  0.0 -1.0 ";
-  arma::Col<size_t> labels = " 0    0    0    1    1    1   ";
+  arma::Row<size_t> labels = " 0    0    0    1    1    1   ";
 
   SoftmaxErrorFunction<SquaredEuclideanDistance> sef(data, labels);
 
@@ -264,7 +272,7 @@ BOOST_AUTO_TEST_CASE(NCASGDSimpleDataset)
   // Useful but simple dataset with six points and two classes.
   arma::mat data           = "-0.1 -0.1 -0.1  0.1  0.1  0.1;"
                              " 1.0  0.0 -1.0  1.0  0.0 -1.0 ";
-  arma::Col<size_t> labels = " 0    0    0    1    1    1   ";
+  arma::Row<size_t> labels = " 0    0    0    1    1    1   ";
 
   // Huge learning rate because this is so simple.
   NCA<SquaredEuclideanDistance> nca(data, labels);
@@ -298,7 +306,7 @@ BOOST_AUTO_TEST_CASE(NCALBFGSSimpleDataset)
   // Useful but simple dataset with six points and two classes.
   arma::mat data           = "-0.1 -0.1 -0.1  0.1  0.1  0.1;"
                              " 1.0  0.0 -1.0  1.0  0.0 -1.0 ";
-  arma::Col<size_t> labels = " 0    0    0    1    1    1   ";
+  arma::Row<size_t> labels = " 0    0    0    1    1    1   ";
 
   // Huge learning rate because this is so simple.
   NCA<SquaredEuclideanDistance, L_BFGS> nca(data, labels);

@@ -1,43 +1,34 @@
 /**
  * @file random.cpp
  *
- * Declarations of global Boost random number generators.
+ * Declarations of global random number generators.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <boost/random.hpp>
-#include <boost/version.hpp>
+#include <random>
 
 namespace mlpack {
 namespace math {
 
-#if BOOST_VERSION >= 104700
-  // Global random object.
-  boost::random::mt19937 randGen;
-  // Global uniform distribution.
-  boost::random::uniform_01<> randUniformDist;
-  // Global normal distribution.
-  boost::random::normal_distribution<> randNormalDist;
-#else
-  // Global random object.
-  boost::mt19937 randGen;
+// Global random object.
+std::mt19937 randGen;
+// Global uniform distribution.
+std::uniform_real_distribution<> randUniformDist(0.0, 1.0);
+// Global normal distribution.
+std::normal_distribution<> randNormalDist(0.0, 1.0);
 
-  #if BOOST_VERSION >= 103900
-    // Global uniform distribution.
-    boost::uniform_01<> randUniformDist;
-  #else
-    // Pre-1.39 Boost.Random did not give default template parameter values.
-    boost::uniform_01<boost::mt19937, double> randUniformDist(randGen);
-  #endif
-
-  // Global normal distribution.
-  boost::normal_distribution<> randNormalDist;
-#endif
-
-}; // namespace math
-}; // namespace mlpack
+} // namespace math
+} // namespace mlpack

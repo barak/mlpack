@@ -5,12 +5,20 @@
  *
  * Implementation of simple linear regression.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "linear_regression.hpp"
 
@@ -21,11 +29,25 @@ LinearRegression::LinearRegression(const arma::mat& predictors,
                                    const arma::vec& responses,
                                    const double lambda,
                                    const bool intercept,
-                                   const arma::vec& weights
-                                   ) :
+                                   const arma::vec& weights) :
     lambda(lambda),
     intercept(intercept)
 {
+  Train(predictors, responses, intercept, weights);
+}
+
+LinearRegression::LinearRegression(const LinearRegression& linearRegression) :
+    parameters(linearRegression.parameters),
+    lambda(linearRegression.lambda)
+{ /* Nothing to do. */ }
+
+void LinearRegression::Train(const arma::mat& predictors,
+                             const arma::vec& responses,
+                             const bool intercept,
+                             const arma::vec& weights)
+{
+  this->intercept = intercept;
+
   /*
    * We want to calculate the a_i coefficients of:
    * \sum_{i=0}^n (a_i * x_i^i)
@@ -39,18 +61,19 @@ LinearRegression::LinearRegression(const arma::mat& predictors,
 
   arma::mat p = predictors;
   arma::vec r = responses;
+
   // Here we add the row of ones to the predictors.
   // The intercept is not penalized. Add an "all ones" row to design and set
-  // intercept = false to get a penalized intercept
-  if(intercept)
+  // intercept = false to get a penalized intercept.
+  if (intercept)
   {
     p.insert_rows(0, arma::ones<arma::mat>(1,nCols));
   }
 
-   if(weights.n_elem > 0)
+  if (weights.n_elem > 0)
   {
     p = p * diagmat(sqrt(weights));
-    r =  sqrt(weights) % responses;
+    r = sqrt(weights) % responses;
   }
 
   if (lambda != 0.0)
@@ -60,8 +83,8 @@ LinearRegression::LinearRegression(const arma::mat& predictors,
     // more information.
     p.insert_cols(nCols, predictors.n_rows);
     p.submat(p.n_rows - predictors.n_rows, nCols, p.n_rows - 1, nCols +
-    predictors.n_rows - 1) = sqrt(lambda) * arma::eye<arma::mat>(predictors.n_rows,
-        predictors.n_rows);
+    predictors.n_rows - 1) = sqrt(lambda) *
+        arma::eye<arma::mat>(predictors.n_rows, predictors.n_rows);
   }
 
   // We compute the QR decomposition of the predictors.
@@ -84,19 +107,6 @@ LinearRegression::LinearRegression(const arma::mat& predictors,
     arma::solve(parameters, R, arma::trans(Q) * r);
   }
 }
-
-LinearRegression::LinearRegression(const std::string& filename) :
-    lambda(0.0)
-{
-  arma::mat parameter;
-  data::Load(filename, parameter, true);
-  parameters = parameter.unsafe_col(0);
-}
-
-LinearRegression::LinearRegression(const LinearRegression& linearRegression) :
-    parameters(linearRegression.parameters),
-    lambda(linearRegression.lambda)
-{ /* Nothing to do. */ }
 
 void LinearRegression::Predict(const arma::mat& points, arma::vec& predictions)
     const
@@ -157,12 +167,4 @@ double LinearRegression::ComputeError(const arma::mat& predictors,
   const double cost = arma::dot(temp, temp) / nCols;
 
   return cost;
-}
-
-std::string LinearRegression::ToString() const
-{
-  std::ostringstream convert;
-  convert << "Linear Regression [" << this << "]" << std::endl;
-  convert << "  Lambda: " << lambda << std::endl;
-  return convert.str();
 }

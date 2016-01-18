@@ -30,8 +30,8 @@ target_link_libraries(mlpack
 )
 set_target_properties(mlpack
   PROPERTIES
-  VERSION 1.0
-  SOVERSION 1
+  VERSION 2.0
+  SOVERSION 2
 )
 
 # Make sure the linker can find the needed library.
@@ -39,6 +39,12 @@ set_target_properties(mlpack
 if(UNIX AND NOT APPLE)
     target_link_libraries(mlpack rt)
 endif(UNIX AND NOT APPLE)
+
+# Log::Assert may require linking against whatever provides backtrace
+# functionality.
+if(Backtrace_FOUND)
+  target_link_libraries(mlpack ${Backtrace_LIBRARIES})
+endif(Backtrace_FOUND)
 
 # Collect all header files in the library.
 file(GLOB_RECURSE INCLUDE_H_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
@@ -76,7 +82,7 @@ add_dependencies(mlpack mlpack_headers)
 
 # For 'make test'.
 add_custom_target(test
-  ${CMAKE_BINARY_DIR}/bin/mlpack_test
+  ${CMAKE_BINARY_DIR}/bin/mlpack_test "--log_level=test_suite" # Set UTF runtime param
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/ # This is where test files are put.
-  COMMENT "Running MLPACK test"
+  COMMENT "Running mlpack test"
   DEPENDS mlpack_test)

@@ -4,19 +4,27 @@
  * Bounds that are useful for binary space partitioning trees.
  * Interface to a ball bound that works in arbitrary metric spaces.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #ifndef __MLPACK_CORE_TREE_BALLBOUND_HPP
 #define __MLPACK_CORE_TREE_BALLBOUND_HPP
 
 #include <mlpack/core.hpp>
 #include <mlpack/core/metrics/lmetric.hpp>
+#include "bound_traits.hpp"
 
 namespace mlpack {
 namespace bound {
@@ -35,17 +43,14 @@ class BallBound
 {
  public:
   typedef VecType Vec;
-  //! Need this for Binary Space Partion Tree
+  //! Needed for BinarySpaceTree.
   typedef TMetricType MetricType;
 
  private:
-
   //! The radius of the ball bound.
   double radius;
-
   //! The center of the ball bound.
   VecType center;
-
   //! The metric used in this bound.
   TMetricType* metric;
 
@@ -80,8 +85,11 @@ class BallBound
   //! Copy constructor. To prevent memory leaks.
   BallBound(const BallBound& other);
 
-  //! For the same reason as the Copy Constructor. To prevent memory leaks.
+  //! For the same reason as the copy constructor: to prevent memory leaks.
   BallBound& operator=(const BallBound& other);
+
+  //! Move constructor: take possession of another bound.
+  BallBound(BallBound&& other);
 
   //! Destructor to release allocated memory.
   ~BallBound();
@@ -114,11 +122,11 @@ class BallBound
   bool Contains(const VecType& point) const;
 
   /**
-   * Place the centroid of BallBound into the given vector.
+   * Place the center of BallBound into the given vector.
    *
-   * @param centroid Vector which the centroid will be written to.
+   * @param center Vector which the centroid will be written to.
    */
-  void Centroid(VecType& centroid) const { centroid = center; }
+  void Center(VecType& center) const { center = this->center; }
 
   /**
    * Calculates minimum bound-to-point squared distance.
@@ -182,20 +190,26 @@ class BallBound
    */
   double Diameter() const { return 2 * radius; }
 
-  /**
-   * Returns the distance metric used in this bound.
-   */
-  TMetricType Metric() const { return *metric; }
+  //! Returns the distance metric used in this bound.
+  const TMetricType& Metric() const { return *metric; }
+  //! Modify the distance metric used in this bound.
+  TMetricType& Metric() { return *metric; }
 
-  /**
-   * Returns a string representation of this object.
-   */
-  std::string ToString() const;
-
+  //! Serialize the bound.
+  template<typename Archive>
+  void Serialize(Archive& ar, const unsigned int version);
 };
 
-}; // namespace bound
-}; // namespace mlpack
+//! A specialization of BoundTraits for this bound type.
+template<typename VecType, typename TMetricType>
+struct BoundTraits<BallBound<VecType, TMetricType>>
+{
+  //! These bounds are potentially loose in some dimensions.
+  const static bool HasTightBounds = false;
+};
+
+} // namespace bound
+} // namespace mlpack
 
 #include "ballbound_impl.hpp"
 

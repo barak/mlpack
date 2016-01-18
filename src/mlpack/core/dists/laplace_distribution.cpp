@@ -4,12 +4,20 @@
  *
  * Implementation of Laplace distribution.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 
@@ -19,12 +27,12 @@ using namespace mlpack;
 using namespace mlpack::distribution;
 
 /**
- * Return the probability of the given observation.
+ * Return the log probability of the given observation.
  */
-double LaplaceDistribution::Probability(const arma::vec& observation) const
+double LaplaceDistribution::LogProbability(const arma::vec& observation) const
 {
-  // Evaluate the PDF of the Laplace distribution to determine the probability.
-  return (0.5 / scale) * std::exp(arma::norm(observation - mean, 2) / scale);
+  // Evaluate the PDF of the Laplace distribution to determine the log probability.
+  return -log(2. * scale) - arma::norm(observation - mean, 2) / scale;
 }
 
 /**
@@ -81,18 +89,4 @@ void LaplaceDistribution::Estimate(const arma::mat& observations,
   for (size_t i = 0; i < observations.n_cols; ++i)
     scale += probabilities(i) * arma::norm(observations.col(i) - mean, 2);
   scale /= arma::accu(probabilities);
-}
-
-//! Returns a string representation of this object.
-std::string LaplaceDistribution::ToString() const
-{
-  std::ostringstream convert;
-  convert << "LaplaceDistribution [" << this << "]" << std::endl;
-
-  std::ostringstream data;
-  data << "Mean: " << std::endl << mean.t();
-  data << "Scale: " << scale << "." << std::endl;
-
-  convert << util::Indent(data.str());
-  return convert.str();
 }

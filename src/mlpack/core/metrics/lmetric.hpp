@@ -7,12 +7,20 @@
  *
  * This also gives several convenience typedefs for commonly used L-metrics.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_METRICS_LMETRIC_HPP
 #define __MLPACK_CORE_METRICS_LMETRIC_HPP
@@ -44,7 +52,7 @@ namespace metric {
  *
  * It is faster to compute that distance, so TakeRoot is by default off.
  * However, when TakeRoot is false, the distance given is not actually a true
- * metric -- it does not satisfy the triangle inequality.  Some MLPACK methods
+ * metric -- it does not satisfy the triangle inequality.  Some mlpack methods
  * do not require the triangle inequality to operate correctly (such as the
  * BinarySpaceTree), but setting TakeRoot = false in some cases will cause
  * incorrect results.
@@ -61,49 +69,65 @@ namespace metric {
  *    is returned.  Setting this to false causes the metric to not satisfy the
  *    Triangle Inequality (be careful!).
  */
-template<int Power, bool TakeRoot = true>
+template<int TPower, bool TTakeRoot = true>
 class LMetric
 {
  public:
   /***
-   * Default constructor does nothing, but is required to satisfy the Kernel
+   * Default constructor does nothing, but is required to satisfy the Metric
    * policy.
    */
   LMetric() { }
 
   /**
    * Computes the distance between two points.
+   *
+   * @tparam VecTypeA Type of first vector (generally arma::vec or
+   *      arma::sp_vec).
+   * @tparam VecTypeB Type of second vector.
+   * @param a First vector.
+   * @param b Second vector.
+   * @return Distance between vectors a and b.
    */
-  template<typename VecType1, typename VecType2>
-  static double Evaluate(const VecType1& a, const VecType2& b);
-  std::string ToString() const;
+  template<typename VecTypeA, typename VecTypeB>
+  static double Evaluate(const VecTypeA& a, const VecTypeB& b);
+
+  //! Serialize the metric (nothing to do).
+  template<typename Archive>
+  void Serialize(Archive& /* ar */, const unsigned int /* version */) { }
+
+  //! The power of the metric.
+  static const int Power = TPower;
+  //! Whether or not the root is taken.
+  static const bool TakeRoot = TTakeRoot;
 };
 
 // Convenience typedefs.
 
-/***
+/**
  * The Manhattan (L1) distance.
  */
 typedef LMetric<1, false> ManhattanDistance;
 
-/***
- * The squared Euclidean (L2) distance.
+/**
+ * The squared Euclidean (L2) distance.  Note that this is not technically a
+ * metric!  But it can sometimes be used when distances are required.
  */
 typedef LMetric<2, false> SquaredEuclideanDistance;
 
-/***
+/**
  * The Euclidean (L2) distance.
  */
 typedef LMetric<2, true> EuclideanDistance;
 
-/***
- * The L-infinity distance
+/**
+ * The L-infinity distance.
  */
 typedef LMetric<INT_MAX, false> ChebyshevDistance;
 
 
-}; // namespace metric
-}; // namespace mlpack
+} // namespace metric
+} // namespace mlpack
 
 // Include implementation.
 #include "lmetric_impl.hpp"

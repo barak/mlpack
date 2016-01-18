@@ -6,12 +6,20 @@
  * This file describes the interface for the HRectBound class, which implements
  * a hyperrectangle bound.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_TREE_HRECTBOUND_HPP
 #define __MLPACK_CORE_TREE_HRECTBOUND_HPP
@@ -19,9 +27,29 @@
 #include <mlpack/core.hpp>
 #include <mlpack/core/math/range.hpp>
 #include <mlpack/core/metrics/lmetric.hpp>
+#include "bound_traits.hpp"
 
 namespace mlpack {
 namespace bound {
+
+namespace meta /** Metaprogramming utilities. */ {
+
+//! Utility struct where Value is true if and only if the argument is of type
+//! LMetric.
+template<typename MetricType>
+struct IsLMetric
+{
+  static const bool Value = false;
+};
+
+//! Specialization for IsLMetric when the argument is of type LMetric.
+template<int Power, bool TakeRoot>
+struct IsLMetric<metric::LMetric<Power, TakeRoot>>
+{
+  static const bool Value = true;
+};
+
+} // namespace util
 
 /**
  * Hyper-rectangle bound for an L-metric.  This should be used in conjunction
@@ -32,13 +60,14 @@ namespace bound {
  * @tparam TakeRoot Whether or not the root should be taken (see LMetric
  *     documentation).
  */
-template<int Power = 2, bool TakeRoot = true>
+template<typename MetricType = metric::LMetric<2, true>>
 class HRectBound
 {
- public:
-  //! This is the metric type that this bound is using.
-  typedef metric::LMetric<Power, TakeRoot> MetricType;
+  // It is required that HRectBound have an LMetric as the given MetricType.
+  static_assert(meta::IsLMetric<MetricType>::Value == true,
+      "HRectBound can only be used with the LMetric<> metric type.");
 
+ public:
   /**
    * Empty constructor; creates a bound of dimensionality 0.
    */
@@ -54,6 +83,9 @@ class HRectBound
   HRectBound(const HRectBound& other);
   //! Same as copy constructor; necessary to prevent memory leaks.
   HRectBound& operator=(const HRectBound& other);
+
+  //! Move constructor: take possession of another bound's information.
+  HRectBound(HRectBound&& other);
 
   //! Destructor: clean up memory.
   ~HRectBound();
@@ -79,11 +111,18 @@ class HRectBound
   double& MinWidth() { return minWidth; }
 
   /**
-   * Calculates the centroid of the range, placing it into the given vector.
+   * Calculates the center of the range, placing it into the given vector.
    *
-   * @param centroid Vector which the centroid will be written to.
+   * @param center Vector which the center will be written to.
    */
-  void Centroid(arma::vec& centroid) const;
+  void Center(arma::vec& center) const;
+
+  /**
+   * Calculate the volume of the hyperrectangle.
+   *
+   * @return Volume of the hyperrectangle.
+   */
+  double Volume() const;
 
   /**
    * Calculates minimum bound-to-point distance.
@@ -163,16 +202,10 @@ class HRectBound
   double Diameter() const;
 
   /**
-   * Returns a string representation of this object.
+   * Serialize the bound object.
    */
-  std::string ToString() const;
-
-  /**
-   * Return the metric associated with this bound.  Because it is an LMetric, it
-   * cannot store state, so we can make it on the fly.  It is also static
-   * because the metric is only dependent on the template arguments.
-   */
-  static MetricType Metric() { return metric::LMetric<Power, TakeRoot>(); }
+  template<typename Archive>
+  void Serialize(Archive& ar, const unsigned int version);
 
  private:
   //! The dimensionality of the bound.
@@ -183,8 +216,16 @@ class HRectBound
   double minWidth;
 };
 
-}; // namespace bound
-}; // namespace mlpack
+// A specialization of BoundTraits for this class.
+template<typename MetricType>
+struct BoundTraits<HRectBound<MetricType>>
+{
+  //! These bounds are always tight for each dimension.
+  const static bool HasTightBounds = true;
+};
+
+} // namespace bound
+} // namespace mlpack
 
 #include "hrectbound_impl.hpp"
 

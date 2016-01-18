@@ -5,12 +5,20 @@
  *
  * You should define your own statistic that looks like EmptyStatistic.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef __MLPACK_CORE_TREE_STATISTIC_HPP
@@ -39,19 +47,15 @@ class EmptyStatistic
     template<typename TreeType>
     EmptyStatistic(TreeType& /* node */) { }
 
-  public:
     /**
-     * Returns a string representation of this object.
+     * Serialize the statistic (there's nothing to be saved).
      */
-    std::string ToString() const
-    {
-      std::stringstream convert;
-      convert << "EmptyStatistic [" << this << "]" << std::endl;
-      return convert.str();
-    }
+    template<typename Archive>
+    void Serialize(Archive& /* ar */, const unsigned int /* version */)
+    { }
 };
 
-}; // namespace tree
-}; // namespace mlpack
+} // namespace tree
+} // namespace mlpack
 
 #endif // __MLPACK_CORE_TREE_STATISTIC_HPP

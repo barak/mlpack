@@ -4,12 +4,20 @@
  *
  * Test file for NMF class.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/methods/amf/amf.hpp>
@@ -34,7 +42,6 @@ using namespace mlpack::amf;
  */
 BOOST_AUTO_TEST_CASE(NMFDefaultTest)
 {
-  mlpack::math::RandomSeed(std::time(NULL));
   mat w = randu<mat>(20, 12);
   mat h = randu<mat>(12, 20);
   mat v = w * h;
@@ -45,9 +52,9 @@ BOOST_AUTO_TEST_CASE(NMFDefaultTest)
 
   mat wh = w * h;
 
-  // Make sure reconstruction error is not too high.  1.5% tolerance.
+  // Make sure reconstruction error is not too high.  5.0% tolerance.
   BOOST_REQUIRE_SMALL(arma::norm(v - wh, "fro") / arma::norm(v, "fro"),
-      0.015);
+      0.05);
 }
 
 /**
@@ -56,7 +63,6 @@ BOOST_AUTO_TEST_CASE(NMFDefaultTest)
  */
 BOOST_AUTO_TEST_CASE(NMFAcolDistTest)
 {
-  mlpack::math::RandomSeed(std::time(NULL));
   mat w = randu<mat>(20, 12);
   mat h = randu<mat>(12, 20);
   mat v = w * h;
@@ -79,15 +85,16 @@ BOOST_AUTO_TEST_CASE(NMFAcolDistTest)
  */
 BOOST_AUTO_TEST_CASE(NMFRandomDivTest)
 {
-  mlpack::math::RandomSeed(std::time(NULL));
   mat w = randu<mat>(20, 12);
   mat h = randu<mat>(12, 20);
   mat v = w * h;
   size_t r = 12;
 
+  // Custom tighter tolerance.
+  SimpleResidueTermination srt(1e-8, 10000);
   AMF<SimpleResidueTermination,
       RandomInitialization,
-      NMFMultiplicativeDivergenceUpdate> nmf;
+      NMFMultiplicativeDivergenceUpdate> nmf(srt);
   nmf.Apply(v, r, w, h);
 
   mat wh = w * h;
@@ -104,7 +111,6 @@ BOOST_AUTO_TEST_CASE(NMFRandomDivTest)
  */
 BOOST_AUTO_TEST_CASE(NMFALSTest)
 {
-  mlpack::math::RandomSeed(std::time(NULL));
   mat w = randu<mat>(20, 12);
   mat h = randu<mat>(12, 20);
   mat v = w * h;

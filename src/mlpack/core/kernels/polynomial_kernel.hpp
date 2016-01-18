@@ -4,12 +4,20 @@
  *
  * Implementation of the polynomial kernel (just the standard dot product).
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_KERNELS_POLYNOMIAL_KERNEL_HPP
 #define __MLPACK_CORE_KERNELS_POLYNOMIAL_KERNEL_HPP
@@ -46,13 +54,15 @@ class PolynomialKernel
    * Simple evaluation of the dot product.  This evaluation uses Armadillo's
    * dot() function.
    *
-   * @tparam VecType Type of vector (should be arma::vec or arma::spvec).
+   * @tparam VecTypeA Type of first vector (should be arma::vec or
+   *      arma::sp_vec).
+   * @tparam VecTypeB Type of second vector (arma::vec / arma::sp_vec).
    * @param a First vector.
    * @param b Second vector.
    * @return K(a, b).
    */
-  template<typename VecType>
-  double Evaluate(const VecType& a, const VecType& b) const
+  template<typename VecTypeA, typename VecTypeB>
+  double Evaluate(const VecTypeA& a, const VecTypeB& b) const
   {
     return pow((arma::dot(a, b) + offset), degree);
   }
@@ -67,14 +77,12 @@ class PolynomialKernel
   //! Modify the offset of the dot product of the arguments.
   double& Offset() { return offset; }
 
-  //! Return a string representation of the kernel.
-  std::string ToString() const
+  //! Serialize the kernel.
+  template<typename Archive>
+  void Serialize(Archive& ar, const unsigned int /* version */)
   {
-    std::ostringstream convert;
-    convert << "PolynomialKernel [" << this << "]" << std::endl;
-    convert << "  Degree: " << degree << std::endl;
-    convert << "  Offset: " << offset << std::endl;
-    return convert.str();
+    ar & data::CreateNVP(degree, "degree");
+    ar & data::CreateNVP(offset, "offset");
   }
 
  private:
@@ -84,7 +92,7 @@ class PolynomialKernel
   double offset;
 };
 
-}; // namespace kernel
-}; // namespace mlpack
+} // namespace kernel
+} // namespace mlpack
 
 #endif

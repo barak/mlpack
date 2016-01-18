@@ -4,12 +4,20 @@
  *
  * Update rules for the Non-negative Matrix Factorization.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_LMF_UPDATE_RULES_NMF_MULT_DIST_UPDATE_RULES_HPP
 #define __MLPACK_METHODS_LMF_UPDATE_RULES_NMF_MULT_DIST_UPDATE_RULES_HPP
@@ -20,33 +28,49 @@ namespace mlpack {
 namespace amf {
 
 /**
- * The multiplicative distance update rules for matrices W and H. This follows 
- * a method described in the paper 'Algorithms for Non-negative Matrix Factorization'
- * by D. D. Lee and H. S. Seung. This is a multiplicative rule that ensures
- * that the Frobenius norm \f$ \sqrt{\sum_i \sum_j(V-WH)^2} \f$ is
- * non-increasing between subsequent iterations. Both of the update rules
- * for W and H are defined in this file.
+ * The multiplicative distance update rules for matrices W and H. This follows
+ * a method described in the following paper:
+ *
+ * @code
+ * @inproceedings{lee2001algorithms,
+ *   title={Algorithms for non-negative matrix factorization},
+ *   author={Lee, D.D. and Seung, H.S.},
+ *   booktitle={Advances in Neural Information Processing Systems 13
+ *       (NIPS 2000)},
+ *   pages={556--562},
+ *   year={2001}
+ * }
+ * @endcode
+ *
+ * This is a multiplicative rule that ensures that the Frobenius norm
+ * \f$ \sqrt{\sum_i \sum_j(V-WH)^2} \f$ is non-increasing between subsequent
+ * iterations. Both of the update rules for W and H are defined in this file.
  */
 class NMFMultiplicativeDistanceUpdate
 {
  public:
-  // Empty constructor required for the UpdateRule template. 
+  // Empty constructor required for the UpdateRule template.
   NMFMultiplicativeDistanceUpdate() { }
 
+  /**
+   * Initialize the factorization.  These update rules hold no information, so
+   * the input parameters are ignored.
+   */
   template<typename MatType>
-  void Initialize(const MatType& dataset, const size_t rank)
+  void Initialize(const MatType& /* dataset */, const size_t /* rank */)
   {
-        (void)dataset;
-        (void)rank;
+    // Nothing to do.
   }
 
   /**
-   * The update rule for the basis matrix W. The formula used is
+   * The update rule for the basis matrix W. The formula used isa
+   *
    * \f[
    * W_{ia} \leftarrow W_{ia} \frac{(VH^T)_{ia}}{(WHH^T)_{ia}}
    * \f]
-   * The function takes in all the matrices and only changes the
-   * value of the W matrix.
+   *
+   * The function takes in all the matrices and only changes the value of the W
+   * matrix.
    *
    * @param V Input matrix to be factorized.
    * @param W Basis matrix to be updated.
@@ -62,11 +86,13 @@ class NMFMultiplicativeDistanceUpdate
 
   /**
    * The update rule for the encoding matrix H. The formula used is
+   *
    * \f[
    * H_{a\mu} \leftarrow H_{a\mu} \frac{(W^T V)_{a\mu}}{(W^T WH)_{a\mu}}
    * \f]
-   * The function takes in all the matrices and only changes the
-   * value of the H matrix.
+   *
+   * The function takes in all the matrices and only changes the value of the H
+   * matrix.
    *
    * @param V Input matrix to be factorized.
    * @param W Basis matrix.
@@ -79,9 +105,13 @@ class NMFMultiplicativeDistanceUpdate
   {
     H = (H % (W.t() * V)) / (W.t() * W * H);
   }
+
+  //! Serialize the object (in this case, there is nothing to serialize).
+  template<typename Archive>
+  void Serialize(Archive& /* ar */, const unsigned int /* version */) { }
 };
 
-}; // namespace amf
-}; // namespace mlpack
+} // namespace amf
+} // namespace mlpack
 
 #endif

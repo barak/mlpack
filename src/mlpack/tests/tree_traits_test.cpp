@@ -8,17 +8,26 @@
  * change like that (because they have to change the test too).  That's the
  * hope, at least...
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/core/tree/tree_traits.hpp>
 #include <mlpack/core/tree/binary_space_tree.hpp>
 #include <mlpack/core/tree/cover_tree.hpp>
+#include <mlpack/core/tree/rectangle_tree.hpp>
 
 #include <boost/test/unit_test.hpp>
 #include "old_boost_test_definitions.hpp"
@@ -42,31 +51,60 @@ BOOST_AUTO_TEST_CASE(DefaultsTraitsTest)
   BOOST_REQUIRE_EQUAL(b, true);
   b = TreeTraits<int>::HasSelfChildren;
   BOOST_REQUIRE_EQUAL(b, false);
+  b = TreeTraits<int>::FirstPointIsCentroid;
+  BOOST_REQUIRE_EQUAL(b, false);
+  b = TreeTraits<int>::RearrangesDataset;
+  BOOST_REQUIRE_EQUAL(b, false);
+  b = TreeTraits<int>::BinaryTree;
+  BOOST_REQUIRE_EQUAL(b, false);
 }
 
 // Test the binary space tree traits.
 BOOST_AUTO_TEST_CASE(BinarySpaceTreeTraitsTest)
 {
+  typedef BinarySpaceTree<LMetric<2, false>> TreeType;
+
   // Children are non-overlapping.
-  bool b =
-      TreeTraits<BinarySpaceTree<LMetric<2, false> > >::HasOverlappingChildren;
+  bool b = TreeTraits<TreeType>::HasOverlappingChildren;
   BOOST_REQUIRE_EQUAL(b, false);
 
   // Points are not contained at multiple levels.
-  b = TreeTraits<BinarySpaceTree<LMetric<2, false> > >::HasSelfChildren;
+  b = TreeTraits<TreeType>::HasSelfChildren;
   BOOST_REQUIRE_EQUAL(b, false);
+
+  // The first point is not the centroid.
+  b = TreeTraits<TreeType>::FirstPointIsCentroid;
+  BOOST_REQUIRE_EQUAL(b, false);
+
+  // The dataset gets rearranged at build time.
+  b = TreeTraits<TreeType>::RearrangesDataset;
+  BOOST_REQUIRE_EQUAL(b, true);
+
+  // It is a binary tree.
+  b = TreeTraits<TreeType>::BinaryTree;
+  BOOST_REQUIRE_EQUAL(b, true);
 }
 
 // Test the cover tree traits.
 BOOST_AUTO_TEST_CASE(CoverTreeTraitsTest)
 {
   // Children may be overlapping.
-  bool b = TreeTraits<CoverTree<> >::HasOverlappingChildren;
+  bool b = TreeTraits<CoverTree<>>::HasOverlappingChildren;
   BOOST_REQUIRE_EQUAL(b, true);
 
   // The cover tree has self-children.
-  b = TreeTraits<CoverTree<> >::HasSelfChildren;
+  b = TreeTraits<CoverTree<>>::HasSelfChildren;
   BOOST_REQUIRE_EQUAL(b, true);
+
+  // The first point is the center of the node.
+  b = TreeTraits<CoverTree<>>::FirstPointIsCentroid;
+  BOOST_REQUIRE_EQUAL(b, true);
+
+  b = TreeTraits<CoverTree<>>::RearrangesDataset;
+  BOOST_REQUIRE_EQUAL(b, false);
+
+  b = TreeTraits<CoverTree<>>::BinaryTree;
+  BOOST_REQUIRE_EQUAL(b, false); // Not necessarily binary.
 }
 
 BOOST_AUTO_TEST_SUITE_END();

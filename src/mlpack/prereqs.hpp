@@ -3,12 +3,20 @@
  *
  * The core includes that mlpack expects; standard C++ includes and Armadillo.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_PREREQS_HPP
 #define __MLPACK_PREREQS_HPP
@@ -16,7 +24,7 @@
 // First, check if Armadillo was included before, warning if so.
 #ifdef ARMA_INCLUDES
 #pragma message "Armadillo was included before mlpack; this can sometimes cause\
-problems.  It should only be necessary to include <mlpack/core.hpp> and not\
+ problems.  It should only be necessary to include <mlpack/core.hpp> and not \
 <armadillo>."
 #endif
 
@@ -29,6 +37,7 @@ problems.  It should only be necessary to include <mlpack/core.hpp> and not\
 #include <float.h>
 #include <stdint.h>
 #include <iostream>
+#include <stdexcept>
 
 // Defining _USE_MATH_DEFINES should set M_PI.
 #define _USE_MATH_DEFINES
@@ -52,8 +61,31 @@ problems.  It should only be necessary to include <mlpack/core.hpp> and not\
   #define force_inline __forceinline
 #endif
 
+// We'll need the necessary boost::serialization features, as well as what we
+// use with mlpack.  In Boost 1.59 and newer, the BOOST_PFTO code is no longer
+// defined, but we still need to define it (as nothing) so that the mlpack
+// serialization shim compiles.
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
+#if BOOST_VERSION < 105500 // Old versions don't have unordered_map support.
+  #include "core/boost_backport/unordered_map.hpp"
+#else
+  #include <boost/serialization/unordered_map.hpp>
+#endif
+// Boost 1.59 and newer don't use BOOST_PFTO, but our shims do.  We can resolve
+// any issue by setting BOOST_PFTO to nothing.
+#ifndef BOOST_PFTO
+  #define BOOST_PFTO
+#endif
+#include <mlpack/core/data/serialization_shim.hpp>
+
 // Now include Armadillo through the special mlpack extensions.
 #include <mlpack/core/arma_extend/arma_extend.hpp>
+
+// Ensure that the user isn't doing something stupid with their Armadillo
+// defines.
+#include <mlpack/core/util/arma_config_check.hpp>
 
 // On Visual Studio, disable C4519 (default arguments for function templates)
 // since it's by default an error, which doesn't even make any sense because

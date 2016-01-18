@@ -5,12 +5,20 @@
  *
  * Implementation of templated PrefixedOutStream member functions.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_UTIL_PREFIXEDOUTSTREAM_IMPL_HPP
 #define __MLPACK_CORE_UTIL_PREFIXEDOUTSTREAM_IMPL_HPP
@@ -25,45 +33,8 @@ namespace util {
 template<typename T>
 PrefixedOutStream& PrefixedOutStream::operator<<(const T& s)
 {
-  CallBaseLogic<T>(s);
+  BaseLogic<T>(s);
   return *this;
-}
-
-//! This handles forwarding all primitive types transparently
-template<typename T>
-void PrefixedOutStream::CallBaseLogic(const T& s,
-    typename boost::disable_if<
-        boost::is_class<T>
-    >::type*)
-{
-  BaseLogic<T>(s);
-}
-
-// Forward all objects that do not implement a ToString() method transparently
-template<typename T>
-void PrefixedOutStream::CallBaseLogic(const T& s,
-    typename boost::enable_if<
-        boost::is_class<T>
-    >::type*,
-    typename boost::disable_if<
-        HasToString<T, std::string(T::*)() const>
-    >::type*)
-{
-  BaseLogic<T>(s);
-}
-
-// Call ToString() on all objects that implement ToString() before forwarding
-template<typename T>
-void PrefixedOutStream::CallBaseLogic(const T& s,
-    typename boost::enable_if<
-        boost::is_class<T>
-    >::type*,
-    typename boost::enable_if<
-        HasToString<T, std::string(T::*)() const>
-    >::type*)
-{
-  std::string result = s.ToString();
-  BaseLogic<std::string>(result);
 }
 
 template<typename T>
@@ -80,7 +51,7 @@ void PrefixedOutStream::BaseLogic(const T& val)
   std::ostringstream convert;
   convert << val;
 
-  if(convert.fail())
+  if (convert.fail())
   {
     PrefixIfNeeded();
     if (!ignoreInput)
@@ -135,9 +106,9 @@ void PrefixedOutStream::BaseLogic(const T& val)
     }
   }
 
-  // If we displayed a newline and we need to terminate afterwards, do that.
+  // If we displayed a newline and we need to throw afterwards, do that.
   if (fatal && newlined)
-    exit(1);
+    throw std::runtime_error("fatal error; see Log::Fatal output");
 }
 
 // This is an inline function (that is why it is here and not in .cc).
@@ -153,7 +124,7 @@ void PrefixedOutStream::PrefixIfNeeded()
   }
 }
 
-}; // namespace util
-}; // namespace mlpack
+} // namespace util
+} // namespace mlpack
 
 #endif // MLPACK_CLI_PREFIXEDOUTSTREAM_IMPL_H

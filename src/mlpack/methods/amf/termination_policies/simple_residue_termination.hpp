@@ -4,12 +4,20 @@
  *
  * Termination policy used in AMF (Alternating Matrix Factorization).
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef _MLPACK_METHODS_AMF_SIMPLERESIDUETERMINATION_HPP_INCLUDED
 #define _MLPACK_METHODS_AMF_SIMPLERESIDUETERMINATION_HPP_INCLUDED
@@ -41,7 +49,7 @@ class SimpleResidueTermination
    * @param minResidue Minimum residue for termination.
    * @param maxIterations Maximum number of iterations.
    */
-  SimpleResidueTermination(const double minResidue = 1e-10,
+  SimpleResidueTermination(const double minResidue = 1e-5,
                            const size_t maxIterations = 10000)
       : minResidue(minResidue), maxIterations(maxIterations) { }
 
@@ -69,8 +77,11 @@ class SimpleResidueTermination
    */
   bool IsConverged(arma::mat& W, arma::mat& H)
   {
-    // Calculate the norm and compute the residue
-    const double norm = arma::norm(W * H, "fro");
+    // Calculate the norm and compute the residue, but do it by hand, so as to
+    // avoid calculating (W*H), which may be very large.
+    double norm = 0.0;
+    for (size_t j = 0; j < H.n_cols; ++j)
+      norm += arma::norm(W * H.col(j), "fro");
     residue = fabs(normOld - norm) / normOld;
 
     // Store the norm.
@@ -78,6 +89,7 @@ class SimpleResidueTermination
 
     // Increment iteration count
     iteration++;
+    Log::Info << "Iteration " << iteration << "; residue " << residue << ".\n";
 
     // Check if termination criterion is met.
     return (residue < minResidue || iteration > maxIterations);
@@ -113,8 +125,8 @@ public:
   size_t nm;
 }; // class SimpleResidueTermination
 
-}; // namespace amf
-}; // namespace mlpack
+} // namespace amf
+} // namespace mlpack
 
 
 #endif // _MLPACK_METHODS_AMF_SIMPLERESIDUETERMINATION_HPP_INCLUDED

@@ -1,7 +1,7 @@
-# MLPACK test executable.
+# mlpack test executable.
 add_executable(mlpack_test
   mlpack_test.cpp
-#  adaboost_test.cpp
+  adaboost_test.cpp
   allkfn_test.cpp
   allknn_test.cpp
   allkrann_search_test.cpp
@@ -17,6 +17,7 @@ add_executable(mlpack_test
   fastmks_test.cpp
   gmm_test.cpp
   hmm_test.cpp
+  hoeffding_tree_test.cpp
   kernel_test.cpp
   kernel_pca_test.cpp
   kernel_traits_test.cpp
@@ -27,10 +28,14 @@ add_executable(mlpack_test
   linear_regression_test.cpp
   load_save_test.cpp
   local_coordinate_coding_test.cpp
+  log_test.cpp
   logistic_regression_test.cpp
   lrsdp_test.cpp
   lsh_test.cpp
   math_test.cpp
+  matrix_completion_test.cpp
+  maximal_inputs_test.cpp
+  mean_shift_test.cpp
   metric_test.cpp
   nbc_test.cpp
   nca_test.cpp
@@ -40,20 +45,26 @@ add_executable(mlpack_test
   quic_svd_test.cpp
   radical_test.cpp
   range_search_test.cpp
+  rectangle_tree_test.cpp
   regularized_svd_test.cpp
   sa_test.cpp
-  save_restore_utility_test.cpp
+  sdp_primal_dual_test.cpp
   sgd_test.cpp
+  serialization.hpp
+  serialization.cpp
+  serialization_test.cpp
+  softmax_regression_test.cpp
   sort_policy_test.cpp
   sparse_autoencoder_test.cpp
   sparse_coding_test.cpp
-  to_string_test.cpp
+  termination_policy_test.cpp
   tree_test.cpp
   tree_traits_test.cpp
   union_find_test.cpp
   svd_batch_test.cpp
   svd_incremental_test.cpp
   nystroem_method_test.cpp
+  armadillo_svd_test.cpp
 )
 # Link dependencies of test executable.
 target_link_libraries(mlpack_test

@@ -5,12 +5,20 @@
  * Implementation of label normalization functions; these are useful for mapping
  * labels to the range [0, n).
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_DATA_NORMALIZE_LABELS_IMPL_HPP
 #define __MLPACK_CORE_DATA_NORMALIZE_LABELS_IMPL_HPP
@@ -31,9 +39,9 @@ namespace data {
  * @param labels Vector that unsigned labels will be stored in.
  * @param mapping Reverse mapping to convert new labels back to old labels.
  */
-template<typename eT>
-void NormalizeLabels(const arma::Col<eT>& labelsIn,
-                     arma::Col<size_t>& labels,
+template<typename eT, typename RowType>
+void NormalizeLabels(const RowType& labelsIn,
+                     arma::Row<size_t>& labels,
                      arma::Col<eT>& mapping)
 {
   // Loop over the input labels, and develop the mapping.  We'll first naively
@@ -78,9 +86,9 @@ void NormalizeLabels(const arma::Col<eT>& labelsIn,
  * @param labelsOut Vector to store new labels in.
  */
 template<typename eT>
-void RevertLabels(const arma::Col<size_t>& labels,
+void RevertLabels(const arma::Row<size_t>& labels,
                   const arma::Col<eT>& mapping,
-                  arma::Col<eT>& labelsOut)
+                  arma::Row<eT>& labelsOut)
 {
   // We already have the mapping, so we just need to loop over each element.
   labelsOut.set_size(labels.n_elem);
@@ -89,7 +97,7 @@ void RevertLabels(const arma::Col<size_t>& labels,
     labelsOut[i] = mapping[labels[i]];
 }
 
-}; // namespace data
-}; // namespace mlpack
+} // namespace data
+} // namespace mlpack
 
 #endif

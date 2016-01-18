@@ -4,12 +4,20 @@
  *
  * Executable for Neighborhood Components Analysis.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/core/metrics/lmetric.hpp>
@@ -62,7 +70,7 @@ PROGRAM_INFO("Neighborhood Components Analysis (NCA)",
     "--wolfe, --tolerance (the optimization is terminated when the gradient "
     "norm is below this value), --max_line_search_trials, --min_step and "
     "--max_step (which both refer to the line search routine).  For more "
-    "details on the L-BFGS optimizer, consult either the MLPACK L-BFGS "
+    "details on the L-BFGS optimizer, consult either the mlpack L-BFGS "
     "documentation (in lbfgs.hpp) or the vast set of published literature on "
     "L-BFGS.\n"
     "\n"
@@ -182,15 +190,15 @@ int main(int argc, char* argv[])
   data::Load(inputFile, data, true);
 
   // Do we want to load labels separately?
-  arma::umat rawLabels(data.n_cols, 1);
+  arma::umat rawLabels(1, data.n_cols);
   if (labelsFile != "")
   {
     data::Load(labelsFile, rawLabels, true);
 
-    if (rawLabels.n_rows == 1)
+    if (rawLabels.n_cols == 1)
       rawLabels = trans(rawLabels);
 
-    if (rawLabels.n_cols > 1)
+    if (rawLabels.n_rows > 1)
       Log::Fatal << "Labels must have only one column or row!" << endl;
   }
   else
@@ -203,8 +211,8 @@ int main(int argc, char* argv[])
 
   // Now, normalize the labels.
   arma::uvec mappings;
-  arma::Col<size_t> labels;
-  data::NormalizeLabels(rawLabels.unsafe_col(0), labels, mappings);
+  arma::Row<size_t> labels;
+  data::NormalizeLabels(rawLabels.row(0), labels, mappings);
 
   arma::mat distance;
 

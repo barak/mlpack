@@ -4,12 +4,20 @@
  *
  * Implementation of AugLagrangianTestFunction class.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "aug_lagrangian_test_functions.hpp"
@@ -209,8 +217,6 @@ void LovaszThetaSDP::Gradient(const arma::mat& coordinates,
   // The gradient is equal to (2 S' R^T)^T, with R being coordinates.
   // S' = C - sum_{i = 1}^{m} [ y_i - sigma (Tr(A_i * (R^T R)) - b_i)] * A_i
   // We will calculate it in a not very smart way, but it should work.
- // Log::Warn << "Using stupid specialization for gradient calculation!"
- //    << std::endl;
 
   // Initialize S' piece by piece.  It is of size n x n.
   const size_t n = coordinates.n_cols;
@@ -226,7 +232,7 @@ void LovaszThetaSDP::Gradient(const arma::mat& coordinates,
     {
       // A_0 = I_n.  Hooray!  That's easy!  b_0 = 1.
       double inner = -1 * double(n) - 0.5 *
-          (trace(trans(coordinates) * coordinates) - 1);
+          (accu(trans(coordinates) % coordinates) - 1);
 
       arma::mat zz = (inner * arma::eye<arma::mat>(n, n));
 
@@ -248,7 +254,7 @@ void LovaszThetaSDP::Gradient(const arma::mat& coordinates,
       a(edge[1], edge[0]) = 1;
 
       double inner = (-1) - 0.5 *
-          (trace(a * (trans(coordinates) * coordinates)));
+          (accu(a % (trans(coordinates) * coordinates)));
 
       arma::mat zz = (inner * a);
 
@@ -259,14 +265,7 @@ void LovaszThetaSDP::Gradient(const arma::mat& coordinates,
     }
   }
 
-//  Log::Warn << "Calculated S is: " << std::endl << s << std::endl;
-
   gradient = trans(2 * s * trans(coordinates));
-
-//  Log::Warn << "Calculated gradient is: " << std::endl << gradient << std::endl;
-
-
-//  Log::Debug << "Evaluating gradient. " << std::endl;
 
   // The gradient of -Tr(ones * X) is equal to -2 * ones * R
 //  arma::mat ones;
@@ -365,9 +364,6 @@ const arma::mat& LovaszThetaSDP::GetInitialPoint()
   if (ceil(r) > vertices)
     r = vertices; // An upper bound on the dimension.
 
-  Log::Debug << "Dimension will be " << ceil(r) << " x " << vertices << "."
-      << std::endl;
-
   initialPoint.set_size(ceil(r), vertices);
 
   // Now we set the entries of the initial matrix according to the formula given
@@ -383,20 +379,5 @@ const arma::mat& LovaszThetaSDP::GetInitialPoint()
     }
   }
 
-  Log::Debug << "Initial matrix " << std::endl << initialPoint << std::endl;
-
-  Log::Warn << "X " << std::endl << trans(initialPoint) * initialPoint
-      << std::endl;
-
-  Log::Warn << "accu " << accu(trans(initialPoint) * initialPoint) << std::endl;
-
   return initialPoint;
-}
-
-std::string AugLagrangianTestFunction::ToString() const
-{
-  // The actual output is unimportant -- this object is only for testing anyway.
-  std::ostringstream convert;
-  convert << "AugLagrangianTestFunction [" << this << "]" << std::endl;
-  return convert.str();
 }

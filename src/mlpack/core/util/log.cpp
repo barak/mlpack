@@ -4,19 +4,31 @@
  *
  * Implementation of the Log class.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef _WIN32
+  #include <cstddef>
   #include <cxxabi.h>
-  #include <execinfo.h>
 #endif
 
 #include "log.hpp"
+
+#ifdef BACKTRACE_FOUND
+  #include BACKTRACE_HEADER
+#endif
 
 // Color code escape sequences -- but not on Windows.
 #ifndef _WIN32
@@ -59,17 +71,17 @@ void Log::Assert(bool condition, const std::string& message)
 {
   if (!condition)
   {
-#ifndef _WIN32
+#ifdef BACKTRACE_FOUND
     void* array[25];
-    size_t size = backtrace (array, sizeof(array)/sizeof(void*));
+    size_t size = backtrace(array, sizeof(array) / sizeof(void*));
     char** messages = backtrace_symbols(array, size);
 
-    // skip first stack frame (points here)
+    // Skip first stack frame (points here).
     for (size_t i = 1; i < size && messages != NULL; ++i)
     {
       char *mangledName = 0, *offsetBegin = 0, *offsetEnd = 0;
 
-      // find parantheses and +address offset surrounding mangled name
+      // Find parentheses and +address offset surrounding mangled name.
       for (char *p = messages[i]; *p; ++p)
       {
         if (*p == '(')
@@ -87,7 +99,7 @@ void Log::Assert(bool condition, const std::string& message)
         }
       }
 
-      // if the line could be processed, attempt to demangle the symbol
+      // If the line could be processed, attempt to demangle the symbol.
       if (mangledName && offsetBegin && offsetEnd &&
           mangledName < offsetBegin)
       {
@@ -98,7 +110,7 @@ void Log::Assert(bool condition, const std::string& message)
         int status;
         char* realName = abi::__cxa_demangle(mangledName, 0, 0, &status);
 
-        // if demangling is successful, output the demangled function name
+        // If demangling is successful, output the demangled function name.
         if (status == 0)
         {
           Log::Debug << "[bt]: (" << i << ") " << messages[i] << " : "
@@ -106,7 +118,7 @@ void Log::Assert(bool condition, const std::string& message)
                     << std::endl;
 
         }
-        // otherwise, output the mangled function name
+        // Otherwise, output the mangled function name.
         else
         {
           Log::Debug << "[bt]: (" << i << ") " << messages[i] << " : "
@@ -115,7 +127,7 @@ void Log::Assert(bool condition, const std::string& message)
         }
         free(realName);
       }
-      // otherwise, print the whole line
+      // Otherwise, print the whole line.
       else
       {
           Log::Debug << "[bt]: (" << i << ") " << messages[i] << std::endl;
@@ -124,12 +136,11 @@ void Log::Assert(bool condition, const std::string& message)
 #endif
     Log::Debug << message << std::endl;
 
-#ifndef _WIN32
+#ifdef BACKTRACE_FOUND
     free(messages);
 #endif
 
-    //backtrace_symbols_fd (array, size, 2);
-    exit(1);
+    throw std::runtime_error("Log::Assert() failed:" + message);
   }
 }
 #else

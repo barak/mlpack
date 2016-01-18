@@ -4,12 +4,20 @@
  *
  * Implementation of the Mahalanobis distance.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_METRICS_MAHALANOBIS_DISTANCE_IMPL_HPP
 #define __MLPACK_CORE_METRICS_MAHALANOBIS_DISTANCE_IMPL_HPP
@@ -23,9 +31,9 @@ namespace metric {
  * Specialization for non-rooted case.
  */
 template<>
-template<typename VecType1, typename VecType2>
-double MahalanobisDistance<false>::Evaluate(const VecType1& a,
-                                            const VecType2& b)
+template<typename VecTypeA, typename VecTypeB>
+double MahalanobisDistance<false>::Evaluate(const VecTypeA& a,
+                                            const VecTypeB& b)
 {
   arma::vec m = (a - b);
   arma::mat out = trans(m) * covariance * m; // 1x1
@@ -36,9 +44,9 @@ double MahalanobisDistance<false>::Evaluate(const VecType1& a,
  * sqrt().
  */
 template<>
-template<typename VecType1, typename VecType2>
-double MahalanobisDistance<true>::Evaluate(const VecType1& a,
-                                           const VecType2& b)
+template<typename VecTypeA, typename VecTypeB>
+double MahalanobisDistance<true>::Evaluate(const VecTypeA& a,
+                                           const VecTypeB& b)
 {
   // Check if covariance matrix has been initialized.
   if (covariance.n_rows == 0)
@@ -49,31 +57,16 @@ double MahalanobisDistance<true>::Evaluate(const VecType1& a,
   return sqrt(out[0]);
 }
 
-// Convert object into string.
+// Serialize the Mahalanobis distance.
 template<bool TakeRoot>
-std::string MahalanobisDistance<TakeRoot>::ToString() const
+template<typename Archive>
+void MahalanobisDistance<TakeRoot>::Serialize(Archive& ar,
+                                              const unsigned int /* version */)
 {
-  std::ostringstream convert;
-  std::ostringstream convertb;
-  convert << "MahalanobisDistance [" << this << "]" << std::endl;
-  if (TakeRoot)
-    convert << "  TakeRoot: TRUE" << std::endl;
-  if (covariance.size() < 65)
-  {
-    convert << "  Covariance: " << std::endl;
-    convertb << covariance << std::endl;
-    convert << mlpack::util::Indent(convertb.str(),2);
-  }
-  else 
-  {
-    convert << "  Covariance matrix: " << covariance.n_rows << "x" ; 
-    convert << covariance.n_cols << std::endl << " Range: [" ;
-    convert << covariance.min() << "," << covariance.max() << "]" << std::endl;
-  }
-  return convert.str();
+  ar & data::CreateNVP(covariance, "covariance");
 }
 
-}; // namespace metric
-}; // namespace mlpack
+} // namespace metric
+} // namespace mlpack
 
 #endif

@@ -5,12 +5,20 @@
  * Implementation of AugLagrangian class (Augmented Lagrangian optimization
  * method).
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef __MLPACK_CORE_OPTIMIZERS_AUG_LAGRANGIAN_AUG_LAGRANGIAN_IMPL_HPP
@@ -56,19 +64,6 @@ bool AugLagrangian<LagrangianFunction>::Optimize(arma::mat& coordinates,
   return Optimize(coordinates, maxIterations);
 }
 
-// Convert the object to a string.
-template<typename LagrangianFunction>
-std::string AugLagrangian<LagrangianFunction>::ToString() const
-{
-  std::ostringstream convert;
-  convert << "AugLagrangian [" << this << "]" << std::endl;
-  convert << "  Function:" << std::endl;
-  convert << mlpack::util::Indent(function.ToString(), 2);
-  convert << "  L-BFGS optimizer:" << std::endl;
-  convert << mlpack::util::Indent(lbfgs.ToString(), 2);
-  return convert.str();
-}
-
 template<typename LagrangianFunction>
 bool AugLagrangian<LagrangianFunction>::Optimize(arma::mat& coordinates,
                                                  const size_t maxIterations)
@@ -92,15 +87,11 @@ bool AugLagrangian<LagrangianFunction>::Optimize(arma::mat& coordinates,
   size_t it;
   for (it = 0; it != (maxIterations - 1); it++)
   {
-    Log::Warn << "AugLagrangian on iteration " << it
+    Log::Info << "AugLagrangian on iteration " << it
         << ", starting with objective "  << lastObjective << "." << std::endl;
 
- //   Log::Warn << coordinates << std::endl;
-
-//    Log::Warn << trans(coordinates) * coordinates << std::endl;
-
     if (!lbfgs.Optimize(coordinates))
-      Log::Warn << "L-BFGS reported an error during optimization."
+      Log::Info << "L-BFGS reported an error during optimization."
           << std::endl;
 
     // Check if we are done with the entire optimization (the threshold we are
@@ -124,7 +115,7 @@ bool AugLagrangian<LagrangianFunction>::Optimize(arma::mat& coordinates,
 //          function.EvaluateConstraint(i, coordinates) << std::endl;
     }
 
-    Log::Warn << "Penalty is " << penalty << " (threshold "
+    Log::Info << "Penalty is " << penalty << " (threshold "
         << penaltyThreshold << ")." << std::endl;
 
     for (size_t i = 0; i < function.NumConstraints(); ++i)
@@ -147,7 +138,7 @@ bool AugLagrangian<LagrangianFunction>::Optimize(arma::mat& coordinates,
       // penalty.  TODO: this factor should be a parameter (from CLI).  The
       // value of 0.25 is taken from Burer and Monteiro (2002).
       penaltyThreshold = 0.25 * penalty;
-      Log::Warn << "Lagrange multiplier estimates updated." << std::endl;
+      Log::Info << "Lagrange multiplier estimates updated." << std::endl;
     }
     else
     {
@@ -155,15 +146,15 @@ bool AugLagrangian<LagrangianFunction>::Optimize(arma::mat& coordinates,
       // parameter (from CLI).  The value of 10 is taken from Burer and Monteiro
       // (2002).
       augfunc.Sigma() *= 10;
-      Log::Warn << "Updated sigma to " << augfunc.Sigma() << "." << std::endl;
+      Log::Info << "Updated sigma to " << augfunc.Sigma() << "." << std::endl;
     }
   }
 
   return false;
 }
 
-}; // namespace optimization
-}; // namespace mlpack
+} // namespace optimization
+} // namespace mlpack
 
 #endif // __MLPACK_CORE_OPTIMIZERS_AUG_LAGRANGIAN_AUG_LAGRANGIAN_IMPL_HPP
 

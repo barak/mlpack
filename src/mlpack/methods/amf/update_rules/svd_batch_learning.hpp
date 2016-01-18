@@ -1,16 +1,26 @@
 /**
- * @file simple_residue_termination.hpp
+ * @file svd_batch_learning.hpp
  * @author Sumedh Ghaisas
  *
- * This file is part of mlpack 1.0.12.
+ * SVD factorizer used in AMF (Alternating Matrix Factorization).
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * This file is part of mlpack 2.0.0.
+ *
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __MLPACK_METHODS_AMF_UPDATE_RULES_SVD_BATCHLEARNING_HPP
-#define __MLPACK_METHODS_AMF_UPDATE_RULES_SVD_BATCHLEARNING_HPP
+#ifndef __MLPACK_METHODS_AMF_UPDATE_RULES_SVD_BATCH_LEARNING_HPP
+#define __MLPACK_METHODS_AMF_UPDATE_RULES_SVD_BATCH_LEARNING_HPP
 
 #include <mlpack/core.hpp>
 
@@ -19,12 +29,24 @@ namespace amf {
 
 /**
  * This class implements SVD batch learning with momentum. This procedure is
- * described in the paper 'A Guide to singular Value Decomposition'
- * by Chih-Chao Ma. Class implements 'Algorithm 4' given in the paper.
- * This factorizer decomposes the matrix V into two matrices W and H such that
- * sum of sum of squared error between V and W*H is minimum. This optimization is
- * performed with gradient descent. To make gradient descent faster momentum is
- * added.
+ * described in the following paper:
+ *
+ * @code
+ * @techreport{ma2008guide,
+ *   title={A Guide to Singular Value Decomposition for Collaborative
+ *       Filtering},
+ *   author={Ma, Chih-Chao},
+ *   year={2008},
+ *   institution={Department of Computer Science, National Taiwan University}
+ * }
+ * @endcode
+ *
+ * This class implements 'Algorithm 4' as given in the paper.
+ *
+ * The factorizer decomposes the matrix V into two matrices W and H such that
+ * sum of sum of squared error between V and W * H is minimum. This optimization
+ * is performed with gradient descent. To make gradient descent faster, momentum
+ * is added.
  */
 class SVDBatchLearning
 {
@@ -40,12 +62,19 @@ class SVDBatchLearning
   SVDBatchLearning(double u = 0.0002,
                    double kw = 0,
                    double kh = 0,
-                   double momentum = 0.9,
-                   double min = -DBL_MIN,
-                   double max = DBL_MAX)
-        : u(u), kw(kw), kh(kh), min(min), max(max), momentum(momentum)
-    {}
+                   double momentum = 0.9)
+        : u(u), kw(kw), kh(kh), momentum(momentum)
+  {
+    // empty constructor
+  }
 
+  /**
+   * Initialize parameters before factorization.  This function must be called
+   * before a new factorization.  This resets the internally-held momentum.
+   *
+   * @param dataset Input matrix to be factorized.
+   * @param rank rank of factorization
+   */
   template<typename MatType>
   void Initialize(const MatType& dataset, const size_t rank)
   {
@@ -75,24 +104,29 @@ class SVDBatchLearning
 
     size_t r = W.n_cols;
 
+    // initialize the momentum of this iteration.
     mW = momentum * mW;
 
-    arma::mat deltaW(n, r);
-    deltaW.zeros();
-
-    for(size_t i = 0;i < n;i++)
+    // Compute the step.
+    arma::mat deltaW;
+    deltaW.zeros(n, r);
+    for (size_t i = 0; i < n; i++)
     {
-      for(size_t j = 0;j < m;j++)
+      for (size_t j = 0; j < m; j++)
       {
-        double val;
-        if((val = V(i, j)) != 0)
+        const double val = V(i, j);
+        if (val != 0)
           deltaW.row(i) += (val - arma::dot(W.row(i), H.col(j))) *
-                                                  arma::trans(H.col(j));
+                                            arma::trans(H.col(j));
       }
-      if(kw != 0) deltaW.row(i) -= kw * W.row(i);
+      // Add regularization.
+      if (kw != 0)
+        deltaW.row(i) -= kw * W.row(i);
     }
 
+    // Add the step to the momentum.
     mW += u * deltaW;
+    // Add the momentum to the W matrix.
     W += mW;
   }
 
@@ -115,38 +149,59 @@ class SVDBatchLearning
 
     size_t r = W.n_cols;
 
+    // Initialize the momentum of this iteration.
     mH = momentum * mH;
 
-    arma::mat deltaH(r, m);
-    deltaH.zeros();
-
-    for(size_t j = 0;j < m;j++)
+    // Compute the step.
+    arma::mat deltaH;
+    deltaH.zeros(r, m);
+    for (size_t j = 0; j < m; j++)
     {
-      for(size_t i = 0;i < n;i++)
+      for (size_t i = 0; i < n; i++)
       {
-        double val;
-        if((val = V(i, j)) != 0)
-          deltaH.col(j) += (val - arma::dot(W.row(i), H.col(j))) *
-                                                    arma::trans(W.row(i));
+        const double val = V(i, j);
+        if (val != 0)
+          deltaH.col(j) += (val - arma::dot(W.row(i), H.col(j))) * W.row(i).t();
       }
-      if(kh != 0) deltaH.col(j) -= kh * H.col(j);
+      // Add regularization.
+      if (kh != 0)
+        deltaH.col(j) -= kh * H.col(j);
     }
 
-    mH += u*deltaH;
+    // Add this step to the momentum.
+    mH += u * deltaH;
+    // Add the momentum to H.
     H += mH;
   }
 
+  //! Serialize the SVDBatch object.
+  template<typename Archive>
+  void Serialize(Archive& ar, const unsigned int /* version */)
+  {
+    using data::CreateNVP;
+    ar & CreateNVP(u, "u");
+    ar & CreateNVP(kw, "kw");
+    ar & CreateNVP(kh, "kh");
+    ar & CreateNVP(momentum, "momentum");
+    ar & CreateNVP(mW, "mW");
+    ar & CreateNVP(mH, "mH");
+  }
+
  private:
+  //! Step size of the algorithm.
   double u;
+  //! Regularization parameter for matrix W.
   double kw;
+  //! Regularization parameter for matrix H.
   double kh;
-  double min;
-  double max;
+  //! Momentum value (between 0 and 1).
   double momentum;
 
+  //! Momentum matrix for matrix W
   arma::mat mW;
+  //! Momentum matrix for matrix H
   arma::mat mH;
-};
+}; // class SVDBatchLearning
 
 //! TODO : Merge this template specialized function for sparse matrix using
 //!        common row_col_iterator
@@ -159,27 +214,24 @@ inline void SVDBatchLearning::WUpdate<arma::sp_mat>(const arma::sp_mat& V,
                                                     arma::mat& W,
                                                     const arma::mat& H)
 {
-  size_t n = V.n_rows;
-
-  size_t r = W.n_cols;
+  const size_t n = V.n_rows;
+  const size_t r = W.n_cols;
 
   mW = momentum * mW;
 
-  arma::mat deltaW(n, r);
-  deltaW.zeros();
+  arma::mat deltaW;
+  deltaW.zeros(n, r);
 
-  for(arma::sp_mat::const_iterator it = V.begin();it != V.end();it++)
+  for (arma::sp_mat::const_iterator it = V.begin(); it != V.end(); ++it)
   {
-    size_t row = it.row();
-    size_t col = it.col();
+    const size_t row = it.row();
+    const size_t col = it.col();
     deltaW.row(it.row()) += (*it - arma::dot(W.row(row), H.col(col))) *
-                                                  arma::trans(H.col(col));
+                                             arma::trans(H.col(col));
   }
 
-  if(kw != 0) for(size_t i = 0; i < n; i++)
-  {
-    deltaW.row(i) -= kw * W.row(i);
-  }
+  if (kw != 0)
+    deltaW -= kw * W;
 
   mW += u * deltaW;
   W += mW;
@@ -190,35 +242,30 @@ inline void SVDBatchLearning::HUpdate<arma::sp_mat>(const arma::sp_mat& V,
                                                     const arma::mat& W,
                                                     arma::mat& H)
 {
-  size_t m = V.n_cols;
-
-  size_t r = W.n_cols;
+  const size_t m = V.n_cols;
+  const size_t r = W.n_cols;
 
   mH = momentum * mH;
 
-  arma::mat deltaH(r, m);
-  deltaH.zeros();
+  arma::mat deltaH;
+  deltaH.zeros(r, m);
 
-  for(arma::sp_mat::const_iterator it = V.begin();it != V.end();it++)
+  for (arma::sp_mat::const_iterator it = V.begin(); it != V.end(); ++it)
   {
-    size_t row = it.row();
-    size_t col = it.col();
+    const size_t row = it.row();
+    const size_t col = it.col();
     deltaH.col(col) += (*it - arma::dot(W.row(row), H.col(col))) *
-                                                arma::trans(W.row(row));
+        W.row(row).t();
   }
 
-  if(kh != 0) for(size_t j = 0; j < m; j++)
-  {
-    deltaH.col(j) -= kh * H.col(j);
-  }
+  if (kh != 0)
+    deltaH -= kh * H;
 
-  mH += u*deltaH;
+  mH += u * deltaH;
   H += mH;
 }
 
 } // namespace amf
 } // namespace mlpack
 
-#endif
-
-
+#endif // __MLPACK_METHODS_AMF_UPDATE_RULES_SVD_BATCH_LEARNING_HPP

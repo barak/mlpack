@@ -2,24 +2,42 @@
  * @file kmeans_test.cpp
  * @author Ryan Curtin
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 
 #include <mlpack/methods/kmeans/kmeans.hpp>
 #include <mlpack/methods/kmeans/allow_empty_clusters.hpp>
 #include <mlpack/methods/kmeans/refined_start.hpp>
+#include <mlpack/methods/kmeans/elkan_kmeans.hpp>
+#include <mlpack/methods/kmeans/hamerly_kmeans.hpp>
+#include <mlpack/methods/kmeans/pelleg_moore_kmeans.hpp>
+#include <mlpack/methods/kmeans/dual_tree_kmeans.hpp>
+
+#include <mlpack/core/tree/cover_tree/cover_tree.hpp>
+#include <mlpack/methods/neighbor_search/neighbor_search.hpp>
 
 #include <boost/test/unit_test.hpp>
 #include "old_boost_test_definitions.hpp"
 
 using namespace mlpack;
 using namespace mlpack::kmeans;
+using namespace mlpack::metric;
+using namespace mlpack::tree;
+using namespace mlpack::neighbor;
 
 BOOST_AUTO_TEST_SUITE(KMeansTest);
 
@@ -56,48 +74,13 @@ arma::mat kMeansData("  0.0   0.0;" // Class 1.
                      " -9.8   5.1;");
 
 /**
- * 30-point 3-class test case for K-Means, with no overclustering.
+ * 30-point 3-class test case for K-Means.
  */
-BOOST_AUTO_TEST_CASE(KMeansNoOverclusteringTest)
+BOOST_AUTO_TEST_CASE(KMeansSimpleTest)
 {
-  KMeans<> kmeans; // No overclustering.
+  KMeans<> kmeans;
 
-  arma::Col<size_t> assignments;
-  kmeans.Cluster((arma::mat) trans(kMeansData), 3, assignments);
-
-  // Now make sure we got it all right.  There is no restriction on how the
-  // clusters are ordered, so we have to be careful about that.
-  size_t firstClass = assignments(0);
-
-  for (size_t i = 1; i < 13; i++)
-    BOOST_REQUIRE_EQUAL(assignments(i), firstClass);
-
-  size_t secondClass = assignments(13);
-
-  // To ensure that class 1 != class 2.
-  BOOST_REQUIRE_NE(firstClass, secondClass);
-
-  for (size_t i = 13; i < 20; i++)
-    BOOST_REQUIRE_EQUAL(assignments(i), secondClass);
-
-  size_t thirdClass = assignments(20);
-
-  // To ensure that this is the third class which we haven't seen yet.
-  BOOST_REQUIRE_NE(firstClass, thirdClass);
-  BOOST_REQUIRE_NE(secondClass, thirdClass);
-
-  for (size_t i = 20; i < 30; i++)
-    BOOST_REQUIRE_EQUAL(assignments(i), thirdClass);
-}
-
-/**
- * 30-point 3-class test case for K-Means, with overclustering.
- */
-BOOST_AUTO_TEST_CASE(KMeansOverclusteringTest)
-{
-  KMeans<> kmeans(1000, 4.0); // Overclustering factor of 4.0.
-
-  arma::Col<size_t> assignments;
+  arma::Row<size_t> assignments;
   kmeans.Cluster((arma::mat) trans(kMeansData), 3, assignments);
 
   // Now make sure we got it all right.  There is no restriction on how the
@@ -130,9 +113,9 @@ BOOST_AUTO_TEST_CASE(KMeansOverclusteringTest)
  */
 BOOST_AUTO_TEST_CASE(AllowEmptyClusterTest)
 {
-  arma::Col<size_t> assignments;
+  arma::Row<size_t> assignments;
   assignments.randu(30);
-  arma::Col<size_t> assignmentsOld = assignments;
+  arma::Row<size_t> assignmentsOld = assignments;
 
   arma::mat centroids;
   centroids.randu(30, 3); // This doesn't matter.
@@ -144,8 +127,9 @@ BOOST_AUTO_TEST_CASE(AllowEmptyClusterTest)
   arma::Col<size_t> countsOld = counts;
 
   // Make sure the method doesn't modify any points.
+  metric::LMetric<2, true> metric;
   BOOST_REQUIRE_EQUAL(AllowEmptyClusters::EmptyCluster(kMeansData, 2, centroids,
-      counts, assignments), 0);
+      centroids, counts, metric, 0), 0);
 
   // Make sure no assignments were changed.
   for (size_t i = 0; i < assignments.n_elem; i++)
@@ -166,21 +150,45 @@ BOOST_AUTO_TEST_CASE(MaxVarianceNewClusterTest)
                  "1.0 0.8 0.7  5.1  5.2;");
 
   // Point 2 is the mis-clustered point we're looking for to be moved.
-  arma::Col<size_t> assignments("0 0 0 1 1");
+  arma::Row<size_t> assignments("0 0 0 1 1");
 
   arma::mat centroids(2, 3);
   centroids.col(0) = (1.0 / 3.0) * (data.col(0) + data.col(1) + data.col(2));
   centroids.col(1) = 0.5 * (data.col(3) + data.col(4));
-  centroids(0, 2) = 0;
-  centroids(1, 2) = 0;
+  centroids(0, 2) = DBL_MAX;
+  centroids(1, 2) = DBL_MAX;
 
   arma::Col<size_t> counts("3 2 0");
 
-  // This should only change one point.
-  BOOST_REQUIRE_EQUAL(MaxVarianceNewCluster::EmptyCluster(data, 2, centroids,
-      counts, assignments), 1);
+  metric::LMetric<2, true> metric;
 
-  // Ensure that the cluster assignments are right.
+  // This should only change one point.
+  MaxVarianceNewCluster mvnc;
+  BOOST_REQUIRE_EQUAL(mvnc.EmptyCluster(data, 2, centroids, centroids, counts,
+      metric, 0), 1);
+
+  // Add the variance of each point's distance away from the cluster.  I think
+  // this is the sensible thing to do.
+  for (size_t i = 0; i < data.n_cols; ++i)
+  {
+    // Find the closest centroid to this point.
+    double minDistance = std::numeric_limits<double>::infinity();
+    size_t closestCluster = centroids.n_cols; // Invalid value.
+
+    for (size_t j = 0; j < centroids.n_cols; j++)
+    {
+      const double distance = metric.Evaluate(data.col(i), centroids.col(j));
+
+      if (distance < minDistance)
+      {
+        minDistance = distance;
+        closestCluster = j;
+      }
+    }
+
+    assignments[i] = closestCluster;
+  }
+
   BOOST_REQUIRE_EQUAL(assignments[0], 0);
   BOOST_REQUIRE_EQUAL(assignments[1], 0);
   BOOST_REQUIRE_EQUAL(assignments[2], 2);
@@ -201,7 +209,7 @@ BOOST_AUTO_TEST_CASE(RandomPartitionTest)
   arma::mat data;
   data.randu(2, 1000); // One thousand points.
 
-  arma::Col<size_t> assignments;
+  arma::Row<size_t> assignments;
 
   // We'll ask for 18 clusters (arbitrary).
   RandomPartition::Cluster(data, 18, assignments);
@@ -241,7 +249,7 @@ BOOST_AUTO_TEST_CASE(RandomInitialAssignmentFailureTest)
   for (size_t run = 0; run < 15; ++run)
   {
     arma::mat centroids;
-    arma::Col<size_t> assignments;
+    arma::Row<size_t> assignments;
     KMeans<> kmeans;
     kmeans.Cluster(dataset, 2, assignments, centroids);
 
@@ -272,7 +280,7 @@ BOOST_AUTO_TEST_CASE(InitialAssignmentTest)
 
   // Now, if we specify initial assignments, the algorithm should converge (with
   // zero iterations, actually, because this is the solution).
-  arma::Col<size_t> assignments(10002);
+  arma::Row<size_t> assignments(10002);
   assignments.fill(0);
   assignments[10000] = 1;
   assignments[10001] = 1;
@@ -314,7 +322,7 @@ BOOST_AUTO_TEST_CASE(InitialCentroidTest)
   for (size_t i = 0; i < 2; ++i)
     dataset.col(10000 + i) += arma::vec("50 50");
 
-  arma::Col<size_t> assignments;
+  arma::Row<size_t> assignments;
   arma::mat centroids(2, 2);
 
   centroids.col(0) = arma::vec("0 0");
@@ -356,7 +364,7 @@ BOOST_AUTO_TEST_CASE(InitialAssignmentOverrideTest)
   for (size_t i = 0; i < 2; ++i)
     dataset.col(10000 + i) += arma::vec("50 50");
 
-  arma::Col<size_t> assignments(10002);
+  arma::Row<size_t> assignments(10002);
   assignments.fill(0);
   assignments[10000] = 1;
   assignments[10001] = 1;
@@ -418,7 +426,7 @@ BOOST_AUTO_TEST_CASE(RefinedStartTest)
   // Now run the RefinedStart algorithm and make sure it doesn't deviate too
   // much from the actual solution.
   RefinedStart rs;
-  arma::Col<size_t> assignments;
+  arma::Row<size_t> assignments;
   arma::mat resultingCentroids;
   rs.Cluster(data, 5, assignments);
 
@@ -475,9 +483,10 @@ BOOST_AUTO_TEST_CASE(SparseKMeansTest)
   data(1402, 10) = -3.5;
   data(1402, 11) = -3.0;
 
-  arma::Col<size_t> assignments;
+  arma::Row<size_t> assignments;
 
-  KMeans<> kmeans; // Default options.
+  KMeans<metric::EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
+         NaiveKMeans, arma::sp_mat> kmeans; // Default options.
 
   kmeans.Cluster(data, 2, assignments);
 
@@ -500,5 +509,172 @@ BOOST_AUTO_TEST_CASE(SparseKMeansTest)
 
 #endif // Exclude Armadillo 3.4.
 #endif // ARMA_HAS_SPMAT
+
+BOOST_AUTO_TEST_CASE(ElkanTest)
+{
+  const size_t trials = 5;
+
+  for (size_t t = 0; t < trials; ++t)
+  {
+    arma::mat dataset(10, 1000);
+    dataset.randu();
+
+    const size_t k = 5 * (t + 1);
+    arma::mat centroids(10, k);
+    centroids.randu();
+
+    // Make sure Elkan's algorithm and the naive method return the same
+    // clusters.
+    arma::mat naiveCentroids(centroids);
+    KMeans<> km;
+    arma::Row<size_t> assignments;
+    km.Cluster(dataset, k, assignments, naiveCentroids, false, true);
+
+    KMeans<metric::EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
+         ElkanKMeans> elkan;
+    arma::Row<size_t> elkanAssignments;
+    arma::mat elkanCentroids(centroids);
+    elkan.Cluster(dataset, k, elkanAssignments, elkanCentroids, false, true);
+
+    for (size_t i = 0; i < dataset.n_cols; ++i)
+      BOOST_REQUIRE_EQUAL(assignments[i], elkanAssignments[i]);
+
+    for (size_t i = 0; i < centroids.n_elem; ++i)
+      BOOST_REQUIRE_CLOSE(naiveCentroids[i], elkanCentroids[i], 1e-5);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(HamerlyTest)
+{
+  const size_t trials = 5;
+
+  for (size_t t = 0; t < trials; ++t)
+  {
+    arma::mat dataset(10, 1000);
+    dataset.randu();
+
+    const size_t k = 5 * (t + 1);
+    arma::mat centroids(10, k);
+    centroids.randu();
+
+    // Make sure Hamerly's algorithm and the naive method return the same
+    // clusters.
+    arma::mat naiveCentroids(centroids);
+    KMeans<> km;
+    arma::Row<size_t> assignments;
+    km.Cluster(dataset, k, assignments, naiveCentroids, false, true);
+
+    KMeans<metric::EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
+        HamerlyKMeans> hamerly;
+    arma::Row<size_t> hamerlyAssignments;
+    arma::mat hamerlyCentroids(centroids);
+    hamerly.Cluster(dataset, k, hamerlyAssignments, hamerlyCentroids, false,
+        true);
+
+    for (size_t i = 0; i < dataset.n_cols; ++i)
+      BOOST_REQUIRE_EQUAL(assignments[i], hamerlyAssignments[i]);
+
+    for (size_t i = 0; i < centroids.n_elem; ++i)
+      BOOST_REQUIRE_CLOSE(naiveCentroids[i], hamerlyCentroids[i], 1e-5);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(PellegMooreTest)
+{
+  const size_t trials = 5;
+
+  for (size_t t = 0; t < trials; ++t)
+  {
+    arma::mat dataset(10, 1000);
+    dataset.randu();
+
+    const size_t k = 5 * (t + 1);
+    arma::mat centroids(10, k);
+    centroids.randu();
+
+    // Make sure the Pelleg-Moore algorithm and the naive method return the same
+    // clusters.
+    arma::mat naiveCentroids(centroids);
+    KMeans<> km;
+    arma::Row<size_t> assignments;
+    km.Cluster(dataset, k, assignments, naiveCentroids, false, true);
+
+    KMeans<metric::EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
+        PellegMooreKMeans> pellegMoore;
+    arma::Row<size_t> pmAssignments;
+    arma::mat pmCentroids(centroids);
+    pellegMoore.Cluster(dataset, k, pmAssignments, pmCentroids, false, true);
+
+    for (size_t i = 0; i < dataset.n_cols; ++i)
+      BOOST_REQUIRE_EQUAL(assignments[i], pmAssignments[i]);
+
+    for (size_t i = 0; i < centroids.n_elem; ++i)
+      BOOST_REQUIRE_CLOSE(naiveCentroids[i], pmCentroids[i], 1e-5);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(DTNNTest)
+{
+  const size_t trials = 5;
+
+  for (size_t t = 0; t < trials; ++t)
+  {
+    arma::mat dataset(10, 1000);
+    dataset.randu();
+
+    const size_t k = 5 * (t + 1);
+    arma::mat centroids(10, k);
+    centroids.randu();
+
+    arma::mat naiveCentroids(centroids);
+    KMeans<> km;
+    arma::Row<size_t> assignments;
+    km.Cluster(dataset, k, assignments, naiveCentroids, false, true);
+
+    KMeans<metric::EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
+        DefaultDualTreeKMeans> dtnn;
+    arma::Row<size_t> dtnnAssignments;
+    arma::mat dtnnCentroids(centroids);
+    dtnn.Cluster(dataset, k, dtnnAssignments, dtnnCentroids, false, true);
+
+    for (size_t i = 0; i < dataset.n_cols; ++i)
+      BOOST_REQUIRE_EQUAL(assignments[i], dtnnAssignments[i]);
+
+    for (size_t i = 0; i < centroids.n_elem; ++i)
+      BOOST_REQUIRE_CLOSE(naiveCentroids[i], dtnnCentroids[i], 1e-5);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(DTNNCoverTreeTest)
+{
+  const size_t trials = 5;
+
+  for (size_t t = 0; t < trials; ++t)
+  {
+    arma::mat dataset(10, 1000);
+    dataset.randu();
+
+    const size_t k = 5;
+    arma::mat centroids(10, k);
+    centroids.randu();
+
+    arma::mat naiveCentroids(centroids);
+    KMeans<> km;
+    arma::Row<size_t> assignments;
+    km.Cluster(dataset, k, assignments, naiveCentroids, false, true);
+
+    KMeans<metric::EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
+        CoverTreeDualTreeKMeans> dtnn;
+    arma::Row<size_t> dtnnAssignments;
+    arma::mat dtnnCentroids(centroids);
+    dtnn.Cluster(dataset, k, dtnnAssignments, dtnnCentroids, false, true);
+
+    for (size_t i = 0; i < dataset.n_cols; ++i)
+      BOOST_REQUIRE_EQUAL(assignments[i], dtnnAssignments[i]);
+
+    for (size_t i = 0; i < centroids.n_elem; ++i)
+      BOOST_REQUIRE_CLOSE(naiveCentroids[i], dtnnCentroids[i], 1e-5);
+  }
+}
 
 BOOST_AUTO_TEST_SUITE_END();

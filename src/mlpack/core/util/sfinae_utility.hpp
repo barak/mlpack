@@ -7,19 +7,26 @@
  * compile time, which is useful for changing functionality depending on what
  * operations an object is capable of performing.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_SFINAE_UTILITY
 #define __MLPACK_CORE_SFINAE_UTILITY
 
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits.hpp>
-#include <mlpack/prereqs.hpp>
 
 /*
  * Constructs a template supporting the SFINAE pattern.
@@ -34,7 +41,7 @@
  * For general references, see:
  * http://stackoverflow.com/a/264088/391618
  *
- * For an MLPACK specific use case, see /mlpack/core/util/prefixedoutstream.hpp
+ * For an mlpack specific use case, see /mlpack/core/util/prefixedoutstream.hpp
  * and /mlpack/core/util/prefixedoutstream_impl.hpp
  *
  * @param NAME the name of the struct to construct. For example: HasToString

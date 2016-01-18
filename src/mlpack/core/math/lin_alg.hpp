@@ -4,12 +4,20 @@
  *
  * Linear algebra utilities.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_MATH_LIN_ALG_HPP
 #define __MLPACK_CORE_MATH_LIN_ALG_HPP
@@ -83,7 +91,53 @@ void RemoveRows(const arma::mat& input,
                 const std::vector<size_t>& rowsToRemove,
                 arma::mat& output);
 
-}; // namespace math
-}; // namespace mlpack
+/**
+ * Upper triangular representation of a symmetric matrix, scaled such that,
+ * dot(Svec(A), Svec(B)) == dot(A, B) for symmetric A, B. Specifically,
+ *
+ * Svec(K) = [ K_11, sqrt(2) K_12, ..., sqrt(2) K_1n, K_22, ..., sqrt(2) K_2n, ..., K_nn ]^T
+ *
+ * @param input A symmetric matrix
+ * @param output
+ */
+void Svec(const arma::mat& input, arma::vec& output);
+
+void Svec(const arma::sp_mat& input, arma::sp_vec& output);
+
+/**
+ * The inverse of Svec. That is, Smat(Svec(A)) == A.
+ *
+ * @param input
+ * @param output A symmetric matrix
+ */
+void Smat(const arma::vec& input, arma::mat& output);
+
+/**
+ * Return the index such that A[i,j] == factr(i, j) * svec(A)[pos(i, j)],
+ * where factr(i, j) = sqrt(2) if i != j and 1 otherwise.
+ *
+ * @param i
+ * @param j
+ * @param n
+ */
+inline size_t SvecIndex(size_t i, size_t j, size_t n);
+
+/**
+ * If A is a symmetric matrix, then SymKronId returns an operator Op such that
+ *
+ *    Op * svec(X) == svec(0.5 * (AX + XA))
+ *
+ * for every symmetric matrix X
+ *
+ * @param A
+ * @param op
+ */
+void SymKronId(const arma::mat& A, arma::mat& op);
+
+} // namespace math
+} // namespace mlpack
+
+// Partially include implementation
+#include "lin_alg_impl.hpp"
 
 #endif // __MLPACK_CORE_MATH_LIN_ALG_HPP

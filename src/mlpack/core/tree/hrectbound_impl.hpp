@@ -6,12 +6,20 @@
  *
  * @experimental
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_TREE_HRECTBOUND_IMPL_HPP
 #define __MLPACK_CORE_TREE_HRECTBOUND_IMPL_HPP
@@ -27,8 +35,8 @@ namespace bound {
 /**
  * Empty constructor.
  */
-template<int Power, bool TakeRoot>
-HRectBound<Power, TakeRoot>::HRectBound() :
+template<typename MetricType>
+inline HRectBound<MetricType>::HRectBound() :
     dim(0),
     bounds(NULL),
     minWidth(0)
@@ -38,18 +46,18 @@ HRectBound<Power, TakeRoot>::HRectBound() :
  * Initializes to specified dimensionality with each dimension the empty
  * set.
  */
-template<int Power, bool TakeRoot>
-HRectBound<Power, TakeRoot>::HRectBound(const size_t dimension) :
+template<typename MetricType>
+inline HRectBound<MetricType>::HRectBound(const size_t dimension) :
     dim(dimension),
     bounds(new math::Range[dim]),
     minWidth(0)
 { /* Nothing to do. */ }
 
-/***
+/**
  * Copy constructor necessary to prevent memory leaks.
  */
-template<int Power, bool TakeRoot>
-HRectBound<Power, TakeRoot>::HRectBound(const HRectBound& other) :
+template<typename MetricType>
+inline HRectBound<MetricType>::HRectBound(const HRectBound& other) :
     dim(other.Dim()),
     bounds(new math::Range[dim]),
     minWidth(other.MinWidth())
@@ -59,11 +67,11 @@ HRectBound<Power, TakeRoot>::HRectBound(const HRectBound& other) :
     bounds[i] = other[i];
 }
 
-/***
+/**
  * Same as the copy constructor.
  */
-template<int Power, bool TakeRoot>
-HRectBound<Power, TakeRoot>& HRectBound<Power, TakeRoot>::operator=(
+template<typename MetricType>
+inline HRectBound<MetricType>& HRectBound<MetricType>::operator=(
     const HRectBound& other)
 {
   if (dim != other.Dim())
@@ -86,10 +94,25 @@ HRectBound<Power, TakeRoot>& HRectBound<Power, TakeRoot>::operator=(
 }
 
 /**
+ * Move constructor: take possession of another bound's information.
+ */
+template<typename MetricType>
+inline HRectBound<MetricType>::HRectBound(HRectBound&& other) :
+    dim(other.dim),
+    bounds(other.bounds),
+    minWidth(other.minWidth)
+{
+  // Fix the other bound.
+  other.dim = 0;
+  other.bounds = NULL;
+  other.minWidth = 0.0;
+}
+
+/**
  * Destructor: clean up memory.
  */
-template<int Power, bool TakeRoot>
-HRectBound<Power, TakeRoot>::~HRectBound()
+template<typename MetricType>
+inline HRectBound<MetricType>::~HRectBound()
 {
   if (bounds)
     delete[] bounds;
@@ -98,8 +121,8 @@ HRectBound<Power, TakeRoot>::~HRectBound()
 /**
  * Resets all dimensions to the empty set.
  */
-template<int Power, bool TakeRoot>
-void HRectBound<Power, TakeRoot>::Clear()
+template<typename MetricType>
+inline void HRectBound<MetricType>::Clear()
 {
   for (size_t i = 0; i < dim; i++)
     bounds[i] = math::Range();
@@ -111,23 +134,38 @@ void HRectBound<Power, TakeRoot>::Clear()
  *
  * @param centroid Vector which the centroid will be written to.
  */
-template<int Power, bool TakeRoot>
-void HRectBound<Power, TakeRoot>::Centroid(arma::vec& centroid) const
+template<typename MetricType>
+inline void HRectBound<MetricType>::Center(arma::vec& center) const
 {
   // Set size correctly if necessary.
-  if (!(centroid.n_elem == dim))
-    centroid.set_size(dim);
+  if (!(center.n_elem == dim))
+    center.set_size(dim);
 
   for (size_t i = 0; i < dim; i++)
-    centroid(i) = bounds[i].Mid();
+    center(i) = bounds[i].Mid();
+}
+
+/**
+ * Calculate the volume of the hyperrectangle.
+ *
+ * @return Volume of the hyperrectangle.
+ */
+template<typename MetricType>
+inline double HRectBound<MetricType>::Volume() const
+{
+  double volume = 1.0;
+  for (size_t i = 0; i < dim; ++i)
+    volume *= (bounds[i].Hi() - bounds[i].Lo());
+
+  return volume;
 }
 
 /**
  * Calculates minimum bound-to-point squared distance.
  */
-template<int Power, bool TakeRoot>
+template<typename MetricType>
 template<typename VecType>
-double HRectBound<Power, TakeRoot>::MinDistance(
+inline double HRectBound<MetricType>::MinDistance(
     const VecType& point,
     typename boost::enable_if<IsVector<VecType> >* /* junk */) const
 {
@@ -144,24 +182,25 @@ double HRectBound<Power, TakeRoot>::MinDistance(
     // Since only one of 'lower' or 'higher' is negative, if we add each's
     // absolute value to itself and then sum those two, our result is the
     // nonnegative half of the equation times two; then we raise to power Power.
-    sum += pow((lower + fabs(lower)) + (higher + fabs(higher)), (double) Power);
+    sum += pow((lower + fabs(lower)) + (higher + fabs(higher)),
+        (double) MetricType::Power);
   }
 
   // Now take the Power'th root (but make sure our result is squared if it needs
   // to be); then cancel out the constant of 2 (which may have been squared now)
   // that was introduced earlier.  The compiler should optimize out the if
   // statement entirely.
-  if (TakeRoot)
-    return pow(sum, 1.0 / (double) Power) / 2.0;
+  if (MetricType::TakeRoot)
+    return pow(sum, 1.0 / (double) MetricType::Power) / 2.0;
   else
-    return sum / pow(2.0, Power);
+    return sum / pow(2.0, MetricType::Power);
 }
 
 /**
  * Calculates minimum bound-to-bound squared distance.
  */
-template<int Power, bool TakeRoot>
-double HRectBound<Power, TakeRoot>::MinDistance(const HRectBound& other) const
+template<typename MetricType>
+double HRectBound<MetricType>::MinDistance(const HRectBound& other) const
 {
   Log::Assert(dim == other.dim);
 
@@ -177,7 +216,8 @@ double HRectBound<Power, TakeRoot>::MinDistance(const HRectBound& other) const
     // We invoke the following:
     //   x + fabs(x) = max(x * 2, 0)
     //   (x * 2)^2 / 4 = x^2
-    sum += pow((lower + fabs(lower)) + (higher + fabs(higher)), (double) Power);
+    sum += pow((lower + fabs(lower)) + (higher + fabs(higher)),
+        (double) MetricType::Power);
 
     // Move bound pointers.
     mbound++;
@@ -185,18 +225,18 @@ double HRectBound<Power, TakeRoot>::MinDistance(const HRectBound& other) const
   }
 
   // The compiler should optimize out this if statement entirely.
-  if (TakeRoot)
-    return pow(sum, 1.0 / (double) Power) / 2.0;
+  if (MetricType::TakeRoot)
+    return pow(sum, 1.0 / (double) MetricType::Power) / 2.0;
   else
-    return sum / pow(2.0, Power);
+    return sum / pow(2.0, MetricType::Power);
 }
 
 /**
  * Calculates maximum bound-to-point squared distance.
  */
-template<int Power, bool TakeRoot>
+template<typename MetricType>
 template<typename VecType>
-double HRectBound<Power, TakeRoot>::MaxDistance(
+inline double HRectBound<MetricType>::MaxDistance(
     const VecType& point,
     typename boost::enable_if<IsVector<VecType> >* /* junk */) const
 {
@@ -208,12 +248,12 @@ double HRectBound<Power, TakeRoot>::MaxDistance(
   {
     double v = std::max(fabs(point[d] - bounds[d].Lo()),
         fabs(bounds[d].Hi() - point[d]));
-    sum += pow(v, (double) Power);
+    sum += pow(v, (double) MetricType::Power);
   }
 
   // The compiler should optimize out this if statement entirely.
-  if (TakeRoot)
-    return pow(sum, 1.0 / (double) Power);
+  if (MetricType::TakeRoot)
+    return pow(sum, 1.0 / (double) MetricType::Power);
   else
     return sum;
 }
@@ -221,8 +261,9 @@ double HRectBound<Power, TakeRoot>::MaxDistance(
 /**
  * Computes maximum distance.
  */
-template<int Power, bool TakeRoot>
-double HRectBound<Power, TakeRoot>::MaxDistance(const HRectBound& other) const
+template<typename MetricType>
+inline double HRectBound<MetricType>::MaxDistance(const HRectBound& other)
+    const
 {
   double sum = 0;
 
@@ -233,12 +274,12 @@ double HRectBound<Power, TakeRoot>::MaxDistance(const HRectBound& other) const
   {
     v = std::max(fabs(other.bounds[d].Hi() - bounds[d].Lo()),
         fabs(bounds[d].Hi() - other.bounds[d].Lo()));
-    sum += pow(v, (double) Power); // v is non-negative.
+    sum += pow(v, (double) MetricType::Power); // v is non-negative.
   }
 
   // The compiler should optimize out this if statement entirely.
-  if (TakeRoot)
-    return pow(sum, 1.0 / (double) Power);
+  if (MetricType::TakeRoot)
+    return pow(sum, 1.0 / (double) MetricType::Power);
   else
     return sum;
 }
@@ -246,9 +287,9 @@ double HRectBound<Power, TakeRoot>::MaxDistance(const HRectBound& other) const
 /**
  * Calculates minimum and maximum bound-to-bound squared distance.
  */
-template<int Power, bool TakeRoot>
-math::Range HRectBound<Power, TakeRoot>::RangeDistance(const HRectBound& other)
-    const
+template<typename MetricType>
+inline math::Range HRectBound<MetricType>::RangeDistance(
+    const HRectBound& other) const
 {
   double loSum = 0;
   double hiSum = 0;
@@ -272,13 +313,13 @@ math::Range HRectBound<Power, TakeRoot>::RangeDistance(const HRectBound& other)
       vLo = (v2 > 0) ? v2 : 0; // Force to be 0 if negative.
     }
 
-    loSum += pow(vLo, (double) Power);
-    hiSum += pow(vHi, (double) Power);
+    loSum += pow(vLo, (double) MetricType::Power);
+    hiSum += pow(vHi, (double) MetricType::Power);
   }
 
-  if (TakeRoot)
-    return math::Range(pow(loSum, 1.0 / (double) Power),
-                       pow(hiSum, 1.0 / (double) Power));
+  if (MetricType::TakeRoot)
+    return math::Range(pow(loSum, 1.0 / (double) MetricType::Power),
+                       pow(hiSum, 1.0 / (double) MetricType::Power));
   else
     return math::Range(loSum, hiSum);
 }
@@ -286,9 +327,9 @@ math::Range HRectBound<Power, TakeRoot>::RangeDistance(const HRectBound& other)
 /**
  * Calculates minimum and maximum bound-to-point squared distance.
  */
-template<int Power, bool TakeRoot>
+template<typename MetricType>
 template<typename VecType>
-math::Range HRectBound<Power, TakeRoot>::RangeDistance(
+inline math::Range HRectBound<MetricType>::RangeDistance(
     const VecType& point,
     typename boost::enable_if<IsVector<VecType> >* /* junk */) const
 {
@@ -322,13 +363,13 @@ math::Range HRectBound<Power, TakeRoot>::RangeDistance(
       }
     }
 
-    loSum += pow(vLo, (double) Power);
-    hiSum += pow(vHi, (double) Power);
+    loSum += pow(vLo, (double) MetricType::Power);
+    hiSum += pow(vHi, (double) MetricType::Power);
   }
 
-  if (TakeRoot)
-    return math::Range(pow(loSum, 1.0 / (double) Power),
-                       pow(hiSum, 1.0 / (double) Power));
+  if (MetricType::TakeRoot)
+    return math::Range(pow(loSum, 1.0 / (double) MetricType::Power),
+                       pow(hiSum, 1.0 / (double) MetricType::Power));
   else
     return math::Range(loSum, hiSum);
 }
@@ -336,9 +377,9 @@ math::Range HRectBound<Power, TakeRoot>::RangeDistance(
 /**
  * Expands this region to include a new point.
  */
-template<int Power, bool TakeRoot>
+template<typename MetricType>
 template<typename MatType>
-HRectBound<Power, TakeRoot>& HRectBound<Power, TakeRoot>::operator|=(
+inline HRectBound<MetricType>& HRectBound<MetricType>::operator|=(
     const MatType& data)
 {
   Log::Assert(data.n_rows == dim);
@@ -361,8 +402,8 @@ HRectBound<Power, TakeRoot>& HRectBound<Power, TakeRoot>::operator|=(
 /**
  * Expands this region to encompass another bound.
  */
-template<int Power, bool TakeRoot>
-HRectBound<Power, TakeRoot>& HRectBound<Power, TakeRoot>::operator|=(
+template<typename MetricType>
+inline HRectBound<MetricType>& HRectBound<MetricType>::operator|=(
     const HRectBound& other)
 {
   assert(other.dim == dim);
@@ -382,9 +423,9 @@ HRectBound<Power, TakeRoot>& HRectBound<Power, TakeRoot>::operator|=(
 /**
  * Determines if a point is within this bound.
  */
-template<int Power, bool TakeRoot>
+template<typename MetricType>
 template<typename VecType>
-bool HRectBound<Power, TakeRoot>::Contains(const VecType& point) const
+inline bool HRectBound<MetricType>::Contains(const VecType& point) const
 {
   for (size_t i = 0; i < point.n_elem; i++)
   {
@@ -398,39 +439,41 @@ bool HRectBound<Power, TakeRoot>::Contains(const VecType& point) const
 /**
  * Returns the diameter of the hyperrectangle (that is, the longest diagonal).
  */
-template<int Power, bool TakeRoot>
-double HRectBound<Power, TakeRoot>::Diameter() const
+template<typename MetricType>
+inline double HRectBound<MetricType>::Diameter() const
 {
   double d = 0;
   for (size_t i = 0; i < dim; ++i)
-    d += std::pow(bounds[i].Hi() - bounds[i].Lo(), (double) Power);
+    d += std::pow(bounds[i].Hi() - bounds[i].Lo(),
+        (double) MetricType::Power);
 
-  if (TakeRoot)
-    return std::pow(d, 1.0 / (double) Power);
+  if (MetricType::TakeRoot)
+    return std::pow(d, 1.0 / (double) MetricType::Power);
   else
     return d;
 }
 
-/**
- * Returns a string representation of this object.
- */
-template<int Power, bool TakeRoot>
-std::string HRectBound<Power, TakeRoot>::ToString() const
+//! Serialize the bound object.
+template<typename MetricType>
+template<typename Archive>
+void HRectBound<MetricType>::Serialize(Archive& ar,
+                                            const unsigned int /* version */)
 {
-  std::ostringstream convert;
-  convert << "HRectBound [" << this << "]" << std::endl;
-  convert << "  Power: " << Power << std::endl;
-  convert << "  TakeRoot: " << (TakeRoot ? "true" : "false") << std::endl;
-  convert << "  Dimensionality: " << dim << std::endl;
-  convert << "  Bounds: " << std::endl;
-  for (size_t i = 0; i < dim; ++i)
-    convert << util::Indent(bounds[i].ToString()) << std::endl;
-  convert << "  Minimum width: " << minWidth << std::endl;
+  ar & data::CreateNVP(dim, "dim");
 
-  return convert.str();
+  // Allocate memory for the bounds, if necessary.
+  if (Archive::is_loading::value)
+  {
+    if (bounds)
+      delete[] bounds;
+    bounds = new math::Range[dim];
+  }
+
+  ar & data::CreateArrayNVP(bounds, dim, "bounds");
+  ar & data::CreateNVP(minWidth, "minWidth");
 }
 
-}; // namespace bound
-}; // namespace mlpack
+} // namespace bound
+} // namespace mlpack
 
 #endif // __MLPACK_CORE_TREE_HRECTBOUND_IMPL_HPP

@@ -4,12 +4,20 @@
  *
  * Implementation of NearestNeighborRules.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_METHODS_NEIGHBOR_SEARCH_NEAREST_NEIGHBOR_RULES_IMPL_HPP
 #define __MLPACK_METHODS_NEIGHBOR_SEARCH_NEAREST_NEIGHBOR_RULES_IMPL_HPP
@@ -26,12 +34,14 @@ NeighborSearchRules<SortPolicy, MetricType, TreeType>::NeighborSearchRules(
     const typename TreeType::Mat& querySet,
     arma::Mat<size_t>& neighbors,
     arma::mat& distances,
-    MetricType& metric) :
+    MetricType& metric,
+    const bool sameSet) :
     referenceSet(referenceSet),
     querySet(querySet),
     neighbors(neighbors),
     distances(distances),
     metric(metric),
+    sameSet(sameSet),
     lastQueryIndex(querySet.n_cols),
     lastReferenceIndex(referenceSet.n_cols),
     baseCases(0),
@@ -51,7 +61,7 @@ BaseCase(const size_t queryIndex, const size_t referenceIndex)
 {
   // If the datasets are the same, then this search is only using one dataset
   // and we should not return identical points.
-  if ((&querySet == &referenceSet) && (queryIndex == referenceIndex))
+  if (sameSet && (queryIndex == referenceIndex))
     return 0.0;
 
   // If we have already performed this base case, then do not perform it again.
@@ -401,6 +411,12 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::
       bestDistance = queryNode.Parent()->Stat().SecondBound();
   }
 
+  // Could the existing bounds be better?
+  if (SortPolicy::IsBetter(queryNode.Stat().FirstBound(), worstDistance))
+    worstDistance = queryNode.Stat().FirstBound();
+  if (SortPolicy::IsBetter(queryNode.Stat().SecondBound(), bestDistance))
+    bestDistance = queryNode.Stat().SecondBound();
+
   // Cache bounds for later.
   queryNode.Stat().FirstBound() = worstDistance;
   queryNode.Stat().SecondBound() = bestDistance;
@@ -443,7 +459,7 @@ void NeighborSearchRules<SortPolicy, MetricType, TreeType>::InsertNeighbor(
   neighbors(pos, queryIndex) = neighbor;
 }
 
-}; // namespace neighbor
-}; // namespace mlpack
+} // namespace neighbor
+} // namespace mlpack
 
 #endif // __MLPACK_METHODS_NEIGHBOR_SEARCH_NEAREST_NEIGHBOR_RULES_IMPL_HPP

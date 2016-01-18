@@ -4,12 +4,20 @@
  *
  * Tests for each of the implementations of the SortPolicy class.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/core/tree/binary_space_tree.hpp>
@@ -24,6 +32,8 @@
 using namespace mlpack;
 using namespace mlpack::neighbor;
 using namespace mlpack::bound;
+using namespace mlpack::tree;
+using namespace mlpack::metric;
 
 BOOST_AUTO_TEST_SUITE(SortPolicyTest);
 
@@ -106,19 +116,18 @@ BOOST_AUTO_TEST_CASE(NnsNodeToNodeDistance)
   // Well, there's no easy way to make HRectBounds the way we want, so we have
   // to make them and then expand the region to include new points.
   arma::mat dataset("1");
-  tree::BinarySpaceTree<HRectBound<2>, tree::EmptyStatistic, arma::mat>
-      nodeOne(dataset);
+  typedef KDTree<EuclideanDistance, EmptyStatistic, arma::mat> TreeType;
+  TreeType nodeOne(dataset);
   arma::vec utility(1);
   utility[0] = 0;
 
-  nodeOne.Bound() = HRectBound<2>(1);
+  nodeOne.Bound() = HRectBound<EuclideanDistance>(1);
   nodeOne.Bound() |= utility;
   utility[0] = 1;
   nodeOne.Bound() |= utility;
 
-  tree::BinarySpaceTree<HRectBound<2>, tree::EmptyStatistic, arma::mat>
-      nodeTwo(dataset);
-  nodeTwo.Bound() = HRectBound<2>(1);
+  TreeType nodeTwo(dataset);
+  nodeTwo.Bound() = HRectBound<EuclideanDistance>(1);
 
   utility[0] = 5;
   nodeTwo.Bound() |= utility;
@@ -163,8 +172,9 @@ BOOST_AUTO_TEST_CASE(NnsPointToNodeDistance)
   utility[0] = 0;
 
   arma::mat dataset("1");
-  tree::BinarySpaceTree<HRectBound<2> > node(dataset);
-  node.Bound() = HRectBound<2>(1);
+  typedef KDTree<EuclideanDistance, EmptyStatistic, arma::mat> TreeType;
+  TreeType node(dataset);
+  node.Bound() = HRectBound<EuclideanDistance>(1);
   node.Bound() |= utility;
   utility[0] = 1;
   node.Bound() |= utility;
@@ -271,14 +281,15 @@ BOOST_AUTO_TEST_CASE(FnsNodeToNodeDistance)
   utility[0] = 0;
 
   arma::mat dataset("1");
-  tree::BinarySpaceTree<HRectBound<2> > nodeOne(dataset);
-  nodeOne.Bound() = HRectBound<2>(1);
+  typedef KDTree<EuclideanDistance, EmptyStatistic, arma::mat> TreeType;
+  TreeType nodeOne(dataset);
+  nodeOne.Bound() = HRectBound<EuclideanDistance>(1);
   nodeOne.Bound() |= utility;
   utility[0] = 1;
   nodeOne.Bound() |= utility;
 
-  tree::BinarySpaceTree<HRectBound<2> > nodeTwo(dataset);
-  nodeTwo.Bound() = HRectBound<2>(1);
+  TreeType nodeTwo(dataset);
+  nodeTwo.Bound() = HRectBound<EuclideanDistance>(1);
   utility[0] = 5;
   nodeTwo.Bound() |= utility;
   utility[0] = 6;
@@ -322,8 +333,9 @@ BOOST_AUTO_TEST_CASE(FnsPointToNodeDistance)
   utility[0] = 0;
 
   arma::mat dataset("1");
-  tree::BinarySpaceTree<HRectBound<2> > node(dataset);
-  node.Bound() = HRectBound<2>(1);
+  typedef KDTree<EuclideanDistance, EmptyStatistic, arma::mat> TreeType;
+  TreeType node(dataset);
+  node.Bound() = HRectBound<EuclideanDistance>(1);
   node.Bound() |= utility;
   utility[0] = 1;
   node.Bound() |= utility;

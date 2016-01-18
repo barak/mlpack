@@ -4,12 +4,20 @@
  *
  * An implementation of the RegularizedSVDFunction class.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef __MLPACK_METHODS_REGULARIZED_SVD_REGULARIZED_FUNCTION_SVD_HPP
@@ -24,7 +32,7 @@ namespace svd {
 class RegularizedSVDFunction
 {
  public:
-  
+
   /**
    * Constructor for RegularizedSVDFunction class. The constructor calculates
    * the number of users and items in the passed data. It also randomly
@@ -37,14 +45,14 @@ class RegularizedSVDFunction
   RegularizedSVDFunction(const arma::mat& data,
                          const size_t rank,
                          const double lambda);
-  
+
   /**
    * Evaluates the cost function over all examples in the data.
    *
    * @param parameters Parameters(user/item matrices) of the decomposition.
    */
   double Evaluate(const arma::mat& parameters) const;
-  
+
   /**
    * Evaluates the cost function for one training example. Useful for the SGD
    * optimizer abstraction which uses one training example at a time.
@@ -54,7 +62,7 @@ class RegularizedSVDFunction
    */
   double Evaluate(const arma::mat& parameters,
                   const size_t i) const;
-  
+
   /**
    * Evaluates the full gradient of the cost function over all the training
    * examples.
@@ -64,28 +72,28 @@ class RegularizedSVDFunction
    */
   void Gradient(const arma::mat& parameters,
                 arma::mat& gradient) const;
-  
+
   //! Return the initial point for the optimization.
   const arma::mat& GetInitialPoint() const { return initialPoint; }
-  
+
   //! Return the dataset passed into the constructor.
   const arma::mat& Dataset() const { return data; }
-  
+
   //! Return the number of training examples. Useful for SGD optimizer.
   size_t NumFunctions() const { return data.n_cols; }
-  
+
   //! Return the number of users in the data.
   size_t NumUsers() const { return numUsers; }
-  
+
   //! Return the number of items in the data.
   size_t NumItems() const { return numItems; }
-  
+
   //! Return the regularization parameters.
   double Lambda() const { return lambda; }
-  
+
   //! Return the rank used for the factorization.
   size_t Rank() const { return rank; }
-                         
+
  private:
   //! Rating data.
   const arma::mat& data;
@@ -101,8 +109,8 @@ class RegularizedSVDFunction
   size_t numItems;
 };
 
-}; // namespace svd
-}; // namespace mlpack
+} // namespace svd
+} // namespace mlpack
 
 namespace mlpack {
 namespace optimization {
@@ -116,7 +124,7 @@ namespace optimization {
   double SGD<mlpack::svd::RegularizedSVDFunction>::Optimize(
       arma::mat& parameters);
 
-}; // namespace optimization
-}; // namespace mlpack
+} // namespace optimization
+} // namespace mlpack
 
 #endif

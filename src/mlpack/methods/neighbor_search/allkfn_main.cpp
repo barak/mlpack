@@ -1,16 +1,25 @@
 /**
+w
  * @file allkfn_main.cpp
  * @author Ryan Curtin
  *
  * Implementation of the AllkFN executable.  Allows some number of standard
  * options.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 
@@ -20,11 +29,13 @@
 
 #include "neighbor_search.hpp"
 #include "unmap.hpp"
+#include "ns_model.hpp"
 
 using namespace std;
 using namespace mlpack;
 using namespace mlpack::neighbor;
 using namespace mlpack::tree;
+using namespace mlpack::metric;
 
 // Information about the program itself.
 PROGRAM_INFO("All K-Furthest-Neighbors",
@@ -47,158 +58,202 @@ PROGRAM_INFO("All K-Furthest-Neighbors",
     "corresponds to the distance between those two points.");
 
 // Define our input parameters that this program will take.
-PARAM_STRING_REQ("reference_file", "File containing the reference dataset.",
-    "r");
-PARAM_INT_REQ("k", "Number of furthest neighbors to find.", "k");
-PARAM_STRING_REQ("distances_file", "File to output distances into.", "d");
-PARAM_STRING_REQ("neighbors_file", "File to output neighbors into.", "n");
+PARAM_STRING("reference_file", "File containing the reference dataset.", "r",
+    "");
+PARAM_STRING("distances_file", "File to output distances into.", "d", "");
+PARAM_STRING("neighbors_file", "File to output neighbors into.", "n", "");
 
+// The option exists to load or save models.
+PARAM_STRING("input_model_file", "File containing pre-trained kFN model.", "m",
+    "");
+PARAM_STRING("output_model_file", "If specified, the kFN model will be saved to"
+    " the given file.", "M", "");
+
+// The user may specify a query file of query points and a number of furthest
+// neighbors to search for.
 PARAM_STRING("query_file", "File containing query points (optional).", "q", "");
+PARAM_INT("k", "Number of furthest neighbors to find.", "k", 0);
 
+// The user may specify the type of tree to use, and a few pararmeters for tree
+// building.
+PARAM_STRING("tree_type", "Type of tree to use: 'kd', 'cover', 'r', 'r-star', "
+    "'ball'.", "t", "kd");
 PARAM_INT("leaf_size", "Leaf size for tree building.", "l", 20);
+PARAM_FLAG("random_basis", "Before tree-building, project the data onto a "
+    "random orthogonal basis.", "R");
+PARAM_INT("seed", "Random seed (if 0, std::time(NULL) is used).", "s", 0);
+
+// Search settings.
 PARAM_FLAG("naive", "If true, O(n^2) naive mode is used for computation.", "N");
 PARAM_FLAG("single_mode", "If true, single-tree search is used (as opposed to "
     "dual-tree search).", "s");
+
+// Convenience typedef.
+typedef NSModel<FurthestNeighborSort> KFNModel;
 
 int main(int argc, char *argv[])
 {
   // Give CLI the command line parameters the user passed in.
   CLI::ParseCommandLine(argc, argv);
 
-  // Get all the parameters.
-  string referenceFile = CLI::GetParam<string>("reference_file");
+  if (CLI::GetParam<int>("seed") != 0)
+    math::RandomSeed((size_t) CLI::GetParam<int>("seed"));
+  else
+    math::RandomSeed((size_t) std::time(NULL));
 
-  string distancesFile = CLI::GetParam<string>("distances_file");
-  string neighborsFile = CLI::GetParam<string>("neighbors_file");
+  // A user cannot specify both reference data and a model.
+  if (CLI::HasParam("reference_file") && CLI::HasParam("input_model_file"))
+    Log::Fatal << "Only one of --reference_file (-r) or --input_model_file (-m)"
+        << " may be specified!" << endl;
 
-  int lsInt = CLI::GetParam<int>("leaf_size");
+  // A user must specify one of them...
+  if (!CLI::HasParam("reference_file") && !CLI::HasParam("input_model_file"))
+    Log::Fatal << "No model specified (--input_model_file) and no reference "
+        << "data specified (--reference_file)!  One must be provided." << endl;
 
-  size_t k = CLI::GetParam<int>("k");
-
-  bool naive = CLI::HasParam("naive");
-  bool singleMode = CLI::HasParam("single_mode");
-
-  arma::mat referenceData;
-  arma::mat queryData; // So it doesn't go out of scope.
-  data::Load(referenceFile, referenceData, true);
-
-  Log::Info << "Loaded reference data from '" << referenceFile << "' ("
-      << referenceData.n_rows << " x " << referenceData.n_cols << ")." << endl;
-
-  // Sanity check on k value: must be greater than 0, must be less than the
-  // number of reference points.
-  if (k > referenceData.n_cols)
+  if (CLI::HasParam("input_model_file"))
   {
-    Log::Fatal << "Invalid k: " << k << "; must be greater than 0 and less ";
-    Log::Fatal << "than or equal to the number of reference points (";
-    Log::Fatal << referenceData.n_cols << ")." << endl;
+    // Notify the user of parameters that will be ignored.
+    if (CLI::HasParam("tree_type"))
+      Log::Warn << "--tree_type (-t) will be ignored because --input_model_file"
+          << " is specified." << endl;
+    if (CLI::HasParam("leaf_size"))
+      Log::Warn << "--leaf_size (-l) will be ignored because --input_model_file"
+          << " is specified." << endl;
+    if (CLI::HasParam("random_basis"))
+      Log::Warn << "--random_basis (-R) will be ignored because "
+          << "--input_model_file is specified." << endl;
+    if (CLI::HasParam("naive"))
+      Log::Warn << "--naive (-N) will be ignored because --input_model_file is "
+          << "specified." << endl;
   }
+
+  // The user should give something to do...
+  if (!CLI::HasParam("k") && !CLI::HasParam("output_model_file"))
+    Log::Warn << "Neither -k nor --output_model_file are specified, so no "
+        << "results from this program will be saved!" << endl;
+
+  // If the user specifies k but no output files, they should be warned.
+  if (CLI::HasParam("k") &&
+      !(CLI::HasParam("neighbors_file") || CLI::HasParam("distances_file")))
+    Log::Warn << "Neither --neighbors_file nor --distances_file is specified, "
+        << "so the furthest neighbor search results will not be saved!" << endl;
+
+  // If the user specifies output files but no k, they should be warned.
+  if ((CLI::HasParam("neighbors_file") || CLI::HasParam("distances_file")) &&
+      !CLI::HasParam("k"))
+    Log::Warn << "An output file for furthest neighbor search is given ("
+        << "--neighbors_file or --distances_file), but furthest neighbor search"
+        << " is not being performed because k (--k) is not specified!  No "
+        << "results will be saved." << endl;
 
   // Sanity check on leaf size.
-  if (lsInt < 0)
+  const int lsInt = CLI::GetParam<int>("leaf_size");
+  if (lsInt < 1)
+    Log::Fatal << "Invalid leaf size: " << lsInt << ".  Must be greater than 0."
+        << endl;
+
+  // We either have to load the reference data, or we have to load the model.
+  NSModel<FurthestNeighborSort> kfn;
+  const bool naive = CLI::HasParam("naive");
+  const bool singleMode = CLI::HasParam("single_mode");
+  if (CLI::HasParam("reference_file"))
   {
-    Log::Fatal << "Invalid leaf size: " << lsInt << ".  Must be greater "
-        "than or equal to 0." << endl;
-  }
-  size_t leafSize = lsInt;
+    // Get all the parameters.
+    const string referenceFile = CLI::GetParam<string>("reference_file");
+    const string treeType = CLI::GetParam<string>("tree_type");
+    const bool randomBasis = CLI::HasParam("random_basis");
 
-  // Naive mode overrides single mode.
-  if (singleMode && naive)
-  {
-    Log::Warn << "--single_mode ignored because --naive is present." << endl;
-  }
+    int tree = 0;
+    if (treeType == "kd")
+      tree = KFNModel::KD_TREE;
+    else if (treeType == "cover")
+      tree = KFNModel::COVER_TREE;
+    else if (treeType == "r")
+      tree = KFNModel::R_TREE;
+    else if (treeType == "r-star")
+      tree = KFNModel::R_STAR_TREE;
+    else if (treeType == "ball")
+      tree = KFNModel::BALL_TREE;
+    else
+      Log::Fatal << "Unknown tree type '" << treeType << "'; valid choices are "
+          << "'kd', 'cover', 'r', 'r-star', and 'ball'." << endl;
 
-  if (naive)
-    leafSize = referenceData.n_cols;
+    kfn.TreeType() = tree;
+    kfn.RandomBasis() = randomBasis;
 
-  arma::Mat<size_t> neighbors;
-  arma::mat distances;
+    arma::mat referenceSet;
+    data::Load(referenceFile, referenceSet, true);
 
-  AllkFN* allkfn = NULL;
+    Log::Info << "Loaded reference data from '" << referenceFile << "' ("
+        << referenceSet.n_rows << "x" << referenceSet.n_cols << ")." << endl;
 
-  std::vector<size_t> oldFromNewRefs;
-
-  // Build trees by hand, so we can save memory: if we pass a tree to
-  // NeighborSearch, it does not copy the matrix.
-  Log::Info << "Building reference tree..." << endl;
-  Timer::Start("reference_tree_building");
-
-  BinarySpaceTree<bound::HRectBound<2>,
-      NeighborSearchStat<FurthestNeighborSort> >
-      refTree(referenceData, oldFromNewRefs, leafSize);
-  BinarySpaceTree<bound::HRectBound<2>,
-      NeighborSearchStat<FurthestNeighborSort> >*
-      queryTree = NULL; // Empty for now.
-
-  Timer::Stop("reference_tree_building");
-
-  std::vector<size_t> oldFromNewQueries;
-
-  if (CLI::GetParam<string>("query_file") != "")
-  {
-    string queryFile = CLI::GetParam<string>("query_file");
-
-    data::Load(queryFile, queryData, true);
-
-    Log::Info << "Loaded query data from '" << queryFile << "' ("
-        << queryData.n_rows << " x " << queryData.n_cols << ")." << endl;
-
-    Log::Info << "Building query tree..." << endl;
-
-    if (naive && leafSize < queryData.n_cols)
-      leafSize = queryData.n_cols;
-
-    // Build trees by hand, so we can save memory: if we pass a tree to
-    // NeighborSearch, it does not copy the matrix.
-    Timer::Start("query_tree_building");
-
-    queryTree = new BinarySpaceTree<bound::HRectBound<2>,
-        NeighborSearchStat<FurthestNeighborSort> >(queryData, oldFromNewQueries,
-        leafSize);
-
-    Timer::Stop("query_tree_building");
-
-    allkfn = new AllkFN(&refTree, queryTree, referenceData, queryData,
-        singleMode);
-
-    Log::Info << "Tree built." << endl;
+    kfn.BuildModel(std::move(referenceSet), size_t(lsInt), naive, singleMode);
   }
   else
   {
-    allkfn = new AllkFN(&refTree, referenceData, singleMode);
+    // Load the model from file.
+    const string inputModelFile = CLI::GetParam<string>("input_model_file");
+    data::Load(inputModelFile, "kfn_model", kfn, true); // Fatal on failure.
 
-    Log::Info << "Trees built." << endl;
+    Log::Info << "Loaded kFN model from '" << inputModelFile << "' (trained on "
+        << kfn.Dataset().n_rows << "x" << kfn.Dataset().n_cols << " dataset)."
+        << endl;
+
+    // Adjust singleMode and naive if necessary.
+    kfn.SingleMode() = CLI::HasParam("single_mode");
+    kfn.Naive() = CLI::HasParam("naive");
+    kfn.LeafSize() = size_t(lsInt);
   }
 
-  Log::Info << "Computing " << k << " furthest neighbors..." << endl;
-  allkfn->Search(k, neighbors, distances);
+  // Perform search, if desired.
+  if (CLI::HasParam("k"))
+  {
+    const string queryFile = CLI::GetParam<string>("query_file");
+    const size_t k = (size_t) CLI::GetParam<int>("k");
 
-  Log::Info << "Neighbors computed." << endl;
+    arma::mat queryData;
+    if (queryFile != "")
+    {
+      data::Load(queryFile, queryData, true);
+      Log::Info << "Loaded query data from '" << queryFile << "' ("
+          << queryData.n_rows << "x" << queryData.n_cols << ")." << endl;
+    }
 
-  // We have to map back to the original indices from before the tree
-  // construction.
-  Log::Info << "Re-mapping indices..." << endl;
+    // Sanity check on k value: must be greater than 0, must be less than the
+    // number of reference points.  Since it is unsigned, we only test the upper
+    // bound.
+    if (k > kfn.Dataset().n_cols)
+    {
+      Log::Fatal << "Invalid k: " << k << "; must be greater than 0 and less "
+          << "than or equal to the number of reference points ("
+          << kfn.Dataset().n_cols << ")." << endl;
+    }
 
-  arma::mat distancesOut(distances.n_rows, distances.n_cols);
-  arma::Mat<size_t> neighborsOut(neighbors.n_rows, neighbors.n_cols);
+    // Naive mode overrides single mode.
+    if (singleMode && naive)
+      Log::Warn << "--single_mode ignored because --naive is present." << endl;
 
-  // Map the points back to their original locations.
-  if ((CLI::GetParam<string>("query_file") != "") && !singleMode)
-    Unmap(neighbors, distances, oldFromNewRefs, oldFromNewQueries, neighborsOut,
-        distancesOut);
-  else if ((CLI::GetParam<string>("query_file") != "") && singleMode)
-    Unmap(neighbors, distances, oldFromNewRefs, neighborsOut, distancesOut);
-  else
-    Unmap(neighbors, distances, oldFromNewRefs, oldFromNewRefs, neighborsOut,
-        distancesOut);
+    // Now run the search.
+    arma::Mat<size_t> neighbors;
+    arma::mat distances;
 
-  // Clean up.
-  if (queryTree)
-    delete queryTree;
+    if (CLI::HasParam("query_file"))
+      kfn.Search(std::move(queryData), k, neighbors, distances);
+    else
+      kfn.Search(k, neighbors, distances);
+    Log::Info << "Search complete." << endl;
 
-  // Save output.
-  data::Save(distancesFile, distancesOut);
-  data::Save(neighborsFile, neighborsOut);
+    // Save output, if desired.
+    if (CLI::HasParam("neighbors_file"))
+      data::Save(CLI::GetParam<string>("neighbors_file"), neighbors);
+    if (CLI::HasParam("distances_file"))
+      data::Save(CLI::GetParam<string>("distances_file"), distances);
+  }
 
-  delete allkfn;
+  if (CLI::HasParam("output_model_file"))
+  {
+    const string outputModelFile = CLI::GetParam<string>("output_model_File");
+    data::Save(outputModelFile, "kfn_model", kfn);
+  }
 }

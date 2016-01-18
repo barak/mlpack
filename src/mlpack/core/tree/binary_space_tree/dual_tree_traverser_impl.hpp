@@ -6,12 +6,20 @@
  * to perform a dual-tree traversal of two trees.  The trees must be the same
  * type.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef __MLPACK_CORE_TREE_BINARY_SPACE_TREE_DUAL_TREE_TRAVERSER_IMPL_HPP
 #define __MLPACK_CORE_TREE_BINARY_SPACE_TREE_DUAL_TREE_TRAVERSER_IMPL_HPP
@@ -22,12 +30,14 @@
 namespace mlpack {
 namespace tree {
 
-template<typename BoundType,
+template<typename MetricType,
          typename StatisticType,
          typename MatType,
-         typename SplitType>
+         template<typename BoundMetricType> class BoundType,
+         template<typename SplitBoundType, typename SplitMatType>
+             class SplitType>
 template<typename RuleType>
-BinarySpaceTree<BoundType, StatisticType, MatType, SplitType>::
+BinarySpaceTree<MetricType, StatisticType, MatType, BoundType, SplitType>::
 DualTreeTraverser<RuleType>::DualTreeTraverser(RuleType& rule) :
     rule(rule),
     numPrunes(0),
@@ -36,15 +46,18 @@ DualTreeTraverser<RuleType>::DualTreeTraverser(RuleType& rule) :
     numBaseCases(0)
 { /* Nothing to do. */ }
 
-template<typename BoundType,
+template<typename MetricType,
          typename StatisticType,
          typename MatType,
-         typename SplitType>
+         template<typename BoundMetricType> class BoundType,
+         template<typename SplitBoundType, typename SplitMatType>
+             class SplitType>
 template<typename RuleType>
-void BinarySpaceTree<BoundType, StatisticType, MatType, SplitType>::
+void BinarySpaceTree<MetricType, StatisticType, MatType, BoundType, SplitType>::
 DualTreeTraverser<RuleType>::Traverse(
-    BinarySpaceTree<BoundType, StatisticType, MatType, SplitType>& queryNode,
-    BinarySpaceTree<BoundType, StatisticType, MatType, SplitType>&
+    BinarySpaceTree<MetricType, StatisticType, MatType, BoundType, SplitType>&
+        queryNode,
+    BinarySpaceTree<MetricType, StatisticType, MatType, BoundType, SplitType>&
         referenceNode)
 {
   // Increment the visit counter.
@@ -57,7 +70,9 @@ DualTreeTraverser<RuleType>::Traverse(
   if (queryNode.IsLeaf() && referenceNode.IsLeaf())
   {
     // Loop through each of the points in each node.
-    for (size_t query = queryNode.Begin(); query < queryNode.End(); ++query)
+    const size_t queryEnd = queryNode.Begin() + queryNode.Count();
+    const size_t refEnd = referenceNode.Begin() + referenceNode.Count();
+    for (size_t query = queryNode.Begin(); query < queryEnd; ++query)
     {
       // See if we need to investigate this point (this function should be
       // implemented for the single-tree recursion too).  Restore the traversal
@@ -68,13 +83,15 @@ DualTreeTraverser<RuleType>::Traverse(
       if (childScore == DBL_MAX)
         continue; // We can't improve this particular point.
 
-      for (size_t ref = referenceNode.Begin(); ref < referenceNode.End(); ++ref)
+      for (size_t ref = referenceNode.Begin(); ref < refEnd; ++ref)
         rule.BaseCase(query, ref);
 
       numBaseCases += referenceNode.Count();
     }
   }
-  else if ((!queryNode.IsLeaf()) && referenceNode.IsLeaf())
+  else if (((!queryNode.IsLeaf()) && referenceNode.IsLeaf()) ||
+           (queryNode.NumDescendants() > 3 * referenceNode.NumDescendants() &&
+            !queryNode.IsLeaf() && !referenceNode.IsLeaf()))
   {
     // We have to recurse down the query node.  In this case the recursion order
     // does not matter.
@@ -333,7 +350,7 @@ DualTreeTraverser<RuleType>::Traverse(
   }
 }
 
-}; // namespace tree
-}; // namespace mlpack
+} // namespace tree
+} // namespace mlpack
 
 #endif // __MLPACK_CORE_TREE_BINARY_SPACE_TREE_DUAL_TREE_TRAVERSER_IMPL_HPP

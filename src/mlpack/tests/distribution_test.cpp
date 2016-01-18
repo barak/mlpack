@@ -4,12 +4,20 @@
  *
  * Test for the mlpack::distribution::DiscreteDistribution class.
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <mlpack/core.hpp>
 
@@ -80,13 +88,13 @@ BOOST_AUTO_TEST_CASE(DiscreteDistributionRandomTest)
 /**
  * Make sure we can estimate from observations correctly.
  */
-BOOST_AUTO_TEST_CASE(DiscreteDistributionEstimateTest)
+BOOST_AUTO_TEST_CASE(DiscreteDistributionTrainTest)
 {
   DiscreteDistribution d(4);
 
   arma::mat obs("0 0 1 1 2 2 2 3");
 
-  d.Estimate(obs);
+  d.Train(obs);
 
   BOOST_REQUIRE_CLOSE(d.Probability("0"), 0.25, 1e-5);
   BOOST_REQUIRE_CLOSE(d.Probability("1"), 0.25, 1e-5);
@@ -97,7 +105,7 @@ BOOST_AUTO_TEST_CASE(DiscreteDistributionEstimateTest)
 /**
  * Estimate from observations with probabilities.
  */
-BOOST_AUTO_TEST_CASE(DiscreteDistributionEstimateProbTest)
+BOOST_AUTO_TEST_CASE(DiscreteDistributionTrainProbTest)
 {
   DiscreteDistribution d(3);
 
@@ -105,7 +113,7 @@ BOOST_AUTO_TEST_CASE(DiscreteDistributionEstimateProbTest)
 
   arma::vec prob("0.25 0.25 0.5 1.0");
 
-  d.Estimate(obs, prob);
+  d.Train(obs, prob);
 
   BOOST_REQUIRE_CLOSE(d.Probability("0"), 0.25, 1e-5);
   BOOST_REQUIRE_CLOSE(d.Probability("1"), 0.25, 1e-5);
@@ -147,6 +155,8 @@ BOOST_AUTO_TEST_CASE(GaussianDistributionDistributionConstructor)
 
   mean.randu();
   covariance.randu();
+  covariance *= covariance.t();
+  covariance += arma::eye<arma::mat>(3, 3);
 
   GaussianDistribution d(mean, covariance);
 
@@ -164,20 +174,152 @@ BOOST_AUTO_TEST_CASE(GaussianDistributionDistributionConstructor)
 BOOST_AUTO_TEST_CASE(GaussianDistributionProbabilityTest)
 {
   arma::vec mean("5 6 3 3 2");
-  arma::mat cov("6 1 1 0 2;"
-                "0 7 1 0 1;"
+  arma::mat cov("6 1 1 1 2;"
+                "1 7 1 0 0;"
                 "1 1 4 1 1;"
                 "1 0 1 7 0;"
-                "2 0 1 1 6");
+                "2 0 1 0 6");
 
   GaussianDistribution d(mean, cov);
 
-  BOOST_REQUIRE_CLOSE(d.Probability("0 1 2 3 4"), 1.02531207499358e-6, 1e-5);
-  BOOST_REQUIRE_CLOSE(d.Probability("3 2 3 7 8"), 1.82353695848039e-7, 1e-5);
-  BOOST_REQUIRE_CLOSE(d.Probability("2 2 0 8 1"), 1.29759261892949e-6, 1e-5);
-  BOOST_REQUIRE_CLOSE(d.Probability("2 1 5 0 1"), 1.33218060268258e-6, 1e-5);
-  BOOST_REQUIRE_CLOSE(d.Probability("3 0 5 1 0"), 1.12120427975708e-6, 1e-5);
-  BOOST_REQUIRE_CLOSE(d.Probability("4 0 6 1 0"), 4.57951032485297e-7, 1e-5);
+  BOOST_REQUIRE_CLOSE(d.LogProbability("0 1 2 3 4"), -13.432076798791542, 1e-5);
+  BOOST_REQUIRE_CLOSE(d.LogProbability("3 2 3 7 8"), -15.814880322345738, 1e-5);
+  BOOST_REQUIRE_CLOSE(d.LogProbability("2 2 0 8 1"), -13.754462857772776, 1e-5);
+  BOOST_REQUIRE_CLOSE(d.LogProbability("2 1 5 0 1"), -13.283283233107898, 1e-5);
+  BOOST_REQUIRE_CLOSE(d.LogProbability("3 0 5 1 0"), -13.800326511545279, 1e-5);
+  BOOST_REQUIRE_CLOSE(d.LogProbability("4 0 6 1 0"), -14.900192463287908, 1e-5);
+}
+
+/**
+ * Test GaussianDistribution::Probability() in the univariate case.
+ */
+BOOST_AUTO_TEST_CASE(GaussianUnivariateProbabilityTest)
+{
+  GaussianDistribution g(arma::vec("0.0"), arma::mat("1.0"));
+
+  // Simple case.
+  BOOST_REQUIRE_CLOSE(g.Probability(arma::vec("0.0")), 0.398942280401433, 1e-5);
+  BOOST_REQUIRE_CLOSE(g.Probability(arma::vec("1.0")), 0.241970724519143, 1e-5);
+  BOOST_REQUIRE_CLOSE(g.Probability(arma::vec("-1.0")), 0.241970724519143,
+      1e-5);
+
+  // A few more cases...
+  arma::mat covariance;
+
+  covariance = 2.0;
+  g.Covariance(std::move(covariance));
+  BOOST_REQUIRE_CLOSE(g.Probability(arma::vec("0.0")), 0.282094791773878, 1e-5);
+  BOOST_REQUIRE_CLOSE(g.Probability(arma::vec("1.0")), 0.219695644733861, 1e-5);
+  BOOST_REQUIRE_CLOSE(g.Probability(arma::vec("-1.0")), 0.219695644733861,
+      1e-5);
+
+  g.Mean().fill(1.0);
+  covariance = 1.0;
+  g.Covariance(std::move(covariance));
+  BOOST_REQUIRE_CLOSE(g.Probability(arma::vec("1.0")), 0.398942280401433, 1e-5);
+
+  covariance = 2.0;
+  g.Covariance(std::move(covariance));
+  BOOST_REQUIRE_CLOSE(g.Probability(arma::vec("-1.0")), 0.103776874355149,
+      1e-5);
+}
+
+/**
+ * Test GaussianDistribution::Probability() in the multivariate case.
+ */
+BOOST_AUTO_TEST_CASE(GaussianMultivariateProbabilityTest)
+{
+  // Simple case.
+  arma::vec mean = "0 0";
+  arma::mat cov = "1 0; 0 1";
+  arma::vec x = "0 0";
+
+  GaussianDistribution g(mean, cov);
+
+  BOOST_REQUIRE_CLOSE(g.Probability(x), 0.159154943091895, 1e-5);
+
+  arma::mat covariance;
+  covariance = "2 0; 0 2";
+  g.Covariance(std::move(covariance));
+
+  BOOST_REQUIRE_CLOSE(g.Probability(x), 0.0795774715459477, 1e-5);
+
+  x = "1 1";
+
+  BOOST_REQUIRE_CLOSE(g.Probability(x), 0.0482661763150270, 1e-5);
+  BOOST_REQUIRE_CLOSE(g.Probability(-x), 0.0482661763150270, 1e-5);
+
+  g.Mean() = "1 1";
+  BOOST_REQUIRE_CLOSE(g.Probability(x), 0.0795774715459477, 1e-5);
+  g.Mean() *= -1;
+  BOOST_REQUIRE_CLOSE(g.Probability(-x), 0.0795774715459477, 1e-5);
+
+  g.Mean() = "1 1";
+  covariance = "2 1.5; 1.5 4";
+  g.Covariance(std::move(covariance));
+
+  BOOST_REQUIRE_CLOSE(g.Probability(x), 0.066372199406187285, 1e-5);
+  g.Mean() *= -1;
+  BOOST_REQUIRE_CLOSE(g.Probability(-x), 0.066372199406187285, 1e-5);
+
+  g.Mean() = "1 1";
+  x = "-1 4";
+
+  BOOST_REQUIRE_CLOSE(g.Probability(x), 0.00072147262356379415, 1e-5);
+  BOOST_REQUIRE_CLOSE(g.Probability(-x), 0.00085851785428674523, 1e-5);
+
+  // Higher-dimensional case.
+  x = "0 1 2 3 4";
+  g.Mean() = "5 6 3 3 2";
+
+  covariance = "6 1 1 1 2;"
+               "1 7 1 0 0;"
+               "1 1 4 1 1;"
+               "1 0 1 7 0;"
+               "2 0 1 0 6";
+  g.Covariance(std::move(covariance));
+
+  BOOST_REQUIRE_CLOSE(g.Probability(x), 1.4673143531128877e-06, 1e-5);
+  BOOST_REQUIRE_CLOSE(g.Probability(-x), 7.7404143494891786e-09, 1e-8);
+
+  g.Mean() *= -1;
+  BOOST_REQUIRE_CLOSE(g.Probability(-x), 1.4673143531128877e-06, 1e-5);
+  BOOST_REQUIRE_CLOSE(g.Probability(x), 7.7404143494891786e-09, 1e-8);
+
+}
+
+/**
+ * Test the phi() function, for multiple points in the multivariate Gaussian
+ * case.
+ */
+BOOST_AUTO_TEST_CASE(GaussianMultipointMultivariateProbabilityTest)
+{
+  // Same case as before.
+  arma::vec mean = "5 6 3 3 2";
+  arma::mat cov("6 1 1 1 2;"
+                "1 7 1 0 0;"
+                "1 1 4 1 1;"
+                "1 0 1 7 0;"
+                "2 0 1 0 6");
+
+  arma::mat points = "0 3 2 2 3 4;"
+                     "1 2 2 1 0 0;"
+                     "2 3 0 5 5 6;"
+                     "3 7 8 0 1 1;"
+                     "4 8 1 1 0 0;";
+
+  arma::vec phis;
+  GaussianDistribution g(mean, cov);
+  g.LogProbability(points, phis);
+
+  BOOST_REQUIRE_EQUAL(phis.n_elem, 6);
+
+  BOOST_REQUIRE_CLOSE(phis(0), -13.432076798791542, 1e-5);
+  BOOST_REQUIRE_CLOSE(phis(1), -15.814880322345738, 1e-5);
+  BOOST_REQUIRE_CLOSE(phis(2), -13.754462857772776, 1e-5);
+  BOOST_REQUIRE_CLOSE(phis(3), -13.283283233107898, 1e-5);
+  BOOST_REQUIRE_CLOSE(phis(4), -13.800326511545279, 1e-5);
+  BOOST_REQUIRE_CLOSE(phis(5), -14.900192463287908, 1e-5);
 }
 
 /**
@@ -213,7 +355,7 @@ BOOST_AUTO_TEST_CASE(GaussianDistributionRandomTest)
 /**
  * Make sure that we can properly estimate from given observations.
  */
-BOOST_AUTO_TEST_CASE(GaussianDistributionEstimateTest)
+BOOST_AUTO_TEST_CASE(GaussianDistributionTrainTest)
 {
   arma::vec mean("1.0 3.0 0.0 2.5");
   arma::mat cov("3.0 0.0 1.0 4.0;"
@@ -235,7 +377,7 @@ BOOST_AUTO_TEST_CASE(GaussianDistributionEstimateTest)
   arma::vec actualMean = arma::mean(observations, 1);
   arma::mat actualCov = ccov(observations);
 
-  d.Estimate(observations);
+  d.Train(observations);
 
   // Check that everything is estimated right.
   for (size_t i = 0; i < 4; i++)

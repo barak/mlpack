@@ -19,12 +19,20 @@
  * }
  * @endcode
  *
- * This file is part of mlpack 1.0.12.
+ * This file is part of mlpack 2.0.0.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
+ * mlpack is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details (LICENSE.txt).
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * mlpack.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "dtb.hpp"
@@ -51,6 +59,7 @@ PARAM_INT("leaf_size", "Leaf size in the kd-tree.  One-element leaves give the "
 using namespace mlpack;
 using namespace mlpack::emst;
 using namespace mlpack::tree;
+using namespace mlpack::metric;
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -93,12 +102,12 @@ int main(int argc, char* argv[])
 
     Timer::Start("tree_building");
     std::vector<size_t> oldFromNew;
-    tree::BinarySpaceTree<bound::HRectBound<2>, DTBStat> tree(dataPoints,
-        oldFromNew, leafSize);
+    KDTree<EuclideanDistance, DTBStat, arma::mat> tree(dataPoints, oldFromNew,
+        leafSize);
     metric::LMetric<2, true> metric;
     Timer::Stop("tree_building");
 
-    DualTreeBoruvka<> dtb(&tree, dataPoints, metric);
+    DualTreeBoruvka<> dtb(&tree, metric);
 
     // Run the DTB algorithm.
     Log::Info << "Calculating minimum spanning tree." << endl;
