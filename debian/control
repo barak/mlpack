@@ -27,9 +27,9 @@ Depends: ${misc:Depends}, ${shlibs:Depends}, libmlpack2 (= ${binary:Version}),
 	 libarmadillo-dev (>= 1:3.6.0), liblapack-dev, libxml2-dev, libboost-dev
 Suggests: mlpack-doc
 Description: intuitive, fast, scalable C++ machine learning library (development libs)
- This package contains the MLPACK Library development files.
+ This package contains the mlpack Library development files.
  .
- MLPACK (Machine Learning PACK) is an intuitive, fast, scalable C++
+ Machine Learning Pack (mlpack) is an intuitive, fast, scalable C++
  machine learning library, meant to be a machine learning analog to
  LAPACK.  It aims to implement a wide array of machine learning
  methods and function as a "swiss army knife" for machine learning
@@ -41,9 +41,9 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: intuitive, fast, scalable C++ machine learning library (runtime library)
- This package contains the MLPACK Library runtime files.
+ This package contains the mlpack Library runtime files.
  .
- MLPACK (Machine Learning PACK) is an intuitive, fast, scalable C++
+ Machine Learning Pack (mlpack) is an intuitive, fast, scalable C++
  machine learning library, meant to be a machine learning analog to
  LAPACK.  It aims to implement a wide array of machine learning
  methods and function as a "swiss army knife" for machine learning
@@ -55,9 +55,9 @@ Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}, libmlpack2 (>= ${binary:Version})
 Description: intuitive, fast, scalable C++ machine learning library (binaries)
- This package contains example binaries using the MLPACK Library.
+ This package contains example binaries using the mlpack Library.
  .
- MLPACK (Machine Learning PACK) is an intuitive, fast, scalable C++
+ Machine Learning Pack (mlpack) is an intuitive, fast, scalable C++
  machine learning library, meant to be a machine learning analog to
  LAPACK.  It aims to implement a wide array of machine learning
  methods and function as a "swiss army knife" for machine learning
@@ -69,9 +69,10 @@ Architecture: all
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: intuitive, fast, scalable C++ machine learning library (documentation)
- This package contains documentation for the MLPACK Library.
+ This package contains documentation for the mlpack Library.
  .
- MLPACK is an intuitive, fast, scalable C++ machine learning library,
- meant to be a machine learning analog to LAPACK. It aims to implement
- a wide array of machine learning methods and function as a "swiss
- army knife" for machine learning researchers.
+ Machine Learning Pack (mlpack) is an intuitive, fast, scalable C++
+ machine learning library, meant to be a machine learning analog to
+ LAPACK.  It aims to implement a wide array of machine learning
+ methods and function as a "swiss army knife" for machine learning
+ researchers.
