@@ -1,3 +1,9 @@
+mlpack (2.0.0-2) unstable; urgency=medium
+
+  * work around upstream bug of failure to install arma_config.hpp
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 04 Feb 2016 23:26:01 +0000
+
 mlpack (2.0.0-1) unstable; urgency=medium
 
   * New upstream version
