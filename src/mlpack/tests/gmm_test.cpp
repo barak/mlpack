@@ -5,20 +5,12 @@
  *
  * Test for the Gaussian Mixture Model class.
  *
- * This file is part of mlpack 2.0.0.
+ * This file is part of mlpack 2.0.1.
  *
- * mlpack is free software: you can redistribute it and/or modify it under the
- * terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
- *
- * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
- * details (LICENSE.txt).
- *
- * You should have received a copy of the GNU General Public License along with
- * mlpack.  If not, see <http://www.gnu.org/licenses/>.
+ * mlpack is free software; you may redstribute it and/or modify it under the
+ * terms of the 3-clause BSD license.  You should have received a copy of the
+ * 3-clause BSD license along with mlpack.  If not, see
+ * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
 
@@ -220,17 +212,17 @@ BOOST_AUTO_TEST_CASE(GMMTrainEMMultipleGaussians)
     // Check the mean.
     for (size_t j = 0; j < dims; j++)
       BOOST_REQUIRE_CLOSE(gmm.Component(sortTry[i]).Mean()[j],
-          (means[sortRef[i]])[j], 1e-5);
+          (means[sortRef[i]])[j], 0.001);
 
     // Check the covariance.
     for (size_t row = 0; row < dims; row++)
       for (size_t col = 0; col < dims; col++)
         BOOST_REQUIRE_CLOSE(gmm.Component(sortTry[i]).Covariance()(row, col),
-            (covars[sortRef[i]])(row, col), 1e-5);
+            (covars[sortRef[i]])(row, col), 0.05);
 
     // Check the weight.
     BOOST_REQUIRE_CLOSE(gmm.Weights()[sortTry[i]], weights[sortRef[i]],
-        1e-5);
+        0.001);
   }
 }
 

@@ -4,20 +4,12 @@
  *
  * Main executable for logistic regression.
  *
- * This file is part of mlpack 2.0.0.
+ * This file is part of mlpack 2.0.1.
  *
- * mlpack is free software: you can redistribute it and/or modify it under the
- * terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
- *
- * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
- * details (LICENSE.txt).
- *
- * You should have received a copy of the GNU General Public License along with
- * mlpack.  If not, see <http://www.gnu.org/licenses/>.
+ * mlpack is free software; you may redstribute it and/or modify it under the
+ * terms of the 3-clause BSD license.  You should have received a copy of the
+ * 3-clause BSD license along with mlpack.  If not, see
+ * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
 #include "logistic_regression.hpp"
@@ -116,8 +108,8 @@ int main(int argc, char** argv)
   const double tolerance = CLI::GetParam<double>("tolerance");
   const double stepSize = CLI::GetParam<double>("step_size");
   const size_t maxIterations = (size_t) CLI::GetParam<int>("max_iterations");
-  const string inputModelFile = CLI::GetParam<string>("input_model");
-  const string outputModelFile = CLI::GetParam<string>("output_model");
+  const string inputModelFile = CLI::GetParam<string>("input_model_file");
+  const string outputModelFile = CLI::GetParam<string>("output_model_file");
   const string testFile = CLI::GetParam<string>("test_file");
   const string outputFile = CLI::GetParam<string>("output_file");
   const double decisionBoundary = CLI::GetParam<double>("decision_boundary");
@@ -129,9 +121,9 @@ int main(int argc, char** argv)
 
   // If no output file is given, the user should know that the model will not be
   // saved, but only if a model is being trained.
-  if (outputFile.empty() && !trainingFile.empty())
-    Log::Warn << "--output_model not given; trained model will not be saved."
-        << endl;
+  if (outputModelFile.empty() && !trainingFile.empty())
+    Log::Warn << "--output_model_file not given; trained model will not be "
+        << "saved." << endl;
 
   // Tolerance needs to be positive.
   if (tolerance < 0.0)

@@ -4,20 +4,12 @@
  *
  * Termination policy used in AMF (Alternating Matrix Factorization).
  *
- * This file is part of mlpack 2.0.0.
+ * This file is part of mlpack 2.0.1.
  *
- * mlpack is free software: you can redistribute it and/or modify it under the
- * terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
- *
- * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
- * details (LICENSE.txt).
- *
- * You should have received a copy of the GNU General Public License along with
- * mlpack.  If not, see <http://www.gnu.org/licenses/>.
+ * mlpack is free software; you may redstribute it and/or modify it under the
+ * terms of the 3-clause BSD license.  You should have received a copy of the
+ * 3-clause BSD license along with mlpack.  If not, see
+ * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #ifndef _MLPACK_METHODS_AMF_VALIDATIONRMSETERMINATION_HPP_INCLUDED
 #define _MLPACK_METHODS_AMF_VALIDATIONRMSETERMINATION_HPP_INCLUDED
@@ -34,7 +26,7 @@ namespace amf
  * The input data matrix is divided into 2 sets, training set and validation set.
  * Entries of validation set are nullifed in the input matrix. Termination
  * criterion is met when increase in validation set RMSe value drops below the
- * given tolerance. To accomodate spikes certain number of successive validation
+ * given tolerance. To accommodate spikes certain number of successive validation
  * RMSE drops are accepted. This upper imit on successive drops can be adjusted
  * with reverseStepCount. Secondary termination criterion terminates algorithm
  * when iteration count goes above the threshold.

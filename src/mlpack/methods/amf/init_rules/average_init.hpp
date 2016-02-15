@@ -2,22 +2,14 @@
  * @file averge_init.hpp
  * @author Sumedh Ghaisas
  *
- * Intialization rule for Alternating Matrix Factorization.
+ * Initialization rule for Alternating Matrix Factorization.
  *
- * This file is part of mlpack 2.0.0.
+ * This file is part of mlpack 2.0.1.
  *
- * mlpack is free software: you can redistribute it and/or modify it under the
- * terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
- *
- * mlpack is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
- * details (LICENSE.txt).
- *
- * You should have received a copy of the GNU General Public License along with
- * mlpack.  If not, see <http://www.gnu.org/licenses/>.
+ * mlpack is free software; you may redstribute it and/or modify it under the
+ * terms of the 3-clause BSD license.  You should have received a copy of the
+ * 3-clause BSD license along with mlpack.  If not, see
+ * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #ifndef __MLPACK_METHODS_AMF_AVERAGE_INIT_HPP
 #define __MLPACK_METHODS_AMF_AVERAGE_INIT_HPP
@@ -76,7 +68,7 @@ class AverageInitialization
 
     avgV = sqrt(((avgV / (n * m)) - min) / r);
 
-    // Intialize to random values.
+    // Initialize to random values.
     W.randu(n, r);
     H.randu(r, m);
 
