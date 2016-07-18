@@ -6,15 +6,18 @@
  * dual-tree traversal should be updating the members of this class before
  * Score() is called.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef __MLPACK_CORE_TREE_TRAVERSAL_INFO_HPP
-#define __MLPACK_CORE_TREE_TRAVERSAL_INFO_HPP
+#ifndef MLPACK_CORE_TREE_TRAVERSAL_INFO_HPP
+#define MLPACK_CORE_TREE_TRAVERSAL_INFO_HPP
+
+namespace mlpack {
+namespace tree {
 
 /**
  * The TraversalInfo class holds traversal information which is used in
@@ -88,5 +91,8 @@ class TraversalInfo
   //! The last base case.
   double lastBaseCase;
 };
+
+} // namespace tree
+} // namespace mlpack
 
 #endif

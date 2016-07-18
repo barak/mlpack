@@ -1,22 +1,27 @@
 /**
- * @file allkrann_main.cpp
- * @author Parikshit Ram
+ * @file knn_main.cpp
+ * @author Ryan Curtin
  *
- * Implementation of the AllkRANN executable.  Allows some number of standard
+ * Implementation of the AllkNN executable.  Allows some number of standard
  * options.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
+#include <mlpack/core/tree/cover_tree.hpp>
 
-#include "ra_search.hpp"
-#include "ra_model.hpp"
-#include <mlpack/methods/neighbor_search/unmap.hpp>
+#include <string>
+#include <fstream>
+#include <iostream>
+
+#include "neighbor_search.hpp"
+#include "unmap.hpp"
+#include "ns_model.hpp"
 
 using namespace std;
 using namespace mlpack;
@@ -25,25 +30,19 @@ using namespace mlpack::tree;
 using namespace mlpack::metric;
 
 // Information about the program itself.
-PROGRAM_INFO("All K-Rank-Approximate-Nearest-Neighbors",
-    "This program will calculate the k rank-approximate-nearest-neighbors of a "
-    "set of points. You may specify a separate set of reference points and "
-    "query points, or just a reference set which will be used as both the "
-    "reference and query set. You must specify the rank approximation (in \%) "
-    "(and optionally the success probability)."
+PROGRAM_INFO("k-Nearest-Neighbors",
+    "This program will calculate the k-nearest-neighbors of a set of "
+    "points using kd-trees or cover trees (cover tree support is experimental "
+    "and may be slow). You may specify a separate set of "
+    "reference points and query points, or just a reference set which will be "
+    "used as both the reference and query set."
     "\n\n"
-    "For example, the following will return 5 neighbors from the top 0.1\% of "
-    "the data (with probability 0.95) for each point in 'input.csv' and store "
-    "the distances in 'distances.csv' and the neighbors in the file "
-    "'neighbors.csv':"
+    "For example, the following will calculate the 5 nearest neighbors of each"
+    "point in 'input.csv' and store the distances in 'distances.csv' and the "
+    "neighbors in the file 'neighbors.csv':"
     "\n\n"
-    "$ allkrann -k 5 -r input.csv -d distances.csv -n neighbors.csv --tau 0.1"
-    "\n\n"
-    "Note that tau must be set such that the number of points in the "
-    "corresponding percentile of the data is greater than k.  Thus, if we "
-    "choose tau = 0.1 with a dataset of 1000 points and k = 5, then we are "
-    "attempting to choose 5 nearest neighbors out of the closest 1 point -- "
-    "this is invalid and the program will terminate with an error message."
+    "$ mlpack_knn --k=5 --reference_file=input.csv "
+    "--distances_file=distances.csv\n --neighbors_file=neighbors.csv"
     "\n\n"
     "The output files are organized such that row i and column j in the "
     "neighbors output file corresponds to the index of the point in the "
@@ -52,8 +51,8 @@ PROGRAM_INFO("All K-Rank-Approximate-Nearest-Neighbors",
     "corresponds to the distance between those two points.");
 
 // Define our input parameters that this program will take.
-PARAM_STRING("reference_file", "File containing the reference dataset.",
-                 "r", "");
+PARAM_STRING("reference_file", "File containing the reference dataset.", "r",
+    "");
 PARAM_STRING("distances_file", "File to output distances into.", "d", "");
 PARAM_STRING("neighbors_file", "File to output neighbors into.", "n", "");
 
@@ -70,40 +69,33 @@ PARAM_INT("k", "Number of nearest neighbors to find.", "k", 0);
 
 // The user may specify the type of tree to use, and a few parameters for tree
 // building.
-PARAM_STRING("tree_type", "Type of tree to use: 'kd', 'cover', 'r', or "
-    "'r-star'.", "t", "kd");
+PARAM_STRING("tree_type", "Type of tree to use: 'kd', 'cover', 'r', 'r-star', "
+    "'x', 'ball'.", "t", "kd");
 PARAM_INT("leaf_size", "Leaf size for tree building (used for kd-trees, R "
     "trees, and R* trees).", "l", 20);
 PARAM_FLAG("random_basis", "Before tree-building, project the data onto a "
     "random orthogonal basis.", "R");
 PARAM_INT("seed", "Random seed (if 0, std::time(NULL) is used).", "s", 0);
 
-// Search options.
-PARAM_DOUBLE("tau", "The allowed rank-error in terms of the percentile of "
-             "the data.", "t", 5);
-PARAM_DOUBLE("alpha", "The desired success probability.", "a", 0.95);
-PARAM_FLAG("naive", "If true, sampling will be done without using a tree.",
-           "N");
+// Search settings.
+PARAM_FLAG("naive", "If true, O(n^2) naive mode is used for computation.", "N");
 PARAM_FLAG("single_mode", "If true, single-tree search is used (as opposed to "
-           "dual-tree search.", "s");
-PARAM_FLAG("sample_at_leaves", "The flag to trigger sampling at leaves.", "L");
-PARAM_FLAG("first_leaf_exact", "The flag to trigger sampling only after "
-           "exactly exploring the first leaf.", "X");
-PARAM_INT("single_sample_limit", "The limit on the maximum number of "
-    "samples (and hence the largest node you can approximate).", "S", 20);
+    "dual-tree search).", "S");
 
 // Convenience typedef.
-typedef RAModel<NearestNeighborSort> RANNModel;
+typedef NSModel<NearestNeighborSort> KNNModel;
 
 int main(int argc, char *argv[])
 {
   // Give CLI the command line parameters the user passed in.
   CLI::ParseCommandLine(argc, argv);
+
   if (CLI::GetParam<int>("seed") != 0)
     math::RandomSeed((size_t) CLI::GetParam<int>("seed"));
   else
     math::RandomSeed((size_t) std::time(NULL));
- // A user cannot specify both reference data and a model.
+
+  // A user cannot specify both reference data and a model.
   if (CLI::HasParam("reference_file") && CLI::HasParam("input_model_file"))
     Log::Fatal << "Only one of --reference_file (-r) or --input_model_file (-m)"
         << " may be specified!" << endl;
@@ -158,7 +150,7 @@ int main(int argc, char *argv[])
   }
 
   // We either have to load the reference data, or we have to load the model.
-  RANNModel rann;
+  NSModel<NearestNeighborSort> knn;
   const bool naive = CLI::HasParam("naive");
   const bool singleMode = CLI::HasParam("single_mode");
   if (CLI::HasParam("reference_file"))
@@ -168,21 +160,25 @@ int main(int argc, char *argv[])
     const string treeType = CLI::GetParam<string>("tree_type");
     const bool randomBasis = CLI::HasParam("random_basis");
 
-    int tree = 0;
+    KNNModel::TreeTypes tree = KNNModel::KD_TREE;
     if (treeType == "kd")
-      tree = RANNModel::KD_TREE;
+      tree = KNNModel::KD_TREE;
     else if (treeType == "cover")
-      tree = RANNModel::COVER_TREE;
+      tree = KNNModel::COVER_TREE;
     else if (treeType == "r")
-      tree = RANNModel::R_TREE;
+      tree = KNNModel::R_TREE;
     else if (treeType == "r-star")
-      tree = RANNModel::R_STAR_TREE;
+      tree = KNNModel::R_STAR_TREE;
+    else if (treeType == "ball")
+      tree = KNNModel::BALL_TREE;
+    else if (treeType == "x")
+      tree = KNNModel::X_TREE;
     else
       Log::Fatal << "Unknown tree type '" << treeType << "'; valid choices are "
-          << "'kd', 'cover', 'r', and 'r-star'." << endl;
+          << "'kd', 'cover', 'r', 'r-star', 'x' and 'ball'." << endl;
 
-    rann.TreeType() = tree;
-    rann.RandomBasis() = randomBasis;
+    knn.TreeType() = tree;
+    knn.RandomBasis() = randomBasis;
 
     arma::mat referenceSet;
     data::Load(referenceFile, referenceSet, true);
@@ -191,33 +187,23 @@ int main(int argc, char *argv[])
         << referenceSet.n_rows << " x " << referenceSet.n_cols << ")."
         << endl;
 
-    rann.BuildModel(std::move(referenceSet), size_t(lsInt), naive, singleMode);
+    knn.BuildModel(std::move(referenceSet), size_t(lsInt), naive, singleMode);
   }
   else
   {
     // Load the model from file.
     const string inputModelFile = CLI::GetParam<string>("input_model_file");
-    data::Load(inputModelFile, "rann_model", rann, true); // Fatal on failure.
+    data::Load(inputModelFile, "knn_model", knn, true); // Fatal on failure.
 
-    Log::Info << "Loaded rank-approximate kNN model from '" << inputModelFile
-        << "' (trained on " << rann.Dataset().n_rows << "x"
-        << rann.Dataset().n_cols << " dataset)." << endl;
+    Log::Info << "Loaded kNN model from '" << inputModelFile << "' (trained on "
+        << knn.Dataset().n_rows << "x" << knn.Dataset().n_cols << " dataset)."
+        << endl;
 
     // Adjust singleMode and naive if necessary.
-    rann.SingleMode() = CLI::HasParam("single_mode");
-    rann.Naive() = CLI::HasParam("naive");
-    rann.LeafSize() = size_t(lsInt);
+    knn.SingleMode() = CLI::HasParam("single_mode");
+    knn.Naive() = CLI::HasParam("naive");
+    knn.LeafSize() = size_t(lsInt);
   }
-
-  // Apply the parameters for search.
-  if (CLI::HasParam("tau"))
-    rann.Tau() = CLI::GetParam<double>("tau");
-  if (CLI::HasParam("alpha"))
-    rann.Alpha() = CLI::GetParam<double>("alpha");
-  if (CLI::HasParam("single_sample_limit"))
-    rann.SingleSampleLimit() = CLI::GetParam<double>("single_sample_limit");
-  rann.SampleAtLeaves() = CLI::HasParam("sample_at_leaves");
-  rann.FirstLeafExact() = CLI::HasParam("sample_at_leaves");
 
   // Perform search, if desired.
   if (CLI::HasParam("k"))
@@ -236,11 +222,11 @@ int main(int argc, char *argv[])
     // Sanity check on k value: must be greater than 0, must be less than the
     // number of reference points.  Since it is unsigned, we only test the upper
     // bound.
-    if (k > rann.Dataset().n_cols)
+    if (k > knn.Dataset().n_cols)
     {
       Log::Fatal << "Invalid k: " << k << "; must be greater than 0 and less ";
       Log::Fatal << "than or equal to the number of reference points (";
-      Log::Fatal << rann.Dataset().n_cols << ")." << endl;
+      Log::Fatal << knn.Dataset().n_cols << ")." << endl;
     }
 
     // Naive mode overrides single mode.
@@ -249,12 +235,14 @@ int main(int argc, char *argv[])
       Log::Warn << "--single_mode ignored because --naive is present." << endl;
     }
 
+    // Now run the search.
     arma::Mat<size_t> neighbors;
     arma::mat distances;
+
     if (CLI::HasParam("query_file"))
-      rann.Search(std::move(queryData), k, neighbors, distances);
+      knn.Search(std::move(queryData), k, neighbors, distances);
     else
-      rann.Search(k, neighbors, distances);
+      knn.Search(k, neighbors, distances);
     Log::Info << "Search complete." << endl;
 
     // Save output, if desired.
@@ -267,6 +255,6 @@ int main(int argc, char *argv[])
   if (CLI::HasParam("output_model_file"))
   {
     const string outputModelFile = CLI::GetParam<string>("output_model_file");
-    data::Save(outputModelFile, "rann_model", rann);
+    data::Save(outputModelFile, "knn_model", knn);
   }
 }

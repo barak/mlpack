@@ -5,15 +5,15 @@
  * This implements the cosine distance (or cosine similarity) between two
  * vectors, which is a measure of the angle between the two vectors.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef __MLPACK_CORE_KERNELS_COSINE_DISTANCE_HPP
-#define __MLPACK_CORE_KERNELS_COSINE_DISTANCE_HPP
+#ifndef MLPACK_CORE_KERNELS_COSINE_DISTANCE_HPP
+#define MLPACK_CORE_KERNELS_COSINE_DISTANCE_HPP
 
 #include <mlpack/core.hpp>
 
@@ -54,7 +54,7 @@ class KernelTraits<CosineDistance>
  public:
   //! The cosine kernel is normalized: K(x, x) = 1 for all x.
   static const bool IsNormalized = true;
-  
+
   //! The cosine kernel doesn't include a squared distance.
   static const bool UsesSquaredDistance = false;
 };

@@ -6,15 +6,15 @@
   * with a given set of rules which indicate the branches to prune and the
   * order in which to recurse.  This is a depth-first traverser.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
   */
-#ifndef __MLPACK_CORE_TREE_RECTANGLE_TREE_SINGLE_TREE_TRAVERSER_HPP
-#define __MLPACK_CORE_TREE_RECTANGLE_TREE_SINGLE_TREE_TRAVERSER_HPP
+#ifndef MLPACK_CORE_TREE_RECTANGLE_TREE_SINGLE_TREE_TRAVERSER_HPP
+#define MLPACK_CORE_TREE_RECTANGLE_TREE_SINGLE_TREE_TRAVERSER_HPP
 
 #include <mlpack/core.hpp>
 
@@ -26,7 +26,7 @@ namespace tree {
 template<typename MetricType,
          typename StatisticType,
          typename MatType,
-         typename SplitType,
+         template<typename> class SplitType,
          typename DescentType>
 template<typename RuleType>
 class RectangleTree<MetricType, StatisticType, MatType, SplitType,

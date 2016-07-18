@@ -4,9 +4,9 @@
  *
  * This file provides an example use of the DET
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
     Timer::Stop("det_training");
 
     // Compute training set estimates, if desired.
-    if (CLI::GetParam<string>("training_set_estimates_file") != "")
+    if (CLI::HasParam("training_set_estimates_file"))
     {
       // Compute density estimates for each point in the training set.
       arma::rowvec trainingDensities(trainingData.n_cols);

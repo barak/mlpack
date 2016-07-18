@@ -4,15 +4,15 @@
  *
  * Implementation of Serialize() and inline functions for RSModel.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef __MLPACK_METHODS_RANGE_SEARCH_RS_MODEL_IMPL_HPP
-#define __MLPACK_METHODS_RANGE_SEARCH_RS_MODEL_IMPL_HPP
+#ifndef MLPACK_METHODS_RANGE_SEARCH_RS_MODEL_IMPL_HPP
+#define MLPACK_METHODS_RANGE_SEARCH_RS_MODEL_IMPL_HPP
 
 // In case it hasn't been included yet.
 #include "rs_model.hpp"
@@ -56,6 +56,10 @@ void RSModel::Serialize(Archive& ar, const unsigned int /* version */)
     case BALL_TREE:
       ar & CreateNVP(ballTreeRS, "range_search_model");
       break;
+
+    case X_TREE:
+      ar & CreateNVP(xTreeRS, "range_search_model");
+      break;
   }
 }
 
@@ -71,6 +75,8 @@ inline const arma::mat& RSModel::Dataset() const
     return rStarTreeRS->ReferenceSet();
   else if (ballTreeRS)
     return ballTreeRS->ReferenceSet();
+  else if (xTreeRS)
+    return xTreeRS->ReferenceSet();
 
   throw std::runtime_error("no range search model initialized");
 }
@@ -87,6 +93,8 @@ inline bool RSModel::SingleMode() const
     return rStarTreeRS->SingleMode();
   else if (ballTreeRS)
     return ballTreeRS->SingleMode();
+  else if (xTreeRS)
+    return xTreeRS->SingleMode();
 
   throw std::runtime_error("no range search model initialized");
 }
@@ -103,6 +111,8 @@ inline bool& RSModel::SingleMode()
     return rStarTreeRS->SingleMode();
   else if (ballTreeRS)
     return ballTreeRS->SingleMode();
+  else if (xTreeRS)
+    return xTreeRS->SingleMode();
 
   throw std::runtime_error("no range search model initialized");
 }
@@ -119,6 +129,8 @@ inline bool RSModel::Naive() const
     return rStarTreeRS->Naive();
   else if (ballTreeRS)
     return ballTreeRS->Naive();
+  else if (xTreeRS)
+    return xTreeRS->Naive();
 
   throw std::runtime_error("no range search model initialized");
 }
@@ -135,6 +147,8 @@ inline bool& RSModel::Naive()
     return rStarTreeRS->Naive();
   else if (ballTreeRS)
     return ballTreeRS->Naive();
+  else if (xTreeRS)
+    return xTreeRS->Naive();
 
   throw std::runtime_error("no range search model initialized");
 }

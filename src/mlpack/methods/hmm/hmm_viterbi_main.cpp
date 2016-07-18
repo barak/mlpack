@@ -5,9 +5,9 @@
  * Compute the most probably hidden state sequence of a given observation
  * sequence for a given HMM.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
@@ -27,8 +27,8 @@ PROGRAM_INFO("Hidden Markov Model (HMM) Viterbi State Prediction", "This "
 
 PARAM_STRING_REQ("input_file", "File containing observations,", "i");
 PARAM_STRING_REQ("model_file", "File containing HMM.", "m");
-PARAM_STRING("output_file", "File to save predicted state sequence to.", "o",
-    "output.csv");
+PARAM_STRING("output_file", "File to save predicted state sequence to.",
+    "o", "");
 
 using namespace mlpack;
 using namespace mlpack::hmm;
@@ -47,6 +47,7 @@ struct Viterbi
   {
     // Load observations.
     const string inputFile = CLI::GetParam<string>("input_file");
+    const string outputFile = CLI::GetParam<string>("output_file");
 
     mat dataSeq;
     data::Load(inputFile, dataSeq, true);
@@ -69,8 +70,8 @@ struct Viterbi
     hmm.Predict(dataSeq, sequence);
 
     // Save output.
-    const string outputFile = CLI::GetParam<string>("output_file");
-    data::Save(outputFile, sequence, true);
+    if (CLI::HasParam("output_file"))
+      data::Save(outputFile, sequence, true);
   }
 };
 
@@ -78,6 +79,10 @@ int main(int argc, char** argv)
 {
   // Parse command line options.
   CLI::ParseCommandLine(argc, argv);
+
+  if (CLI::HasParam("output_file"))
+    Log::Warn << "--output_file (-o) is not specified; no results will be "
+        << "saved!" << endl;
 
   const string modelFile = CLI::GetParam<string>("model_file");
   LoadHMMAndPerformAction<Viterbi>(modelFile);

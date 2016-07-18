@@ -4,15 +4,15 @@
  *
  * Implementation of save functionality.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef __MLPACK_CORE_DATA_SAVE_IMPL_HPP
-#define __MLPACK_CORE_DATA_SAVE_IMPL_HPP
+#ifndef MLPACK_CORE_DATA_SAVE_IMPL_HPP
+#define MLPACK_CORE_DATA_SAVE_IMPL_HPP
 
 // In case it hasn't already been included.
 #include "save.hpp"
@@ -140,12 +140,18 @@ bool Save(const std::string& filename,
   Log::Info << "Saving " << stringType << " to '" << filename << "'."
       << std::endl;
 
-  // Transpose the matrix.
-  if (transpose)
+  // Transpose the matrix.  If we are saving HDF5, Armadillo already transposes
+  // this on save, so we don't need to.
+  if ((transpose && saveType != arma::hdf5_binary) ||
+      (!transpose && saveType == arma::hdf5_binary))
   {
     arma::Mat<eT> tmp = trans(matrix);
 
-    if (!tmp.quiet_save(stream, saveType))
+    // We can't save with streams for HDF5.
+    const bool success = (saveType == arma::hdf5_binary) ?
+        tmp.quiet_save(filename, saveType) :
+        tmp.quiet_save(stream, saveType);
+    if (!success)
     {
       Timer::Stop("saving_data");
       if (fatal)
@@ -158,7 +164,11 @@ bool Save(const std::string& filename,
   }
   else
   {
-    if (!matrix.quiet_save(stream, saveType))
+    // We can't save with streams for HDF5.
+    const bool success = (saveType == arma::hdf5_binary) ?
+        matrix.quiet_save(filename, saveType) :
+        matrix.quiet_save(stream, saveType);
+    if (!success)
     {
       Timer::Stop("saving_data");
       if (fatal)

@@ -1,11 +1,11 @@
 /**
- * @file allkfntest.cpp
+ * @file kfn_test.cpp
  *
- * Tests for AllkFN (all-k-furthest-neighbors).
+ * Tests for KFN (k-furthest-neighbors).
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
@@ -22,7 +22,7 @@ using namespace mlpack::tree;
 using namespace mlpack::metric;
 using namespace mlpack::bound;
 
-BOOST_AUTO_TEST_SUITE(AllkFNTest);
+BOOST_AUTO_TEST_SUITE(KFNTest);
 
 /**
  * Simple furthest-neighbors test with small, synthetic dataset.  This is an
@@ -58,25 +58,25 @@ BOOST_AUTO_TEST_CASE(ExhaustiveSyntheticTest)
   TreeType* tree = new TreeType(data, oldFromNew, newFromOld, 1);
   for (int i = 0; i < 3; i++)
   {
-    AllkFN* allkfn;
+    KFN* kfn;
 
     switch (i)
     {
       case 0: // Use the dual-tree method.
-        allkfn = new AllkFN(tree, false);
+        kfn = new KFN(tree, false);
         break;
       case 1: // Use the single-tree method.
-        allkfn = new AllkFN(tree, true);
+        kfn = new KFN(tree, true);
         break;
       case 2: // Use the naive method.
-        allkfn = new AllkFN(tree->Dataset(), true);
+        kfn = new KFN(tree->Dataset(), true);
         break;
     }
 
     // Now perform the actual calculation.
     arma::Mat<size_t> neighbors;
     arma::mat distances;
-    allkfn->Search(10, neighbors, distances);
+    kfn->Search(10, neighbors, distances);
 
     // Now the exhaustive check for correctness.  This will be long.  We must
     // also remember that the distances returned are squared distances.  As a
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(ExhaustiveSyntheticTest)
     BOOST_REQUIRE_CLOSE(distances(0, newFromOld[10]), 4.05, 1e-5);
 
     // Clean the memory.
-    delete allkfn;
+    delete kfn;
   }
 
   // We are responsible for the tree, too.
@@ -347,13 +347,13 @@ BOOST_AUTO_TEST_CASE(DualTreeVsNaive1)
   if (!data::Load("test_data_3_1000.csv", dataset))
     BOOST_FAIL("Cannot load test dataset test_data_3_1000.csv!");
 
-  AllkFN allkfn(dataset);
+  KFN kfn(dataset);
 
-  AllkFN naive(dataset, true);
+  KFN naive(dataset, true);
 
   arma::Mat<size_t> neighborsTree;
   arma::mat distancesTree;
-  allkfn.Search(dataset, 15, neighborsTree, distancesTree);
+  kfn.Search(dataset, 15, neighborsTree, distancesTree);
 
   arma::Mat<size_t> neighborsNaive;
   arma::mat distancesNaive;
@@ -381,13 +381,13 @@ BOOST_AUTO_TEST_CASE(DualTreeVsNaive2)
   if (!data::Load("test_data_3_1000.csv", dataset))
     BOOST_FAIL("Cannot load test dataset test_data_3_1000.csv!");
 
-  AllkFN allkfn(dataset);
+  KFN kfn(dataset);
 
-  AllkFN naive(dataset, true);
+  KFN naive(dataset, true);
 
   arma::Mat<size_t> neighborsTree;
   arma::mat distancesTree;
-  allkfn.Search(15, neighborsTree, distancesTree);
+  kfn.Search(15, neighborsTree, distancesTree);
 
   arma::Mat<size_t> neighborsNaive;
   arma::mat distancesNaive;
@@ -415,13 +415,13 @@ BOOST_AUTO_TEST_CASE(SingleTreeVsNaive)
   if (!data::Load("test_data_3_1000.csv", dataset))
     BOOST_FAIL("Cannot load test dataset test_data_3_1000.csv!");
 
-  AllkFN allkfn(dataset, false, true);
+  KFN kfn(dataset, false, true);
 
-  AllkFN naive(dataset, true);
+  KFN naive(dataset, true);
 
   arma::Mat<size_t> neighborsTree;
   arma::mat distancesTree;
-  allkfn.Search(15, neighborsTree, distancesTree);
+  kfn.Search(15, neighborsTree, distancesTree);
 
   arma::Mat<size_t> neighborsNaive;
   arma::mat distancesNaive;
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(SingleCoverTreeTest)
   NeighborSearch<FurthestNeighborSort, LMetric<2>, arma::mat, StandardCoverTree>
       coverTreeSearch(&tree, true);
 
-  AllkFN naive(data, true);
+  KFN naive(data, true);
 
   arma::Mat<size_t> coverTreeNeighbors;
   arma::mat coverTreeDistances;
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(DualCoverTreeTest)
   arma::mat dataset;
   data::Load("test_data_3_1000.csv", dataset);
 
-  AllkFN tree(dataset);
+  KFN tree(dataset);
 
   arma::Mat<size_t> kdNeighbors;
   arma::mat kdDistances;
@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(SingleBallTreeTest)
   NeighborSearch<FurthestNeighborSort, LMetric<2>, arma::mat, BallTree>
       ballTreeSearch(&tree, true);
 
-  AllkFN naive(tree.Dataset(), true);
+  KFN naive(tree.Dataset(), true);
 
   arma::Mat<size_t> ballTreeNeighbors;
   arma::mat ballTreeDistances;
@@ -550,7 +550,7 @@ BOOST_AUTO_TEST_CASE(DualBallTreeTest)
   arma::mat dataset;
   data::Load("test_data_3_1000.csv", dataset);
 
-  AllkFN tree(dataset);
+  KFN tree(dataset);
 
   arma::Mat<size_t> kdNeighbors;
   arma::mat kdDistances;

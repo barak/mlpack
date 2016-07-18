@@ -4,9 +4,9 @@
  *
  * Test for the CLI input parameter system.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
@@ -14,13 +14,14 @@
 
 #include <iostream>
 #include <sstream>
+
 #ifndef _WIN32
   #include <sys/time.h>
 #endif
 
 // For Sleep().
 #ifdef _WIN32
-  #include <Windows.h>
+  #include <windows.h>
 #endif
 
 #include <mlpack/core.hpp>
@@ -247,7 +248,7 @@ BOOST_AUTO_TEST_CASE(MultiRunTimerTest)
 
   Timer::Stop("test_timer");
 
-  BOOST_REQUIRE_GE(Timer::Get("test_timer").tv_usec, 10000);
+  BOOST_REQUIRE_GE(Timer::Get("test_timer").count(), 10000);
 
   // Restart it.
   Timer::Start("test_timer");
@@ -260,7 +261,7 @@ BOOST_AUTO_TEST_CASE(MultiRunTimerTest)
 
   Timer::Stop("test_timer");
 
-  BOOST_REQUIRE_GE(Timer::Get("test_timer").tv_usec, 20000);
+  BOOST_REQUIRE_GE(Timer::Get("test_timer").count(), 20000);
 
   // Just one more time, for good measure...
   Timer::Start("test_timer");
@@ -273,20 +274,20 @@ BOOST_AUTO_TEST_CASE(MultiRunTimerTest)
 
   Timer::Stop("test_timer");
 
-  BOOST_REQUIRE_GE(Timer::Get("test_timer").tv_usec, 40000);
+  BOOST_REQUIRE_GE(Timer::Get("test_timer").count(), 40000);
 }
 
 BOOST_AUTO_TEST_CASE(TwiceStartTimerTest)
 {
   Timer::Start("test_timer");
-  
+
   BOOST_REQUIRE_THROW(Timer::Start("test_timer"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(TwiceStopTimerTest)
 {
   Timer::Stop("test_timer");
-  
+
   BOOST_REQUIRE_THROW(Timer::Stop("test_timer"), std::runtime_error);
 }
 

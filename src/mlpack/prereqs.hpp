@@ -3,15 +3,15 @@
  *
  * The core includes that mlpack expects; standard C++ includes and Armadillo.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef __MLPACK_PREREQS_HPP
-#define __MLPACK_PREREQS_HPP
+#ifndef MLPACK_PREREQS_HPP
+#define MLPACK_PREREQS_HPP
 
 // First, check if Armadillo was included before, warning if so.
 #ifdef ARMA_INCLUDES
@@ -21,19 +21,20 @@
 #endif
 
 // Next, standard includes.
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <limits.h>
-#include <float.h>
-#include <stdint.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cctype>
+#include <climits>
+#include <cfloat>
+#include <cstdint>
 #include <iostream>
 #include <stdexcept>
+#include <tuple>
 
 // Defining _USE_MATH_DEFINES should set M_PI.
 #define _USE_MATH_DEFINES
-#include <math.h>
+#include <cmath>
 
 // For tgamma().
 #include <boost/math/special_functions/gamma.hpp>
@@ -71,6 +72,7 @@
   #define BOOST_PFTO
 #endif
 #include <mlpack/core/data/serialization_shim.hpp>
+#include <mlpack/core/data/serialization_template_version.hpp>
 
 // Now include Armadillo through the special mlpack extensions.
 #include <mlpack/core/arma_extend/arma_extend.hpp>
@@ -84,6 +86,7 @@
 // it's part of the C++11 standard.
 #ifdef _MSC_VER
   #pragma warning(disable : 4519)
+  #define ARMA_USE_CXX11
 #endif
 
 #endif

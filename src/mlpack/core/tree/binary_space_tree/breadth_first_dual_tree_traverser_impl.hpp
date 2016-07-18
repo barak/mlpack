@@ -6,15 +6,15 @@
  * This is a way to perform a dual-tree traversal of two trees.  The trees must
  * be the same type.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef __MLPACK_CORE_TREE_BINARY_SPACE_TREE_BREADTH_FIRST_DUAL_TREE_TRAVERSER_IMPL_HPP
-#define __MLPACK_CORE_TREE_BINARY_SPACE_TREE_BREADTH_FIRST_DUAL_TREE_TRAVERSER_IMPL_HPP
+#ifndef MLPACK_CORE_TREE_BINARY_SPACE_TREE_BREADTH_FIRST_DUAL_TREE_TRAVERSER_IMPL_HPP
+#define MLPACK_CORE_TREE_BINARY_SPACE_TREE_BREADTH_FIRST_DUAL_TREE_TRAVERSER_IMPL_HPP
 
 // In case it hasn't been included yet.
 #include "breadth_first_dual_tree_traverser.hpp"
@@ -25,7 +25,7 @@ namespace tree {
 template<typename MetricType,
          typename StatisticType,
          typename MatType,
-         template<typename BoundMetricType> class BoundType,
+         template<typename BoundMetricType, typename...> class BoundType,
          template<typename SplitBoundType, typename SplitMatType>
              class SplitType>
 template<typename RuleType>
@@ -53,7 +53,7 @@ bool operator<(const QueueFrame<TreeType, TraversalInfoType>& a,
 template<typename MetricType,
          typename StatisticType,
          typename MatType,
-         template<typename BoundMetricType> class BoundType,
+         template<typename BoundMetricType, typename...> class BoundType,
          template<typename SplitBoundType, typename SplitMatType>
              class SplitType>
 template<typename RuleType>
@@ -93,7 +93,7 @@ BreadthFirstDualTreeTraverser<RuleType>::Traverse(
 template<typename MetricType,
          typename StatisticType,
          typename MatType,
-         template<typename BoundMetricType> class BoundType,
+         template<typename BoundMetricType, typename...> class BoundType,
          template<typename SplitBoundType, typename SplitMatType>
              class SplitType>
 template<typename RuleType>
@@ -209,4 +209,4 @@ BreadthFirstDualTreeTraverser<RuleType>::Traverse(
 } // namespace tree
 } // namespace mlpack
 
-#endif // __MLPACK_CORE_TREE_BINARY_SPACE_TREE_BREADTH_FIRST_DUAL_TREE_TRAVERSER_IMPL_HPP
+#endif // MLPACK_CORE_TREE_BINARY_SPACE_TREE_BREADTH_FIRST_DUAL_TREE_TRAVERSER_IMPL_HPP

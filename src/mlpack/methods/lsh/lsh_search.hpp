@@ -20,15 +20,15 @@
  * }
  *
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef __MLPACK_METHODS_NEIGHBOR_SEARCH_LSH_SEARCH_HPP
-#define __MLPACK_METHODS_NEIGHBOR_SEARCH_LSH_SEARCH_HPP
+#ifndef MLPACK_METHODS_NEIGHBOR_SEARCH_LSH_SEARCH_HPP
+#define MLPACK_METHODS_NEIGHBOR_SEARCH_LSH_SEARCH_HPP
 
 #include <mlpack/core.hpp>
 #include <vector>
@@ -57,6 +57,32 @@ class LSHSearch
    * performing the hashing for details on how the hashing is done.
    *
    * @param referenceSet Set of reference points and the set of queries.
+   * @param projections Cube of projection tables. For a cube of size (a, b, c)
+   *     we set numProj = a, numTables = c. b is the reference set
+   *     dimensionality.
+   * @param hashWidth The width of hash for every table. If 0 (the default) is
+   *     provided, then the hash width is automatically obtained by computing
+   *     the average pairwise distance of 25 pairs.  This should be a reasonable
+   *     upper bound on the nearest-neighbor distance in general.
+   * @param secondHashSize The size of the second hash table. This should be a
+   *     large prime number.
+   * @param bucketSize The size of the bucket in the second hash table. This is
+   *     the maximum number of points that can be hashed into single bucket.  A
+   *     value of 0 indicates that there is no limit (so the second hash table
+   *     can be arbitrarily large---be careful!).
+   */
+  LSHSearch(const arma::mat& referenceSet,
+            const arma::cube& projections,
+            const double hashWidth = 0.0,
+            const size_t secondHashSize = 99901,
+            const size_t bucketSize = 500);
+
+  /**
+   * This function initializes the LSH class. It builds the hash one the
+   * reference set using the provided projections. See the individual functions
+   * performing the hashing for details on how the hashing is done.
+   *
+   * @param referenceSet Set of reference points and the set of queries.
    * @param numProj Number of projections in each hash table (anything between
    *     10-50 might be a decent choice).
    * @param numTables Total number of hash tables (anything between 10-20
@@ -68,8 +94,9 @@ class LSHSearch
    * @param secondHashSize The size of the second hash table. This should be a
    *     large prime number.
    * @param bucketSize The size of the bucket in the second hash table. This is
-   *     the maximum number of points that can be hashed into single bucket.
-   *     Default values are already provided here.
+   *     the maximum number of points that can be hashed into single bucket.  A
+   *     value of 0 indicates that there is no limit (so the second hash table
+   *     can be arbitrarily large---be careful!).
    */
   LSHSearch(const arma::mat& referenceSet,
             const size_t numProj,
@@ -90,15 +117,36 @@ class LSHSearch
   ~LSHSearch();
 
   /**
-   * Train the LSH model on the given dataset.  This means building new hash
-   * tables.
+   * Train the LSH model on the given dataset.  If a correctly-sized projection
+   * cube is not provided, this means building new hash tables. Otherwise, we
+   * use the projections provided by the user.
+   *
+   * @param referenceSet Set of reference points and the set of queries.
+   * @param numProj Number of projections in each hash table (anything between
+   *     10-50 might be a decent choice).
+   * @param numTables Total number of hash tables (anything between 10-20
+   *     should suffice).
+   * @param hashWidth The width of hash for every table. If 0 (the default) is
+   *     provided, then the hash width is automatically obtained by computing
+   *     the average pairwise distance of 25 pairs.  This should be a reasonable
+   *     upper bound on the nearest-neighbor distance in general.
+   * @param secondHashSize The size of the second hash table. This should be a
+   *     large prime number.
+   * @param bucketSize The size of the bucket in the second hash table. This is
+   *     the maximum number of points that can be hashed into single bucket.  A
+   *     value of 0 indicates that there is no limit (so the second hash table
+   *     can be arbitrarily large---be careful!).
+   * @param projections Cube of projection tables. For a cube of size (a, b, c)
+   *     we set numProj = a, numTables = c. b is the reference set
+   *     dimensionality.
    */
   void Train(const arma::mat& referenceSet,
              const size_t numProj,
              const size_t numTables,
              const double hashWidth = 0.0,
              const size_t secondHashSize = 99901,
-             const size_t bucketSize = 500);
+             const size_t bucketSize = 500,
+             const arma::cube& projection = arma::cube());
 
   /**
    * Compute the nearest neighbors of the points in the given query set and
@@ -154,7 +202,7 @@ class LSHSearch
    * @param ar Archive to serialize to.
    */
   template<typename Archive>
-  void Serialize(Archive& ar, const unsigned int /* version */);
+  void Serialize(Archive& ar, const unsigned int version);
 
   //! Return the number of distance evaluations performed.
   size_t DistanceEvaluations() const { return distanceEvaluations; }
@@ -165,9 +213,7 @@ class LSHSearch
   const arma::mat& ReferenceSet() const { return *referenceSet; }
 
   //! Get the number of projections.
-  size_t NumProjections() const { return projections.size(); }
-  //! Get the projection matrix of the given table.
-  const arma::mat& Projection(const size_t i) const { return projections[i]; }
+  size_t NumProjections() const { return projections.n_slices; }
 
   //! Get the offsets 'b' for each of the projections.  (One 'b' per column.)
   const arma::mat& Offsets() const { return offsets; }
@@ -179,24 +225,25 @@ class LSHSearch
   size_t BucketSize() const { return bucketSize; }
 
   //! Get the second hash table.
-  const arma::Mat<size_t>& SecondHashTable() const { return secondHashTable; }
+  const std::vector<arma::Col<size_t>>& SecondHashTable() const
+      { return secondHashTable; }
+
+  //! Get the projection tables.
+  const arma::cube& Projections() { return projections; }
+
+  //! Change the projection tables (this retrains the LSH model).
+  void Projections(const arma::cube& projTables)
+  {
+    // Simply call Train() with the given projection tables.
+    Train(*referenceSet, numProj, numTables, hashWidth, secondHashSize,
+        bucketSize, projTables);
+  }
+
+  //! Get a single projection matrix.  This function is deprecated and will be
+  //! removed in mlpack 2.1.0!
+  const arma::mat& Projection(size_t i) { return projections.slice(i); }
 
  private:
-  /**
-   * This function builds a hash table with two levels of hashing as presented
-   * in the paper. This function first hashes the points with 'numProj' random
-   * projections to a single hash table creating (key, point ID) pairs where the
-   * key is a 'numProj'-dimensional integer vector.
-   *
-   * Then each key in this hash table is hashed into a second hash table using a
-   * standard hash.
-   *
-   * This function does not have any parameters and relies on parameters which
-   * are private members of this class, initialized during the class
-   * initialization.
-   */
-  void BuildHash();
-
   /**
    * This function takes a query and hashes it into each of the hash tables to
    * get keys for the query and then the key is hashed to a bucket of the second
@@ -278,8 +325,8 @@ class LSHSearch
   //! The number of hash tables.
   size_t numTables;
 
-  //! The std::vector containing the projection matrix of each table.
-  std::vector<arma::mat> projections; // should be [numProj x dims] x numTables
+  //! The arma::cube containing the projection matrix of each table.
+  arma::cube projections; // should be [numProj x dims] x numTables slices
 
   //! The list of the offsets 'b' for each of the projection for each table.
   arma::mat offsets; // should be numProj x numTables
@@ -296,15 +343,16 @@ class LSHSearch
   //! The bucket size of the second hash.
   size_t bucketSize;
 
-  //! The final hash table; should be (< secondHashSize) x bucketSize.
-  arma::Mat<size_t> secondHashTable;
+  //! The final hash table; should be (< secondHashSize) vectors each with
+  //! (<= bucketSize) elements.
+  std::vector<arma::Col<size_t>> secondHashTable;
 
   //! The number of elements present in each hash bucket; should be
   //! secondHashSize.
   arma::Col<size_t> bucketContentSize;
 
   //! For a particular hash value, points to the row in secondHashTable
-  //! corresponding to this value.  Should be secondHashSize.
+  //! corresponding to this value. Length secondHashSize.
   arma::Col<size_t> bucketRowInHashTable;
 
   //! The number of distance evaluations.
@@ -313,6 +361,10 @@ class LSHSearch
 
 } // namespace neighbor
 } // namespace mlpack
+
+//! Set the serialization version of the LSHSearch class.
+BOOST_TEMPLATE_CLASS_VERSION(template<typename SortPolicy>,
+    mlpack::neighbor::LSHSearch<SortPolicy>, 1);
 
 // Include implementation.
 #include "lsh_search_impl.hpp"

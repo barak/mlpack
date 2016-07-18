@@ -6,15 +6,15 @@
  * Defines the KernelPCA class to perform Kernel Principal Components Analysis
  * on the specified data set.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef __MLPACK_METHODS_KERNEL_PCA_KERNEL_PCA_HPP
-#define __MLPACK_METHODS_KERNEL_PCA_KERNEL_PCA_HPP
+#ifndef MLPACK_METHODS_KERNEL_PCA_KERNEL_PCA_HPP
+#define MLPACK_METHODS_KERNEL_PCA_KERNEL_PCA_HPP
 
 #include <mlpack/core.hpp>
 #include <mlpack/methods/kernel_pca/kernel_rules/naive_method.hpp>
@@ -133,4 +133,4 @@ class KernelPCA
 // Include implementation.
 #include "kernel_pca_impl.hpp"
 
-#endif // __MLPACK_METHODS_KERNEL_PCA_KERNEL_PCA_HPP
+#endif // MLPACK_METHODS_KERNEL_PCA_KERNEL_PCA_HPP

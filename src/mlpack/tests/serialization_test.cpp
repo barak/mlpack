@@ -4,9 +4,9 @@
  *
  * Test serialization of mlpack objects.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
@@ -58,6 +58,26 @@ using namespace std;
 BOOST_AUTO_TEST_SUITE(SerializationTest);
 
 /**
+ * Serialize a random cube.
+ */
+BOOST_AUTO_TEST_CASE(CubeSerializeTest)
+{
+  arma::cube m;
+  m.randu(2, 50, 50);
+  TestAllArmadilloSerialization(m);
+}
+
+/**
+ * Serialize an empty cube.
+ */
+BOOST_AUTO_TEST_CASE(EmptyCubeSerializeTest)
+{
+  arma::cube c;
+  TestAllArmadilloSerialization(c);
+}
+
+
+/**
  * Can we load and save an Armadillo matrix?
  */
 BOOST_AUTO_TEST_CASE(MatrixSerializeXMLTest)
@@ -70,7 +90,7 @@ BOOST_AUTO_TEST_CASE(MatrixSerializeXMLTest)
 /**
  * How about columns?
  */
-BOOST_AUTO_TEST_CASE(ColSerializeXMLTest)
+BOOST_AUTO_TEST_CASE(ColSerializeTest)
 {
   arma::vec m;
   m.randu(50, 1);
@@ -80,7 +100,7 @@ BOOST_AUTO_TEST_CASE(ColSerializeXMLTest)
 /**
  * How about rows?
  */
-BOOST_AUTO_TEST_CASE(RowSerializeXMLTest)
+BOOST_AUTO_TEST_CASE(RowSerializeTest)
 {
   arma::rowvec m;
   m.randu(1, 50);
@@ -97,7 +117,7 @@ BOOST_AUTO_TEST_CASE(EmptyMatrixSerializeTest)
 /**
  * Can we load and save a sparse Armadillo matrix?
  */
-BOOST_AUTO_TEST_CASE(SparseMatrixSerializeXMLTest)
+BOOST_AUTO_TEST_CASE(SparseMatrixSerializeTest)
 {
   arma::sp_mat m;
   m.sprandu(50, 50, 0.3);
@@ -107,7 +127,7 @@ BOOST_AUTO_TEST_CASE(SparseMatrixSerializeXMLTest)
 /**
  * How about columns?
  */
-BOOST_AUTO_TEST_CASE(SparseColSerializeXMLTest)
+BOOST_AUTO_TEST_CASE(SparseColSerializeTest)
 {
   arma::sp_vec m;
   m.sprandu(50, 1, 0.3);
@@ -117,7 +137,7 @@ BOOST_AUTO_TEST_CASE(SparseColSerializeXMLTest)
 /**
  * How about rows?
  */
-BOOST_AUTO_TEST_CASE(SparseRowSerializeXMLTest)
+BOOST_AUTO_TEST_CASE(SparseRowSerializeTest)
 {
   arma::sp_rowvec m;
   m.sprandu(1, 50, 0.3);
@@ -341,12 +361,12 @@ BOOST_AUTO_TEST_CASE(BallBoundTest)
 
 BOOST_AUTO_TEST_CASE(MahalanobisBallBoundTest)
 {
-  BallBound<arma::vec, MahalanobisDistance<>> b(100);
+  BallBound<MahalanobisDistance<>, arma::vec> b(100);
   b.Center().randu();
   b.Radius() = 14.0;
   b.Metric().Covariance().randu(100, 100);
 
-  BallBound<arma::vec, MahalanobisDistance<>> xmlB, textB, binaryB;
+  BallBound<MahalanobisDistance<>, arma::vec> xmlB, textB, binaryB;
 
   SerializeObjectAll(b, xmlB, textB, binaryB);
 
@@ -788,16 +808,16 @@ BOOST_AUTO_TEST_CASE(LogisticRegressionTest)
   BOOST_REQUIRE_CLOSE(lr.Lambda(), lrBinary.Lambda(), 1e-5);
 }
 
-BOOST_AUTO_TEST_CASE(AllkNNTest)
+BOOST_AUTO_TEST_CASE(KNNTest)
 {
-  using neighbor::AllkNN;
+  using neighbor::KNN;
   arma::mat dataset = arma::randu<arma::mat>(5, 2000);
 
-  AllkNN allknn(dataset, false, false);
+  KNN knn(dataset, false, false);
 
-  AllkNN knnXml, knnText, knnBinary;
+  KNN knnXml, knnText, knnBinary;
 
-  SerializeObjectAll(allknn, knnXml, knnText, knnBinary);
+  SerializeObjectAll(knn, knnXml, knnText, knnBinary);
 
   // Now run nearest neighbor and make sure the results are the same.
   arma::mat querySet = arma::randu<arma::mat>(5, 1000);
@@ -805,7 +825,7 @@ BOOST_AUTO_TEST_CASE(AllkNNTest)
   arma::mat distances, xmlDistances, textDistances, binaryDistances;
   arma::Mat<size_t> neighbors, xmlNeighbors, textNeighbors, binaryNeighbors;
 
-  allknn.Search(querySet, 5, neighbors, distances);
+  knn.Search(querySet, 5, neighbors, distances);
   knnXml.Search(querySet, 5, xmlNeighbors, xmlDistances);
   knnText.Search(querySet, 5, textNeighbors, textDistances);
   knnBinary.Search(querySet, 5, binaryNeighbors, binaryDistances);
@@ -1111,7 +1131,7 @@ BOOST_AUTO_TEST_CASE(NaiveBayesSerializationTest)
 BOOST_AUTO_TEST_CASE(RASearchTest)
 {
   using neighbor::AllkRANN;
-  using neighbor::AllkNN;
+  using neighbor::KNN;
   arma::mat dataset = arma::randu<arma::mat>(5, 200);
   arma::mat otherDataset = arma::randu<arma::mat>(5, 100);
 
@@ -1132,8 +1152,8 @@ BOOST_AUTO_TEST_CASE(RASearchTest)
   arma::mat distances, xmlDistances, textDistances, binaryDistances;
   arma::Mat<size_t> neighbors, xmlNeighbors, textNeighbors, binaryNeighbors;
 
-  AllkNN allknn(dataset); // Exact search.
-  allknn.Search(querySet, 10, neighbors, distances);
+  KNN knn(dataset); // Exact search.
+  knn.Search(querySet, 10, neighbors, distances);
   krannXml.Search(querySet, 5, xmlNeighbors, xmlDistances);
   krannText.Search(querySet, 5, textNeighbors, textDistances);
   krannBinary.Search(querySet, 5, binaryNeighbors, binaryDistances);
@@ -1197,8 +1217,8 @@ BOOST_AUTO_TEST_CASE(LSHTest)
   BOOST_REQUIRE_EQUAL(lsh.NumProjections(), binaryLsh.NumProjections());
   for (size_t i = 0; i < lsh.NumProjections(); ++i)
   {
-    CheckMatrices(lsh.Projection(i), xmlLsh.Projection(i),
-        textLsh.Projection(i), binaryLsh.Projection(i));
+    CheckMatrices(lsh.Projections().slice(i), xmlLsh.Projections().slice(i),
+        textLsh.Projections().slice(i), binaryLsh.Projections().slice(i));
   }
 
   CheckMatrices(lsh.ReferenceSet(), xmlLsh.ReferenceSet(),
@@ -1212,8 +1232,16 @@ BOOST_AUTO_TEST_CASE(LSHTest)
   BOOST_REQUIRE_EQUAL(lsh.BucketSize(), textLsh.BucketSize());
   BOOST_REQUIRE_EQUAL(lsh.BucketSize(), binaryLsh.BucketSize());
 
-  CheckMatrices(lsh.SecondHashTable(), xmlLsh.SecondHashTable(),
-      textLsh.SecondHashTable(), binaryLsh.SecondHashTable());
+  BOOST_REQUIRE_EQUAL(lsh.SecondHashTable().size(),
+      xmlLsh.SecondHashTable().size());
+  BOOST_REQUIRE_EQUAL(lsh.SecondHashTable().size(),
+      textLsh.SecondHashTable().size());
+  BOOST_REQUIRE_EQUAL(lsh.SecondHashTable().size(),
+      binaryLsh.SecondHashTable().size());
+
+  for (size_t i = 0; i < lsh.SecondHashTable().size(); ++i)
+  CheckMatrices(lsh.SecondHashTable()[i], xmlLsh.SecondHashTable()[i],
+      textLsh.SecondHashTable()[i], binaryLsh.SecondHashTable()[i]);
 }
 
 // Make sure serialization works for the decision stump.

@@ -1,14 +1,14 @@
 /**
 w
- * @file allkfn_main.cpp
+ * @file kfn_main.cpp
  * @author Ryan Curtin
  *
- * Implementation of the AllkFN executable.  Allows some number of standard
+ * Implementation of the KFN executable.  Allows some number of standard
  * options.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
@@ -40,8 +40,8 @@ PROGRAM_INFO("All K-Furthest-Neighbors",
     "point in 'input.csv' and store the distances in 'distances.csv' and the "
     "neighbors in the file 'neighbors.csv':"
     "\n\n"
-    "$ allkfn --k=5 --reference_file=input.csv --distances_file=distances.csv\n"
-    "  --neighbors_file=neighbors.csv"
+    "$ mlpack_kfn --k=5 --reference_file=input.csv "
+    "--distances_file=distances.csv\n --neighbors_file=neighbors.csv"
     "\n\n"
     "The output files are organized such that row i and column j in the "
     "neighbors output file corresponds to the index of the point in the "
@@ -69,7 +69,7 @@ PARAM_INT("k", "Number of furthest neighbors to find.", "k", 0);
 // The user may specify the type of tree to use, and a few pararmeters for tree
 // building.
 PARAM_STRING("tree_type", "Type of tree to use: 'kd', 'cover', 'r', 'r-star', "
-    "'ball'.", "t", "kd");
+    "'x', 'ball'.", "t", "kd");
 PARAM_INT("leaf_size", "Leaf size for tree building.", "l", 20);
 PARAM_FLAG("random_basis", "Before tree-building, project the data onto a "
     "random orthogonal basis.", "R");
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
     const string treeType = CLI::GetParam<string>("tree_type");
     const bool randomBasis = CLI::HasParam("random_basis");
 
-    int tree = 0;
+    KFNModel::TreeTypes tree = KFNModel::KD_TREE;
     if (treeType == "kd")
       tree = KFNModel::KD_TREE;
     else if (treeType == "cover")
@@ -167,9 +167,11 @@ int main(int argc, char *argv[])
       tree = KFNModel::R_STAR_TREE;
     else if (treeType == "ball")
       tree = KFNModel::BALL_TREE;
+    else if (treeType == "x")
+      tree = KFNModel::X_TREE;
     else
       Log::Fatal << "Unknown tree type '" << treeType << "'; valid choices are "
-          << "'kd', 'cover', 'r', 'r-star', and 'ball'." << endl;
+          << "'kd', 'cover', 'r', 'r-star', 'x' and 'ball'." << endl;
 
     kfn.TreeType() = tree;
     kfn.RandomBasis() = randomBasis;

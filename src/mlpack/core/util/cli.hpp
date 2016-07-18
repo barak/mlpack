@@ -6,15 +6,15 @@
  * This can be used more or less regardless of context.  In the future,
  * it might be expanded to include file I/O.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef __MLPACK_CORE_UTIL_CLI_HPP
-#define __MLPACK_CORE_UTIL_CLI_HPP
+#ifndef MLPACK_CORE_UTIL_CLI_HPP
+#define MLPACK_CORE_UTIL_CLI_HPP
 
 #include <list>
 #include <iostream>
@@ -430,8 +430,8 @@ struct ParamData
  * The flag (boolean) type automatically defaults to false; it is specified
  * merely as a flag on the command line (no '=true' is required).
  *
- * Here is an example of a few parameters being defined; this is for the AllkNN
- * executable (methods/neighbor_search/allknn_main.cpp):
+ * Here is an example of a few parameters being defined; this is for the KNN
+ * executable (methods/neighbor_search/knn_main.cpp):
  *
  * @code
  * PARAM_STRING_REQ("reference_file", "File containing the reference dataset.",
@@ -642,13 +642,6 @@ class CLI
    */
   static void RemoveDuplicateFlags(po::basic_parsed_options<char>& bpo);
 
- /**
-   * Parses a stream for arguments.
-   *
-   * @param stream The stream to be parsed.
-   */
-  static void ParseStream(std::istream& stream);
-
   /**
    * Print out the current hierarchy.
    */
@@ -680,7 +673,7 @@ class CLI
   //! Values of the options given by user.
   po::variables_map vmap;
 
-  //! Pathnames of required options.
+  //! Identifier names of required options.
   std::list<std::string> requiredOptions;
 
   //! Map of global values.
@@ -728,30 +721,12 @@ class CLI
    */
   static std::string AliasReverseLookup(const std::string& value);
 
-#ifdef _WIN32
-  /**
-   * Converts a FILETIME structure to an equivalent timeval structure.
-   * Only necessary on windows platforms.
-   * @param tv Valid timeval structure.
-   */
-  void FileTimeToTimeVal(timeval* tv);
-#endif
-
   /**
    * Checks that all required parameters have been specified on the command
    * line.  If any have not been specified, an error message is printed and the
    * program is terminated.
    */
   static void RequiredOptions();
-
-  /**
-   * Cleans up input pathnames, rendering strings such as /foo/bar
-   * and foo/bar/ equivalent inputs.
-   *
-   * @param str Input string.
-   * @return Sanitized string.
-   */
-  static std::string SanitizeString(const std::string& str);
 
   /**
    * Parses the values given on the command line, overriding any default values.

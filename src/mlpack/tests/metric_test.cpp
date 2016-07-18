@@ -3,9 +3,9 @@
  *
  * Unit tests for the 'LMetric' class.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
@@ -51,10 +51,10 @@ BOOST_AUTO_TEST_CASE(L2MetricTest)
   arma::vec b1(5);
   b1.randn();
 
-  arma::Col<size_t> a2(5);
+  arma::vec a2(5);
   a2 << 1 << 2 << 1 << 0 << 5;
 
-  arma::Col<size_t> b2(5);
+  arma::vec b2(5);
   b2 << 2 << 5 << 2 << 0 << 1;
 
   EuclideanDistance lMetric;

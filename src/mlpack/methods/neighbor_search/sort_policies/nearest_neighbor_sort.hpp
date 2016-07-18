@@ -5,15 +5,15 @@
  * Implementation of the SortPolicy class for NeighborSearch; in this case, the
  * nearest neighbors are those that are most important.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef __MLPACK_METHODS_NEIGHBOR_SEARCH_NEAREST_NEIGHBOR_SORT_HPP
-#define __MLPACK_METHODS_NEIGHBOR_SEARCH_NEAREST_NEIGHBOR_SORT_HPP
+#ifndef MLPACK_METHODS_NEIGHBOR_SEARCH_NEAREST_NEIGHBOR_SORT_HPP
+#define MLPACK_METHODS_NEIGHBOR_SEARCH_NEAREST_NEIGHBOR_SORT_HPP
 
 #include <mlpack/core.hpp>
 
@@ -53,16 +53,16 @@ class NearestNeighborSort
 
   /**
    * Return whether or not value is "better" than ref.  In this case, that means
-   * that the value is less than the reference.
+   * that the value is less than or equal to the reference.
    *
    * @param value Value to compare
    * @param ref Value to compare with
    *
-   * @return bool indicating whether or not (value < ref).
+   * @return bool indicating whether or not (value <= ref).
    */
   static inline bool IsBetter(const double value, const double ref)
   {
-    return (value < ref);
+    return (value <= ref);
   }
 
   /**

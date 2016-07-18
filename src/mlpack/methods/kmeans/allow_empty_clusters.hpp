@@ -5,15 +5,15 @@
  * This very simple policy is used when K-Means is allowed to return empty
  * clusters.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef __MLPACK_METHODS_KMEANS_ALLOW_EMPTY_CLUSTERS_HPP
-#define __MLPACK_METHODS_KMEANS_ALLOW_EMPTY_CLUSTERS_HPP
+#ifndef MLPACK_METHODS_KMEANS_ALLOW_EMPTY_CLUSTERS_HPP
+#define MLPACK_METHODS_KMEANS_ALLOW_EMPTY_CLUSTERS_HPP
 
 #include <mlpack/core.hpp>
 
@@ -31,8 +31,8 @@ class AllowEmptyClusters
   AllowEmptyClusters() { }
 
   /**
-   * This function does nothing.  It is called by K-Means when K-Means detects
-   * an empty cluster.
+   * This function allows empty clusters to persist simply by leaving the empty
+   * cluster in its last position.
    *
    * @tparam MatType Type of data (arma::mat or arma::spmat).
    * @param data Dataset on which clustering is being performed.
@@ -50,15 +50,16 @@ class AllowEmptyClusters
   template<typename MetricType, typename MatType>
   static inline force_inline size_t EmptyCluster(
       const MatType& /* data */,
-      const size_t /* emptyCluster */,
-      const arma::mat& /* oldCentroids */,
-      arma::mat& /* newCentroids */,
+      const size_t emptyCluster,
+      const arma::mat& oldCentroids,
+      arma::mat& newCentroids,
       arma::Col<size_t>& /* clusterCounts */,
       MetricType& /* metric */,
       const size_t /* iteration */)
   {
-    // Empty clusters are okay!  Do nothing.
-    return 0;
+    // Take the last iteration's centroid.
+    newCentroids.col(emptyCluster) = oldCentroids.col(emptyCluster);
+    return 0; // No points were changed.
   }
 
   //! Serialize the empty cluster policy (nothing to do).

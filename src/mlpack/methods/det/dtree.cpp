@@ -6,9 +6,9 @@
  * the Density Estimation Tree class.
  *
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
@@ -143,11 +143,8 @@ DTree::DTree(const arma::vec& maxVals,
 
 DTree::~DTree()
 {
-  if (left != NULL)
-    delete left;
-
-  if (right != NULL)
-    delete right;
+  delete left;
+  delete right;
 }
 
 // This function computes the log-l2-negative-error of a given node from the
@@ -155,9 +152,18 @@ DTree::~DTree()
 double DTree::LogNegativeError(const size_t totalPoints) const
 {
   // log(-|t|^2 / (N^2 V_t)) = log(-1) + 2 log(|t|) - 2 log(N) - log(V_t).
-  return 2 * std::log((double) (end - start)) -
-         2 * std::log((double) totalPoints) -
-         arma::accu(arma::log(maxVals - minVals));
+  double err = 2 * std::log((double) (end - start)) -
+               2 * std::log((double) totalPoints);
+
+  arma::vec valDiffs = maxVals - minVals;
+  for (size_t i = 0; i < maxVals.n_elem; ++i)
+  {
+    // Ignore very small dimensions to prevent overflow.
+    if (valDiffs[i] > 1e-50)
+      err -= std::log(valDiffs[i]);
+  }
+
+  return err;
 }
 
 // This function finds the best split with respect to the L2-error, by trying

@@ -4,9 +4,9 @@
  *
  * Executable for RADICAL.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
@@ -23,10 +23,8 @@ PROGRAM_INFO("RADICAL", "An implementation of RADICAL, a method for independent"
 
 PARAM_STRING_REQ("input_file", "Input dataset filename for ICA.", "i");
 
-PARAM_STRING("output_ic", "File to save independent components to.", "o",
-    "output_ic.csv");
-PARAM_STRING("output_unmixing", "File to save unmixing matrix to.", "u",
-    "output_unmixing.csv");
+PARAM_STRING_REQ("output_ic", "File to save independent components to.", "o");
+PARAM_STRING_REQ("output_unmixing", "File to save unmixing matrix to.", "u");
 
 PARAM_DOUBLE("noise_std_dev", "Standard deviation of Gaussian noise.", "n",
     0.175);

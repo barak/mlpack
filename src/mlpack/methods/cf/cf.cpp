@@ -8,9 +8,9 @@
  * Implementation of CF class to perform Collaborative Filtering on the
  * specified data set.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
@@ -79,7 +79,7 @@ void CF::GetRecommendations(const size_t numRecs,
 
   // Calculate the neighborhood of the queried users.
   // This should be a templatized option.
-  neighbor::AllkNN a(stretchedH);
+  neighbor::KNN a(stretchedH);
   arma::mat resultingDistances; // Temporary storage.
   a.Search(query, numUsersForSimilarity, neighborhood, resultingDistances);
 
@@ -161,7 +161,7 @@ double CF::Predict(const size_t user, const size_t item) const
 
   // Calculate the neighborhood of the queried users.
   // This should be a templatized option.
-  neighbor::AllkNN a(stretchedH, false, true /* single-tree mode */);
+  neighbor::KNN a(stretchedH, false, true /* single-tree mode */);
   arma::mat resultingDistances; // Temporary storage.
 
   a.Search(query, numUsersForSimilarity, neighborhood, resultingDistances);
@@ -200,7 +200,7 @@ void CF::Predict(const arma::Mat<size_t>& combinations,
     queries.col(i) = stretchedH.col(users[i]);
 
   // Now calculate the neighborhood of these users.
-  neighbor::AllkNN a(stretchedH);
+  neighbor::KNN a(stretchedH);
   arma::mat distances;
   arma::Mat<size_t> neighborhood;
 

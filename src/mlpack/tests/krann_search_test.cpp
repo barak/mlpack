@@ -4,9 +4,9 @@
  * Unit tests for the 'RASearch' class and consequently the
  * 'RASearchRules' class
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
@@ -29,9 +29,9 @@ using namespace mlpack::tree;
 using namespace mlpack::metric;
 using namespace mlpack::bound;
 
-BOOST_AUTO_TEST_SUITE(AllkRANNTest);
+BOOST_AUTO_TEST_SUITE(KRANNTest);
 
-// Test the correctness and guarantees of AllkRANN when in naive mode.
+// Test the correctness and guarantees of KRANN when in naive mode.
 BOOST_AUTO_TEST_CASE(NaiveGuaranteeTest)
 {
   arma::Mat<size_t> neighbors;
@@ -569,8 +569,8 @@ BOOST_AUTO_TEST_CASE(MoveConstructorTest)
   arma::mat dataset = arma::randu<arma::mat>(3, 200);
   arma::mat copy(dataset);
 
-  AllkRANN moveknn(std::move(copy));
-  AllkRANN allknn(dataset);
+  KRANN moveknn(std::move(copy));
+  KRANN knn(dataset);
 
   BOOST_REQUIRE_EQUAL(copy.n_elem, 0);
   BOOST_REQUIRE_EQUAL(moveknn.ReferenceSet().n_rows, 3);
@@ -580,7 +580,7 @@ BOOST_AUTO_TEST_CASE(MoveConstructorTest)
   arma::Mat<size_t> moveNeighbors, neighbors;
 
   moveknn.Search(1, moveNeighbors, moveDistances);
-  allknn.Search(1, neighbors, distances);
+  knn.Search(1, neighbors, distances);
 
   BOOST_REQUIRE_EQUAL(moveNeighbors.n_rows, neighbors.n_rows);
   BOOST_REQUIRE_EQUAL(moveNeighbors.n_rows, neighbors.n_rows);
@@ -597,7 +597,7 @@ BOOST_AUTO_TEST_CASE(MoveTrainTest)
   arma::mat dataset = arma::randu<arma::mat>(3, 200);
 
   // Do it in tree mode, and in naive mode.
-  AllkRANN knn;
+  KRANN knn;
   knn.Train(std::move(dataset));
 
   arma::mat distances;
@@ -632,7 +632,7 @@ BOOST_AUTO_TEST_CASE(RAModelTest)
   data::Load("rann_test_q_3_100.csv", queryData, true);
 
   // Build all the possible models.
-  KNNModel models[8];
+  KNNModel models[10];
   models[0] = KNNModel(KNNModel::TreeTypes::KD_TREE, false);
   models[1] = KNNModel(KNNModel::TreeTypes::KD_TREE, true);
   models[2] = KNNModel(KNNModel::TreeTypes::COVER_TREE, false);
@@ -641,13 +641,15 @@ BOOST_AUTO_TEST_CASE(RAModelTest)
   models[5] = KNNModel(KNNModel::TreeTypes::R_TREE, true);
   models[6] = KNNModel(KNNModel::TreeTypes::R_STAR_TREE, false);
   models[7] = KNNModel(KNNModel::TreeTypes::R_STAR_TREE, true);
+  models[8] = KNNModel(KNNModel::TreeTypes::X_TREE, false);
+  models[9] = KNNModel(KNNModel::TreeTypes::X_TREE, true);
 
   arma::Mat<size_t> qrRanks;
   data::Load("rann_test_qr_ranks.csv", qrRanks, true, false); // No transpose.
 
   for (size_t j = 0; j < 3; ++j)
   {
-    for (size_t i = 0; i < 8; ++i)
+    for (size_t i = 0; i < 10; ++i)
     {
       // We only have std::move() constructors so make a copy of our data.
       arma::mat referenceCopy(referenceData);

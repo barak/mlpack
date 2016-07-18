@@ -3,6 +3,8 @@
 set(SOURCES
   arma_config.hpp
   arma_config_check.hpp
+  backtrace.hpp
+  backtrace.cpp
   cli.hpp
   cli.cpp
   cli_deleter.hpp
@@ -18,8 +20,6 @@ set(SOURCES
   prefixedoutstream.cpp
   prefixedoutstream_impl.hpp
   sfinae_utility.hpp
-  string_util.hpp
-  string_util.cpp
   timers.hpp
   timers.cpp
   version.hpp

@@ -4,15 +4,15 @@
  *
  * Implementation of stochastic gradient descent.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef __MLPACK_CORE_OPTIMIZERS_SGD_SGD_IMPL_HPP
-#define __MLPACK_CORE_OPTIMIZERS_SGD_SGD_IMPL_HPP
+#ifndef MLPACK_CORE_OPTIMIZERS_SGD_SGD_IMPL_HPP
+#define MLPACK_CORE_OPTIMIZERS_SGD_SGD_IMPL_HPP
 
 #include <mlpack/methods/regularized_svd/regularized_svd_function.hpp>
 // In case it hasn't been included yet.
@@ -42,10 +42,10 @@ double SGD<DecomposableFunctionType>::Optimize(arma::mat& iterate)
   const size_t numFunctions = function.NumFunctions();
 
   // This is used only if shuffle is true.
-  arma::vec visitationOrder;
+  arma::Col<size_t> visitationOrder;
   if (shuffle)
-    visitationOrder = arma::shuffle(arma::linspace(0, (numFunctions - 1),
-        numFunctions));
+    visitationOrder = arma::shuffle(arma::linspace<arma::Col<size_t>>(0,
+        (numFunctions - 1), numFunctions));
 
   // To keep track of where we are and how things are going.
   size_t currentFunction = 0;

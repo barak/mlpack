@@ -4,9 +4,9 @@
  *
  * Implementation of non-template Epanechnikov kernels.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
@@ -39,13 +39,13 @@ double EpanechnikovKernel::Evaluate(const double distance) const
 }
 
 /**
- * Evaluate gradient of the kernel not for two points 
+ * Evaluate gradient of the kernel not for two points
  * but for a numerical value.
  */
 double EpanechnikovKernel::Gradient(const double distance) const {
   if (std::abs(bandwidth) < std::abs(distance)) {
     return 0;
-  } else if (std::abs(bandwidth > std::abs(distance))) {
+  } else if (std::abs(bandwidth) > std::abs(distance)) {
     return -2 * inverseBandwidthSquared * distance;
   } else {
     // The gradient doesn't exist.

@@ -1,3 +1,42 @@
+### mlpack 2.0.2
+###### 2016-06-20
+  * Added the function LSHSearch::Projections(), which returns an arma::cube
+    with each projection table in a slice (#663).  Instead of Projection(i), you
+    should now use Projections().slice(i).
+
+  * A new constructor has been added to LSHSearch that creates objects using
+    projection tables provided in an arma::cube (#663).
+
+  * LSHSearch projection tables refactored for speed (#675).
+
+  * Handle zero-variance dimensions in DET (#515).
+
+  * Add MiniBatchSGD optimizer (src/mlpack/core/optimizers/minibatch_sgd/) and
+    allow its use in mlpack_logistic_regression and mlpack_nca programs.
+
+  * Add better backtrace support from Grzegorz Krajewski for Log::Fatal messages
+    when compiled with debugging and profiling symbols.  This requires libbfd
+    and libdl to be present during compilation.
+
+  * CosineTree test fix from Mikhail Lozhnikov (#358).
+
+  * Fixed HMM initial state estimation (#600).
+
+  * Changed versioning macros __MLPACK_VERSION_MAJOR, __MLPACK_VERSION_MINOR,
+    and __MLPACK_VERSION_PATCH to MLPACK_VERSION_MAJOR, MLPACK_VERSION_MINOR,
+    and MLPACK_VERSION_PATCH.  The old names will remain in place until
+    mlpack 3.0.0.
+
+  * Renamed mlpack_allknn, mlpack_allkfn, and mlpack_allkrann to mlpack_knn,
+    mlpack_kfn, and mlpack_krann.  The mlpack_allknn, mlpack_allkfn, and
+    mlpack_allkrann programs will remain as copies until mlpack 3.0.0.
+
+  * Add --random_initialization option to mlpack_hmm_train, for use when no
+    labels are provided.
+
+  * Add --kill_empty_clusters option to mlpack_kmeans and KillEmptyClusters
+    policy for the KMeans class (#595, #596).
+
 ### mlpack 2.0.1
 ###### 2016-02-04
   * Fix CMake to properly detect when MKL is being used with Armadillo.

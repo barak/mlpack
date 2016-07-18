@@ -8,9 +8,9 @@
  * change like that (because they have to change the test too).  That's the
  * hope, at least...
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
@@ -30,9 +30,9 @@ using namespace mlpack::metric;
 
 BOOST_AUTO_TEST_SUITE(TreeTraitsTest);
 
-// Be careful!  When writing new tests, always get the boolean value and store
-// it in a temporary, because the Boost unit test macros do weird things and
-// will cause bizarre problems.
+// Be careful!  When writing new tests, always get the boolean value of each
+// trait and store it in a temporary, because the Boost unit test macros do
+// weird things and will cause bizarre problems.
 
 // Test the defaults.
 BOOST_AUTO_TEST_CASE(DefaultsTraitsTest)

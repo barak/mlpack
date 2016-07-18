@@ -6,15 +6,15 @@
  * easy way to serialize a rank-approximate neighbor search model by abstracting
  * the types of trees and reflecting the RASearch API.
  *
- * This file is part of mlpack 2.0.1.
+ * This file is part of mlpack 2.0.2.
  *
- * mlpack is free software; you may redstribute it and/or modify it under the
+ * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef __MLPACK_METHODS_RANN_RA_MODEL_HPP
-#define __MLPACK_METHODS_RANN_RA_MODEL_HPP
+#ifndef MLPACK_METHODS_RANN_RA_MODEL_HPP
+#define MLPACK_METHODS_RANN_RA_MODEL_HPP
 
 #include <mlpack/core/tree/binary_space_tree.hpp>
 #include <mlpack/core/tree/cover_tree.hpp>
@@ -46,12 +46,13 @@ class RAModel
     KD_TREE,
     COVER_TREE,
     R_TREE,
-    R_STAR_TREE
+    R_STAR_TREE,
+    X_TREE
   };
 
  private:
   //! The type of tree being used.
-  int treeType;
+  TreeTypes treeType;
   //! The leaf size of the tree being used (useful only for the kd-tree).
   size_t leafSize;
 
@@ -77,13 +78,15 @@ class RAModel
   RAType<tree::RTree>* rTreeRA;
   //! Non-NULL if the R* tree is used.
   RAType<tree::RStarTree>* rStarTreeRA;
+  //! Non-NULL if the X tree is used.
+  RAType<tree::XTree>* xTreeRA;
 
  public:
   /**
    * Initialize the RAModel with the given type and whether or not a random
    * basis should be used.
    */
-  RAModel(int treeType = TreeTypes::KD_TREE, bool randomBasis = false);
+  RAModel(TreeTypes treeType = TreeTypes::KD_TREE, bool randomBasis = false);
 
   //! Clean memory, if necessary.
   ~RAModel();
@@ -136,9 +139,9 @@ class RAModel
   size_t& LeafSize();
 
   //! Get the type of tree being used.
-  int TreeType() const;
+  TreeTypes TreeType() const;
   //! Modify the type of tree being used.
-  int& TreeType();
+  TreeTypes& TreeType();
 
   //! Get whether or not a random basis is being used.
   bool RandomBasis() const;
