@@ -1,0 +1,161 @@
+From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
+Date: Tue, 19 Jul 2016 12:02:32 +0200
+Subject: spelling
+
+---
+ doc/policies/trees.hpp                                    | 2 +-
+ doc/tutorials/range_search/range_search.txt               | 2 +-
+ src/mlpack/core/tree/cosine_tree/cosine_tree.hpp          | 2 +-
+ src/mlpack/core/tree/rectangle_tree/r_star_tree_split.hpp | 2 +-
+ src/mlpack/core/tree/rectangle_tree/r_tree_split.hpp      | 2 +-
+ src/mlpack/core/tree/rectangle_tree/x_tree_split.hpp      | 2 +-
+ src/mlpack/core/util/backtrace.cpp                        | 2 +-
+ src/mlpack/core/util/backtrace.hpp                        | 2 +-
+ src/mlpack/methods/amf/init_rules/average_init.hpp        | 2 +-
+ src/mlpack/methods/amf/init_rules/random_acol_init.hpp    | 2 +-
+ src/mlpack/methods/naive_bayes/naive_bayes_classifier.hpp | 2 +-
+ 11 files changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/doc/policies/trees.hpp b/doc/policies/trees.hpp
+index 89bed8c..c15ef39 100644
+--- a/doc/policies/trees.hpp
++++ b/doc/policies/trees.hpp
+@@ -748,7 +748,7 @@ The \c RangeDistance() function allows a way for both bounds to be calculated at
+ once.  It is possible to implement this as a call to \c MinDistance() followed
+ by a call to \c MaxDistance(), but this may incur more metric \c Evaluate()
+ calls than necessary.  Often calculating both bounds at once can be more
+-efficent and can be done with fewer \c Evaluate() calls than calling both
++efficient and can be done with fewer \c Evaluate() calls than calling both
+ \c MinDistance() and \c MaxDistance().
+ 
+ @subsection treetype_rigorous_serialization Serialization
+diff --git a/doc/tutorials/range_search/range_search.txt b/doc/tutorials/range_search/range_search.txt
+index 277a844..645f623 100644
+--- a/doc/tutorials/range_search/range_search.txt
++++ b/doc/tutorials/range_search/range_search.txt
+@@ -47,7 +47,7 @@ A list of all the sections this tutorial contains.
+ 
+ @section cli_rstut The 'mlpack_range_search' command-line executable
+ 
+-\b mlpack provides an exectuable, \c mlpack_range_search, which can be used to
++\b mlpack provides an executable, \c mlpack_range_search, which can be used to
+ perform range searches quickly and simply from the command-line.  This program
+ will perform the range search and place the resulting neighbor index list into
+ one file and their corresponding distances into another file.  These files are
+diff --git a/src/mlpack/core/tree/cosine_tree/cosine_tree.hpp b/src/mlpack/core/tree/cosine_tree/cosine_tree.hpp
+index 0697401..0dd1fe8 100644
+--- a/src/mlpack/core/tree/cosine_tree/cosine_tree.hpp
++++ b/src/mlpack/core/tree/cosine_tree/cosine_tree.hpp
+@@ -144,7 +144,7 @@ class CosineTree
+    * a significant speedup when there are large number of columns to choose from
+    * and when a number of samples are to be drawn from the distribution.
+    *
+-   * @param cDistribution Cumulative LS distibution of columns in the node.
++   * @param cDistribution Cumulative LS distribution of columns in the node.
+    * @param value Randomly generated value in the range [0, 1].
+    * @param start Starting index of the distribution interval to search in.
+    * @param end Ending index of the distribution interval to search in.
+diff --git a/src/mlpack/core/tree/rectangle_tree/r_star_tree_split.hpp b/src/mlpack/core/tree/rectangle_tree/r_star_tree_split.hpp
+index 8159943..3048989 100644
+--- a/src/mlpack/core/tree/rectangle_tree/r_star_tree_split.hpp
++++ b/src/mlpack/core/tree/rectangle_tree/r_star_tree_split.hpp
+@@ -2,7 +2,7 @@
+  * @file r_tree_star_split.hpp
+  * @author Andrew Wells
+  *
+- * Defintion of the RStarTreeSplit class, a class that splits the nodes of an R tree, starting
++ * Definition of the RStarTreeSplit class, a class that splits the nodes of an R tree, starting
+  * at a leaf node and moving upwards if necessary.
+  *
+  * This file is part of mlpack 2.0.2.
+diff --git a/src/mlpack/core/tree/rectangle_tree/r_tree_split.hpp b/src/mlpack/core/tree/rectangle_tree/r_tree_split.hpp
+index 7a3ec0f..9d4fa09 100644
+--- a/src/mlpack/core/tree/rectangle_tree/r_tree_split.hpp
++++ b/src/mlpack/core/tree/rectangle_tree/r_tree_split.hpp
+@@ -2,7 +2,7 @@
+  * @file r_tree_split.hpp
+  * @author Andrew Wells
+  *
+- * Defintion of the RTreeSplit class, a class that splits the nodes of an R
++ * Definition of the RTreeSplit class, a class that splits the nodes of an R
+  * tree, starting at a leaf node and moving upwards if necessary.
+  *
+  * This file is part of mlpack 2.0.2.
+diff --git a/src/mlpack/core/tree/rectangle_tree/x_tree_split.hpp b/src/mlpack/core/tree/rectangle_tree/x_tree_split.hpp
+index 3028df1..c5fca3a 100644
+--- a/src/mlpack/core/tree/rectangle_tree/x_tree_split.hpp
++++ b/src/mlpack/core/tree/rectangle_tree/x_tree_split.hpp
+@@ -2,7 +2,7 @@
+  * @file x_tre_split.hpp
+  * @author Andrew Wells
+  *
+- * Defintion of the XTreeSplit class, a class that splits the nodes of an X
++ * Definition of the XTreeSplit class, a class that splits the nodes of an X
+  * tree, starting at a leaf node and moving upwards if necessary.
+  *
+  * This is known to have a bug: see #368.
+diff --git a/src/mlpack/core/util/backtrace.cpp b/src/mlpack/core/util/backtrace.cpp
+index bfa5782..fac2d13 100644
+--- a/src/mlpack/core/util/backtrace.cpp
++++ b/src/mlpack/core/util/backtrace.cpp
+@@ -148,7 +148,7 @@ void Backtrace::DecodeAddress(long addr)
+     if (FIND_LINE)
+     {
+       DemangleFunction();
+-      // Save retrieved informations.
++      // Save retrieved information.
+       stack.push_back(frame);
+     }
+   }
+diff --git a/src/mlpack/core/util/backtrace.hpp b/src/mlpack/core/util/backtrace.hpp
+index c1f9881..e12cf76 100644
+--- a/src/mlpack/core/util/backtrace.hpp
++++ b/src/mlpack/core/util/backtrace.hpp
+@@ -23,7 +23,7 @@ namespace mlpack {
+  * Provides a backtrace.
+  *
+  * The Backtrace class retrieve addresses of each called function from the
+- * stack and decode file name, function & line number. Retrieved informations
++ * stack and decode file name, function & line number. Retrieved information
+  * can be printed in form:
+  *
+  * @code
+diff --git a/src/mlpack/methods/amf/init_rules/average_init.hpp b/src/mlpack/methods/amf/init_rules/average_init.hpp
+index a9f2de3..f51a307 100644
+--- a/src/mlpack/methods/amf/init_rules/average_init.hpp
++++ b/src/mlpack/methods/amf/init_rules/average_init.hpp
+@@ -2,7 +2,7 @@
+  * @file averge_init.hpp
+  * @author Sumedh Ghaisas
+  *
+- * Intialization rule for Alternating Matrix Factorization.
++ * Initialization rule for Alternating Matrix Factorization.
+  *
+  * This file is part of mlpack 2.0.2.
+  *
+diff --git a/src/mlpack/methods/amf/init_rules/random_acol_init.hpp b/src/mlpack/methods/amf/init_rules/random_acol_init.hpp
+index 3c372d8..9a2822f 100644
+--- a/src/mlpack/methods/amf/init_rules/random_acol_init.hpp
++++ b/src/mlpack/methods/amf/init_rules/random_acol_init.hpp
+@@ -2,7 +2,7 @@
+  * @file random_acol_init.hpp
+  * @author Mohan Rajendran
+  *
+- * Intialization rule for Alternating Matrix Factorization.
++ * Initialization rule for Alternating Matrix Factorization.
+  *
+  * This file is part of mlpack 2.0.2.
+  *
+diff --git a/src/mlpack/methods/naive_bayes/naive_bayes_classifier.hpp b/src/mlpack/methods/naive_bayes/naive_bayes_classifier.hpp
+index 097114f..11bdd50 100644
+--- a/src/mlpack/methods/naive_bayes/naive_bayes_classifier.hpp
++++ b/src/mlpack/methods/naive_bayes/naive_bayes_classifier.hpp
+@@ -29,7 +29,7 @@ namespace naive_bayes /** The Naive Bayes Classifier. */ {
+  * last row of the data input to the constructor.
+  *
+  * Mathematically, it computes P(X_i = x_i | Y = y_j) for each feature X_i for
+- * each of the labels y_j.  Alongwith this, it also computes the classs
++ * each of the labels y_j.  Alongwith this, it also computes the class
+  * probabilities P(Y = y_j).
+  *
+  * For classifying a data point (x_1, x_2, ..., x_n), it computes the following:
