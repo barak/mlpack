@@ -4,7 +4,7 @@
  *
  * Implementation of the CLI module for parsing parameters.
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -599,6 +599,11 @@ void CLI::PrintHelp(const std::string& param)
         continue; // Don't print this one.
       if ((pass == 1) && required)
         continue; // Don't print this one.
+
+      // For reverse compatibility: this can be removed when these options are
+      // gone in mlpack 3.0.0.  We don't want to print the deprecated options.
+      if (data.name == "inputFile")
+        continue;
 
       if (!printedHeader)
       {

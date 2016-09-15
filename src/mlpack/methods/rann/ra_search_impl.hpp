@@ -5,7 +5,7 @@
  * Implementation of RASearch class to perform rank-approximate
  * all-nearest-neighbors on two specified data sets.
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -354,7 +354,7 @@ Search(const MatType& querySet,
       neighborPtr = new arma::Mat<size_t>;
     }
 
-    if (treeOwner)
+    else if (treeOwner)
       neighborPtr = new arma::Mat<size_t>; // All indices need mapping.
   }
 

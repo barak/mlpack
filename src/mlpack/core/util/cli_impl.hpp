@@ -4,7 +4,7 @@
  *
  * Implementation of templated functions of the CLI class.
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -28,12 +28,11 @@ namespace mlpack {
  *     CheckValue.
  *
  * @tparam T The type of the parameter.
- * @param identifier The name of the parameter, eg foo in bar/foo.
+ * @param identifier The name of the parameter, eg foo.
  * @param description A string description of the parameter.
- * @param parent The name of the parent of the parameter,
- *   eg bar/foo in bar/foo/buzz.
- * @param required If required, the program will refuse to run
- *   unless the parameter is specified.
+ * @param alias Short name of the parameter.
+ * @param required If required, the program will refuse to run unless the
+ *     parameter is specified.
  */
 template<typename T>
 void CLI::Add(const std::string& identifier,

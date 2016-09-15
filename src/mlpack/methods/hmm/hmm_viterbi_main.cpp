@@ -5,7 +5,7 @@
  * Compute the most probably hidden state sequence of a given observation
  * sequence for a given HMM.
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -80,7 +80,7 @@ int main(int argc, char** argv)
   // Parse command line options.
   CLI::ParseCommandLine(argc, argv);
 
-  if (CLI::HasParam("output_file"))
+  if (!CLI::HasParam("output_file"))
     Log::Warn << "--output_file (-o) is not specified; no results will be "
         << "saved!" << endl;
 

@@ -4,7 +4,7 @@
  * Include all of the base components required to write MLPACK methods, and the
  * main MLPACK Doxygen documentation.
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -200,6 +200,7 @@
  *   - Marcos Pividori <marcos.pividori@gmail.com>
  *   - Keon Kim <kwk236@gmail.com>
  *   - Nilay Jain <nilayjain13@gmail.com>
+ *   - Peter Lehner <peter.lehner@dlr.de>
  */
 
 // First, include all of the prerequisites.

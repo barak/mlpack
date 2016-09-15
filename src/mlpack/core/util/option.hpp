@@ -5,7 +5,7 @@
  * Definition of the Option class, which is used to define parameters which are
  * used by CLI.  The ProgramDoc class also resides here.
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -45,15 +45,14 @@ class Option
    * @param identifier The name of the option (no dashes in front; for --help,
    *      we would pass "help").
    * @param description A short string describing the option.
-   * @param parent Full pathname of the parent module that "owns" this option.
-   *      The default is the root node (an empty string).
+   * @param alias Short name of the parameter.
    * @param required Whether or not the option is required at runtime.
    */
   Option(bool ignoreTemplate,
          N defaultValue,
          const std::string& identifier,
          const std::string& description,
-         const std::string& parent = std::string(""),
+         const std::string& alias = std::string(""),
          bool required = false);
 
   /**
@@ -63,12 +62,11 @@ class Option
    * @param identifier The name of the option (no dashes in front); for --help
    *     we would pass "help".
    * @param description A short string describing the option.
-   * @param parent Full pathname of the parent module that "owns" this option.
-   *     The default is the root node (an empty string).
+   * @param alias Short name of the parameter.
    */
   Option(const std::string& identifier,
          const std::string& description,
-         const std::string& parent = std::string(""));
+         const std::string& alias);
 };
 
 /**
@@ -77,7 +75,7 @@ class Option
  * the PROGRAM_INFO() macro to declare these objects.  Only one ProgramDoc
  * object should ever exist.
  *
- * @see core/io/cli.hpp, mlpack::CLI
+ * @see core/util/cli.hpp, mlpack::CLI
  */
 class ProgramDoc
 {

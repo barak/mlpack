@@ -4,7 +4,7 @@
  *
  * Executable for Neighborhood Components Analysis.
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -129,6 +129,10 @@ int main(int argc, char* argv[])
   const string inputFile = CLI::GetParam<string>("input_file");
   const string labelsFile = CLI::GetParam<string>("labels_file");
   const string outputFile = CLI::GetParam<string>("output_file");
+
+  if (outputFile == "")
+    Log::Warn << "--output_file (-o) not specified; no output will be saved!"
+        << endl;
 
   const string optimizerType = CLI::GetParam<string>("optimizer");
 
@@ -285,5 +289,6 @@ int main(int argc, char* argv[])
   }
 
   // Save the output.
-  data::Save(CLI::GetParam<string>("output_file"), distance, true);
+  if (outputFile != "")
+    data::Save(outputFile, distance, true);
 }

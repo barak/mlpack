@@ -26,7 +26,7 @@
  *   output coding}
  * @endcode
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -279,6 +279,12 @@ int main(int argc, char *argv[])
   {
     Log::Warn << "Neither --output_model_file nor --output_file are specified; "
         << "no results will be saved." << endl;
+  }
+
+  if (CLI::HasParam("output_file") && !CLI::HasParam("test_file"))
+  {
+    Log::Warn << "--output_file ignored because --test_file is not specified."
+        << endl;
   }
 
   AdaBoostModel m;

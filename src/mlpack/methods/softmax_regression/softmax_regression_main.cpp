@@ -4,7 +4,7 @@
  *
  * Main executable for softmax regression.
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -117,7 +117,8 @@ int main(int argc, char** argv)
     Log::Fatal << "One of --input_model_file or --training_file must be specified."
         << endl;
 
-  if (CLI::HasParam("training_file") && CLI::HasParam("labels_file"))
+  if ((CLI::HasParam("training_file") || CLI::HasParam("labels_file")) &&
+      !(CLI::HasParam("training_file") && CLI::HasParam("labels_file")))
     Log::Fatal << "--labels_file must be specified with --training_file!"
         << endl;
 

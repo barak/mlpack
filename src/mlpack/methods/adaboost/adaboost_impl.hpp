@@ -18,7 +18,7 @@
  * }
  * @endcode
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -215,7 +215,7 @@ void AdaBoost<WeakLearnerType, MatType>::Classify(
   }
 
   arma::colvec cMRow;
-  arma::uword maxIndex;
+  arma::uword maxIndex = 0;
 
   for (size_t i = 0; i < predictedLabels.n_cols; i++)
   {

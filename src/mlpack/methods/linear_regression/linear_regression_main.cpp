@@ -4,7 +4,7 @@
  *
  * Main function for least-squares linear regression.
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -44,8 +44,13 @@ PARAM_STRING("input_model_file", "File containing existing model (parameters).",
 PARAM_STRING("output_model_file", "File to save trained model to.", "M", "");
 
 PARAM_STRING("test_file", "File containing X' (test regressors).", "T", "");
-PARAM_STRING("output_predictions", "If --test_file is specified, this "
-    "file is where the predicted responses will be saved.", "p", "");
+
+// Keep for reverse compatibility.  We can remove these for mlpack 3.0.0.
+PARAM_STRING("output_predictions", "If --test_file is specified, this file "
+    "is where the predicted responses will be saved.", "p", "");
+// This is the future name of the parameter.
+PARAM_STRING("output_predictions_file", "If --test_file is specified, this "
+    "file is where the predicted responses will be saved.", "o", "");
 
 PARAM_DOUBLE("lambda", "Tikhonov regularization for ridge regression.  If 0, "
     "the method reduces to linear regression.", "l", 0.0);
@@ -60,15 +65,34 @@ int main(int argc, char* argv[])
   // Handle parameters.
   CLI::ParseCommandLine(argc, argv);
 
+  // Reverse compatibility.  We can remove these for mlpack 3.0.0.
+  if (CLI::HasParam("output_predictions") &&
+      CLI::HasParam("output_predictions_file"))
+    Log::Fatal << "Cannot specify both --output_predictions and "
+        << "--output_predictions_file!" << endl;
+
+  if (CLI::HasParam("output_predictions"))
+  {
+    Log::Warn << "--output_predictions (-p) is deprecated and will be removed "
+        << "in mlpack 3.0.0; use --output_predictions_file (-o) instead."
+        << endl;
+    CLI::GetParam<string>("output_predictions_file") =
+        CLI::GetParam<string>("output_predictions");
+  }
+
   const string inputModelFile = CLI::GetParam<string>("input_model_file");
   const string outputModelFile = CLI::GetParam<string>("output_model_file");
   const string outputPredictionsFile =
-      CLI::GetParam<string>("output_predictions");
+      CLI::GetParam<string>("output_predictions_file");
   const string trainingResponsesFile =
       CLI::GetParam<string>("training_responses");
   const string testFile = CLI::GetParam<string>("test_file");
   const string trainFile = CLI::GetParam<string>("training_file");
   const double lambda = CLI::GetParam<double>("lambda");
+
+  if (testFile == "" && outputPredictionsFile != "")
+    Log::Warn << "--output_predictions_file (-o) ignored because --test_file "
+        << "(-T) is not specified." << endl;
 
   mat regressors;
   mat responses;
@@ -99,8 +123,9 @@ int main(int argc, char* argv[])
         << "both." << endl;
   }
 
-  if (CLI::HasParam("test_file") && !CLI::HasParam("output_predictions"))
-    Log::Warn << "--test_file (-t) specified, but --output_predictions "
+  if (CLI::HasParam("test_file") && 
+      (CLI::GetParam<string>("output_predictions_file") == ""))
+    Log::Warn << "--test_file (-t) specified, but --output_predictions_file "
         << "(-o) is not; no results will be saved." << endl;
 
   // If they specified a model file, we also need a test file or we
@@ -116,6 +141,12 @@ int main(int argc, char* argv[])
     Log::Warn << "--lambda ignored because no model is being trained." << endl;
   }
 
+  if (outputModelFile == "" && outputPredictionsFile == "")
+  {
+    Log::Warn << "Neither --output_model_file nor --output_predictions_file are "
+        << "specified; no output will be saved!" << endl;
+  }
+
   // An input file was given and we need to generate the model.
   if (computeModel)
   {
@@ -124,7 +155,7 @@ int main(int argc, char* argv[])
     Timer::Stop("load_regressors");
 
     // Are the responses in a separate file?
-    if (CLI::HasParam("training_responses"))
+    if (!CLI::HasParam("training_responses"))
     {
       // The initial predictors for y, Nx1.
       responses = trans(regressors.row(regressors.n_rows - 1));
@@ -189,7 +220,7 @@ int main(int argc, char* argv[])
     Timer::Stop("prediction");
 
     // Save predictions.
-    if (CLI::HasParam("output_predictions"))
+    if (outputPredictionsFile != "")
       data::Save(outputPredictionsFile, predictions, true, false);
   }
 }

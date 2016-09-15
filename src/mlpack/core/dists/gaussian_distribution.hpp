@@ -5,7 +5,7 @@
  *
  * Implementation of the Gaussian distribution.
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -85,7 +85,7 @@ class GaussianDistribution
 
   /**
    * Calculates the multivariate Gaussian probability density function for each
-   * data point (column) in the given matrix
+   * data point (column) in the given matrix.
    *
    * @param x List of observations.
    * @param probabilities Output probabilities for each input observation.

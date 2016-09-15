@@ -4,7 +4,7 @@
  *
  * Implementation of Perceptron class.
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -115,7 +115,7 @@ void Perceptron<LearnPolicy, WeightInitializationPolicy, MatType>::Classify(
     arma::Row<size_t>& predictedLabels)
 {
   arma::vec tempLabelMat;
-  arma::uword maxIndex;
+  arma::uword maxIndex = 0;
 
   // Could probably be faster if done in batch.
   for (size_t i = 0; i < test.n_cols; i++)

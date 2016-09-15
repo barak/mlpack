@@ -5,7 +5,7 @@
  * Defintion of the RStarTreeSplit class, a class that splits the nodes of an R tree, starting
  * at a leaf node and moving upwards if necessary.
  *
- * This file is part of mlpack 2.0.2.
+ * This file is part of mlpack 2.0.3.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -53,26 +53,6 @@ class RStarTreeSplit
 
  private:
   /**
-   * Class to allow for faster sorting.
-   */
-  template<typename ElemType>
-  struct SortStruct
-  {
-    ElemType d;
-    int n;
-  };
-
-  /**
-   * Comparator for sorting with SortStruct.
-   */
-  template<typename ElemType>
-  static bool StructComp(const SortStruct<ElemType>& s1,
-                         const SortStruct<ElemType>& s2)
-  {
-    return s1.d < s2.d;
-  }
-
-  /**
    * Insert a node into another node.
    */
   static void InsertNodeIntoTree(TreeType* destTree, TreeType* srcNode);
@@ -83,6 +63,17 @@ class RStarTreeSplit
    */
   template<typename Archive>
   void Serialize(Archive &, const unsigned int /* version */) { };
+
+  /**
+   * Comparator for sorting with std::pair. This comparator works a little bit
+   * faster then the default comparator.
+   */
+  template<typename ElemType>
+  static bool PairComp(const std::pair<ElemType, size_t>& p1,
+                       const std::pair<ElemType, size_t>& p2)
+  {
+    return p1.first < p2.first;
+  }
 };
 
 } // namespace tree
