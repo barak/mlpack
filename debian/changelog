@@ -1,3 +1,9 @@
+mlpack (2.0.3-1) unstable; urgency=medium
+
+  * New upstream version
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 15 Sep 2016 12:00:57 +0100
+
 mlpack (2.0.2-1) unstable; urgency=medium
 
   * New upstream version
