@@ -10,6 +10,8 @@ include /usr/share/dpkg/buildflags.mk
 CFLAGS+=$(CPPFLAGS)
 CXXFLAGS+=$(CPPFLAGS)
 
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
 %:
 	dh $@ --parallel
 
