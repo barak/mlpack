@@ -43,7 +43,7 @@ index 277a844..645f623 100644
  will perform the range search and place the resulting neighbor index list into
  one file and their corresponding distances into another file.  These files are
 diff --git a/src/mlpack/core/tree/cosine_tree/cosine_tree.hpp b/src/mlpack/core/tree/cosine_tree/cosine_tree.hpp
-index 0697401..0dd1fe8 100644
+index 1808946..187a7b1 100644
 --- a/src/mlpack/core/tree/cosine_tree/cosine_tree.hpp
 +++ b/src/mlpack/core/tree/cosine_tree/cosine_tree.hpp
 @@ -144,7 +144,7 @@ class CosineTree
@@ -56,7 +56,7 @@ index 0697401..0dd1fe8 100644
     * @param start Starting index of the distribution interval to search in.
     * @param end Ending index of the distribution interval to search in.
 diff --git a/src/mlpack/core/tree/rectangle_tree/r_star_tree_split.hpp b/src/mlpack/core/tree/rectangle_tree/r_star_tree_split.hpp
-index 8159943..3048989 100644
+index 737a542..58006a6 100644
 --- a/src/mlpack/core/tree/rectangle_tree/r_star_tree_split.hpp
 +++ b/src/mlpack/core/tree/rectangle_tree/r_star_tree_split.hpp
 @@ -2,7 +2,7 @@
@@ -67,9 +67,9 @@ index 8159943..3048989 100644
 + * Definition of the RStarTreeSplit class, a class that splits the nodes of an R tree, starting
   * at a leaf node and moving upwards if necessary.
   *
-  * This file is part of mlpack 2.0.2.
+  * This file is part of mlpack 2.0.3.
 diff --git a/src/mlpack/core/tree/rectangle_tree/r_tree_split.hpp b/src/mlpack/core/tree/rectangle_tree/r_tree_split.hpp
-index 7a3ec0f..9d4fa09 100644
+index 719bcbf..0ea1159 100644
 --- a/src/mlpack/core/tree/rectangle_tree/r_tree_split.hpp
 +++ b/src/mlpack/core/tree/rectangle_tree/r_tree_split.hpp
 @@ -2,7 +2,7 @@
@@ -80,9 +80,9 @@ index 7a3ec0f..9d4fa09 100644
 + * Definition of the RTreeSplit class, a class that splits the nodes of an R
   * tree, starting at a leaf node and moving upwards if necessary.
   *
-  * This file is part of mlpack 2.0.2.
+  * This file is part of mlpack 2.0.3.
 diff --git a/src/mlpack/core/tree/rectangle_tree/x_tree_split.hpp b/src/mlpack/core/tree/rectangle_tree/x_tree_split.hpp
-index 3028df1..c5fca3a 100644
+index 95afef5..e115fb9 100644
 --- a/src/mlpack/core/tree/rectangle_tree/x_tree_split.hpp
 +++ b/src/mlpack/core/tree/rectangle_tree/x_tree_split.hpp
 @@ -2,7 +2,7 @@
@@ -95,7 +95,7 @@ index 3028df1..c5fca3a 100644
   *
   * This is known to have a bug: see #368.
 diff --git a/src/mlpack/core/util/backtrace.cpp b/src/mlpack/core/util/backtrace.cpp
-index bfa5782..fac2d13 100644
+index eb54925..3d55822 100644
 --- a/src/mlpack/core/util/backtrace.cpp
 +++ b/src/mlpack/core/util/backtrace.cpp
 @@ -148,7 +148,7 @@ void Backtrace::DecodeAddress(long addr)
@@ -108,7 +108,7 @@ index bfa5782..fac2d13 100644
      }
    }
 diff --git a/src/mlpack/core/util/backtrace.hpp b/src/mlpack/core/util/backtrace.hpp
-index c1f9881..e12cf76 100644
+index dd63501..8f59e45 100644
 --- a/src/mlpack/core/util/backtrace.hpp
 +++ b/src/mlpack/core/util/backtrace.hpp
 @@ -23,7 +23,7 @@ namespace mlpack {
@@ -121,7 +121,7 @@ index c1f9881..e12cf76 100644
   *
   * @code
 diff --git a/src/mlpack/methods/amf/init_rules/average_init.hpp b/src/mlpack/methods/amf/init_rules/average_init.hpp
-index a9f2de3..f51a307 100644
+index d332bdf..4f5fc7e 100644
 --- a/src/mlpack/methods/amf/init_rules/average_init.hpp
 +++ b/src/mlpack/methods/amf/init_rules/average_init.hpp
 @@ -2,7 +2,7 @@
@@ -131,10 +131,10 @@ index a9f2de3..f51a307 100644
 - * Intialization rule for Alternating Matrix Factorization.
 + * Initialization rule for Alternating Matrix Factorization.
   *
-  * This file is part of mlpack 2.0.2.
+  * This file is part of mlpack 2.0.3.
   *
 diff --git a/src/mlpack/methods/amf/init_rules/random_acol_init.hpp b/src/mlpack/methods/amf/init_rules/random_acol_init.hpp
-index 3c372d8..9a2822f 100644
+index 3098b79..6597725 100644
 --- a/src/mlpack/methods/amf/init_rules/random_acol_init.hpp
 +++ b/src/mlpack/methods/amf/init_rules/random_acol_init.hpp
 @@ -2,7 +2,7 @@
@@ -144,10 +144,10 @@ index 3c372d8..9a2822f 100644
 - * Intialization rule for Alternating Matrix Factorization.
 + * Initialization rule for Alternating Matrix Factorization.
   *
-  * This file is part of mlpack 2.0.2.
+  * This file is part of mlpack 2.0.3.
   *
 diff --git a/src/mlpack/methods/naive_bayes/naive_bayes_classifier.hpp b/src/mlpack/methods/naive_bayes/naive_bayes_classifier.hpp
-index 097114f..11bdd50 100644
+index 63b8427..f1d1e23 100644
 --- a/src/mlpack/methods/naive_bayes/naive_bayes_classifier.hpp
 +++ b/src/mlpack/methods/naive_bayes/naive_bayes_classifier.hpp
 @@ -29,7 +29,7 @@ namespace naive_bayes /** The Naive Bayes Classifier. */ {
