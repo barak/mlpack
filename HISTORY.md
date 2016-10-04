@@ -1,19 +1,33 @@
+### mlpack 2.x.x
+###### 2016-??-??
+  * Fixed CoverTree to properly handle single-point datasets.
+
+  * Fixed a bug in CosineTree (and thus QUIC-SVD) that caused split failures for
+    some datasets (#717).
+
+  * Added mlpack_preprocess_describe program, which can be used to print
+    statistics on a given dataset (#742).
+
+  * Fix prioritized recursion for k-furthest-neighbor search (mlpack_kfn and the
+    KFN class), leading to orders-of-magnitude speedups in some cases.
+
+  * Bump minimum required version of Armadillo to 4.200.0.
+
 ### mlpack 2.0.3
 ###### 2016-07-21
-  * Standardize some parameter names for programs (old names are kept for
-    reverse compatibility, but warnings will now be issued).
+  * Added multiprobe LSH (#691).  The parameter 'T' to LSHSearch::Search() can
+    now be used to control the number of extra bins that are probed, as can the
+    -T (--num_probes) option to mlpack_lsh.
 
-  * RectangleTree optimizations (#721).
+  * Added the Hilbert R tree to src/mlpack/core/tree/rectangle_tree/ (#664).  It
+    can be used as the typedef HilbertRTree, and it is now an option in the
+    mlpack_knn, mlpack_kfn, mlpack_range_search, and mlpack_krann command-line
+    programs.
 
-  * Fix memory leak in NeighborSearch (#731).
+  * Added the mlpack_preprocess_split and mlpack_preprocess_binarize programs,
+    which can be used for preprocessing code (#650, #666).
 
-  * Documentation fix for k-means tutorial (#730).
-
-  * Fix TreeTraits for BallTree (#727).
-
-  * Fix incorrect parameter checks for some command-line programs.
-
-  * Fix error in HMM training with probabilities for each point (#636).
+  * Added OpenMP support to LSHSearch and mlpack_lsh (#700).
 
 ### mlpack 2.0.2
 ###### 2016-06-20
@@ -23,8 +37,6 @@
 
   * A new constructor has been added to LSHSearch that creates objects using
     projection tables provided in an arma::cube (#663).
-
-  * LSHSearch projection tables refactored for speed (#675).
 
   * Handle zero-variance dimensions in DET (#515).
 

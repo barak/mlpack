@@ -8,6 +8,7 @@ if (BUILD_CLI_EXECUTABLES)
   )
   target_link_libraries(mlpack_${name}
     mlpack
+    ${COMPILER_SUPPORT_LIBRARIES}
   )
   install(TARGETS mlpack_${name} RUNTIME DESTINATION bin)
 endif ()
@@ -18,6 +19,7 @@ set(DIRS
   preprocess
   adaboost
   amf
+  ann
   cf
   decision_stump
   det
@@ -34,17 +36,21 @@ set(DIRS
   local_coordinate_coding
   logistic_regression
   lsh
+#  mvu
   matrix_completion
   naive_bayes
   nca
   neighbor_search
   nmf
+#  lmf
   pca
   perceptron
   quic_svd
   radical
+  randomized_svd
   range_search
   rann
+  rmva
   regularized_svd
   softmax_regression
   sparse_autoencoder

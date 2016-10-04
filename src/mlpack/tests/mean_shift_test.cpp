@@ -1,13 +1,6 @@
 /**
  * @file mean_shift_test.cpp
  * @author Shangtong Zhang
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 
 #include <mlpack/core.hpp>
@@ -15,7 +8,7 @@
 #include <mlpack/methods/mean_shift/mean_shift.hpp>
 
 #include <boost/test/unit_test.hpp>
-#include "old_boost_test_definitions.hpp"
+#include "test_tools.hpp"
 
 using namespace mlpack;
 using namespace mlpack::meanshift;
@@ -97,7 +90,6 @@ BOOST_AUTO_TEST_CASE(MeanShiftSimpleTest) {
 // recovers those four centers.
 BOOST_AUTO_TEST_CASE(GaussianClustering)
 {
-  math::RandomSeed(std::time(NULL));
   GaussianDistribution g1("0.0 0.0 0.0", arma::eye<arma::mat>(3, 3));
   GaussianDistribution g2("5.0 5.0 5.0", 2 * arma::eye<arma::mat>(3, 3));
   GaussianDistribution g3("-3.0 3.0 -1.0", arma::eye<arma::mat>(3, 3));

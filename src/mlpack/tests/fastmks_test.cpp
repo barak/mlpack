@@ -3,20 +3,13 @@
  * @author Ryan Curtin
  *
  * Ensure that fast max-kernel search is correct.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/methods/fastmks/fastmks.hpp>
 #include <mlpack/methods/fastmks/fastmks_model.hpp>
 
 #include <boost/test/unit_test.hpp>
-#include "old_boost_test_definitions.hpp"
+#include "test_tools.hpp"
 #include "serialization.hpp"
 
 using namespace mlpack;

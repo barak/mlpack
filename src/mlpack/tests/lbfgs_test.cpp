@@ -4,20 +4,13 @@
  * Tests the L-BFGS optimizer on a couple test functions.
  *
  * @author Ryan Curtin (gth671b@mail.gatech.edu)
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/core/optimizers/lbfgs/lbfgs.hpp>
 #include <mlpack/core/optimizers/lbfgs/test_functions.hpp>
 
 #include <boost/test/unit_test.hpp>
-#include "old_boost_test_definitions.hpp"
+#include "test_tools.hpp"
 
 using namespace mlpack::optimization;
 using namespace mlpack::optimization::test;

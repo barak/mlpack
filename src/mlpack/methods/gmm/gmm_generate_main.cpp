@@ -3,13 +3,6 @@
  * @author Ryan Curtin
  *
  * Load a GMM from file, then generate samples from it.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
 #include "gmm.hpp"
@@ -26,11 +19,13 @@ PROGRAM_INFO("GMM Sample Generator",
     "The output samples are saved in the file specified by --output_file "
     "(-o).");
 
-PARAM_STRING_REQ("input_model_file", "File containing input GMM model.", "m");
-PARAM_INT_REQ("samples", "Number of samples to generate.", "n");
+PARAM_STRING_IN_REQ("input_model_file", "File containing input GMM model.",
+    "m");
+PARAM_INT_IN_REQ("samples", "Number of samples to generate.", "n");
 
-PARAM_STRING("output_file", "File to save output samples in.", "o", "");
-PARAM_INT("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
+PARAM_STRING_OUT("output_file", "File to save output samples in.", "o");
+
+PARAM_INT_IN("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
 
 int main(int argc, char** argv)
 {
@@ -59,4 +54,7 @@ int main(int argc, char** argv)
 
   if (CLI::HasParam("output_file"))
     data::Save(CLI::GetParam<string>("output_file"), samples);
+  else
+    Log::Warn << "--output_file is not specified, so no output will be saved!"
+        << endl;
 }

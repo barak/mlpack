@@ -3,13 +3,6 @@
  * @author Nishant Mehta
  *
  * Executable for RADICAL.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 
 #include <mlpack/core.hpp>
@@ -21,29 +14,29 @@ PROGRAM_INFO("RADICAL", "An implementation of RADICAL, a method for independent"
     "dimensions of Y are independent components.  If the algorithm is running"
     "particularly slowly, try reducing the number of replicates.");
 
-PARAM_STRING_REQ("input_file", "Input dataset filename for ICA.", "i");
+PARAM_STRING_IN_REQ("input_file", "Input dataset filename for ICA.", "i");
 
 // Kept for reverse compatibility until mlpack 3.0.0.
-PARAM_STRING("output_ic", "File to save independent components to "
-    "(deprecated: use --output_ic_file).", "", "");
-PARAM_STRING("output_unmixing", "File to save unmixing matrix to "
-    "(deprecated: use --output_unmixing_file).", "", "");
+PARAM_STRING_OUT("output_ic", "File to save independent components to "
+    "(deprecated: use --output_ic_file).", "");
+PARAM_STRING_OUT("output_unmixing", "File to save unmixing matrix to "
+    "(deprecated: use --output_unmixing_file).", "");
 
 // These are the new parameter names.
-PARAM_STRING("output_ic_file", "File to save independent components to.",
-    "o", "");
-PARAM_STRING("output_unmixing_file", "File to save unmixing matrix to.",
-    "u", "");
+PARAM_STRING_OUT("output_ic_file", "File to save independent components to.",
+    "o");
+PARAM_STRING_OUT("output_unmixing_file", "File to save unmixing matrix to.",
+    "u");
 
-PARAM_DOUBLE("noise_std_dev", "Standard deviation of Gaussian noise.", "n",
+PARAM_DOUBLE_IN("noise_std_dev", "Standard deviation of Gaussian noise.", "n",
     0.175);
-PARAM_INT("replicates", "Number of Gaussian-perturbed replicates to use "
+PARAM_INT_IN("replicates", "Number of Gaussian-perturbed replicates to use "
     "(per point) in Radical2D.", "r", 30);
-PARAM_INT("angles", "Number of angles to consider in brute-force search "
+PARAM_INT_IN("angles", "Number of angles to consider in brute-force search "
     "during Radical2D.", "a", 150);
-PARAM_INT("sweeps", "Number of sweeps; each sweep calls Radical2D once for "
+PARAM_INT_IN("sweeps", "Number of sweeps; each sweep calls Radical2D once for "
     "each pair of dimensions.", "S", 0);
-PARAM_INT("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
+PARAM_INT_IN("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
 PARAM_FLAG("objective", "If set, an estimate of the final objective function "
     "is printed.", "O");
 

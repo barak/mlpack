@@ -7,13 +7,6 @@
  *
  * Defines the CF class to perform collaborative filtering on the specified data
  * set using alternating least squares (ALS).
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #ifndef MLPACK_METHODS_CF_CF_HPP
 #define MLPACK_METHODS_CF_CF_HPP
@@ -265,22 +258,16 @@ class CF
   //! Cleaned data matrix.
   arma::sp_mat cleanedData;
 
-  /**
-   * Helper function to insert a point into the recommendation matrices.
-   *
-   * @param queryIndex Index of point whose recommendations we are inserting
-   *     into.
-   * @param pos Position in list to insert into.
-   * @param neighbor Index of item being inserted as a recommendation.
-   * @param value Value of recommendation.
-   */
-  void InsertNeighbor(const size_t queryIndex,
-                      const size_t pos,
-                      const size_t neighbor,
-                      const double value,
-                      arma::Mat<size_t>& recommendations,
-                      arma::mat& values) const;
+  //! Candidate represents a possible recommendation (value, item).
+  typedef std::pair<double, size_t> Candidate;
 
+  //! Compare two candidates based on the value.
+  struct CandidateCmp {
+    bool operator()(const Candidate& c1, const Candidate& c2)
+    {
+      return c1.first > c2.first;
+    };
+  };
 }; // class CF
 
 } // namespace cf

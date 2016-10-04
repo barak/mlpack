@@ -3,13 +3,6 @@
  * @author Shangtong Zhang
  *
  * Executable for running Mean Shift
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 
 #include <mlpack/core.hpp>
@@ -28,11 +21,11 @@ PROGRAM_INFO("Mean Shift Clustering", "This program performs mean shift "
     "in a separate file.");
 
 // Required options.
-PARAM_STRING("input_file", "Input dataset to perform clustering on.",
+PARAM_STRING_IN("input_file", "Input dataset to perform clustering on.",
     "i", "");
 // This is kept for reverse compatibility and may be removed in mlpack 3.0.0.
 // At that time, --input_file should be made a required parameter.
-PARAM_STRING("inputFile", "Input dataset to perform clustering on.", "", "");
+PARAM_STRING_IN("inputFile", "Input dataset to perform clustering on.", "", "");
 
 // Output options.
 PARAM_FLAG("in_place", "If specified, a column containing the learned cluster "
@@ -40,18 +33,18 @@ PARAM_FLAG("in_place", "If specified, a column containing the learned cluster "
     "--output_file is overridden.", "P");
 PARAM_FLAG("labels_only", "If specified, only the output labels will be "
     "written to the file specified by --output_file.", "l");
-PARAM_STRING("output_file", "File to write output labels or labeled data "
-    "to.", "o", "");
-PARAM_STRING("centroid_file", "If specified, the centroids of each cluster "
-    "will be written to the given file.", "C", "");
+PARAM_STRING_OUT("output_file", "File to write output labels or labeled data "
+    "to.", "o");
+PARAM_STRING_OUT("centroid_file", "If specified, the centroids of each cluster "
+    "will be written to the given file.", "C");
 
 // Mean shift configuration options.
-PARAM_INT("max_iterations", "Maximum number of iterations before mean shift "
-          "terminates.", "m", 1000);
+PARAM_INT_IN("max_iterations", "Maximum number of iterations before mean shift "
+    "terminates.", "m", 1000);
 
-PARAM_DOUBLE("radius", "If distance of two centroids is less than the given "
-    "radius, one will be removed.  A radius of 0 or less means an estimate will"
-    " be calculated and used.", "r", 0);
+PARAM_DOUBLE_IN("radius", "If the distance between two centroids is less than "
+    "the given radius, one will be removed.  A radius of 0 or less means an "
+    "estimate will be calculated and used for the radius.", "r", 0);
 
 int main(int argc, char** argv)
 {

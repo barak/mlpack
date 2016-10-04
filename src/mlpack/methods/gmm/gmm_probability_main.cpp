@@ -3,13 +3,6 @@
  * @author Ryan Curtin
  *
  * Given a GMM, calculate the probability of points coming from it.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
 #include "gmm.hpp"
@@ -25,11 +18,11 @@ PROGRAM_INFO("GMM Probability Calculator",
     "--input_file option.  The output probabilities are stored in the file "
     "specified by the --output_file option.");
 
-PARAM_STRING_REQ("input_model_file", "File containing input GMM.", "m");
-PARAM_STRING_REQ("input_file", "File containing points.", "i");
+PARAM_STRING_IN_REQ("input_model_file", "File containing input GMM.", "m");
+PARAM_STRING_IN_REQ("input_file", "File containing points.", "i");
 
-PARAM_STRING("output_file", "File to save calculated probabilities to.", "o",
-    "");
+PARAM_STRING_OUT("output_file", "File to save calculated probabilities to.",
+    "o");
 
 int main(int argc, char** argv)
 {
@@ -57,5 +50,8 @@ int main(int argc, char** argv)
 
   // And save the result.
   if (CLI::HasParam("output_file"))
-    data::Save(outputFile, probabilities);
+    data::Save(CLI::GetParam<string>("output_file"), probabilities);
+  else
+    Log::Warn << "--output_file was not specified, so no output will be saved!"
+        << endl;
 }

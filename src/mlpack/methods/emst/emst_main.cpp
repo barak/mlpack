@@ -18,15 +18,7 @@
  *   year = {2010}
  * }
  * @endcode
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-
 #include "dtb.hpp"
 
 #include <mlpack/core.hpp>
@@ -40,13 +32,12 @@ PROGRAM_INFO("Fast Euclidean Minimum Spanning Tree", "This program can compute "
     "second column corresponds to the greater index of the edge; and the third "
     "column corresponds to the distance between the two points.");
 
-PARAM_STRING_REQ("input_file", "Data input file.", "i");
-
-PARAM_STRING("output_file", "Data output file.  Stored as an edge list.",
-    "o", "");
+PARAM_STRING_IN_REQ("input_file", "Data input file.", "i");
+PARAM_STRING_OUT("output_file", "Data output file.  Stored as an edge list.",
+    "o");
 PARAM_FLAG("naive", "Compute the MST using O(n^2) naive algorithm.", "n");
-PARAM_INT("leaf_size", "Leaf size in the kd-tree.  One-element leaves give the "
-    "empirically best performance, but at the cost of greater memory "
+PARAM_INT_IN("leaf_size", "Leaf size in the kd-tree.  One-element leaves give "
+    "the empirically best performance, but at the cost of greater memory "
     "requirements.", "l", 1);
 
 using namespace mlpack;
@@ -60,11 +51,11 @@ int main(int argc, char* argv[])
   CLI::ParseCommandLine(argc, argv);
 
   const string inputFile = CLI::GetParam<string>("input_file");
-  const string outputFile= CLI::GetParam<string>("output_file");
+  const string outputFile = CLI::GetParam<string>("output_file");
 
-  if (CLI::HasParam("output_file"))
-    Log::Warn << "--output_file (-o) is not specified; no results will be "
-        << "saved!" << endl;
+  if (!CLI::HasParam("output_file"))
+    Log::Warn << "--output_file is not specified, so no output will be saved!"
+        << endl;
 
   arma::mat dataPoints;
   data::Load(inputFile, dataPoints, true);

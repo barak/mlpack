@@ -5,13 +5,6 @@
   * A class for traversing rectangle type trees with a given set of rules
   * which indicate the branches to prune and the order in which to recurse.
   * This is a depth-first traverser.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
   */
 #ifndef MLPAC_CORE_TREE_RECTANGLE_TREE_DUAL_TREE_TRAVERSER_IMPL_HPP
 #define MLPAC_CORE_TREE_RECTANGLE_TREE_DUAL_TREE_TRAVERSER_IMPL_HPP
@@ -27,10 +20,12 @@ namespace tree {
 template<typename MetricType,
          typename StatisticType,
          typename MatType,
-         template<typename> class SplitType,
-         typename DescentType>
+         typename SplitType,
+         typename DescentType,
+         template<typename> class AuxiliaryInformationType>
 template<typename RuleType>
-RectangleTree<MetricType, StatisticType, MatType, SplitType, DescentType>::
+RectangleTree<MetricType, StatisticType, MatType, SplitType, DescentType,
+              AuxiliaryInformationType>::
 DualTreeTraverser<RuleType>::DualTreeTraverser(RuleType& rule) :
     rule(rule),
     numPrunes(0),
@@ -42,10 +37,12 @@ DualTreeTraverser<RuleType>::DualTreeTraverser(RuleType& rule) :
 template<typename MetricType,
          typename StatisticType,
          typename MatType,
-         template<typename> class SplitType,
-         typename DescentType>
+         typename SplitType,
+         typename DescentType,
+         template<typename> class AuxiliaryInformationType>
 template<typename RuleType>
-void RectangleTree<MetricType, StatisticType, MatType, SplitType, DescentType>::
+void RectangleTree<MetricType, StatisticType, MatType, SplitType, DescentType,
+                   AuxiliaryInformationType>::
 DualTreeTraverser<RuleType>::Traverse(RectangleTree& queryNode,
                                       RectangleTree& referenceNode)
 {
@@ -70,14 +67,14 @@ DualTreeTraverser<RuleType>::Traverse(RectangleTree& queryNode,
     {
       // Restore the traversal information.
       rule.TraversalInfo() = traversalInfo;
-      const double childScore = rule.Score(queryNode.Points()[query],
+      const double childScore = rule.Score(queryNode.Point(query),
           referenceNode);
 
       if (childScore == DBL_MAX)
         continue;  // We don't require a search in this reference node.
 
       for(size_t ref = 0; ref < referenceNode.Count(); ++ref)
-        rule.BaseCase(queryNode.Points()[query], referenceNode.Points()[ref]);
+        rule.BaseCase(queryNode.Point(query), referenceNode.Point(ref));
 
       numBaseCases += referenceNode.Count();
     }
@@ -106,7 +103,7 @@ DualTreeTraverser<RuleType>::Traverse(RectangleTree& queryNode,
     for (size_t i = 0; i < referenceNode.NumChildren(); i++)
     {
       rule.TraversalInfo() = traversalInfo;
-      nodesAndScores[i].node = referenceNode.Children()[i];
+      nodesAndScores[i].node = &(referenceNode.Child(i));
       nodesAndScores[i].score = rule.Score(queryNode,
           *(nodesAndScores[i].node));
       nodesAndScores[i].travInfo = rule.TraversalInfo();
@@ -141,7 +138,7 @@ DualTreeTraverser<RuleType>::Traverse(RectangleTree& queryNode,
       for (size_t i = 0; i < referenceNode.NumChildren(); i++)
       {
         rule.TraversalInfo() = traversalInfo;
-        nodesAndScores[i].node = referenceNode.Children()[i];
+        nodesAndScores[i].node = &(referenceNode.Child(i));
         nodesAndScores[i].score = rule.Score(queryNode.Child(j),
             *nodesAndScores[i].node);
         nodesAndScores[i].travInfo = rule.TraversalInfo();

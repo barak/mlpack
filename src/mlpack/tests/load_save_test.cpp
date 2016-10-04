@@ -3,20 +3,13 @@
  * @author Ryan Curtin
  *
  * Tests for data::Load() and data::Save().
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <sstream>
 
 #include <mlpack/core.hpp>
 
 #include <boost/test/unit_test.hpp>
-#include "old_boost_test_definitions.hpp"
+#include "test_tools.hpp"
 
 using namespace mlpack;
 using namespace mlpack::data;
@@ -525,9 +518,7 @@ BOOST_AUTO_TEST_CASE(SavePGMBinaryTest)
   remove("test_file.pgm");
 }
 
-#if defined(ARMA_USE_HDF5) && (ARMA_VERSION_MAJOR == 3 \
-    || (ARMA_VERSION_MAJOR == 4 && (ARMA_VERSION_MINOR < 300 \
-    ||  ARMA_VERSION_MINOR > 400)))
+#if defined(ARMA_USE_HDF5)
 /**
  * Make sure load as HDF5 is successful.
  */
@@ -1408,6 +1399,8 @@ BOOST_AUTO_TEST_CASE(HarderKeonTest)
   BOOST_REQUIRE_EQUAL(ntInfo.NumMappings(1), 5);
   BOOST_REQUIRE_EQUAL(ntInfo.NumMappings(2), 5);
   BOOST_REQUIRE_EQUAL(ntInfo.NumMappings(3), 3);
+
+  remove("test.csv");
 }
 
 /**

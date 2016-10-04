@@ -3,13 +3,6 @@
  * @auther Zhihao Lou
  *
  * Test file for SA (simulated annealing).
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/core/optimizers/sa/sa.hpp>
@@ -21,7 +14,7 @@
 #include <mlpack/core/metrics/mahalanobis_distance.hpp>
 
 #include <boost/test/unit_test.hpp>
-#include "old_boost_test_definitions.hpp"
+#include "test_tools.hpp"
 
 using namespace std;
 using namespace arma;
@@ -75,7 +68,7 @@ BOOST_AUTO_TEST_CASE(RosenbrockTest)
 }
 
 /**
- * The Rastigrin function, a (not very) simple nonconvex function.  It is
+ * The Rastrigrin function, a (not very) simple nonconvex function.  It is
  * defined by
  *
  *   f(x) = 10n + \sum_{i = 1}^{n} (x_i^2 - 10 cos(2 \pi x_i)).
@@ -108,11 +101,11 @@ class RastrigrinFunction
 BOOST_AUTO_TEST_CASE(RastrigrinFunctionTest)
 {
   // Simulated annealing isn't guaranteed to converge (except in very specific
-  // situations).  If this works 1 of 5 times, I'm fine with that.  All I want
+  // situations).  If this works 1 of 8 times, I'm fine with that.  All I want
   // to know is that this implementation will escape from local minima.
   size_t successes = 0;
 
-  for (size_t trial = 0; trial < 5; ++trial)
+  for (size_t trial = 0; trial < 8; ++trial)
   {
     RastrigrinFunction f;
     ExponentialSchedule schedule(3e-6);
@@ -125,7 +118,10 @@ BOOST_AUTO_TEST_CASE(RastrigrinFunctionTest)
     if ((std::abs(result) < 1e-3) &&
         (std::abs(coordinates[0]) < 1e-3) &&
         (std::abs(coordinates[1]) < 1e-3))
+    {
       ++successes;
+      break; // No need to continue.
+    }
   }
 
   BOOST_REQUIRE_GE(successes, 1);

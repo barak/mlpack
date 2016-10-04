@@ -4,13 +4,6 @@
  *
  * Compute the most probably hidden state sequence of a given observation
  * sequence for a given HMM.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
 
@@ -25,10 +18,10 @@ PROGRAM_INFO("Hidden Markov Model (HMM) Viterbi State Prediction", "This "
     "(--input_file), using the Viterbi algorithm.  The computed state sequence "
     "is saved to the specified output file (--output_file).");
 
-PARAM_STRING_REQ("input_file", "File containing observations,", "i");
-PARAM_STRING_REQ("model_file", "File containing HMM.", "m");
-PARAM_STRING("output_file", "File to save predicted state sequence to.",
-    "o", "");
+PARAM_STRING_IN_REQ("input_file", "File containing observations,", "i");
+PARAM_STRING_IN_REQ("model_file", "File containing HMM.", "m");
+PARAM_STRING_OUT("output_file", "File to save predicted state sequence to.",
+    "o");
 
 using namespace mlpack;
 using namespace mlpack::hmm;

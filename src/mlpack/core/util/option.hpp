@@ -4,13 +4,6 @@
  *
  * Definition of the Option class, which is used to define parameters which are
  * used by CLI.  The ProgramDoc class also resides here.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #ifndef MLPACK_CORE_UTIL_OPTION_HPP
 #define MLPACK_CORE_UTIL_OPTION_HPP
@@ -47,13 +40,15 @@ class Option
    * @param description A short string describing the option.
    * @param alias Short name of the parameter.
    * @param required Whether or not the option is required at runtime.
+   * @param input Whether or not the option is an input option.
    */
-  Option(bool ignoreTemplate,
-         N defaultValue,
+  Option(const bool ignoreTemplate,
+         const N defaultValue,
          const std::string& identifier,
          const std::string& description,
-         const std::string& alias = std::string(""),
-         bool required = false);
+         const std::string& alias,
+         const bool required = false,
+         const bool input = true);
 
   /**
    * Constructs an Option object.  When constructed, it will register a flag

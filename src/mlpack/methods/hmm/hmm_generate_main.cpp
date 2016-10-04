@@ -5,13 +5,6 @@
  *
  * Compute the most probably hidden state sequence of a given observation
  * sequence for a given HMM.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
 
@@ -26,14 +19,13 @@ PROGRAM_INFO("Hidden Markov Model (HMM) Sequence Generator", "This "
     "parameters, saving them to the specified files (--output_file and "
     "--state_file)");
 
-PARAM_STRING_REQ("model_file", "File containing HMM.", "m");
-PARAM_INT_REQ("length", "Length of sequence to generate.", "l");
+PARAM_STRING_IN_REQ("model_file", "File containing HMM.", "m");
+PARAM_INT_IN_REQ("length", "Length of sequence to generate.", "l");
 
-PARAM_STRING("output_file", "File to save observation sequence to.", "o" ,"");
-PARAM_INT("start_state", "Starting state of sequence.", "t", 0);
-PARAM_STRING("state_file", "File to save hidden state sequence to (may be left "
-    "unspecified.", "S", "");
-PARAM_INT("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
+PARAM_INT_IN("start_state", "Starting state of sequence.", "t", 0);
+PARAM_STRING_OUT("output_file", "File to save observation sequence to.", "o");
+PARAM_STRING_OUT("state_file", "File to save hidden state sequence to.", "S");
+PARAM_INT_IN("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
 
 using namespace mlpack;
 using namespace mlpack::hmm;
@@ -75,6 +67,10 @@ struct Generate
     // Do we want to save the hidden sequence?
     if (CLI::HasParam("state_file"))
       data::Save(sequenceFile, sequence, true);
+
+    if (outputFile == "" && sequenceFile == "")
+      Log::Warn << "Neither --output_file nor --state_file are specified; no "
+          << "output will be saved." << endl;
   }
 };
 

@@ -3,13 +3,6 @@
  * @author Matthew Amidon
  *
  * Implementation of templated functions of the CLI class.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #ifndef MLPACK_CORE_UTIL_CLI_IMPL_HPP
 #define MLPACK_CORE_UTIL_CLI_IMPL_HPP
@@ -33,12 +26,15 @@ namespace mlpack {
  * @param alias Short name of the parameter.
  * @param required If required, the program will refuse to run unless the
  *     parameter is specified.
+ * @param input If true, the parameter is an input parameter (not an output
+ *     parameter).
  */
 template<typename T>
 void CLI::Add(const std::string& identifier,
               const std::string& description,
               const std::string& alias,
-              bool required)
+              const bool required,
+              const bool input)
 {
   // Temporarily define color code escape sequences.
   #ifndef _WIN32
@@ -94,6 +90,13 @@ void CLI::Add(const std::string& identifier,
   // If the option is required, add it to the required options list.
   if (required)
     GetSingleton().requiredOptions.push_front(identifier);
+
+  // Depending on whether or not the option is input or output, add it to the
+  // appropriate list.
+  if (input)
+    GetSingleton().inputOptions.push_front(identifier);
+  else
+    GetSingleton().outputOptions.push_front(identifier);
 }
 
 // We specialize this in cli.cpp.

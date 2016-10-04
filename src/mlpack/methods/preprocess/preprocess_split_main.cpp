@@ -1,15 +1,8 @@
 /**
  * @file preprocess_split_main.cpp
- * @author Keon Woo Kim
+ * @author Keon Kim
  *
  * split data CLI executable
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redstribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
 #include <mlpack/core/data/split_data.hpp>
@@ -46,16 +39,17 @@ PROGRAM_INFO("Split Data", "This utility takes a dataset and optionally labels "
     "> -L test_labels.csv");
 
 // Define parameters for data.
-PARAM_STRING_REQ("input_file", "File containing data,", "i");
-PARAM_STRING_REQ("training_file", "File name to save train data", "t");
-PARAM_STRING_REQ("test_file", "File name to save test data", "T");
-// Define optional parameters.
-PARAM_STRING("input_labels_file", "File containing labels", "I", "");
-PARAM_STRING("training_labels_file", "File name to save train label", "l", "");
-PARAM_STRING("test_labels_file", "File name to save test label", "L","");
+PARAM_STRING_IN_REQ("input_file", "File containing data,", "i");
+PARAM_STRING_OUT("training_file", "File name to save train data", "t");
+PARAM_STRING_OUT("test_file", "File name to save test data", "T");
 
-// Define optional test ratio, default is 0.2 (Test 20% Train 80%)
-PARAM_DOUBLE("test_ratio", "Ratio of test set, if not set,"
+// Define optional parameters.
+PARAM_STRING_IN("input_labels_file", "File containing labels", "I", "");
+PARAM_STRING_OUT("training_labels_file", "File name to save train label", "l");
+PARAM_STRING_OUT("test_labels_file", "File name to save test label", "L");
+
+// Define optional test ratio, default is 0.2 (Test 20% Train 80%).
+PARAM_DOUBLE_IN("test_ratio", "Ratio of test set; if not set,"
     "the ratio defaults to 0.2", "r", 0.2);
 
 using namespace mlpack;
@@ -83,7 +77,7 @@ int main(int argc, char** argv)
         << endl;
 
   // Check on label parameters.
-  if (CLI::HasParam("input_labels"))
+  if (CLI::HasParam("input_labels_file"))
   {
     if (!CLI::HasParam("training_labels_file"))
     {

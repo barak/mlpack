@@ -4,13 +4,6 @@
  *
  * Definition of RTreeDescentHeuristic, a class that chooses the best child of a
  * node in an R tree when inserting a new point.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #ifndef MLPACK_CORE_TREE_RECTANGLE_TREE_R_TREE_DESCENT_HEURISTIC_HPP
 #define MLPACK_CORE_TREE_RECTANGLE_TREE_R_TREE_DESCENT_HEURISTIC_HPP
@@ -36,10 +29,10 @@ class RTreeDescentHeuristic
    *    is greater than zero.
    *
    * @param node The node that is being evaluated.
-   * @param point The point that is being inserted.
+   * @param point The index of the point that is being inserted.
    */
   template<typename TreeType>
-  static size_t ChooseDescentNode(const TreeType* node, const arma::vec& point);
+  static size_t ChooseDescentNode(const TreeType* node, const size_t point);
 
   /**
    * Evaluate the node using a heuristic.  The heuristic guarantees two things:

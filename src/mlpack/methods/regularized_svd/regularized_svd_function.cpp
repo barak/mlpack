@@ -3,13 +3,6 @@
  * @author Siddharth Agrawal
  *
  * An implementation of the RegularizedSVDFunction class.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 
 #include "regularized_svd_function.hpp"
@@ -150,7 +143,7 @@ double SGD<mlpack::svd::RegularizedSVDFunction>::Optimize(arma::mat& parameters)
   for(size_t i = 1; i != maxIterations; i++, currentFunction++)
   {
     // Is this iteration the start of a sequence?
-    if((currentFunction % numFunctions) == 0)
+    if ((currentFunction % numFunctions) == 0)
     {
       // Reset the counter variables.
       overallObjective = 0;

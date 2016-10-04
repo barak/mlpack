@@ -3,13 +3,6 @@
  * @author Matthew Amidon, Ryan Curtin
  *
  * Test for the CLI input parameter system.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 
 #include <iostream>
@@ -29,7 +22,7 @@
 #define DEFAULT_INT 42
 
 #include <boost/test/unit_test.hpp>
-#include "old_boost_test_definitions.hpp"
+#include "test_tools.hpp"
 
 #define BASH_RED "\033[0;31m"
 #define BASH_GREEN "\033[0;32m"
@@ -105,7 +98,7 @@ BOOST_AUTO_TEST_CASE(TestOption)
 {
   // This test will involve creating an option, and making sure CLI reflects
   // this.
-  PARAM(int, "test_parent/test", "test desc", "", DEFAULT_INT, false);
+  PARAM_IN(int, "test_parent/test", "test desc", "", DEFAULT_INT, false);
 
   BOOST_REQUIRE_EQUAL(CLI::GetDescription("test_parent/test"), "test desc");
   BOOST_REQUIRE_EQUAL(CLI::GetParam<int>("test_parent/test"), DEFAULT_INT);

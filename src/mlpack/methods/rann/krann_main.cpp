@@ -4,13 +4,6 @@
  *
  * Implementation of the kRANN executable.  Allows some number of standard
  * options.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
 
@@ -52,36 +45,38 @@ PROGRAM_INFO("K-Rank-Approximate-Nearest-Neighbors (kRANN)",
     "corresponds to the distance between those two points.");
 
 // Define our input parameters that this program will take.
-PARAM_STRING("reference_file", "File containing the reference dataset.",
+PARAM_STRING_IN("reference_file", "File containing the reference dataset.",
                  "r", "");
-PARAM_STRING("distances_file", "File to output distances into.", "d", "");
-PARAM_STRING("neighbors_file", "File to output neighbors into.", "n", "");
+PARAM_STRING_OUT("distances_file", "File to output distances into.", "d");
+PARAM_STRING_OUT("neighbors_file", "File to output neighbors into.", "n");
 
 // The option exists to load or save models.
-PARAM_STRING("input_model_file", "File containing pre-trained kNN model.", "m",
-    "");
-PARAM_STRING("output_model_file", "If specified, the kNN model will be saved "
-    "to the given file.", "M", "");
+PARAM_STRING_IN("input_model_file", "File containing pre-trained kNN model.",
+    "m", "");
+PARAM_STRING_OUT("output_model_file", "If specified, the kNN model will be "
+    "saved to the given file.", "M");
 
 // The user may specify a query file of query points and a number of nearest
 // neighbors to search for.
-PARAM_STRING("query_file", "File containing query points (optional).", "q", "");
-PARAM_INT("k", "Number of nearest neighbors to find.", "k", 0);
+PARAM_STRING_IN("query_file", "File containing query points (optional).", "q",
+    "");
+PARAM_INT_IN("k", "Number of nearest neighbors to find.", "k", 0);
 
 // The user may specify the type of tree to use, and a few parameters for tree
 // building.
-PARAM_STRING("tree_type", "Type of tree to use: 'kd', 'cover', 'r', or "
-    "'x', 'r-star'.", "t", "kd");
-PARAM_INT("leaf_size", "Leaf size for tree building (used for kd-trees, R "
-    "trees, and R* trees).", "l", 20);
+PARAM_STRING_IN("tree_type", "Type of tree to use: 'kd', 'ub', 'cover', 'r', "
+    "'x', 'r-star', 'hilbert-r', 'r-plus', 'r-plus-plus'.", "t", "kd");
+PARAM_INT_IN("leaf_size", "Leaf size for tree building (used for kd-trees, "
+    "UB trees, R trees, R* trees, X trees, Hilbert R trees, R+ trees and "
+    "R++ trees).", "l", 20);
 PARAM_FLAG("random_basis", "Before tree-building, project the data onto a "
     "random orthogonal basis.", "R");
-PARAM_INT("seed", "Random seed (if 0, std::time(NULL) is used).", "s", 0);
+PARAM_INT_IN("seed", "Random seed (if 0, std::time(NULL) is used).", "s", 0);
 
 // Search options.
-PARAM_DOUBLE("tau", "The allowed rank-error in terms of the percentile of "
+PARAM_DOUBLE_IN("tau", "The allowed rank-error in terms of the percentile of "
              "the data.", "T", 5);
-PARAM_DOUBLE("alpha", "The desired success probability.", "a", 0.95);
+PARAM_DOUBLE_IN("alpha", "The desired success probability.", "a", 0.95);
 PARAM_FLAG("naive", "If true, sampling will be done without using a tree.",
            "N");
 PARAM_FLAG("single_mode", "If true, single-tree search is used (as opposed to "
@@ -89,7 +84,7 @@ PARAM_FLAG("single_mode", "If true, single-tree search is used (as opposed to "
 PARAM_FLAG("sample_at_leaves", "The flag to trigger sampling at leaves.", "L");
 PARAM_FLAG("first_leaf_exact", "The flag to trigger sampling only after "
            "exactly exploring the first leaf.", "X");
-PARAM_INT("single_sample_limit", "The limit on the maximum number of "
+PARAM_INT_IN("single_sample_limit", "The limit on the maximum number of "
     "samples (and hence the largest node you can approximate).", "S", 20);
 
 // Convenience typedef.
@@ -179,9 +174,18 @@ int main(int argc, char *argv[])
       tree = RANNModel::R_STAR_TREE;
     else if (treeType == "x")
       tree = RANNModel::X_TREE;
+    else if (treeType == "hilbert-r")
+      tree = RANNModel::HILBERT_R_TREE;
+    else if (treeType == "r-plus")
+      tree = RANNModel::R_PLUS_TREE;
+    else if (treeType == "r-plus-plus")
+      tree = RANNModel::R_PLUS_PLUS_TREE;
+    else if (treeType == "ub")
+      tree = RANNModel::UB_TREE;
     else
       Log::Fatal << "Unknown tree type '" << treeType << "'; valid choices are "
-          << "'kd', 'cover', 'r', 'r-star' and 'x'." << endl;
+          << "'kd', 'ub', 'cover', 'r', 'r-star', 'x', 'hilbert-r', "
+          << "'r-plus' and 'r-plus-plus'." << endl;
 
     rann.TreeType() = tree;
     rann.RandomBasis() = randomBasis;

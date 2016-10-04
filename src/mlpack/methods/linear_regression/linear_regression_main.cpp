@@ -3,13 +3,6 @@
  * @author James Cline
  *
  * Main function for least-squares linear regression.
- *
- * This file is part of mlpack 2.0.3.
- *
- * mlpack is free software; you may redistribute it and/or modify it under the
- * terms of the 3-clause BSD license.  You should have received a copy of the
- * 3-clause BSD license along with mlpack.  If not, see
- * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
 #include "linear_regression.hpp"
@@ -33,27 +26,27 @@ PROGRAM_INFO("Simple Linear Regression and Prediction",
     "least-angle regression, which mlpack implements with the 'lars' "
     "executable.");
 
-PARAM_STRING("training_file", "File containing training set X (regressors).",
+PARAM_STRING_IN("training_file", "File containing training set X (regressors).",
     "t", "");
-PARAM_STRING("training_responses", "Optional file containing y "
-    "(responses). If not given, the responses are assumed to be the last row "
-    "of the input file.", "r", "");
+PARAM_STRING_IN("training_responses", "Optional file containing y (responses). "
+    "If not given, the responses are assumed to be the last row of the input "
+    "file.", "r", "");
 
-PARAM_STRING("input_model_file", "File containing existing model (parameters).",
-    "m", "");
-PARAM_STRING("output_model_file", "File to save trained model to.", "M", "");
+PARAM_STRING_IN("input_model_file", "File containing existing model "
+    "(parameters).", "m", "");
+PARAM_STRING_OUT("output_model_file", "File to save trained model to.", "M");
 
-PARAM_STRING("test_file", "File containing X' (test regressors).", "T", "");
+PARAM_STRING_IN("test_file", "File containing X' (test regressors).", "T", "");
 
 // Keep for reverse compatibility.  We can remove these for mlpack 3.0.0.
-PARAM_STRING("output_predictions", "If --test_file is specified, this file "
-    "is where the predicted responses will be saved.", "p", "");
+PARAM_STRING_OUT("output_predictions", "If --test_file is specified, this file "
+    "is where the predicted responses will be saved.", "p");
 // This is the future name of the parameter.
-PARAM_STRING("output_predictions_file", "If --test_file is specified, this "
-    "file is where the predicted responses will be saved.", "o", "");
+PARAM_STRING_OUT("output_predictions_file", "If --test_file is specified, this "
+    "file is where the predicted responses will be saved.", "o");
 
-PARAM_DOUBLE("lambda", "Tikhonov regularization for ridge regression.  If 0, "
-    "the method reduces to linear regression.", "l", 0.0);
+PARAM_DOUBLE_IN("lambda", "Tikhonov regularization for ridge regression.  If 0,"
+    " the method reduces to linear regression.", "l", 0.0);
 
 using namespace mlpack;
 using namespace mlpack::regression;
