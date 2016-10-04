@@ -67,7 +67,7 @@ Package: mlpack-doc
 Section: doc
 Architecture: all
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}, libjs-jquery
 Description: intuitive, fast, scalable C++ machine learning library (documentation)
  This package contains documentation for the mlpack Library.
  .
