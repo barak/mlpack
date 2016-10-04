@@ -3,9 +3,8 @@ mlpack (2.0.3-2) unstable; urgency=medium
   * Track upstream changes, including pkg-config goo desired by Dirk for R
   * Tweak build scripts to generate/install .pc file
   * Use jquery.js from common package per lintian whining
-  * Correct more spelling errors per lintian whining
 
- -- Barak A. Pearlmutter <bap@debian.org>  Tue, 04 Oct 2016 17:11:25 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 04 Oct 2016 23:21:44 +0100
 
 mlpack (2.0.3-1) unstable; urgency=medium
 
