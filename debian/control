@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Debian Science Maintainers <debian-science-maintainers@lists.alioth.debian.org>
 Uploaders: Barak A. Pearlmutter <bap@debian.org>
 Build-Depends: cmake, debhelper (>=9), dh-exec,
+		pkg-config,
 		libboost-math-dev,
 		libboost-program-options-dev,
 		libboost-random-dev,

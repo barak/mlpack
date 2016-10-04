@@ -4,3 +4,4 @@
 # /usr/lib/lib*.a  /usr/lib/${DEB_HOST_MULTIARCH}/
 # Work around bug of not installing this, per email:
 src/mlpack/core/util/arma_config.hpp /usr/include/mlpack/core/util/
+/usr/lib/pkgconfig/mlpack.pc
