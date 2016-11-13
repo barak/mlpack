@@ -6,7 +6,6 @@ set(MLPACK_SRCS ${MLPACK_SRCS} "${CMAKE_CURRENT_SOURCE_DIR}/core.hpp")
 
 ## Recurse into both core/ and methods/.
 set(DIRS
-  bindings
   core
   methods
 )
@@ -47,7 +46,7 @@ target_link_libraries(mlpack
 
 set_target_properties(mlpack
   PROPERTIES
-  VERSION 2.0
+  VERSION 2.1
   SOVERSION 2
 )
 

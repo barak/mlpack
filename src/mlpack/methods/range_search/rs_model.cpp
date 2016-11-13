@@ -3,6 +3,11 @@
  * @author Ryan Curtin
  *
  * Implementation of the range search model class.
+ *
+ * mlpack is free software; you may redistribute it and/or modify it under the
+ * terms of the 3-clause BSD license.  You should have received a copy of the
+ * 3-clause BSD license along with mlpack.  If not, see
+ * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include "rs_model.hpp"
 
@@ -16,6 +21,7 @@ using namespace mlpack::range;
  */
 RSModel::RSModel(TreeTypes treeType, bool randomBasis) :
     treeType(treeType),
+    leafSize(0),
     randomBasis(randomBasis),
     kdTreeRS(NULL),
     coverTreeRS(NULL),
@@ -30,8 +36,7 @@ RSModel::RSModel(TreeTypes treeType, bool randomBasis) :
     rpTreeRS(NULL),
     maxRPTreeRS(NULL),
     ubTreeRS(NULL),
-    octreeRS(NULL),
-    leafSize(0)
+    octreeRS(NULL)
 {
   // Nothing to do.
 }
