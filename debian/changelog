@@ -1,10 +1,13 @@
-mlpack (2.0.3-2) unstable; urgency=medium
+mlpack (2.1.0-1) unstable; urgency=medium
 
   * Track upstream changes, including pkg-config goo desired by Dirk for R
   * Tweak build scripts to generate/install .pc file
   * Use jquery.js from common package per lintian whining
+  * New upstream version
+  * Remove now-unnecessary cmake hardening workaround
+  * bump to dh10
 
- -- Barak A. Pearlmutter <bap@debian.org>  Tue, 04 Oct 2016 23:21:44 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 14 Nov 2016 14:38:59 +0000
 
 mlpack (2.0.3-1) unstable; urgency=medium
 
