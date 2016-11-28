@@ -4,8 +4,39 @@
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
+## Memory consumption issues on some autobuilders have been causing
+## build failures.  There are two ways to address such issues:
+## (a) reduce parallelism, e.g., dh $@ --max-parallel=2
+## (b) reduce GCC memory usage, e.g., g++ --param ggc-min-expand=20 to
+## reduce abrupt memory spikes, and g++ -g0 to skip debugging info.
+
+## These issues have occurred post-2.1.x in two places: Ubuntu
+## Launchpad, and some particular Debian architectures including
+## armhf, mips, mipsel, m68k, kfreebsd-amd64, kfreebsd-i386.
+
+## For that reason, I am activating all of the above space-reduction
+## mechanisms on Ubuntu, all 32-bit architectures, and all kfreebsd
+## systems.
+
+ifeq ($(shell dpkg-vendor --derives-from Ubuntu && echo yes),yes)
+SAVE_SPACE=yes
+endif
+
+ifeq ($(shell dpkg-architecture --query DEB_BUILD_ARCH_BITS),32)
+SAVE_SPACE=yes
+endif
+
+ifeq ($(shell dpkg-architecture --query DEB_BUILD_ARCH_OS),kfreebsd)
+SAVE_SPACE=yes
+endif
+
+ifeq ($(SAVE_SPACE),yes)
+export CXX=g++ --param ggc-min-expand=20 -g0
+DH_FLAGS += --max-parallel=2
+endif
+
 %:
-	dh $@
+	dh $@ ${DH_FLAGS}
 
 override_dh_auto_build:
 	dh_auto_build
