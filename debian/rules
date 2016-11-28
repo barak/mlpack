@@ -19,8 +19,9 @@ override_dh_auto_test:
 
 override_dh_install:
 	dh_install --list-missing
+	@echo use shared jquery.js javascript library
 	for f in $$(find debian/mlpack-doc -name jquery.js); do \
-	  ln -sf /usr/share/javascript/jquery/jquery.js $$f; \
+	  ln --verbose --symbolic --force /usr/share/javascript/jquery/jquery.js $$f; \
 	done
 
 override_dh_compress:
