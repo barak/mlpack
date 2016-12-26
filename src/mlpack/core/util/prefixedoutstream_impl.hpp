@@ -44,6 +44,9 @@ void PrefixedOutStream::BaseLogic(const T& val)
   PrefixIfNeeded();
 
   std::ostringstream convert;
+  // Sync flags and precision with destination stream
+  convert.setf(destination.flags());
+  convert.precision(destination.precision());
   convert << val;
 
   if (convert.fail())
@@ -102,7 +105,8 @@ void PrefixedOutStream::BaseLogic(const T& val)
   // If we displayed a newline and we need to throw afterwards, do that.
   if (fatal && newlined)
   {
-    std::cout << std::endl;
+    if (!ignoreInput)
+      destination << std::endl;
 
     // Print a backtrace, if we can.
 #ifdef HAS_BFD_DL
