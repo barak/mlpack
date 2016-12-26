@@ -1,3 +1,9 @@
+mlpack (2.1.1-1) unstable; urgency=medium
+
+  * New upstream version
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 26 Dec 2016 10:13:23 +0000
+
 mlpack (2.1.0-2) unstable; urgency=medium
 
   * space-saving options to address FTBS on some architectures
