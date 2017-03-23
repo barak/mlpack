@@ -10,7 +10,11 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 
-#include <mlpack/core.hpp>
+#include <mlpack/prereqs.hpp>
+#include <mlpack/core/data/load.hpp>
+#include <mlpack/core/data/save.hpp>
+#include <mlpack/core/util/param.hpp>
+#include <mlpack/core/math/random.hpp>
 #include "radical.hpp"
 
 PROGRAM_INFO("RADICAL", "An implementation of RADICAL, a method for independent"

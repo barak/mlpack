@@ -13,7 +13,7 @@
 #ifndef MLPACK_METHODS_RANGE_SEARCH_RANGE_SEARCH_HPP
 #define MLPACK_METHODS_RANGE_SEARCH_RANGE_SEARCH_HPP
 
-#include <mlpack/core.hpp>
+#include <mlpack/prereqs.hpp>
 #include <mlpack/core/metrics/lmetric.hpp>
 #include <mlpack/core/tree/binary_space_tree.hpp>
 #include "range_search_stat.hpp"
@@ -22,7 +22,7 @@ namespace mlpack {
 namespace range /** Range-search routines. */ {
 
 //! Forward declaration.
-class RSModel;
+class TrainVisitor;
 
 /**
  * The RangeSearch class is a template class for performing range searches.  It
@@ -131,6 +131,17 @@ class RangeSearch
   RangeSearch(const bool naive = false,
               const bool singleMode = false,
               const MetricType metric = MetricType());
+
+  /**
+   * Copy constructor: this will copy any trees, so it may not be a great idea
+   * to call this!
+   */
+  RangeSearch(const RangeSearch& other);
+
+  /**
+   * Move constructor: take possession of all the members of the other model.
+   */
+  RangeSearch(RangeSearch&& other);
 
   /**
    * Destroy the RangeSearch object.  If trees were created, they will be
@@ -323,7 +334,7 @@ class RangeSearch
   size_t scores;
 
   //! For access to mappings when building models.
-  friend RSModel;
+  friend class TrainVisitor;
 };
 
 } // namespace range

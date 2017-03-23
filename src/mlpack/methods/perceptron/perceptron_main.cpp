@@ -1,6 +1,6 @@
-/*
- * @file: perceptron_main.cpp
- * @author: Udit Saxena
+/**
+ * @file perceptron_main.cpp
+ * @author Udit Saxena
  *
  * This program runs the Simple Perceptron Classifier.
  *
@@ -13,7 +13,11 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 
-#include <mlpack/core.hpp>
+#include <mlpack/prereqs.hpp>
+#include <mlpack/core/data/load.hpp>
+#include <mlpack/core/data/save.hpp>
+#include <mlpack/core/util/param.hpp>
+#include <mlpack/core/data/normalize_labels.hpp>
 #include "perceptron.hpp"
 
 using namespace mlpack;
@@ -47,13 +51,13 @@ PROGRAM_INFO("Perceptron",
     "perceptron on 'training_data.csv' (and 'training_labels.csv)' and saves "
     "the model to 'perceptron.xml'."
     "\n\n"
-    "$ perceptron -t training_data.csv -l training_labels.csv -m perceptron.csv"
+    "$ perceptron -t training_data.csv -l training_labels.csv -M perceptron.xml"
     "\n\n"
     "Then, this model can be re-used for classification on 'test_data.csv'.  "
     "The example below does precisely that, saving the predicted classes to "
     "'predictions.csv'."
     "\n\n"
-    "$ perceptron -i perceptron.xml -T test_data.csv -o predictions.csv"
+    "$ perceptron -m perceptron.xml -T test_data.csv -o predictions.csv"
     "\n\n"
     "Note that all of the options may be specified at once: predictions may be "
     "calculated right after training a model, and model training can occur even"

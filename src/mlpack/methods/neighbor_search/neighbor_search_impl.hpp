@@ -13,7 +13,7 @@
 #ifndef MLPACK_METHODS_NEIGHBOR_SEARCH_NEIGHBOR_SEARCH_IMPL_HPP
 #define MLPACK_METHODS_NEIGHBOR_SEARCH_NEIGHBOR_SEARCH_IMPL_HPP
 
-#include <mlpack/core.hpp>
+#include <mlpack/prereqs.hpp>
 #include <mlpack/core/tree/greedy_single_tree_traverser.hpp>
 #include "neighbor_search_rules.hpp"
 #include <mlpack/core/tree/spill_tree/is_spill_tree.hpp>
@@ -389,6 +389,68 @@ SingleTreeTraversalType>::NeighborSearch(const bool naive,
         oldFromNewReferences);
     treeOwner = true;
   }
+}
+
+// Copy constructor.
+template<typename SortPolicy,
+         typename MetricType,
+         typename MatType,
+         template<typename TreeMetricType,
+                  typename TreeStatType,
+                  typename TreeMatType> class TreeType,
+         template<typename> class DualTreeTraversalType,
+         template<typename> class SingleTreeTraversalType>
+NeighborSearch<SortPolicy, MetricType, MatType, TreeType, DualTreeTraversalType,
+    SingleTreeTraversalType>::
+NeighborSearch(const NeighborSearch& other) :
+    oldFromNewReferences(other.oldFromNewReferences),
+    referenceTree(other.naive ? NULL : new Tree(*other.referenceTree)),
+    referenceSet(other.naive ? new MatType(*other.referenceSet) :
+        &referenceTree->Dataset()),
+    treeOwner(!other.naive),
+    setOwner(other.naive),
+    naive(other.naive),
+    singleMode(other.singleMode),
+    epsilon(other.epsilon),
+    metric(other.metric),
+    baseCases(other.baseCases),
+    scores(other.scores),
+    treeNeedsReset(other.treeNeedsReset)
+{
+  // Nothing to do.
+}
+
+// Move constructor.
+template<typename SortPolicy,
+         typename MetricType,
+         typename MatType,
+         template<typename TreeMetricType,
+                  typename TreeStatType,
+                  typename TreeMatType> class TreeType,
+         template<typename> class DualTreeTraversalType,
+         template<typename> class SingleTreeTraversalType>
+NeighborSearch<SortPolicy, MetricType, MatType, TreeType, DualTreeTraversalType,
+    SingleTreeTraversalType>::
+NeighborSearch(NeighborSearch&& other) :
+    oldFromNewReferences(std::move(other.oldFromNewReferences)),
+    referenceTree(other.referenceTree),
+    referenceSet(other.referenceSet),
+    treeOwner(other.treeOwner),
+    setOwner(other.setOwner),
+    naive(other.naive),
+    singleMode(other.singleMode),
+    epsilon(other.epsilon),
+    metric(std::move(other.metric)),
+    baseCases(other.baseCases),
+    scores(other.scores),
+    treeNeedsReset(other.treeNeedsReset)
+{
+  other.referenceTree = NULL;
+  other.referenceSet = new arma::mat(); // Empty dataset.
+  other.treeOwner = false;
+  other.setOwner = true;
+  other.baseCases = 0;
+  other.scores = 0;
 }
 
 // Clean memory.

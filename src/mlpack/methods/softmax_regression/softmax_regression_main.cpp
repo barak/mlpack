@@ -8,7 +8,10 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#include <mlpack/core.hpp>
+#include <mlpack/prereqs.hpp>
+#include <mlpack/core/data/load.hpp>
+#include <mlpack/core/data/save.hpp>
+#include <mlpack/core/util/param.hpp>
 #include <mlpack/methods/softmax_regression/softmax_regression.hpp>
 #include <mlpack/core/optimizers/lbfgs/lbfgs.hpp>
 
@@ -82,7 +85,7 @@ size_t CalculateNumberOfClasses(const size_t numClasses,
 
 // Test the accuracy of the model.
 template<typename Model>
-void TestPredictAcc(const string& testFile,
+void TestClassifyAcc(const string& testFile,
                     const string& predictionsFile,
                     const string& testLabels,
                     const size_t numClasses,
@@ -138,7 +141,7 @@ int main(int argc, char** argv)
                                             inputModelFile,
                                             maxIterations);
 
-  TestPredictAcc(CLI::GetParam<string>("test_data"),
+  TestClassifyAcc(CLI::GetParam<string>("test_data"),
                  CLI::GetParam<string>("predictions_file"),
                  CLI::GetParam<string>("test_labels"),
                  sm->NumClasses(), *sm);
@@ -164,7 +167,7 @@ size_t CalculateNumberOfClasses(const size_t numClasses,
 }
 
 template<typename Model>
-void TestPredictAcc(const string& testFile,
+void TestClassifyAcc(const string& testFile,
                     const string& predictionsFile,
                     const string& testLabelsFile,
                     size_t numClasses,
@@ -195,7 +198,7 @@ void TestPredictAcc(const string& testFile,
   data::Load(testFile, testData, true);
 
   arma::Row<size_t> predictLabels;
-  model.Predict(testData, predictLabels);
+  model.Classify(testData, predictLabels);
 
   // Save predictions, if desired.
   if (!predictionsFile.empty())

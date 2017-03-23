@@ -13,7 +13,7 @@
 #ifndef MLPACK_METHODS_LOGISTIC_REGRESSION_LOGISTIC_REGRESSION_HPP
 #define MLPACK_METHODS_LOGISTIC_REGRESSION_LOGISTIC_REGRESSION_HPP
 
-#include <mlpack/core.hpp>
+#include <mlpack/prereqs.hpp>
 #include <mlpack/core/optimizers/lbfgs/lbfgs.hpp>
 
 #include "logistic_regression_function.hpp"
@@ -163,9 +163,9 @@ class LogisticRegression
    * @param responses Vector to put output predictions of responses into.
    * @param decisionBoundary Decision boundary (default 0.5).
    */
-  void Predict(const MatType& predictors,
-               arma::Row<size_t>& responses,
-               const double decisionBoundary = 0.5) const;
+  mlpack_deprecated void Predict(const MatType& predictors,
+                                 arma::Row<size_t>& responses,
+                                 const double decisionBoundary = 0.5) const;
 
   /**
    * Classify the given point.  The predicted label is returned.  Optionally,

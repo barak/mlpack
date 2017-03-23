@@ -10,12 +10,14 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 
-#include <mlpack/core.hpp>
-
+#include <mlpack/prereqs.hpp>
+#include <mlpack/core/math/random.hpp>
 #include <mlpack/methods/amf/amf.hpp>
 #include <mlpack/methods/regularized_svd/regularized_svd.hpp>
 #include <mlpack/methods/amf/termination_policies/max_iteration_termination.hpp>
 #include "cf.hpp"
+#include <mlpack/core/data/load.hpp>
+#include <mlpack/core/data/save.hpp>
 
 using namespace mlpack;
 using namespace mlpack::cf;
@@ -200,7 +202,7 @@ void AssembleFactorizerType(const std::string& algorithm,
           FactorizerType;
       PerformAction(FactorizerType(mit), dataset, rank);
     }
-    else if (algorithm == "SVDBatch")
+    else if (algorithm == "BatchSVD")
     {
       typedef AMF<MaxIterationTermination, RandomInitialization,
           SVDBatchLearning> FactorizerType;
@@ -232,7 +234,7 @@ void AssembleFactorizerType(const std::string& algorithm,
     SimpleResidueTermination srt(minResidue, maxIterations);
     if (algorithm == "NMF")
       PerformAction(NMFALSFactorizer(srt), dataset, rank);
-    else if (algorithm == "SVDBatch")
+    else if (algorithm == "BatchSVD")
       PerformAction(SVDBatchFactorizer(srt), dataset, rank);
     else if (algorithm == "SVDIncompleteIncremental")
       PerformAction(SparseSVDIncompleteIncrementalFactorizer(srt), dataset,
@@ -298,12 +300,12 @@ int main(int argc, char** argv)
 
     // Issue an error if an invalid factorizer is used.
     if (algo != "NMF" &&
-        algo != "SVDBatch" &&
+        algo != "BatchSVD" &&
         algo != "SVDIncompleteIncremental" &&
         algo != "SVDCompleteIncremental" &&
         algo != "RegSVD")
       Log::Fatal << "Invalid decomposition algorithm.  Choices are 'NMF', "
-          << "'SVDBatch', 'SVDIncompleteIncremental', 'SVDCompleteIncremental',"
+          << "'BatchSVD', 'SVDIncompleteIncremental', 'SVDCompleteIncremental',"
           << " and 'RegSVD'." << endl;
 
     // Issue a warning if the user provided a minimum residue but it will be
