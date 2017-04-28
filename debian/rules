@@ -31,8 +31,13 @@ SAVE_SPACE=yes
 endif
 
 ifeq ($(SAVE_SPACE),yes)
-export CXX=g++ --param ggc-min-expand=20 -g0
-DH_FLAGS += --max-parallel=2
+ifneq (, $(filter $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU),mips mipsel))
+	export CXX=g++ --param ggc-min-expand=5 -g0
+	DH_FLAGS += --max-parallel=1
+else
+	export CXX=g++ --param ggc-min-expand=20 -g0
+	DH_FLAGS += --max-parallel=2
+endif
 endif
 
 %:
