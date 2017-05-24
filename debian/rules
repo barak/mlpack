@@ -59,6 +59,10 @@ override_dh_install:
 	for f in $$(find debian/mlpack-doc -name jquery.js); do \
 	  ln --verbose --symbolic --force /usr/share/javascript/jquery/jquery.js $$f; \
 	done
+	for f in debian/mlpack-bin/usr/bin/*; do \
+	  chrpath --list $$f; \
+	  chrpath --delete $$f; \
+	done
 
 override_dh_compress:
 	dh_compress -Xrefman.pdf -Xdoc/html/
