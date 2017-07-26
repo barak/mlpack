@@ -68,6 +68,7 @@ Description: intuitive, fast, scalable C++ machine learning library (binaries)
 Package: mlpack-doc
 Section: doc
 Architecture: all
+Multi-Arch: foreign
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}, libjs-jquery
 Description: intuitive, fast, scalable C++ machine learning library (documentation)
