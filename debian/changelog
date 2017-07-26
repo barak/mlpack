@@ -1,3 +1,12 @@
+mlpack (2.2.4-1) unstable; urgency=medium
+
+  * New upstream version
+  * Bump standards version, no changes required
+  * Mark mlpack-doc as Multi-arch: Foreign
+  * Move .pc file to arch-specific subdir
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 26 Jul 2017 21:42:50 +0100
+
 mlpack (2.2.3-1) unstable; urgency=medium
 
   * New upstream version
