@@ -1,3 +1,11 @@
+mlpack (2.2.5-1) unstable; urgency=medium
+
+  * New upstream version
+  * Bump standards version, no changes required
+  * Secure packaging repo URL
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 31 Aug 2017 09:50:16 +0100
+
 mlpack (2.2.4-1) unstable; urgency=medium
 
   * New upstream version
