@@ -17,7 +17,7 @@ Build-Depends: cmake, debhelper (>= 10), dh-exec,
 		doxygen, doxygen-latex, graphviz
 Standards-Version: 4.1.0
 Homepage: http://www.mlpack.org/
-Vcs-Git: git://anonscm.debian.org/debian-science/packages/mlpack.git
+Vcs-Git: https://anonscm.debian.org/git/debian-science/packages/mlpack.git
 Vcs-Browser: https://anonscm.debian.org/gitweb/?p=debian-science/packages/mlpack.git
 
 Package: libmlpack-dev
