@@ -1,8 +1,7 @@
 set(SOURCES
   lbfgs_impl.hpp
   lbfgs.hpp
-  test_functions.hpp
-  test_functions.cpp
+  lbfgs.cpp
 )
 
 set(DIR_SRCS)

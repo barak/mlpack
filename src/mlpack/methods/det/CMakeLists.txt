@@ -4,11 +4,11 @@
 set(SOURCES
   # the DET class
   dtree.hpp
-  dtree.cpp
+  dtree_impl.hpp
 
-  # the util file
+  # Utility files
   dt_utils.hpp
-  dt_utils.cpp
+  dt_utils_impl.hpp
 )
 
 # add directory name to sources
@@ -20,3 +20,4 @@ endforeach()
 set(MLPACK_SRCS ${MLPACK_SRCS} ${DIR_SRCS} PARENT_SCOPE)
 
 add_cli_executable(det)
+add_python_binding(det)

@@ -15,6 +15,8 @@
  */
 #include "cf.hpp"
 
+#include <queue>
+
 namespace mlpack {
 namespace cf {
 
@@ -50,7 +52,7 @@ void CF::GetRecommendations(const size_t numRecs,
 
 void CF::GetRecommendations(const size_t numRecs,
                             arma::Mat<size_t>& recommendations,
-                            arma::Col<size_t>& users)
+                            const arma::Col<size_t>& users)
 {
   // We want to avoid calculating the full rating matrix, so we will do nearest
   // neighbor search only on the H matrix, using the observation that if the
@@ -75,8 +77,11 @@ void CF::GetRecommendations(const size_t numRecs,
   // Temporary storage for neighborhood of the queried users.
   arma::Mat<size_t> neighborhood;
 
-  // Calculate the neighborhood of the queried users.
-  // This should be a templatized option.
+  // Calculate the neighborhood of the queried users.  Note that the query user
+  // is part of the neighborhood---this is intentional.  We want to use an
+  // average of both the query user and the local neighborhood of the query
+  // user.
+  // The neighbor search technique should be a template parameter.
   neighbor::KNN a(stretchedH);
   arma::mat resultingDistances; // Temporary storage.
   a.Search(query, numUsersForSimilarity, neighborhood, resultingDistances);
@@ -85,6 +90,8 @@ void CF::GetRecommendations(const size_t numRecs,
   // elements in the averages matrix.
   recommendations.set_size(numRecs, users.n_elem);
   arma::mat values(numRecs, users.n_elem);
+  recommendations.fill(SIZE_MAX);
+  values.fill(DBL_MAX);
 
   for (size_t i = 0; i < users.n_elem; i++)
   {
@@ -110,7 +117,6 @@ void CF::GetRecommendations(const size_t numRecs,
       // Ensure that the user hasn't already rated the item.
       if (cleanedData(j, users(i)) != 0.0)
         continue; // The user already rated the item.
-
 
       // Is the estimated value better than the worst candidate?
       if (averages[j] > pqueue.top().first)
@@ -257,5 +263,5 @@ void CF::CleanData(const arma::mat& data, arma::sp_mat& cleanedData)
   cleanedData = arma::sp_mat(locations, values, maxItemID, maxUserID);
 }
 
-} // namespace mlpack
 } // namespace cf
+} // namespace mlpack

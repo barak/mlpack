@@ -72,7 +72,7 @@ class DBSCAN
          PointSelectionPolicy pointSelector = PointSelectionPolicy());
 
   /**
-   * Performs DBSCAN clustering on the data, returning number of clusters 
+   * Performs DBSCAN clustering on the data, returning number of clusters
    * and also the centroid of each cluster.
    *
    * @tparam MatType Type of matrix (arma::mat or arma::sp_mat).
@@ -84,8 +84,9 @@ class DBSCAN
                  arma::mat& centroids);
 
   /**
-   * Performs DBSCAN clustering on the data, returning number of clusters 
-   * and also the list of cluster assignments.
+   * Performs DBSCAN clustering on the data, returning number of clusters
+   * and also the list of cluster assignments.  If assignments[i] == SIZE_MAX,
+   * then the point is considered "noise".
    *
    * @tparam MatType Type of matrix (arma::mat or arma::sp_mat).
    * @param data Dataset to cluster.
@@ -96,10 +97,9 @@ class DBSCAN
                  arma::Row<size_t>& assignments);
 
   /**
-   * Performs DBSCAN clustering on the data, returning number of clusters, 
+   * Performs DBSCAN clustering on the data, returning number of clusters,
    * the centroid of each cluster and also the list of cluster assignments.
-   * If assignments[i] == assignments.n_elem - 1, then the point is considered
-   * "noise".
+   * If assignments[i] == SIZE_MAX, then the point is considered "noise".
    *
    * @tparam MatType Type of matrix (arma::mat or arma::sp_mat).
    * @param data Dataset to cluster.

@@ -13,7 +13,7 @@
 #ifndef MLPACK_METHODS_ANN_INIT_RULES_RANDOM_INIT_HPP
 #define MLPACK_METHODS_ANN_INIT_RULES_RANDOM_INIT_HPP
 
-#include <mlpack/core.hpp>
+#include <mlpack/prereqs.hpp>
 
 namespace mlpack {
 namespace ann /** Artificial Neural Network. */ {
@@ -80,10 +80,10 @@ class RandomInitialization
 
  private:
   //! The number used as lower bound.
-  const double lowerBound;
+  double lowerBound;
 
   //! The number used as upper bound.
-  const double upperBound;
+  double upperBound;
 }; // class RandomInitialization
 
 } // namespace ann

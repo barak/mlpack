@@ -82,7 +82,9 @@ inline CellBound<MetricType, ElemType>::CellBound(
  * Same as the copy constructor.
  */
 template<typename MetricType, typename ElemType>
-inline CellBound<MetricType, ElemType>& CellBound<MetricType, ElemType>::operator=(
+inline CellBound<
+    MetricType,
+    ElemType>& CellBound<MetricType, ElemType>::operator=(
     const CellBound<MetricType, ElemType>& other)
 {
   if (dim != other.Dim())
@@ -469,7 +471,7 @@ template<typename MetricType, typename ElemType>
 template<typename VecType>
 inline ElemType CellBound<MetricType, ElemType>::MinDistance(
     const VecType& point,
-    typename boost::enable_if<IsVector<VecType>>* /* junk */) const
+    typename std::enable_if_t<IsVector<VecType>::value>* /* junk */) const
 {
   Log::Assert(point.n_elem == dim);
 
@@ -486,9 +488,10 @@ inline ElemType CellBound<MetricType, ElemType>::MinDistance(
       lower = loBound(d, i) - point[d];
       higher = point[d] - hiBound(d, i);
 
-      // Since only one of 'lower' or 'higher' is negative, if we add each's
-      // absolute value to itself and then sum those two, our result is the
-      // nonnegative half of the equation times two; then we raise to power Power.
+      // Since only one of 'lower' or 'higher' is negative, if we add
+      // each's absolute value to itself and then sum those two, our
+      // result is the non negative half of the equation times two;
+      // then we raise to power Power.
       if (MetricType::Power == 1)
         sum += lower + std::fabs(lower) + higher + std::fabs(higher);
       else if (MetricType::Power == 2)
@@ -607,7 +610,7 @@ template<typename MetricType, typename ElemType>
 template<typename VecType>
 inline ElemType CellBound<MetricType, ElemType>::MaxDistance(
     const VecType& point,
-    typename boost::enable_if<IsVector<VecType> >* /* junk */) const
+    typename std::enable_if_t<IsVector<VecType>::value>* /* junk */) const
 {
   ElemType maxSum = std::numeric_limits<ElemType>::lowest();
 
@@ -782,7 +785,7 @@ template<typename VecType>
 inline math::RangeType<ElemType>
 CellBound<MetricType, ElemType>::RangeDistance(
     const VecType& point,
-    typename boost::enable_if<IsVector<VecType>>* /* junk */) const
+    typename std::enable_if_t<IsVector<VecType>::value>* /* junk */) const
 {
   ElemType minLoSum = std::numeric_limits<ElemType>::max();
   ElemType maxHiSum = std::numeric_limits<ElemType>::lowest();
@@ -864,8 +867,8 @@ CellBound<MetricType, ElemType>::RangeDistance(
  */
 template<typename MetricType, typename ElemType>
 template<typename MatType>
-inline CellBound<MetricType, ElemType>& CellBound<MetricType, ElemType>::operator|=(
-    const MatType& data)
+inline CellBound<MetricType, ElemType>&
+CellBound<MetricType, ElemType>::operator|=(const MatType& data)
 {
   Log::Assert(data.n_rows == dim);
 
@@ -893,8 +896,8 @@ inline CellBound<MetricType, ElemType>& CellBound<MetricType, ElemType>::operato
  * Expands this region to encompass another bound.
  */
 template<typename MetricType, typename ElemType>
-inline CellBound<MetricType, ElemType>& CellBound<MetricType, ElemType>::operator|=(
-    const CellBound& other)
+inline CellBound<MetricType, ElemType>&
+CellBound<MetricType, ElemType>::operator|=(const CellBound& other)
 {
   assert(other.dim == dim);
 
@@ -930,7 +933,8 @@ inline CellBound<MetricType, ElemType>& CellBound<MetricType, ElemType>::operato
  */
 template<typename MetricType, typename ElemType>
 template<typename VecType>
-inline bool CellBound<MetricType, ElemType>::Contains(const VecType& point) const
+inline bool CellBound<MetricType, ElemType>::Contains(
+    const VecType& point) const
 {
   for (size_t i = 0; i < point.n_elem; i++)
   {
@@ -969,11 +973,10 @@ inline ElemType CellBound<MetricType, ElemType>::Diameter() const
 //! Serialize the bound object.
 template<typename MetricType, typename ElemType>
 template<typename Archive>
-void CellBound<MetricType, ElemType>::Serialize(Archive& ar,
-                                          const unsigned int /* version */)
+void CellBound<MetricType, ElemType>::serialize(
+    Archive& ar,
+    const unsigned int /* version */)
 {
-  ar & data::CreateNVP(dim, "dim");
-
   // Allocate memory for the bounds, if necessary.
   if (Archive::is_loading::value)
   {
@@ -982,13 +985,14 @@ void CellBound<MetricType, ElemType>::Serialize(Archive& ar,
     bounds = new math::RangeType<ElemType>[dim];
   }
 
-  ar & data::CreateArrayNVP(bounds, dim, "bounds");
-  ar & data::CreateNVP(minWidth, "minWidth");
-  ar & data::CreateNVP(loBound, "loBound");
-  ar & data::CreateNVP(hiBound, "hiBound");
-  ar & data::CreateNVP(numBounds, "numBounds");
-  ar & data::CreateNVP(loAddress, "loAddress");
-  ar & data::CreateNVP(hiAddress, "hiAddress");
+  auto boundsArray = boost::serialization::make_array(bounds, dim);
+  ar & BOOST_SERIALIZATION_NVP(boundsArray);
+  ar & BOOST_SERIALIZATION_NVP(minWidth);
+  ar & BOOST_SERIALIZATION_NVP(loBound);
+  ar & BOOST_SERIALIZATION_NVP(hiBound);
+  ar & BOOST_SERIALIZATION_NVP(numBounds);
+  ar & BOOST_SERIALIZATION_NVP(loAddress);
+  ar & BOOST_SERIALIZATION_NVP(hiAddress);
 }
 
 } // namespace bound

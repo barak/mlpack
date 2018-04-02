@@ -2,7 +2,7 @@
  * @file preprocess_split_main.cpp
  * @author Keon Kim
  *
- * split data CLI executable
+ * A CLI executable to split a dataset.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -10,53 +10,55 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/prereqs.hpp>
-#include <mlpack/core/data/load.hpp>
-#include <mlpack/core/data/save.hpp>
-#include <mlpack/core/util/param.hpp>
 #include <mlpack/core/math/random.hpp>
 #include <mlpack/core/util/cli.hpp>
+#include <mlpack/core/util/mlpack_main.hpp>
 #include <mlpack/core/data/split_data.hpp>
 
 PROGRAM_INFO("Split Data", "This utility takes a dataset and optionally labels "
     "and splits them into a training set and a test set. Before the split, the "
     "points in the dataset are randomly reordered. The percentage of the "
-    "dataset to be used as the test set can be specified with the --test_ratio "
-    "(-r) option; the default is 0.2 (20%)."
+    "dataset to be used as the test set can be specified with the " +
+    PRINT_PARAM_STRING("test_ratio") + " parameter; the default is 0.2 (20%)."
     "\n\n"
-    "The program does not modify the original file, but instead makes separate "
-    "files to save the training and test files; The program requires you to "
-    "specify the file names with --training_file (-t) and --test_file (-T)."
+    "The output training and test matrices may be saved with the " +
+    PRINT_PARAM_STRING("training") + " and " + PRINT_PARAM_STRING("test") +
+    " output parameters."
     "\n\n"
     "Optionally, labels can be also be split along with the data by specifying "
-    "the --input_labels_file (-I) option. Splitting labels works the same way "
-    "as splitting the data. The output training and test labels will be saved "
-    "to the files specified by --training_labels_file (-l) and "
-    "--test_labels_file (-L), respectively."
+    "the " + PRINT_PARAM_STRING("input_labels") + " parameter.  Splitting "
+    "labels works the same way as splitting the data. The output training and "
+    "test labels may be saved with the " +
+    PRINT_PARAM_STRING("training_labels") + " and " +
+    PRINT_PARAM_STRING("test_labels") + " output parameters, respectively."
     "\n\n"
-    "So, a simple example where we want to split dataset.csv into "
-    "train.csv and test.csv with 60% of the data in the training set and 40% "
-    "of the dataset in the test set, we could run"
+    "So, a simple example where we want to split the dataset " +
+    PRINT_DATASET("X") + " into " + PRINT_DATASET("X_train") + " and " +
+    PRINT_DATASET("X_test") + " with 60% of the data in the training set and "
+    "40% of the dataset in the test set, we could run "
+    "\n\n" +
+    PRINT_CALL("preprocess_split", "input", "X", "training", "X_train", "test",
+        "X_test", "test_ratio", 0.4) +
     "\n\n"
-    "$ mlpack_preprocess_split -i dataset.csv -t train.csv -T test.csv -r 0.4"
-    "\n\n"
-    "If we had a dataset in dataset.csv and associated labels in labels.csv, "
-    "and we wanted to split these into training_set.csv, training_labels.csv, "
-    "test_set.csv, and test_labels.csv, with 30% of the data in the test set, "
-    "we could run"
-    "\n\n"
-    "$ mlpack_preprocess_split -i dataset.csv -I labels.csv -r 0.3\n"
-    "> -t training_set.csv -l training_labels.csv -T test_set.csv\n"
-    "> -L test_labels.csv");
+    "If we had a dataset " + PRINT_DATASET("X") + " and associated labels " +
+    PRINT_DATASET("y") + ", and we wanted to split these into " +
+    PRINT_DATASET("X_train") + ", " + PRINT_DATASET("y_train") + ", " +
+    PRINT_DATASET("X_test") + ", and " + PRINT_DATASET("y_test") + ", with 30% "
+    "of the data in the test set, we could run"
+    "\n\n" +
+    PRINT_CALL("preprocess_split", "input", "X", "input_labels", "y",
+        "test_ratio", 0.3, "training", "X_train", "training_labels", "y_train",
+        "test", "X_test", "test_labels", "y_test"));
 
 // Define parameters for data.
-PARAM_STRING_IN_REQ("input_file", "File containing data,", "i");
-PARAM_STRING_OUT("training_file", "File name to save train data", "t");
-PARAM_STRING_OUT("test_file", "File name to save test data", "T");
+PARAM_MATRIX_IN_REQ("input", "Matrix containing data.", "i");
+PARAM_MATRIX_OUT("training", "Matrix to save training data to.", "t");
+PARAM_MATRIX_OUT("test", "Matrix to save test data to.", "T");
 
 // Define optional parameters.
-PARAM_STRING_IN("input_labels_file", "File containing labels", "I", "");
-PARAM_STRING_OUT("training_labels_file", "File name to save train label", "l");
-PARAM_STRING_OUT("test_labels_file", "File name to save test label", "L");
+PARAM_UMATRIX_IN("input_labels", "Matrix containing labels.", "I");
+PARAM_UMATRIX_OUT("training_labels", "Matrix to save train labels to.", "l");
+PARAM_UMATRIX_OUT("test_labels", "Matrix to save test labels to.", "L");
 
 // Define optional test ratio, default is 0.2 (Test 20% Train 80%).
 PARAM_DOUBLE_IN("test_ratio", "Ratio of test set; if not set,"
@@ -65,19 +67,13 @@ PARAM_DOUBLE_IN("test_ratio", "Ratio of test set; if not set,"
 PARAM_INT_IN("seed", "Random seed (0 for std::time(NULL)).", "s", 0);
 
 using namespace mlpack;
+using namespace mlpack::util;
 using namespace arma;
 using namespace std;
 
-int main(int argc, char** argv)
+static void mlpackMain()
 {
   // Parse command line options.
-  CLI::ParseCommandLine(argc, argv);
-  const string inputFile = CLI::GetParam<string>("input_file");
-  const string inputLabels = CLI::GetParam<string>("input_labels_file");
-  const string trainingFile = CLI::GetParam<string>("training_file");
-  const string testFile = CLI::GetParam<string>("test_file");
-  const string trainingLabelsFile = CLI::GetParam<string>("training_labels_file");
-  const string testLabelsFile = CLI::GetParam<string>("test_labels_file");
   const double testRatio = CLI::GetParam<double>("test_ratio");
 
   if (CLI::GetParam<int>("seed") == 0)
@@ -86,62 +82,44 @@ int main(int argc, char** argv)
     mlpack::math::RandomSeed((size_t) CLI::GetParam<int>("seed"));
 
   // Make sure the user specified output filenames.
-  if (trainingFile == "")
-    Log::Warn << "--training_file (-t) is not specified; no training set will "
-        << "be saved!" << endl;
-  if (testFile == "")
-    Log::Warn << "--test_file (-T) is not specified; no test set will be saved!"
-        << endl;
+  RequireAtLeastOnePassed({ "training" }, false, "no training set will be "
+      "saved");
+  RequireAtLeastOnePassed({ "test" }, false, "no test set will be saved");
 
   // Check on label parameters.
-  if (CLI::HasParam("input_labels_file"))
+  if (CLI::HasParam("input_labels"))
   {
-    if (!CLI::HasParam("training_labels_file"))
-    {
-      Log::Warn << "--training_labels_file (-l) is not specified; no training "
-          << "set labels will be saved!" << endl;
-    }
-    if (!CLI::HasParam("test_labels_file"))
-    {
-      Log::Warn << "--test_labels_file (-L) is not specified; no test set "
-          << "labels will be saved!" << endl;
-    }
+    RequireAtLeastOnePassed({ "training_labels" }, false, "no training set "
+        "labels will be saved");
+    RequireAtLeastOnePassed({ "test_labels" }, false, "no test set labels will "
+        "be saved");
   }
   else
   {
-    if (CLI::HasParam("training_labels_file"))
-      Log::Warn << "--training_labels_file ignored because --input_labels is "
-          << "not specified." << endl;
-    if (CLI::HasParam("test_labels_file"))
-      Log::Warn << "--test_labels_file ignored because --input_labels is not "
-          << "specified." << endl;
+    ReportIgnoredParam({{ "input_labels", true }}, "training_labels");
+    ReportIgnoredParam({{ "input_labels", true }}, "test_labels");
   }
 
   // Check test_ratio.
-  if (CLI::HasParam("test_ratio"))
+  RequireParamValue<double>("test_ratio",
+      [](double x) { return x >= 0.0 && x <= 1.0; }, true,
+      "test ratio must be between 0.0 and 1.0");
+
+  if (!CLI::HasParam("test_ratio")) // If test_ratio is not set, warn the user.
   {
-    if ((testRatio < 0.0) || (testRatio > 1.0))
-    {
-      Log::Fatal << "Invalid parameter for test_ratio; "
-          << "--test_ratio must be between 0.0 and 1.0." << endl;
-    }
-  }
-  else // If test_ratio is not set, warn the user.
-  {
-    Log::Warn << "You did not specify --test_ratio, so it will be automatically"
-        << " set to 0.2." << endl;
+    Log::Warn << "You did not specify " << PRINT_PARAM_STRING("test_ratio")
+        << ", so it will be automatically set to 0.2." << endl;
   }
 
   // Load the data.
-  arma::mat data;
-  data::Load(inputFile, data, true);
+  arma::mat& data = CLI::GetParam<arma::mat>("input");
 
   // If parameters for labels exist, we must split the labels too.
-  if (CLI::HasParam("input_labels_file"))
+  if (CLI::HasParam("input_labels"))
   {
-    arma::mat labels;
-    data::Load(inputLabels, labels, true);
-    arma::rowvec labelsRow = labels.row(0);
+    arma::Mat<size_t>& labels =
+        CLI::GetParam<arma::Mat<size_t>>("input_labels");
+    arma::Row<size_t> labelsRow = labels.row(0);
 
     const auto value = data::Split(data, labelsRow, testRatio);
     Log::Info << "Training data contains " << get<0>(value).n_cols << " points."
@@ -149,14 +127,16 @@ int main(int argc, char** argv)
     Log::Info << "Test data contains " << get<1>(value).n_cols << " points."
         << endl;
 
-    if (trainingFile != "")
-      data::Save(trainingFile, get<0>(value), false);
-    if (testFile != "")
-      data::Save(testFile, get<1>(value), false);
-    if (trainingLabelsFile != "")
-      data::Save(trainingLabelsFile, get<2>(value), false);
-    if (testLabelsFile != "")
-      data::Save(testLabelsFile, get<3>(value), false);
+    if (CLI::HasParam("training"))
+      CLI::GetParam<arma::mat>("training") = std::move(get<0>(value));
+    if (CLI::HasParam("test"))
+      CLI::GetParam<arma::mat>("test") = std::move(get<1>(value));
+    if (CLI::HasParam("training_labels"))
+      CLI::GetParam<arma::Mat<size_t>>("training_labels") =
+          std::move(get<2>(value));
+    if (CLI::HasParam("test_labels"))
+      CLI::GetParam<arma::Mat<size_t>>("test_labels") =
+          std::move(get<3>(value));
   }
   else // We have no labels, so just split the dataset.
   {
@@ -166,9 +146,9 @@ int main(int argc, char** argv)
     Log::Info << "Test data contains " << get<1>(value).n_cols << " points."
         << endl;
 
-    if (trainingFile != "")
-      data::Save(trainingFile, get<0>(value), false);
-    if (testFile != "")
-      data::Save(testFile, get<1>(value), false);
+    if (CLI::HasParam("training"))
+      CLI::GetParam<arma::mat>("training") = std::move(get<0>(value));
+    if (CLI::HasParam("test"))
+      CLI::GetParam<arma::mat>("test") = std::move(get<1>(value));
   }
 }

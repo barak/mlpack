@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(MultiDiscreteDistributionTrainProbTest)
   arma::mat obs("0 1 1 1 2 2 2 2 2 2;"
                 "0 0 0 1 1 1 2 2 2 2;"
                 "0 0 0 1 1 2 2 2 2 2;");
- 
+
   d.Train(obs);
   BOOST_REQUIRE_CLOSE(d.Probability("0 0 0"), 0.009, 1e-5);
   BOOST_REQUIRE_CLOSE(d.Probability("0 1 2"), 0.015, 1e-5);
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(MultiDiscreteDistributionTrainProbTest)
 }
 
 /**
- * Make sure we initialize multidimensional probability distribution 
+ * Make sure we initialize multidimensional probability distribution
  * correctly.
  */
 BOOST_AUTO_TEST_CASE(MultiDiscreteDistributionConstructorTest)
@@ -357,7 +357,6 @@ BOOST_AUTO_TEST_CASE(GaussianMultivariateProbabilityTest)
   g.Mean() *= -1;
   BOOST_REQUIRE_CLOSE(g.Probability(-x), 1.4673143531128877e-06, 1e-5);
   BOOST_REQUIRE_CLOSE(g.Probability(x), 7.7404143494891786e-09, 1e-8);
-
 }
 
 /**
@@ -461,108 +460,92 @@ BOOST_AUTO_TEST_CASE(GaussianDistributionTrainTest)
 }
 
 /**
-  * This test verifies the fitting of GaussianDistribution
-  works properly when probabilities for each sample is given.
-**/
+ * This test verifies the fitting of GaussianDistribution works properly when
+ * probabilities for each sample is given.
+ */
 BOOST_AUTO_TEST_CASE(GaussianDistributionTrainWithProbabilitiesTest)
 {
-  double mean = 5.0;
-  double stddeviation = 2.0;
+  arma::vec mean = ("5.0");
+  arma::vec cov = ("2.0");
 
-  //Creates a normal distribution generator.
-  std::default_random_engine generator;
-  generator.seed(std::time(NULL));
-  std::normal_distribution<double> dist(mean, stddeviation);
-  
-  size_t N = 50000;
-  size_t d =1;
-  
+  GaussianDistribution dist(mean, cov);
+  size_t N = 5000;
+  size_t d = 1;
+
   arma::mat rdata(d, N);
-  
-  for(size_t i = 0;i < d; i++)
-    for(size_t j = 0;j < N;j++)
-      rdata(i,j) = dist(generator);
+  for (size_t i = 0; i < N; i++)
+    rdata.col(i) = dist.Random();
 
-  //Creates a uniform distribution generator
-  std::uniform_real_distribution<double> prob(0, 1);
   arma::vec probabilities(N);
-  
-  for(size_t i = 0;i < N;i++)
-    probabilities(i) = prob(generator);
-  
-  //Fits result with probabilities and data.
+  for (size_t i = 0; i < N; i++)
+    probabilities(i) = Random();
+
+  // Fit distribution with probabilities and data.
   GaussianDistribution guDist;
   guDist.Train(rdata, probabilities);
-  
-  //Fits result only with data
+
+  // Fit distribution only with data.
   GaussianDistribution guDist2;
   guDist2.Train(rdata);
-  
+
   BOOST_REQUIRE_CLOSE(guDist.Mean()[0], guDist2.Mean()[0], 5);
   BOOST_REQUIRE_CLOSE(guDist.Covariance()[0], guDist2.Covariance()[0], 5);
-  
-  BOOST_REQUIRE_CLOSE(guDist.Mean()[0], mean, 5);
-  BOOST_REQUIRE_CLOSE(guDist.Covariance()[0], stddeviation*stddeviation, 5);
+
+  BOOST_REQUIRE_CLOSE(guDist.Mean()[0], mean[0], 5);
+  BOOST_REQUIRE_CLOSE(guDist.Covariance()[0], cov[0], 5);
 }
+
 /**
-  *This test ensures that the same result is obtained when trained
-  with probabilities all set to 1 and with no probabilities at all
-**/
+ * This test ensures that the same result is obtained when trained with
+ * probabilities all set to 1 and with no probabilities at all.
+ */
 BOOST_AUTO_TEST_CASE(GaussianDistributionWithProbabilties1Test)
 {
-  double mean = 5.0;
-  double stddeviation = 4.0;
+  arma::vec mean = ("5.0");
+  arma::vec cov  = ("4.0");
 
-  //Create a normal distribution random generator
-  std::default_random_engine generator;
-  generator.seed(std::time(NULL));
-  std::normal_distribution<double> dist(mean, stddeviation);
-
+  GaussianDistribution dist(mean, cov);
   size_t N = 50000;
   size_t d = 1;
 
   arma::mat rdata(d, N);
 
-  for(size_t i = 0; i < d; i++)
-    for(size_t j = 0; j < N ; j++)
-      rdata(i,j) = dist(generator);
+  for (size_t i = 0; i < N; i++)
+      rdata.col(i) = Random();
 
   arma::vec probabilities(N, arma::fill::ones);
 
-  //fits data with only data
+  // Fit the distribution with only data.
   GaussianDistribution guDist;
   guDist.Train(rdata);
 
-  //fits result with data and each probability as 1
+  // Fit the distribution with data and each probability as 1.
   GaussianDistribution guDist2;
   guDist2.Train(rdata, probabilities);
 
   BOOST_REQUIRE_CLOSE(guDist.Mean()[0], guDist2.Mean()[0], 1e-15);
   BOOST_REQUIRE_CLOSE(guDist.Covariance()[0], guDist2.Covariance()[0], 1e-2);
 }
-/** This test draes points from two different normal distributions,
-  * stes the probabilities for points from the first distribution
-  * to something small and the probabilities for the second to
-  * something large
-  *It ensures that the normal distribution recovered the same
-  *parameters as the second normal distribution with high probabilities
-**/
+
+/**
+ * This test draws points from two different normal distributions, sets the
+ * probabilities for points from the first distribution to something small and
+ * the probabilities for the second to something large.
+ *
+ * We expect that the distribution we recover after training to be the same as
+ * the second normal distribution (the one with high probabilities).
+ */
 BOOST_AUTO_TEST_CASE(GaussianDistributionTrainWithTwoDistProbabilitiesTest)
 {
-  double mean1 = 5.0;
-  double stddeviation1 = 4.0;
+  arma::vec mean1 = ("5.0");
+  arma::vec cov1 = ("4.0");
 
-  double mean2 = 3.0;
-  double stddeviation2 = 1.0;
+  arma::vec mean2 = ("3.0");
+  arma::vec cov2 = ("1.0");
 
-  //Create two gaussian distribution random generator
-  std::default_random_engine generator;
-  generator.seed(std::time(NULL));
-  std::normal_distribution<double> dist1(mean1, stddeviation1);
-  std::normal_distribution<double> dist2(mean2, stddeviation2);
-
-  std::uniform_real_distribution<double> lowProb(0, 0.02);
-  std::uniform_real_distribution<double> highProb(0.98, 1);
+  // Create two GaussianDistributions with different parameters.
+  GaussianDistribution dist1(mean1, cov1);
+  GaussianDistribution dist2(mean2, cov2);
 
   size_t N = 50000;
   size_t d = 1;
@@ -570,32 +553,33 @@ BOOST_AUTO_TEST_CASE(GaussianDistributionTrainWithTwoDistProbabilitiesTest)
   arma::mat rdata(d, N);
   arma::vec probabilities(N);
 
-  //draws point alternatily from the two different distributions.
-  for(size_t i = 0 ; i < d; i++)
+  // Fill even numbered columns with random points from dist1 and odd numbered
+  // columns with random points from dist2.
+  for (size_t j = 0; j < N; j++)
   {
-    for(size_t j = 0; j < N; j++)
-    {
-      if(j%2 == 0)
-        rdata(i,j) = dist1(generator);
-      else
-        rdata(i,j) = dist2(generator);
-    }
+    if (j % 2 == 0)
+      rdata.col(j) = dist1.Random();
+    else
+      rdata.col(j) = dist2.Random();
   }
 
-  for(size_t i = 0 ; i < N ; i++)
+  // Assign high probabilities to points drawn from dist1 and low probabilities
+  // to numbers drawn from dist2.
+  for (size_t i = 0 ; i < N ; i++)
   {
-    if(i%2 == 0)
-      probabilities(i) = highProb(generator);
+    if (i % 2 == 0)
+      probabilities(i) = Random(0.98, 1);
     else
-      probabilities(i) = lowProb(generator);
+      probabilities(i) = Random(0, 0.02);
   }
 
   GaussianDistribution guDist;
   guDist.Train(rdata, probabilities);
 
-  BOOST_REQUIRE_CLOSE(guDist.Mean()[0], mean1, 5);
-  BOOST_REQUIRE_CLOSE(guDist.Covariance()[0], stddeviation1*stddeviation1, 5);
+  BOOST_REQUIRE_CLOSE(guDist.Mean()[0], mean1[0], 5);
+  BOOST_REQUIRE_CLOSE(guDist.Covariance()[0], cov1[0], 5);
 }
+
 /******************************/
 /** Gamma Distribution Tests **/
 /******************************/

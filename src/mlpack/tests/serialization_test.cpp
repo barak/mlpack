@@ -274,8 +274,8 @@ BOOST_AUTO_TEST_CASE(LinearRegressionTest)
   // Generate some random data.
   mat data;
   data.randn(15, 800);
-  vec responses;
-  responses.randn(800, 1);
+  rowvec responses;
+  responses.randn(800);
 
   LinearRegression lr(data, responses, 0.05); // Train the model.
   LinearRegression xmlLr, textLr, binaryLr;
@@ -295,8 +295,8 @@ BOOST_AUTO_TEST_CASE(RegressionDistributionTest)
   // Generate some random data.
   mat data;
   data.randn(15, 800);
-  vec responses;
-  responses.randn(800, 1);
+  rowvec responses;
+  responses.randn(800);
 
   RegressionDistribution rd(data, responses);
   RegressionDistribution xmlRd, textRd, binaryRd;
@@ -844,11 +844,11 @@ BOOST_AUTO_TEST_CASE(SoftmaxRegressionTest)
   for (size_t i = 500; i < 1000; ++i)
     labels[i] = 1;
 
-  SoftmaxRegression<> sr(dataset, labels, 2);
+  SoftmaxRegression sr(dataset, labels, 2);
 
-  SoftmaxRegression<> srXml(dataset.n_rows, 2);
-  SoftmaxRegression<> srText(dataset.n_rows, 2);
-  SoftmaxRegression<> srBinary(dataset.n_rows, 2);
+  SoftmaxRegression srXml(dataset.n_rows, 2);
+  SoftmaxRegression srText(dataset.n_rows, 2);
+  SoftmaxRegression srBinary(dataset.n_rows, 2);
 
   SerializeObjectAll(sr, srXml, srText, srBinary);
 
@@ -859,18 +859,19 @@ BOOST_AUTO_TEST_CASE(SoftmaxRegressionTest)
 BOOST_AUTO_TEST_CASE(DETTest)
 {
   using det::DTree;
+  typedef DTree<arma::mat>   DTreeX;
 
   // Create a density estimation tree on a random dataset.
   arma::mat dataset = arma::randu<arma::mat>(25, 5000);
 
-  DTree tree(dataset);
+  DTreeX tree(dataset);
 
   arma::mat otherDataset = arma::randu<arma::mat>(5, 100);
-  DTree xmlTree, binaryTree, textTree(otherDataset);
+  DTreeX xmlTree, binaryTree, textTree(otherDataset);
 
   SerializeObjectAll(tree, xmlTree, binaryTree, textTree);
 
-  std::stack<DTree*> stack, xmlStack, binaryStack, textStack;
+  std::stack<DTreeX*> stack, xmlStack, binaryStack, textStack;
   stack.push(&tree);
   xmlStack.push(&xmlTree);
   binaryStack.push(&binaryTree);
@@ -879,10 +880,10 @@ BOOST_AUTO_TEST_CASE(DETTest)
   while (!stack.empty())
   {
     // Get the top node from the stack.
-    DTree* node = stack.top();
-    DTree* xmlNode = xmlStack.top();
-    DTree* binaryNode = binaryStack.top();
-    DTree* textNode = textStack.top();
+    DTreeX* node = stack.top();
+    DTreeX* xmlNode = xmlStack.top();
+    DTreeX* binaryNode = binaryStack.top();
+    DTreeX* textNode = textStack.top();
 
     stack.pop();
     xmlStack.pop();
@@ -1129,7 +1130,7 @@ BOOST_AUTO_TEST_CASE(NaiveBayesSerializationTest)
 
 BOOST_AUTO_TEST_CASE(RASearchTest)
 {
-  using neighbor::AllkRANN;
+  using neighbor::KRANN;
   using neighbor::KNN;
   arma::mat dataset = arma::randu<arma::mat>(5, 200);
   arma::mat otherDataset = arma::randu<arma::mat>(5, 100);
@@ -1137,11 +1138,11 @@ BOOST_AUTO_TEST_CASE(RASearchTest)
   // Find nearest neighbors in the top 10, with accuracy 0.95.  So 95% of the
   // results we get (at least) should fall into the top 10 of the true nearest
   // neighbors.
-  AllkRANN allkrann(dataset, false, false, 5, 0.95);
+  KRANN allkrann(dataset, false, false, 5, 0.95);
 
-  AllkRANN krannXml(otherDataset, false, false);
-  AllkRANN krannText(otherDataset, true, false);
-  AllkRANN krannBinary(otherDataset, true, true);
+  KRANN krannXml(otherDataset, false, false);
+  KRANN krannText(otherDataset, true, false);
+  KRANN krannBinary(otherDataset, true, true);
 
   SerializeObjectAll(allkrann, krannXml, krannText, krannBinary);
 
@@ -1287,7 +1288,7 @@ BOOST_AUTO_TEST_CASE(LARSTest)
   // Create a dataset.
   arma::mat X = arma::randn(75, 250);
   arma::vec beta = arma::randn(75, 1);
-  arma::vec y = trans(X) * beta;
+  arma::rowvec y = beta.t() * X;
 
   LARS lars(true, 0.1, 0.1);
   arma::vec betaOpt;
@@ -1300,14 +1301,14 @@ BOOST_AUTO_TEST_CASE(LARSTest)
   // Train textLars.
   arma::mat textX = arma::randn(25, 150);
   arma::vec textBeta = arma::randn(25, 1);
-  arma::vec textY = trans(textX) * textBeta;
+  arma::rowvec textY = textBeta.t() * textX;
   arma::vec textBetaOpt;
   textLars.Train(textX, textY, textBetaOpt);
 
   SerializeObjectAll(lars, xmlLars, binaryLars, textLars);
 
   // Now, check that predictions are the same.
-  arma::vec pred, xmlPred, textPred, binaryPred;
+  arma::rowvec pred, xmlPred, textPred, binaryPred;
   lars.Predict(X, pred);
   xmlLars.Predict(X, xmlPred);
   textLars.Predict(X, textPred);

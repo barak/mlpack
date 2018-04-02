@@ -69,7 +69,7 @@ class HyperplaneBase
    */
   template<typename VecType>
   double Project(const VecType& point,
-                 typename boost::enable_if<IsVector<VecType> >::type* = 0) const
+                 typename std::enable_if_t<IsVector<VecType>::value>* = 0) const
   {
     if (splitVal == DBL_MAX)
       return 0;
@@ -84,7 +84,7 @@ class HyperplaneBase
    */
   template<typename VecType>
   bool Left(const VecType& point,
-            typename boost::enable_if<IsVector<VecType> >::type* = 0) const
+            typename std::enable_if_t<IsVector<VecType>::value>* = 0) const
   {
     return Project(point) <= 0;
   };
@@ -97,7 +97,7 @@ class HyperplaneBase
    */
   template<typename VecType>
   bool Right(const VecType& point,
-            typename boost::enable_if<IsVector<VecType> >::type* = 0) const
+            typename std::enable_if_t<IsVector<VecType>::value>* = 0) const
   {
     return Project(point) > 0;
   };
@@ -130,10 +130,10 @@ class HyperplaneBase
    * Serialization.
    */
   template<typename Archive>
-  void Serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const unsigned int /* version */)
   {
-    ar & data::CreateNVP(projVect, "projVect");
-    ar & data::CreateNVP(splitVal, "splitVal");
+    ar & BOOST_SERIALIZATION_NVP(projVect);
+    ar & BOOST_SERIALIZATION_NVP(splitVal);
   };
 };
 

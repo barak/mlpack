@@ -1,8 +1,8 @@
 /**
- * @file smarthash_main.cpp
+ * @file approx_kfn_main.cpp
  * @author Ryan Curtin
  *
- * Command-line program for the SmartHash algorithm.
+ * Command-line program for various furthest neighbor search algorithms.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -10,27 +10,28 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/prereqs.hpp>
+#include <mlpack/core/util/cli.hpp>
 #include <mlpack/methods/neighbor_search/neighbor_search.hpp>
+#include <mlpack/core/util/mlpack_main.hpp>
 #include "drusilla_select.hpp"
 #include "qdafn.hpp"
-#include <mlpack/core/data/load.hpp>
-#include <mlpack/core/data/save.hpp>
 
 using namespace mlpack;
 using namespace mlpack::neighbor;
+using namespace mlpack::util;
 using namespace std;
 
 PROGRAM_INFO("Approximate furthest neighbor search",
     "This program implements two strategies for furthest neighbor search. "
     "These strategies are:"
     "\n\n"
-    " - The 'qdafn' algorithm from 'Approximate Furthest Neighbor in High "
-    "Dimensions' by R. Pagh, F. Silvestri, J. Sivertsen, and M. Skala, in "
+    " - The 'qdafn' algorithm from \"Approximate Furthest Neighbor in High "
+    "Dimensions\" by R. Pagh, F. Silvestri, J. Sivertsen, and M. Skala, in "
     "Similarity Search and Applications 2015 (SISAP)."
     "\n"
-    " - The 'DrusillaSelect' algorithm from 'Fast approximate furthest "
-    "neighbors with data-dependent candidate selection, by R.R. Curtin and A.B."
-    " Gardner, in Similarity Search and Applications 2016 (SISAP)."
+    " - The 'DrusillaSelect' algorithm from \"Fast approximate furthest "
+    "neighbors with data-dependent candidate selection\", by R.R. Curtin and "
+    "A.B. Gardner, in Similarity Search and Applications 2016 (SISAP)."
     "\n\n"
     "These two strategies give approximate results for the furthest neighbor "
     "search problem and can be used as fast replacements for other furthest "
@@ -38,30 +39,57 @@ PROGRAM_INFO("Approximate furthest neighbor search",
     "that typically, the 'ds' algorithm requires far fewer tables and "
     "projections than the 'qdafn' algorithm."
     "\n\n"
-    "Specify a reference set (set to search in) with --reference_file, "
-    "specify a query set with --query_file, and specify algorithm parameters "
-    "with --num_tables (-t) and --num_projections (-p) (or don't and defaults "
-    "will be used).  The algorithm to be used (either 'ds'---the default---or "
-    "'qdafn') may be specified with --algorithm.  Also specify the number of "
-    "neighbors to search for with --k.  Each of those options also has short "
-    "names; see the detailed parameter documentation below."
+    "Specify a reference set (set to search in) with " +
+    PRINT_PARAM_STRING("reference") + ", specify a query set with " +
+    PRINT_PARAM_STRING("query") + ", and specify algorithm parameters with " +
+    PRINT_PARAM_STRING("num_tables") + " and " +
+    PRINT_PARAM_STRING("num_projections") + " (or don't and defaults will be "
+    "used).  The algorithm to be used (either 'ds'---the default---or 'qdafn') "
+    " may be specified with " + PRINT_PARAM_STRING("algorithm") + ".  Also "
+    "specify the number of neighbors to search for with " +
+    PRINT_PARAM_STRING("k") + "."
     "\n\n"
-    "If no query file is specified, the reference set will be used as the "
-    "query set.  A model may be saved with --output_model_file (-M), and an "
-    "input model may be loaded instead of specifying a reference set with "
-    "--input_model_file (-m)."
+    "If no query set is specified, the reference set will be used as the "
+    "query set.  The " + PRINT_PARAM_STRING("output_model") + " output "
+    "parameter may be used to store the built model, and an input model may be "
+    "loaded instead of specifying a reference set with the " +
+    PRINT_PARAM_STRING("input_model") + " option."
     "\n\n"
-    "Results for each query point are stored in the files specified by "
-    "--neighbors_file and --distances_file.  This is in the same format as the "
-    "mlpack_kfn and mlpack_knn programs: each row holds the k distances or "
-    "neighbor indices for each query point.");
+    "Results for each query point can be stored with the " +
+    PRINT_PARAM_STRING("neighbors") + " and " +
+    PRINT_PARAM_STRING("distances") + " output parameters.  Each row of these "
+    "output matrices holds the k distances or neighbor indices for each query "
+    "point."
+    "\n\n"
+    "For example, to find the 5 approximate furthest neighbors with " +
+    PRINT_DATASET("reference_set") + " as the reference set and " +
+    PRINT_DATASET("query_set") + " as the query set using DrusillaSelect, "
+    "storing the furthest neighbor indices to " + PRINT_DATASET("neighbors") +
+    " and the furthest neighbor distances to " + PRINT_DATASET("distances") +
+    ", one could call"
+    "\n\n" +
+    PRINT_CALL("approx_kfn", "query", "query_set", "reference", "reference_set",
+        "k", 5, "algorithm", "ds", "neighbors", "neighbors", "distances",
+        "distances") +
+    "\n\n"
+    "and to perform approximate all-furthest-neighbors search with k=1 on the "
+    "set " + PRINT_DATASET("data") + " storing only the furthest neighbor "
+    "distances to " + PRINT_DATASET("distances") + ", one could call"
+    "\n\n" +
+    PRINT_CALL("approx_kfn", "reference", "reference_set", "k", 1, "distances",
+        "distances") +
+    "\n\n"
+    "A trained model can be re-used.  If a model has been previously saved to "
+    + PRINT_MODEL("model") + ", then we may find 3 approximate furthest "
+    "neighbors on a query set " + PRINT_DATASET("new_query_set") + " using "
+    "that model and store the furthest neighbor indices into " +
+    PRINT_DATASET("neighbors") + " by calling"
+    "\n\n" +
+    PRINT_CALL("approx_kfn", "input_model", "model", "query", "new_query_set",
+        "k", 3, "neighbors", "neighbors"));
 
-PARAM_STRING_IN("reference_file", "File containing reference points.", "r", "");
-PARAM_STRING_IN("query_file", "File containing query points.", "q", "");
-
-// Model loading and saving.
-PARAM_STRING_IN("input_model_file", "File containing input model.", "m", "");
-PARAM_STRING_OUT("output_model_file", "File to save output model to.", "M");
+PARAM_MATRIX_IN("reference", "Matrix containing the reference dataset.", "r");
+PARAM_MATRIX_IN("query", "Matrix containing query points.", "q");
 
 PARAM_INT_IN("k", "Number of furthest neighbors to search for.", "k", 0);
 
@@ -70,16 +98,15 @@ PARAM_INT_IN("num_projections", "Number of projections to use in each hash "
     "table.", "p", 5);
 PARAM_STRING_IN("algorithm", "Algorithm to use: 'ds' or 'qdafn'.", "a", "ds");
 
-PARAM_STRING_IN("neighbors_file", "File to save furthest neighbor indices to.",
-    "n", "");
-PARAM_STRING_IN("distances_file", "File to save furthest neighbor distances to.",
-    "d", "");
+PARAM_UMATRIX_OUT("neighbors", "Matrix to save neighbor indices to.", "n");
+PARAM_MATRIX_OUT("distances", "Matrix to save furthest neighbor distances to.",
+    "d");
 
 PARAM_FLAG("calculate_error", "If set, calculate the average distance error for"
     " the first furthest neighbor only.", "e");
-PARAM_STRING_IN("exact_distances_file", "File containing exact distances to "
+PARAM_MATRIX_IN("exact_distances", "Matrix containing exact distances to "
     "furthest neighbors; this can be used to avoid explicit calculation when "
-    "--calculate_error is set.", "x", "");
+    "--calculate_error is set.", "x");
 
 // If we save a model we must also save what type it is.
 class ApproxKFNModel
@@ -94,104 +121,109 @@ class ApproxKFNModel
 
   //! Serialize the model.
   template<typename Archive>
-  void Serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const unsigned int /* version */)
   {
-    ar & data::CreateNVP(type, "type");
+    ar & BOOST_SERIALIZATION_NVP(type);
     if (type == 0)
     {
-      ar & data::CreateNVP(ds, "model");
+      ar & BOOST_SERIALIZATION_NVP(ds);
     }
     else
     {
-      ar & data::CreateNVP(qdafn, "model");
+      ar & BOOST_SERIALIZATION_NVP(qdafn);
     }
   }
 };
 
-int main(int argc, char** argv)
+// Model loading and saving.
+PARAM_MODEL_IN(ApproxKFNModel, "input_model", "File containing input model.",
+    "m");
+PARAM_MODEL_OUT(ApproxKFNModel, "output_model", "File to save output model to.",
+    "M");
+
+static void mlpackMain()
 {
-  CLI::ParseCommandLine(argc, argv);
+  // We have to pass either a reference set or an input model.
+  RequireOnlyOnePassed({ "reference", "input_model" });
 
-  if (!CLI::HasParam("reference_file") && !CLI::HasParam("input_model_file"))
-    Log::Fatal << "Either --reference_file (-r) or --input_model_file (-m) must"
-        << " be specified!" << endl;
-  if (CLI::HasParam("reference_file") && CLI::HasParam("input_model_file"))
-    Log::Fatal << "Only one of --reference_file (-r) or --input_model_file (-m)"
-        << " can be specified!" << endl;
-  if (!CLI::HasParam("output_model_file") && !CLI::HasParam("k"))
-    Log::Warn << "Neither --output_model_file (-M) nor --k (-k) are specified;"
-        << " no task will be performed." << endl;
-  if (!CLI::HasParam("neighbors_file") && !CLI::HasParam("distances_file") &&
-      !CLI::HasParam("output_model_file"))
-    Log::Warn << "None of --output_model_file (-M), --neighbors_file (-n), or "
-        << "--distances_file (-d) are specified; no output will be saved!"
-        << endl;
-  if (CLI::GetParam<string>("algorithm") != "ds" &&
-      CLI::GetParam<string>("algorithm") != "qdafn")
-    Log::Fatal << "Unknown algorithm '" << CLI::GetParam<string>("algorithm")
-        << "'; must be 'ds' or 'qdafn'!" << endl;
-  if (CLI::HasParam("k") && !(CLI::HasParam("reference_file") ||
-                              CLI::HasParam("query_file")))
-    Log::Fatal << "If search is being performed, then either --query_file "
-        << "or --reference_file must be specified!" << endl;
+  // Warn if no task will be performed.
+  RequireAtLeastOnePassed({ "reference", "k" }, false,
+      "no task will be performed");
 
-  if (CLI::GetParam<int>("num_tables") <= 0)
-    Log::Fatal << "Invalid --num_tables value ("
-        << CLI::GetParam<int>("num_tables") << "); must be greater than 0!"
-        << endl;
-  if (CLI::GetParam<int>("num_projections") <= 0)
-    Log::Fatal << "Invalid --num_projections value ("
-        << CLI::GetParam<int>("num_projections") << "); must be greater than 0!"
-        << endl;
+  // Warn if no output is going to be saved.
+  RequireAtLeastOnePassed({ "neighbors", "distances", "output_model" }, false,
+      "no output will be saved");
 
-  if (CLI::HasParam("calculate_error") && !CLI::HasParam("k"))
-    Log::Warn << "--calculate_error ignored because --k is not specified."
-        << endl;
-  if (CLI::HasParam("exact_distances_file") &&
-      !CLI::HasParam("calculate_error"))
-    Log::Warn << "--exact_distances_file ignored beceause --calculate_error is "
-        << "not specified." << endl;
-  if (CLI::HasParam("calculate_error") &&
-      !CLI::HasParam("exact_distances_file") &&
-      !CLI::HasParam("reference_file"))
-    Log::Fatal << "Cannot calculate error without either --exact_distances_file"
-        << " or --reference_file specified!" << endl;
+  // Check that the user specified a valid algorithm.
+  RequireParamInSet<string>("algorithm", { "ds", "qdafn" }, true,
+      "unknown algorithm");
+
+  // If we are searching, we need a set to search in.
+  if (CLI::HasParam("k"))
+  {
+    RequireAtLeastOnePassed({ "reference", "query" }, true,
+        "if search is being performed, at least one set must be specified");
+  }
+
+  // Validate parameters.
+  if (CLI::HasParam("k"))
+  {
+    RequireParamValue<int>("k", [](int x) { return x > 0; }, true,
+        "number of neighbors to search for must be positive");
+  }
+  RequireParamValue<int>("num_tables", [](int x) { return x > 0; }, true,
+      "number of tables must be positive");
+  RequireParamValue<int>("num_projections", [](int x) { return x > 0; }, true,
+      "number of projections must be positive");
+
+  ReportIgnoredParam({{ "input_model", true }}, "algorithm");
+  ReportIgnoredParam({{ "input_model", true }}, "num_tables");
+  ReportIgnoredParam({{ "input_model", true }}, "num_projections");
+  ReportIgnoredParam({{ "k", false }}, "calculate_error");
+  ReportIgnoredParam({{ "calculate_error", false }}, "exact_distances");
+
+  if (CLI::HasParam("calculate_error"))
+  {
+    RequireAtLeastOnePassed({ "exact_distances", "reference" }, true,
+        "if error is to be calculated, either precalculated exact distances or "
+        "the reference set must be passed");
+  }
 
   // Do the building of a model, if necessary.
-  ApproxKFNModel m;
+  ApproxKFNModel* m;
   arma::mat referenceSet; // This may be used at query time.
-  if (CLI::HasParam("reference_file"))
+  if (CLI::HasParam("reference"))
   {
-    const string referenceFile = CLI::GetParam<string>("reference_file");
-    data::Load(referenceFile, referenceSet);
+    referenceSet = std::move(CLI::GetParam<arma::mat>("reference"));
+    m = new ApproxKFNModel();
 
     const size_t numTables = (size_t) CLI::GetParam<int>("num_tables");
-    const size_t numProjections = (size_t) CLI::GetParam<int>("num_projections");
+    const size_t numProjections =
+        (size_t) CLI::GetParam<int>("num_projections");
     const string algorithm = CLI::GetParam<string>("algorithm");
 
     if (algorithm == "ds")
     {
       Timer::Start("drusilla_select_construct");
       Log::Info << "Building DrusillaSelect model..." << endl;
-      m.type = 0;
-      m.ds = DrusillaSelect<>(referenceSet, numTables, numProjections);
+      m->type = 0;
+      m->ds = DrusillaSelect<>(referenceSet, numTables, numProjections);
       Timer::Stop("drusilla_select_construct");
     }
     else
     {
       Timer::Start("qdafn_construct");
       Log::Info << "Building QDAFN model..." << endl;
-      m.type = 1;
-      m.qdafn = QDAFN<>(referenceSet, numTables, numProjections);
+      m->type = 1;
+      m->qdafn = QDAFN<>(referenceSet, numTables, numProjections);
       Timer::Stop("qdafn_construct");
     }
     Log::Info << "Model built." << endl;
   }
   else
   {
-    // We must load the model from file.
-    const string inputModelFile = CLI::GetParam<string>("input_model_file");
-    data::Load(inputModelFile, "approx_kfn", m);
+    // We must load the model from what was passed.
+    m = CLI::GetParam<ApproxKFNModel*>("input_model");
   }
 
   // Now, do we need to do any queries?
@@ -203,19 +235,16 @@ int main(int argc, char** argv)
     arma::Mat<size_t> neighbors;
     arma::mat distances;
 
-    arma::mat& set = CLI::HasParam("query_file") ? querySet : referenceSet;
-    if (CLI::HasParam("query_file"))
-    {
-      const string queryFile = CLI::GetParam<string>("query_file");
-      data::Load(queryFile, querySet);
-    }
+    arma::mat& set = CLI::HasParam("query") ? querySet : referenceSet;
+    if (CLI::HasParam("query"))
+      querySet = std::move(CLI::GetParam<arma::mat>("query"));
 
-    if (m.type == 0)
+    if (m->type == 0)
     {
       Timer::Start("drusilla_select_search");
       Log::Info << "Searching for " << k << " furthest neighbors with "
           << "DrusillaSelect..." << endl;
-      m.ds.Search(set, k, neighbors, distances);
+      m->ds.Search(set, k, neighbors, distances);
       Timer::Stop("drusilla_select_search");
     }
     else
@@ -223,7 +252,7 @@ int main(int argc, char** argv)
       Timer::Start("qdafn_search");
       Log::Info << "Searching for " << k << " furthest neighbors with "
           << "QDAFN..." << endl;
-      m.qdafn.Search(set, k, neighbors, distances);
+      m->qdafn.Search(set, k, neighbors, distances);
       Timer::Stop("qdafn_search");
     }
     Log::Info << "Search complete." << endl;
@@ -232,17 +261,16 @@ int main(int argc, char** argv)
     if (CLI::HasParam("calculate_error"))
     {
       arma::mat exactDistances;
-      if (CLI::HasParam("exact_distances_file"))
+      if (CLI::HasParam("exact_distances"))
       {
-        data::Load(CLI::GetParam<string>("exact_distances_file"),
-            exactDistances);
+        exactDistances = std::move(CLI::GetParam<arma::mat>("exact_distances"));
       }
       else
       {
         // Calculate exact distances.  We are guaranteed the reference set is
         // available.
         Log::Info << "Calculating exact distances..." << endl;
-        AllkFN kfn(referenceSet);
+        KFN kfn(referenceSet);
         arma::Mat<size_t> exactNeighbors;
         kfn.Search(set, 1, exactNeighbors, exactDistances);
         Log::Info << "Calculation complete." << endl;
@@ -261,13 +289,9 @@ int main(int argc, char** argv)
     }
 
     // Save results, if desired.
-    if (CLI::HasParam("neighbors_file"))
-      data::Save(CLI::GetParam<string>("neighbors_file"), neighbors, false);
-    if (CLI::HasParam("distances_file"))
-      data::Save(CLI::GetParam<string>("distances_file"), distances, false);
+    CLI::GetParam<arma::Mat<size_t>>("neighbors") = std::move(neighbors);
+    CLI::GetParam<arma::mat>("distances") = std::move(distances);
   }
 
-  // Should we save the model?
-  if (CLI::HasParam("output_model_file"))
-    data::Save(CLI::GetParam<string>("output_model_file"), "approx_kfn", m);
+  CLI::GetParam<ApproxKFNModel*>("output_model") = m;
 }

@@ -20,24 +20,16 @@
 #include <string>
 
 #include <boost/any.hpp>
-#include <boost/program_options.hpp>
 
 #include <mlpack/prereqs.hpp>
 
 #include "timers.hpp"
-#include "cli_deleter.hpp" // To make sure we can delete the singleton.
+#include "program_doc.hpp"
 #include "version.hpp"
-#include "param.hpp"
 
-/**
- * The TYPENAME macro is used internally to convert a type into a string.
- */
-#define TYPENAME(x) (std::string(typeid(x).name()))
-
-namespace po = boost::program_options;
+#include "param_data.hpp"
 
 namespace mlpack {
-
 namespace util {
 
 // Externally defined in option.hpp, this class holds information about the
@@ -45,26 +37,6 @@ namespace util {
 class ProgramDoc;
 
 } // namespace util
-
-/**
- * Aids in the extensibility of CLI by focusing potential
- * changes into one structure.
- */
-struct ParamData
-{
-  //! Name of this parameter.
-  std::string name;
-  //! Description of this parameter, if any.
-  std::string desc;
-  //! Type information of this parameter.
-  std::string tname;
-  //! The actual value of this parameter.
-  boost::any value;
-  //! True if this parameter was passed in via command line or file.
-  bool wasPassed;
-  //! True if the wasPassed value should not be ignored.
-  bool isFlag;
-};
 
 /**
  * @brief Parses the command line for parameters and holds user-specified
@@ -196,67 +168,21 @@ class CLI
  public:
   /**
    * Adds a parameter to the hierarchy; use the PARAM_*() macros instead of this
-   * (i.e. PARAM_INT()). Uses char* and not std::string since the vast majority
-   * of use cases will be literal strings.
+   * (i.e. PARAM_INT()).
    *
-   * @param identifier The name of the parameter.
-   * @param description Short string description of the parameter.
-   * @param alias An alias for the parameter, defaults to "" which is no alias.
-   *    ("").
-   * @param required Indicates if parameter must be set on command line.
-   * @param input If true, the parameter is an input (not output) parameter.
+   * @param d Utility structure holding parameter data.
    */
-  static void Add(const std::string& path,
-                  const std::string& description,
-                  const std::string& alias = "",
-                  const bool required = false,
-                  const bool input = true);
+  static void Add(util::ParamData&& d);
 
   /**
-   * Adds a parameter to the hierarchy; use the PARAM_*() macros instead of this
-   * (i.e. PARAM_INT()). Uses char* and not std::string since the vast majority
-   * of use cases will be literal strings.  If the argument requires a
-   * parameter, you must specify a type.
+   * See if the specified flag was found while parsing.
    *
-   * @param identifier The name of the parameter.
-   * @param description Short string description of the parameter.
-   * @param alias An alias for the parameter, defaults to "" which is no alias.
-   * @param required Indicates if parameter must be set on command line.
-   * @param input If true, the parameter is an input (not output) parameter.
+   * @param identifier The name of the parameter in question.
    */
-  template<class T>
-  static void Add(const std::string& identifier,
-                  const std::string& description,
-                  const std::string& alias = "",
-                  const bool required = false,
-                  const bool input = true);
+  static bool HasParam(const std::string& identifier);
 
   /**
-   * Adds a flag parameter to the hierarchy; use PARAM_FLAG() instead of this.
-   *
-   * @param identifier The name of the paramater.
-   * @param description Short string description of the parameter.
-   * @param alias An alias for the parameter, defaults to "" which is no alias.
-   */
-  static void AddFlag(const std::string& identifier,
-                      const std::string& description,
-                      const std::string& alias = "");
-
-  /**
-   * Parses the parameters for 'help' and 'info'.
-   * If found, will print out the appropriate information and kill the program.
-   */
-  static void DefaultMessages();
-
-  /**
-   * Destroy the CLI object.  This resets the pointer to the singleton, so in
-   * case someone tries to access it after destruction, a new one will be made
-   * (the program will not fail).
-   */
-  static void Destroy();
-
-  /**
-   * Grab the value of type T found while parsing.  You can set the value using
+   * Get the value of type T found while parsing.  You can set the value using
    * this reference safely.
    *
    * @param identifier The name of the parameter in question.
@@ -265,18 +191,32 @@ class CLI
   static T& GetParam(const std::string& identifier);
 
   /**
-   * Get the description of the specified node.
+   * Cast the given parameter of the given type to a short, printable
+   * std::string, for use in status messages.  Ideally the message returned here
+   * should be only a handful of characters, and certainly no longer than one
+   * line.
    *
-   * @param identifier Name of the node in question.
-   * @return Description of the node in question.
+   * @param identifier The name of the parameter in question.
    */
-  static std::string GetDescription(const std::string& identifier);
+  template<typename T>
+  static std::string GetPrintableParam(const std::string& identifier);
 
   /**
-   * Retrieve the singleton.
+   * Get the raw value of the parameter before any processing that GetParam()
+   * might normally do.  So, e.g., for command-line programs, this does not
+   * perform any data loading or manipulation like GetParam() does.  So if you
+   * want to access a matrix or model (or similar) parameter before it is
+   * loaded, this is the method to use.
    *
-   * Not exposed to the outside, so as to spare users some ungainly
-   * x.GetSingleton().foo() syntax.
+   * @param identifier The name of the parameter in question.
+   */
+  template<typename T>
+  static T& GetRawParam(const std::string& identifier);
+
+  /**
+   * Retrieve the singleton.  As an end user, if you are just using the CLI
+   * object, you should not need to use this function---the other static
+   * functions should be sufficient.
    *
    * In this case, the singleton is used to store data for the static methods,
    * as there is no point in defining static methods only to have users call
@@ -287,52 +227,6 @@ class CLI
   static CLI& GetSingleton();
 
   /**
-   * See if the specified flag was found while parsing.
-   *
-   * @param identifier The name of the parameter in question.
-   */
-  static bool HasParam(const std::string& identifier);
-
-  /**
-   * Hyphenate a string or split it onto multiple 80-character lines, with some
-   * amount of padding on each line.  This is ued for option output.
-   *
-   * @param str String to hyphenate (splits are on ' ').
-   * @param padding Amount of padding on the left for each new line.
-   */
-  static std::string HyphenateString(const std::string& str, int padding);
-
-  /**
-   * Parses the commandline for arguments.
-   *
-   * @param argc The number of arguments on the commandline.
-   * @param argv The array of arguments as strings.
-   */
-  static void ParseCommandLine(int argc, char** argv);
-
-  /**
-   * Removes duplicate flags.
-   *
-   * @param bpo The basic_program_options to remove duplicate flags from.
-   */
-  static void RemoveDuplicateFlags(po::basic_parsed_options<char>& bpo);
-
-  /**
-   * Print the value of any output options on stdout.
-   */
-  static void PrintOutput();
-
-  /**
-   * Print out the current hierarchy.
-   */
-  static void Print();
-
-  /**
-   * Print out the help info of the hierarchy.
-   */
-  static void PrintHelp(const std::string& param = "");
-
-  /**
    * Registers a ProgramDoc object, which contains documentation about the
    * program.  If this method has been called before (that is, if two
    * ProgramDocs are instantiated in the program), a fatal error will occur.
@@ -341,41 +235,71 @@ class CLI
    */
   static void RegisterProgramDoc(util::ProgramDoc* doc);
 
+  //! Return a modifiable list of parameters that CLI knows about.
+  static std::map<std::string, util::ParamData>& Parameters();
+  //! Return a modifiable list of aliases that CLI knows about.
+  static std::map<char, std::string>& Aliases();
+
+  //! Get the program name as set by the PROGRAM_INFO() macro.
+  static std::string ProgramName();
+
   /**
-   * Destructor.
+   * Mark a particular parameter as passed.
+   *
+   * @param name Name of the parameter.
    */
-  ~CLI();
+  static void SetPassed(const std::string& name);
+
+  /**
+   * Take all parameters and function mappings and store them, under the given
+   * name.  This can later be restored with RestoreSettings().  If settings have
+   * already been saved under the given name, they will be overwritten.  This
+   * also clears the current parameters and function map.
+   *
+   * @param name Name of settings to save.
+   */
+  static void StoreSettings(const std::string& name);
+
+  /**
+   * Restore all of the parameters and function mappings of the given name, if
+   * they exist.  A std::invalid_argument exception will be thrown if fatal is
+   * true and no settings with the given name have been stored (with
+   * StoreSettings()).
+   *
+   * @param name Name of settings to restore.
+   * @param fatal Whether to throw an exception on an unknown name.
+   */
+  static void RestoreSettings(const std::string& name, const bool fatal = true);
+
+  /**
+   * Clear all of the settings, removing all parameters and function mappings.
+   */
+  static void ClearSettings();
 
  private:
-  //! The documentation and names of options.
-  po::options_description desc;
+  //! Convenience map from alias values to names.
+  std::map<char, std::string> aliases;
+  //! Map of parameters.
+  std::map<std::string, util::ParamData> parameters;
 
-  //! Values of the options given by user.
-  po::variables_map vmap;
+ public:
+  //! Map for functions and types.
+  //! Use as functionMap["typename"]["functionName"].
+  typedef std::map<std::string, std::map<std::string,
+      void (*)(const util::ParamData&, const void*, void*)>> FunctionMapType;
+  FunctionMapType functionMap;
 
-  //! Identifier names of required options.
-  std::list<std::string> requiredOptions;
+ private:
+  //! Storage map for parameters.
+  std::map<std::string, std::tuple<std::map<std::string, util::ParamData>,
+      std::map<char, std::string>, FunctionMapType>> storageMap;
 
-  //! Pathnames of input options.
-  std::list<std::string> inputOptions;
-  //! Pathnames of output options.
-  std::list<std::string> outputOptions;
-
-  //! Map of global values.
-  typedef std::map<std::string, ParamData> gmap_t;
-  gmap_t globalValues;
-
-  //! Map for aliases, from alias to actual name.
-  typedef std::map<std::string, std::string> amap_t;
-  amap_t aliasValues;
-
-  //! The singleton itself.
-  static CLI* singleton;
-
+ public:
   //! True, if CLI was used to parse command line options.
   bool didParse;
 
-  //! Hold the name of the program for --version.
+  //! Holds the name of the program for --version.  This is the true program
+  //! name (argv[0]) not what is given in ProgramDoc.
   std::string programName;
 
   //! Holds the timer objects.
@@ -384,90 +308,19 @@ class CLI
   //! So that Timer::Start() and Timer::Stop() can access the timer variable.
   friend class Timer;
 
- public:
   //! Pointer to the ProgramDoc object.
-  util::ProgramDoc *doc;
+  util::ProgramDoc* doc;
 
  private:
-  /**
-   * Maps a given alias to a given parameter.
-   *
-   * @param alias The name of the alias to be mapped.
-   * @param original The name of the parameter to be mapped.
-   */
-  static void AddAlias(const std::string& alias, const std::string& original);
-
-  /**
-   * Returns an alias, if given the name of the original.
-   *
-   * @param value The value in a key:value pair where the key
-   * is an alias.
-   * @return The alias associated with value.
-   */
-  static std::string AliasReverseLookup(const std::string& value);
-
-  /**
-   * Checks that all required parameters have been specified on the command
-   * line.  If any have not been specified, an error message is printed and the
-   * program is terminated.
-   */
-  static void RequiredOptions();
-
-  /**
-   * Parses the values given on the command line, overriding any default values.
-   */
-  static void UpdateGmap();
-
   /**
    * Make the constructor private, to preclude unauthorized instances.
    */
   CLI();
 
-  /**
-   * Initialize desc with a particular name.
-   *
-   * @param optionsName Name of the module, as far as boost is concerned.
-   */
-  CLI(const std::string& optionsName);
-
   //! Private copy constructor; we don't want copies floating around.
   CLI(const CLI& other);
-
-  //! Metaprogramming structure for vector detection.
-  template<typename T>
-  struct IsStdVector { const static bool value = false; };
-
-  //! Metaprogramming structure for vector detection.
-  template<typename eT>
-  struct IsStdVector<std::vector<eT>> { const static bool value = true; };
-
-  /**
-   * Add an option if it is not a vector type.  This is a utility function used
-   * by CLI::Add.
-   *
-   * @tparam Type of parameter.
-   * @param optId Name of parameter.
-   * @param descr Description.
-   */
-  template<typename T>
-  void AddOption(
-      const char* optId,
-      const char* descr,
-      const typename boost::disable_if<IsStdVector<T>>::type* /* junk */ = 0);
-
-  /**
-   * Add an option if it is a vector type.  This is a utility function used by
-   * CLI::Add.
-   *
-   * @tparam Type of parameter.
-   * @param optId Name of parameter.
-   * @param descr Description.
-   */
-  template<typename T>
-  void AddOption(
-      const char* optId,
-      const char* descr,
-      const typename boost::enable_if<IsStdVector<T>>::type* /* junk */ = 0);
+  //! Private copy operator; we don't want copies floating around.
+  CLI& operator=(const CLI& other);
 };
 
 } // namespace mlpack

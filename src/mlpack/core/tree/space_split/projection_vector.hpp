@@ -43,7 +43,7 @@ class AxisParallelProjVector
    */
   template<typename VecType>
   double Project(const VecType& point,
-                 typename boost::enable_if<IsVector<VecType> >::type* = 0) const
+                 typename std::enable_if_t<IsVector<VecType>::value>* = 0) const
   {
     return point[dim];
   };
@@ -78,9 +78,9 @@ class AxisParallelProjVector
    * Serialization.
    */
   template<typename Archive>
-  void Serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const unsigned int /* version */)
   {
-    ar & data::CreateNVP(dim, "dim");
+    ar & BOOST_SERIALIZATION_NVP(dim);
   };
 };
 
@@ -117,7 +117,7 @@ class ProjVector
    */
   template<typename VecType>
   double Project(const VecType& point,
-                 typename boost::enable_if<IsVector<VecType> >::type* = 0) const
+                 typename std::enable_if_t<IsVector<VecType>::value>* = 0) const
   {
     return arma::dot(point, projVect);
   };
@@ -142,9 +142,9 @@ class ProjVector
    * Serialization.
    */
   template<typename Archive>
-  void Serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const unsigned int /* version */)
   {
-    ar & data::CreateNVP(projVect, "projVect");
+    ar & BOOST_SERIALIZATION_NVP(projVect);
   };
 };
 

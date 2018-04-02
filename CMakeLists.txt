@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 2.8.5)
+cmake_minimum_required(VERSION 2.8.10)
 project(mlpack C CXX)
+
+include(CMake/cotire.cmake)
 
 # First, define all the compilation options.
 # We default to debugging mode for developers.
@@ -10,6 +12,7 @@ option(MATLAB_BINDINGS "Compile MATLAB bindings if MATLAB is found." OFF)
 option(TEST_VERBOSE "Run test cases with verbose output." OFF)
 option(BUILD_TESTS "Build tests." ON)
 option(BUILD_CLI_EXECUTABLES "Build command-line executables." ON)
+option(BUILD_PYTHON_BINDINGS "Build Python bindings." ON)
 option(BUILD_SHARED_LIBS
     "Compile shared libraries (if OFF, static libraries are compiled)." ON)
 option(BUILD_WITH_COVERAGE
@@ -17,9 +20,15 @@ option(BUILD_WITH_COVERAGE
 option(MATHJAX
     "Use MathJax for HTML Doxygen output (disabled by default)." OFF)
 option(FORCE_CXX11
-    "Don't check that the compiler supports C++11, just assume it.  Make sure to specify any necessary flag to enable C++11 as part of CXXFLAGS."
-    OFF)
+    "Don't check that the compiler supports C++11, just assume it.  Make sure to specify any necessary flag to enable C++11 as part of CXXFLAGS." OFF)
 enable_testing()
+
+# Currently Python bindings aren't known to build successfully on Windows, so
+# set BUILD_PYTHON_BINDINGS to OFF when the platform is Windows.
+if (WIN32)
+  option(BUILD_PYTHON_BINDINGS "Build Python bindings." OFF)
+  message(WARNING "By default Python bindings are not compiled for Windows because they are not known to work.  Set BUILD_PYTHON_BINDINGS to ON if you want them built.")
+endif()
 
 # Ensure that we have a C++11 compiler.  In newer versions of CMake, this is
 # done with target_compile_features() when the mlpack library target is added in
@@ -35,6 +44,10 @@ if ((${CMAKE_MAJOR_VERSION} LESS 3 OR
     message(FATAL_ERROR "No C++11 compiler available!")
   endif()
   enable_cxx11()
+else()
+  # set required standard to c++11
+  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif ()
 # Otherwise, we may have to set the C++11 mode after the mlpack target is
 # defined.
@@ -49,6 +62,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMake")
 # Only GCC-like compilers support -Wextra, and other compilers give tons of
 # output for -Wall, so only -Wall and -Wextra on GCC.
 if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  # Ensure that we can't compile with clang 3.4, since this causes strange
+  # issues.
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.5)
+    message(FATAL_ERROR "mlpack does not build correctly with clang < 3.5.  "
+        "Please upgrade your compiler and reconfigure mlpack.")
+  endif ()
+
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -ftemplate-depth=1000")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
 endif()
@@ -57,14 +77,19 @@ endif()
 # specific.  This list is a subset of MLPACK_LIBRARIES.
 set(COMPILER_SUPPORT_LIBRARIES "")
 
+# If we are using MSVC, we need /bigobj.
+if (MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+endif ()
+
 # If using clang, we have to link against libc++ depending on the
 # OS (at least on some systems). Further, gcc sometimes optimizes calls to
 # math.h functions, making -lm unnecessary with gcc, but it may still be
 # necessary with clang.
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   if (APPLE)
-    # detect OS X version. Use '/usr/bin/sw_vers -productVersion' to
-    # extract V from '10.V.x'.)
+    # Detect OS X version. Use '/usr/bin/sw_vers -productVersion' to
+    # extract V from '10.V.x'.
     exec_program(/usr/bin/sw_vers ARGS
         -productVersion OUTPUT_VARIABLE MACOSX_VERSION_RAW)
     string(REGEX REPLACE
@@ -87,6 +112,10 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Link everything with -lm.
   set(COMPILER_SUPPORT_LIBRARIES ${COMPILER_SUPPORT_LIBRARIES} "m")
   set(MLPACK_LIBRARIES ${MLPACK_LIBRARIES} "m")
+  # Use -pthread, but not on OS X.
+  if (NOT APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+  endif ()
 endif()
 
 # Setup build for test coverage
@@ -121,7 +150,7 @@ if(BUILD_WITH_COVERAGE)
 endif()
 
 # For clock_gettime().
-if (UNIX AND NOT APPLE)
+if (UNIX AND NOT APPLE AND NOT HAIKU)
   set(MLPACK_LIBRARIES ${MLPACK_LIBRARIES} "rt")
 endif ()
 
@@ -131,8 +160,6 @@ if(DEBUG)
     add_definitions(-DDEBUG)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -ftemplate-backtrace-limit=0")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -g -O0")
-  else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
   endif()
 
   # mlpack uses it's own mlpack::backtrace class based on Binary File Descriptor
@@ -186,7 +213,7 @@ endif()
 #   BOOST_LIBRARYDIR - library directory for Boost
 #   MATHJAX_ROOT - root of MathJax installation
 
-find_package(Armadillo 4.200.0 REQUIRED)
+find_package(Armadillo 6.500.0 REQUIRED)
 
 # If Armadillo was compiled without ARMA_64BIT_WORD and we are on a 64-bit
 # system (where size_t will be 64 bits), suggest to the user that they should
@@ -266,7 +293,24 @@ set(MLPACK_LIBRARIES ${MLPACK_LIBRARIES} ${ARMADILLO_LIBRARIES})
 # Unfortunately this configuration variable is necessary and will need to be
 # updated as time goes on and new versions are released.
 set(Boost_ADDITIONAL_VERSIONS
-  "1.49.0" "1.50.0" "1.51.0" "1.52.0" "1.53.0" "1.54.0" "1.55.0")
+  "1.66.0" "1.66"
+  "1.65.1" "1.65.0" "1.65"
+  "1.64.1" "1.64.0" "1.64"
+  "1.63.1" "1.63.0" "1.63"
+  "1.62.1" "1.62.0" "1.62"
+  "1.61.1" "1.61.0" "1.61"
+  "1.60.1" "1.60.0" "1.60"
+  "1.59.1" "1.59.0" "1.59"
+  "1.58.1" "1.58.0" "1.58"
+  "1.57.1" "1.57.0" "1.57"
+  "1.56.1" "1.56.0" "1.56"
+  "1.55.1" "1.55.0" "1.55"
+  "1.54.1" "1.54.0" "1.54"
+  "1.53.1" "1.53.0" "1.53"
+  "1.52.1" "1.52.0" "1.52"
+  "1.51.1" "1.51.0" "1.51"
+  "1.50.1" "1.50.0" "1.50"
+  "1.49.1" "1.49.0" "1.49")
 find_package(Boost 1.49
     COMPONENTS
       program_options
@@ -318,8 +362,8 @@ endif ()
 # some reason.
 include(CMake/TargetDistclean.cmake OPTIONAL)
 
-include_directories(${CMAKE_SOURCE_DIR})
-include_directories(${MLPACK_INCLUDE_DIRS})
+include_directories(BEFORE ${MLPACK_INCLUDE_DIRS})
+include_directories(BEFORE ${CMAKE_SOURCE_DIR}/src/)
 
 # On Windows, things end up under Debug/ or Release/.
 if (WIN32)
@@ -455,6 +499,7 @@ if (UNIX)
           mlpack_knn
           mlpack_krann
           mlpack_cf
+          mlpack_dbscan
           mlpack_decision_stump
           mlpack_decision_tree
           mlpack_det
@@ -506,11 +551,12 @@ if (PKG_CONFIG_FOUND)
   # So, we have to parse our list of library directories, libraries, and include
   # directories in order to get the correct line to give to pkg-config.
   # Next, adapt the list of include directories.
+  list(REMOVE_DUPLICATES MLPACK_INCLUDE_DIRS)
   foreach (incldir ${MLPACK_INCLUDE_DIRS})
     # Filter out some obviously unnecessary directories.
     if (NOT "${incldir}" STREQUAL "/usr/include")
-      set(MLPACK_INCLUDE_DIRS_STRING "${MLPACK_INCLUDE_DIRS_STRING}
-          -I${incldir}")
+      set(MLPACK_INCLUDE_DIRS_STRING
+          "${MLPACK_INCLUDE_DIRS_STRING} -I${incldir}")
     endif ()
   endforeach ()
   # Add the install directory too.

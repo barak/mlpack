@@ -86,7 +86,7 @@ void BiSearchVisitor<SortPolicy>::operator()(SpillKNN* ns) const
 {
   if (ns)
   {
-    if (!ns->Naive() && !ns->SingleMode())
+    if (ns->SearchMode() == DUAL_TREE_MODE)
     {
       // For Dual Tree Search on SpillTrees, the queryTree must be built with
       // non overlapping (tau = 0).
@@ -115,7 +115,7 @@ template<typename SortPolicy>
 template<typename NSType>
 void BiSearchVisitor<SortPolicy>::SearchLeaf(NSType* ns) const
 {
-  if (!ns->Naive() && !ns->SingleMode())
+  if (ns->SearchMode() == DUAL_TREE_MODE)
   {
     std::vector<size_t> oldFromNewQueries;
     typename NSType::Tree queryTree(std::move(querySet), oldFromNewQueries,
@@ -186,7 +186,7 @@ void TrainVisitor<SortPolicy>::operator()(SpillKNN* ns) const
 {
   if (ns)
   {
-    if (ns->Naive())
+    if (ns->SearchMode() == NAIVE_MODE)
       ns->Train(std::move(referenceSet));
     else
     {
@@ -212,7 +212,7 @@ template<typename SortPolicy>
 template<typename NSType>
 void TrainVisitor<SortPolicy>::TrainLeaf(NSType* ns) const
 {
-  if (ns->Naive())
+  if (ns->SearchMode() == NAIVE_MODE)
     ns->Train(std::move(referenceSet));
   else
   {
@@ -225,57 +225,13 @@ void TrainVisitor<SortPolicy>::TrainLeaf(NSType* ns) const
   }
 }
 
-//! Set the search mode.
-template<typename NSType>
-void SetSearchModeVisitor::operator()(NSType* ns) const
-{
-  if (ns)
-  {
-    switch (searchMode)
-    {
-      case NAIVE_MODE:
-        ns->Naive() = true;
-        ns->SingleMode() = false;
-        ns->Greedy() = false;
-        break;
-      case SINGLE_TREE_MODE:
-        ns->Naive() = false;
-        ns->SingleMode() = true;
-        ns->Greedy() = false;
-        break;
-      case DUAL_TREE_MODE:
-        ns->Naive() = false;
-        ns->SingleMode() = false;
-        ns->Greedy() = false;
-        break;
-      case GREEDY_SINGLE_TREE_MODE:
-        ns->Naive() = false;
-        ns->SingleMode() = true;
-        ns->Greedy() = true;
-        break;
-    }
-  }
-  else
-    throw std::runtime_error("no neighbor search model initialized");
-}
-
 //! Return the search mode.
 template<typename NSType>
-NeighborSearchMode SearchModeVisitor::operator()(NSType* ns) const
+NeighborSearchMode& SearchModeVisitor::operator()(NSType* ns) const
 {
   if (ns)
-  {
-    if (ns->Naive())
-      return NAIVE_MODE;
-    else if (ns->SingleMode() && ns->Greedy())
-      return GREEDY_SINGLE_TREE_MODE;
-    else if (ns->SingleMode())
-      return SINGLE_TREE_MODE;
-    else
-      return DUAL_TREE_MODE;
-  }
-  else
-    throw std::runtime_error("no neighbor search model initialized");
+    return ns->SearchMode();
+  throw std::runtime_error("no neighbor search model initialized");
 }
 
 //! Expose the Epsilon method of the given NSType.
@@ -319,6 +275,79 @@ NSModel<SortPolicy>::NSModel(TreeTypes treeType, bool randomBasis) :
   // Nothing to do.
 }
 
+template<typename SortPolicy>
+NSModel<SortPolicy>::NSModel(const NSModel& other) :
+    treeType(other.treeType),
+    leafSize(other.leafSize),
+    tau(other.tau),
+    rho(other.rho),
+    randomBasis(other.randomBasis),
+    q(other.q),
+    nSearch(other.nSearch)
+{
+  // Nothing to do.
+}
+
+template<typename SortPolicy>
+NSModel<SortPolicy>::NSModel(NSModel&& other) :
+    treeType(other.treeType),
+    leafSize(other.leafSize),
+    tau(other.tau),
+    rho(other.rho),
+    randomBasis(other.randomBasis),
+    q(std::move(other.q)),
+    nSearch(other.nSearch)
+{
+  // Reset parameters of the other model.
+  other.treeType = TreeTypes::KD_TREE;
+  other.leafSize = 20;
+  other.tau = 0;
+  other.rho = 0.7;
+  other.randomBasis = false;
+  other.nSearch = decltype(other.nSearch)();
+}
+
+template<typename SortPolicy>
+NSModel<SortPolicy>& NSModel<SortPolicy>::operator=(const NSModel& other)
+{
+  boost::apply_visitor(DeleteVisitor(), nSearch);
+
+  treeType = other.treeType;
+  leafSize = other.leafSize;
+  tau = other.tau;
+  rho = other.rho;
+  randomBasis = other.randomBasis;
+  q = other.q;
+  nSearch = other.nSearch;
+
+  return *this;
+}
+
+template<typename SortPolicy>
+NSModel<SortPolicy>& NSModel<SortPolicy>::operator=(NSModel&& other)
+{
+  boost::apply_visitor(DeleteVisitor(), nSearch);
+
+  treeType = other.treeType;
+  leafSize = other.leafSize;
+  tau = other.tau;
+  rho = other.rho;
+  randomBasis = other.randomBasis;
+  q = std::move(other.q);
+  // Copy the pointer and type.
+  nSearch = other.nSearch;
+
+  // Reset parameters of the other model.
+  other.treeType = TreeTypes::KD_TREE;
+  other.leafSize = 20;
+  other.tau = 0;
+  other.rho = 0.7;
+  other.randomBasis = false;
+  other.nSearch = decltype(other.nSearch)();
+
+  return *this;
+}
+
 //! Clean memory, if necessary.
 template<typename SortPolicy>
 NSModel<SortPolicy>::~NSModel()
@@ -326,54 +355,28 @@ NSModel<SortPolicy>::~NSModel()
   boost::apply_visitor(DeleteVisitor(), nSearch);
 }
 
-/**
- * Non-intrusive serialization for NeighborSearch class. We need this definition
- * because we are going to use the serialize function for boost variant, which
- * will look for a serialize function for its member types.
- */
-template<typename Archive,
-         typename SortPolicy,
-         template<typename TreeMetricType,
-                  typename TreeStatType,
-                  typename TreeMatType> class TreeType,
-         template<typename RuleType> class TraversalType,
-         template<typename RuleType> class SingleTreeTraversalType>
-void serialize(
-    Archive& ar,
-    NeighborSearch<SortPolicy,
-                   metric::EuclideanDistance,
-                   arma::mat,
-                   TreeType,
-                   TraversalType,
-                   SingleTreeTraversalType>& ns,
-    const unsigned int version)
-{
-  ns.Serialize(ar, version);
-}
-
 //! Serialize the kNN model.
 template<typename SortPolicy>
 template<typename Archive>
-void NSModel<SortPolicy>::Serialize(Archive& ar, const unsigned int version)
+void NSModel<SortPolicy>::serialize(Archive& ar, const unsigned int version)
 {
-  ar & data::CreateNVP(treeType, "treeType");
+  ar & BOOST_SERIALIZATION_NVP(treeType);
   // Backward compatibility: older versions of NSModel didn't include these
   // parameters.
   if (version > 0)
   {
-    ar & data::CreateNVP(leafSize, "leafSize");
-    ar & data::CreateNVP(tau, "tau");
-    ar & data::CreateNVP(rho, "rho");
+    ar & BOOST_SERIALIZATION_NVP(leafSize);
+    ar & BOOST_SERIALIZATION_NVP(tau);
+    ar & BOOST_SERIALIZATION_NVP(rho);
   }
-  ar & data::CreateNVP(randomBasis, "randomBasis");
-  ar & data::CreateNVP(q, "q");
+  ar & BOOST_SERIALIZATION_NVP(randomBasis);
+  ar & BOOST_SERIALIZATION_NVP(q);
 
   // This should never happen, but just in case, be clean with memory.
   if (Archive::is_loading::value)
     boost::apply_visitor(DeleteVisitor(), nSearch);
 
-  const std::string& name = NSModelName<SortPolicy>::Name();
-  ar & data::CreateNVP(nSearch, name);
+  ar & BOOST_SERIALIZATION_NVP(nSearch);
 }
 
 //! Expose the dataset.
@@ -392,9 +395,9 @@ NeighborSearchMode NSModel<SortPolicy>::SearchMode() const
 
 //! Modify the search mode.
 template<typename SortPolicy>
-void NSModel<SortPolicy>::SetSearchMode(const NeighborSearchMode mode)
+NeighborSearchMode& NSModel<SortPolicy>::SearchMode()
 {
-  return boost::apply_visitor(SetSearchModeVisitor(mode), nSearch);
+  return boost::apply_visitor(SearchModeVisitor(), nSearch);
 }
 
 template<typename SortPolicy>

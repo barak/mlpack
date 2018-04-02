@@ -68,7 +68,7 @@ class SphericalKernel
     }
     double volumeSquared = pow(Normalizer(a.n_rows), 2.0);
 
-    switch(a.n_rows)
+    switch (a.n_rows)
     {
       case 1:
         return 1.0 / volumeSquared * (2.0 * bandwidth - distance);
@@ -88,7 +88,7 @@ class SphericalKernel
   double Normalizer(size_t dimension) const
   {
     return pow(bandwidth, (double) dimension) * pow(M_PI, dimension / 2.0) /
-        boost::math::tgamma(dimension / 2.0 + 1.0);
+        std::tgamma(dimension / 2.0 + 1.0);
   }
 
   /**
@@ -100,16 +100,17 @@ class SphericalKernel
   {
     return (t <= bandwidth) ? 1.0 : 0.0;
   }
-  double Gradient(double t) {
+  double Gradient(double t)
+  {
     return t == bandwidth ? arma::datum::nan : 0.0;
   }
 
   //! Serialize the object.
   template<typename Archive>
-  void Serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const unsigned int /* version */)
   {
-    ar & data::CreateNVP(bandwidth, "bandwidth");
-    ar & data::CreateNVP(bandwidthSquared, "bandwidthSquared");
+    ar & BOOST_SERIALIZATION_NVP(bandwidth);
+    ar & BOOST_SERIALIZATION_NVP(bandwidthSquared);
   }
 
  private:

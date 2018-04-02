@@ -10,9 +10,7 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/prereqs.hpp>
-#include <mlpack/core/data/load.hpp>
-#include <mlpack/core/data/save.hpp>
-#include <mlpack/core/util/param.hpp>
+#include <mlpack/core/util/cli.hpp>
 #include <mlpack/core/math/random.hpp>
 #include <mlpack/core/kernels/kernel_traits.hpp>
 #include <mlpack/core/kernels/linear_kernel.hpp>
@@ -26,6 +24,7 @@
 #include <mlpack/core/kernels/spherical_kernel.hpp>
 #include <mlpack/core/kernels/triangular_kernel.hpp>
 #include <mlpack/methods/hoeffding_trees/hoeffding_tree.hpp>
+#include <mlpack/core/util/mlpack_main.hpp>
 #include <mlpack/methods/nystroem_method/ordered_selection.hpp>
 #include <mlpack/methods/nystroem_method/random_selection.hpp>
 #include <mlpack/methods/nystroem_method/kmeans_selection.hpp>
@@ -37,6 +36,7 @@
 using namespace mlpack;
 using namespace mlpack::kpca;
 using namespace mlpack::kernel;
+using namespace mlpack::util;
 using namespace std;
 using namespace arma;
 
@@ -50,11 +50,12 @@ PROGRAM_INFO("Kernel Principal Components Analysis",
     "For the case where a linear kernel is used, this reduces to regular "
     "PCA."
     "\n\n"
-    "For example, the following will perform KPCA on the 'input.csv' file using"
-    " the gaussian kernel and store the transformed date in the "
-    "'transformed.csv' file."
-    "\n\n"
-    "$ kernel_pca -i input.csv -k gaussian -o transformed.csv"
+    "For example, the following command will perform KPCA on the dataset " +
+    PRINT_DATASET("input") + " using the Gaussian kernel, and saving the "
+    "transformed data to " + PRINT_DATASET("transformed") + ": "
+    "\n\n" +
+    PRINT_CALL("kernel_pca", "input", "input", "kernel", "gaussian", "output",
+        "transformed") +
     "\n\n"
     "The kernels that are supported are listed below:"
     "\n\n"
@@ -80,19 +81,22 @@ PROGRAM_INFO("Kernel Principal Components Analysis",
     "    K(x, y) = 1 - (x^T y) / (|| x || * || y ||)\n"
     "\n"
     "The parameters for each of the kernels should be specified with the "
-    "options --bandwidth, --kernel_scale, --offset, or --degree (or a "
-    "combination of those options)."
+    "options " + PRINT_PARAM_STRING("bandwidth") + ", " +
+    PRINT_PARAM_STRING("kernel_scale") + ", " +
+    PRINT_PARAM_STRING("offset") + ", or " + PRINT_PARAM_STRING("degree") +
+    " (or a combination of those parameters)."
     "\n\n"
-    "Optionally, the nystr\u00F6m method (\"Using the Nystroem method to speed up"
-    " kernel machines\", 2001) can be used to calculate the kernel matrix by "
-    "specifying the --nystroem_method (-n) option. This approach works by using"
-    " a subset of the data as basis to reconstruct the kernel matrix; to specify"
-    " the sampling scheme, the --sampling parameter is used, the sampling scheme"
-    " for the nystr\u00F6m method can be chosen from the following list: kmeans,"
-    " random, ordered.");
+    "Optionally, the Nystr\u00F6m method (\"Using the Nystroem method to speed "
+    "up kernel machines\", 2001) can be used to calculate the kernel matrix by "
+    "specifying the " + PRINT_PARAM_STRING("nystroem_method") + " parameter. "
+    "This approach works by using a subset of the data as basis to reconstruct "
+    "the kernel matrix; to specify the sampling scheme, the " +
+    PRINT_PARAM_STRING("sampling") + " parameter is used.  The "
+    "sampling scheme for the Nystr\u00F6m method can be chosen from the "
+    "following list: 'kmeans', 'random', 'ordered'.");
 
-PARAM_STRING_IN_REQ("input_file", "Input dataset to perform KPCA on.", "i");
-PARAM_STRING_OUT("output_file", "File to save modified dataset to.", "o");
+PARAM_MATRIX_IN_REQ("input", "Input dataset to perform KPCA on.", "i");
+PARAM_MATRIX_OUT("output", "Matrix to save modified dataset to.", "o");
 PARAM_STRING_IN_REQ("kernel", "The kernel to use; see the above documentation "
     "for the list of usable kernels.", "k");
 
@@ -160,19 +164,12 @@ void RunKPCA(arma::mat& dataset,
   }
 }
 
-int main(int argc, char** argv)
+static void mlpackMain()
 {
-  // Parse command line options.
-  CLI::ParseCommandLine(argc, argv);
-
-  if (!CLI::HasParam("output_file"))
-    Log::Warn << "--output_file is not specified; no output will be saved!"
-        << endl;
+  RequireAtLeastOnePassed({ "output" }, false, "no output will be saved");
 
   // Load input dataset.
-  mat dataset;
-  const string inputFile = CLI::GetParam<string>("input_file");
-  data::Load(inputFile, dataset, true); // Fatal on failure.
+  mat dataset = std::move(CLI::GetParam<arma::mat>("input"));
 
   // Get the new dimensionality, if it is necessary.
   size_t newDim = dataset.n_rows;
@@ -189,6 +186,9 @@ int main(int argc, char** argv)
   }
 
   // Get the kernel type and make sure it is valid.
+  RequireParamInSet<string>("kernel", { "linear", "gaussian", "polynomial",
+      "hyptan", "laplacian", "epanechnikov", "cosine" }, true,
+      "unknown kernel type");
   const string kernelType = CLI::GetParam<string>("kernel");
 
   const bool centerTransformedData = CLI::HasParam("center");
@@ -249,16 +249,8 @@ int main(int argc, char** argv)
     RunKPCA<CosineDistance>(dataset, centerTransformedData, nystroem, newDim,
         sampling, kernel);
   }
-  else
-  {
-    // Invalid kernel type.
-    Log::Fatal << "Invalid kernel type ('" << kernelType << "'); valid choices "
-        << "are 'linear', 'gaussian', 'polynomial', 'hyptan', 'laplacian', and "
-        << "'cosine'." << endl;
-  }
 
   // Save the output dataset.
-  const string outputFile = CLI::GetParam<string>("output_file");
-  if (outputFile != "")
-    data::Save(outputFile, dataset, true); // Fatal on failure.
+  if (CLI::HasParam("output"))
+    CLI::GetParam<arma::mat>("output") = std::move(dataset);
 }

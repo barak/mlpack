@@ -55,7 +55,6 @@ class HollowBallBound
   bool ownsMetric;
 
  public:
-
   //! Empty Constructor.
   HollowBallBound();
 
@@ -146,7 +145,7 @@ class HollowBallBound
    */
   template<typename VecType>
   ElemType MinDistance(const VecType& point,
-                       typename boost::enable_if<IsVector<VecType>>* = 0)
+                       typename std::enable_if_t<IsVector<VecType>::value>* = 0)
       const;
 
   /**
@@ -159,7 +158,7 @@ class HollowBallBound
    */
   template<typename VecType>
   ElemType MaxDistance(const VecType& point,
-                       typename boost::enable_if<IsVector<VecType>>* = 0)
+                       typename std::enable_if_t<IsVector<VecType>::value>* = 0)
       const;
 
   /**
@@ -173,7 +172,7 @@ class HollowBallBound
   template<typename VecType>
   math::RangeType<ElemType> RangeDistance(
       const VecType& other,
-      typename boost::enable_if<IsVector<VecType>>* = 0) const;
+      typename std::enable_if_t<IsVector<VecType>::value>* = 0) const;
 
   /**
    * Calculates minimum and maximum bound-to-bound distance.
@@ -215,7 +214,7 @@ class HollowBallBound
 
   //! Serialize the bound.
   template<typename Archive>
-  void Serialize(Archive& ar, const unsigned int version);
+  void serialize(Archive& ar, const unsigned int version);
 };
 
 //! A specialization of BoundTraits for this bound type.

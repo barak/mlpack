@@ -1,8 +1,18 @@
 # Define the files we need to compile
 # Anything not in this list will not be compiled into mlpack.
 set(SOURCES
-  init_rules/random_init.hpp
+  ffn.hpp
+  ffn_impl.hpp
+  rnn.hpp
+  rnn_impl.hpp
 )
+
+add_subdirectory(visitor)
+add_subdirectory(activation_functions)
+add_subdirectory(init_rules)
+add_subdirectory(layer)
+add_subdirectory(convolution_rules)
+add_subdirectory(augmented)
 
 # Add directory name to sources.
 set(DIR_SRCS)

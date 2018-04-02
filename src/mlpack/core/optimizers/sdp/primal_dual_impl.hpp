@@ -46,9 +46,7 @@ PrimalDualSolver<SDPType>::PrimalDualSolver(const SDPType& sdp)
     primalInfeasTol(1e-7),
     dualInfeasTol(1e-7),
     maxIterations(1000)
-{
-
-}
+{ /* Nothing to do. */ }
 
 template <typename SDPType>
 PrimalDualSolver<SDPType>::PrimalDualSolver(const SDPType& sdp,
@@ -110,17 +108,16 @@ PrimalDualSolver<SDPType>::PrimalDualSolver(const SDPType& sdp,
  *
  * See (2.18) of [AHO98] for more details.
  */
-static inline double
-Alpha(const arma::mat& A, const arma::mat& dA, double tau)
+static inline bool
+Alpha(const arma::mat& A, const arma::mat& dA, double tau, double& alpha)
 {
-  // On Armadillo < 4.500, the "lower" option isn't available.
-#if (ARMA_VERSION_MAJOR < 4) || \
-    ((ARMA_VERSION_MAJOR == 4) && (ARMA_VERSION_MINOR < 500))
-  const arma::mat L = arma::chol(A).t(); // This is less efficient.
-#else
-  const arma::mat L = arma::chol(A, "lower");
-#endif
-  const arma::mat Linv = arma::inv(arma::trimatl(L));
+  arma::mat L;
+  if (!arma::chol(L, A, "lower"))
+    return false;
+
+  arma::mat Linv;
+  if (!arma::inv(Linv, arma::trimatl(L)))
+    return false;
   // TODO(stephentu): We only want the top eigenvalue, we should
   // be able to do better than full eigen-decomposition.
   const arma::vec evals = arma::eig_sym(-Linv * dA * Linv.t());
@@ -129,7 +126,8 @@ Alpha(const arma::mat& A, const arma::mat& dA, double tau)
   if (alphahat < 0.)
     // dA is PSD already
     alphahat = 1.;
-  return std::min(1., tau * alphahat);
+  alpha = std::min(1., tau * alphahat);
+  return true;
 }
 
 /**
@@ -377,8 +375,21 @@ PrimalDualSolver<SDPType>::Optimize(arma::mat& X,
     math::Smat(dsz, dZ);
 
     // Step (2), determine step size lengths (alpha, beta)
-    alpha = Alpha(X, dX, tau);
-    beta = Alpha(Z, dZ, tau);
+    bool success = Alpha(X, dX, tau, alpha);
+    if (!success)
+    {
+      Log::Warn << "PrimalDualSolver::Optimize(): cholesky decomposition of X "
+          << "failed!  Terminating optimization.";
+      return primalObj;
+    }
+
+    success = Alpha(Z, dZ, tau, beta);
+    if (!success)
+    {
+      Log::Warn << "PrimalDualSolver::Optimize(): cholesky decomposition of Z "
+          << "failed!  Terminating optimization.";
+      return primalObj;
+    }
 
     // See (7.1)
     const double sigma =
@@ -392,8 +403,18 @@ PrimalDualSolver<SDPType>::Optimize(arma::mat& X,
         dsz);
     math::Smat(dsx, dX);
     math::Smat(dsz, dZ);
-    alpha = Alpha(X, dX, tau);
-    beta = Alpha(Z, dZ, tau);
+    if (!Alpha(X, dX, tau, alpha))
+    {
+      Log::Warn << "PrimalDualSolver::Optimize(): cholesky decomposition of Z "
+          << "failed!  Terminating optimization.";
+      return primalObj;
+    }
+    if (!Alpha(Z, dZ, tau, beta))
+    {
+      Log::Warn << "PrimalDualSolver::Optimize(): cholesky decomposition of Z "
+          << "failed!  Terminating optimization.";
+      return primalObj;
+    }
 
     // Iterate update
     X += alpha * dX;

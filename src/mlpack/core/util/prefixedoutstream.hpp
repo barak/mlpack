@@ -54,13 +54,17 @@ class PrefixedOutStream
    * @param ignoreInput If true, the stream will not be printed.
    * @param fatal If true, a std::runtime_error exception is thrown after
    *     printing a newline.
+   * @param backtrace If true, attempt to print a backtrace (will only be
+   *     done if HAS_BFD_DL is defined).
    */
   PrefixedOutStream(std::ostream& destination,
                     const char* prefix,
                     bool ignoreInput = false,
-                    bool fatal = false) :
+                    bool fatal = false,
+                    bool backtrace = true) :
       destination(destination),
       ignoreInput(ignoreInput),
+      backtrace(backtrace),
       prefix(prefix),
       // We want the first call to operator<< to prefix the prefix so we set
       // carriageReturned to true.
@@ -107,11 +111,15 @@ class PrefixedOutStream
   template<typename T>
   PrefixedOutStream& operator<<(const T& s);
 
-  //! The output stream that all data is to be sent too; example: std::cout.
+  //! The output stream that all data is to be sent to; example: std::cout.
   std::ostream& destination;
 
   //! Discards input, prints nothing if true.
   bool ignoreInput;
+
+  //! If true, on a fatal error, a backtrace will be printed if HAS_BFD_DL is
+  //! defined.
+  bool backtrace;
 
  private:
   /**

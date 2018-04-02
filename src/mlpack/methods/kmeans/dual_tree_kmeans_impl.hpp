@@ -24,29 +24,27 @@ namespace mlpack {
 namespace kmeans {
 
 //! Call the tree constructor that does mapping.
-template<typename TreeType>
+template<typename TreeType, typename MatType>
 TreeType* BuildTree(
-    const typename TreeType::Mat& dataset,
+    MatType&& dataset,
     std::vector<size_t>& oldFromNew,
-    const typename boost::enable_if_c<
-        tree::TreeTraits<TreeType>::RearrangesDataset == true, TreeType*
-    >::type = 0)
+    const typename std::enable_if<
+        tree::TreeTraits<TreeType>::RearrangesDataset>::type* = 0)
 {
   // This is a hack.  I know this will be BinarySpaceTree, so force a leaf size
   // of two.
-  return new TreeType(dataset, oldFromNew, 1);
+  return new TreeType(std::forward<MatType>(dataset), oldFromNew, 1);
 }
 
 //! Call the tree constructor that does not do mapping.
-template<typename TreeType>
+template<typename TreeType, typename MatType>
 TreeType* BuildTree(
-    const typename TreeType::Mat& dataset,
+    MatType&& dataset,
     const std::vector<size_t>& /* oldFromNew */,
-    const typename boost::enable_if_c<
-        tree::TreeTraits<TreeType>::RearrangesDataset == false, TreeType*
-    >::type = 0)
+    const typename std::enable_if<
+        !tree::TreeTraits<TreeType>::RearrangesDataset>::type* = 0)
 {
-  return new TreeType(dataset);
+  return new TreeType(std::forward<MatType>(dataset));
 }
 
 template<typename MetricType,
@@ -633,8 +631,8 @@ void DualTreeKMeans<MetricType, MatType, TreeType>::DecoalesceTree(Tree& node)
 template<typename TreeType>
 void HideChild(TreeType& node,
                const size_t child,
-               const typename boost::disable_if_c<
-                   tree::TreeTraits<TreeType>::BinaryTree>::type*)
+               const typename std::enable_if_t<
+                   !tree::TreeTraits<TreeType>::BinaryTree>*)
 {
   // We're going to assume we have a Children() function open to us.  If we
   // don't, then this won't work, I guess...
@@ -645,8 +643,8 @@ void HideChild(TreeType& node,
 template<typename TreeType>
 void HideChild(TreeType& node,
                const size_t child,
-               const typename boost::enable_if_c<
-                   tree::TreeTraits<TreeType>::BinaryTree>::type*)
+               const typename std::enable_if_t<
+                   tree::TreeTraits<TreeType>::BinaryTree>*)
 {
   // If we're hiding the left child, then take the right child as the new left
   // child.
@@ -664,8 +662,8 @@ void HideChild(TreeType& node,
 //! Utility function for restoring children in a non-binary tree.
 template<typename TreeType>
 void RestoreChildren(TreeType& node,
-                     const typename boost::disable_if_c<
-                         tree::TreeTraits<TreeType>::BinaryTree>::type*)
+                     const typename std::enable_if_t<
+                         !tree::TreeTraits<TreeType>::BinaryTree>*)
 {
   node.Children().clear();
   node.Children().resize(node.Stat().NumTrueChildren());
@@ -676,8 +674,8 @@ void RestoreChildren(TreeType& node,
 //! Utility function for restoring children in a binary tree.
 template<typename TreeType>
 void RestoreChildren(TreeType& node,
-                     const typename boost::enable_if_c<
-                         tree::TreeTraits<TreeType>::BinaryTree>::type*)
+                     const typename std::enable_if_t<
+                         tree::TreeTraits<TreeType>::BinaryTree>*)
 {
   if (node.Stat().NumTrueChildren() > 0)
   {

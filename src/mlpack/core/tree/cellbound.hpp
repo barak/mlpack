@@ -123,7 +123,7 @@ class CellBound
   arma::Col<AddressElemType>& LoAddress() { return loAddress; }
   //! Modify lower address.
   const arma::Col<AddressElemType>& LoAddress() const {return loAddress; }
-  
+
   //! Get high address.
   arma::Col<AddressElemType>& HiAddress() { return hiAddress; }
   //! Modify high address.
@@ -156,7 +156,8 @@ class CellBound
    */
   template<typename VecType>
   ElemType MinDistance(const VecType& point,
-                       typename boost::enable_if<IsVector<VecType>>* = 0) const;
+                       typename std::enable_if_t<IsVector<VecType>::value>* = 0)
+      const;
 
   /**
    * Calculates minimum bound-to-bound distance.
@@ -172,7 +173,8 @@ class CellBound
    */
   template<typename VecType>
   ElemType MaxDistance(const VecType& point,
-                       typename boost::enable_if<IsVector<VecType>>* = 0) const;
+                       typename std::enable_if_t<IsVector<VecType>::value>* = 0)
+      const;
 
   /**
    * Computes maximum distance.
@@ -198,7 +200,7 @@ class CellBound
   template<typename VecType>
   math::RangeType<ElemType> RangeDistance(
       const VecType& point,
-      typename boost::enable_if<IsVector<VecType>>* = 0) const;
+      typename std::enable_if_t<IsVector<VecType>::value>* = 0) const;
 
   /**
    * Expands this region to include new points.
@@ -239,7 +241,7 @@ class CellBound
    * Serialize the bound object.
    */
   template<typename Archive>
-  void Serialize(Archive& ar, const unsigned int version);
+  void serialize(Archive& ar, const unsigned int version);
 
  private:
   //! The precision of the tree element type.

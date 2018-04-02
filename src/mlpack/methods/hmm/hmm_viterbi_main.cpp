@@ -11,24 +11,13 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/prereqs.hpp>
-#include <mlpack/core/data/load.hpp>
-#include <mlpack/core/data/save.hpp>
+#include <mlpack/core/util/cli.hpp>
+#include <mlpack/core/util/mlpack_main.hpp>
 
 #include "hmm.hpp"
-#include "hmm_util.hpp"
+#include "hmm_model.hpp"
 
 #include <mlpack/methods/gmm/gmm.hpp>
-
-PROGRAM_INFO("Hidden Markov Model (HMM) Viterbi State Prediction", "This "
-    "utility takes an already-trained HMM (--model_file) and evaluates the "
-    "most probably hidden state sequence of a given sequence of observations "
-    "(--input_file), using the Viterbi algorithm.  The computed state sequence "
-    "is saved to the specified output file (--output_file).");
-
-PARAM_STRING_IN_REQ("input_file", "File containing observations,", "i");
-PARAM_STRING_IN_REQ("model_file", "File containing HMM.", "m");
-PARAM_STRING_OUT("output_file", "File to save predicted state sequence to.",
-    "o");
 
 using namespace mlpack;
 using namespace mlpack::hmm;
@@ -38,6 +27,26 @@ using namespace mlpack::gmm;
 using namespace arma;
 using namespace std;
 
+PROGRAM_INFO("Hidden Markov Model (HMM) Viterbi State Prediction", "This "
+    "utility takes an already-trained HMM, specified as " +
+    PRINT_PARAM_STRING("input_model") + ", and evaluates the most probable "
+    "hidden state sequence of a given sequence of observations (specified as "
+    "'" + PRINT_PARAM_STRING("input") + ", using the Viterbi algorithm.  The "
+    "computed state sequence may be saved using the " +
+    PRINT_PARAM_STRING("output") + " output parameter."
+    "\n\n"
+    "For example, to predict the state sequence of the observations " +
+    PRINT_DATASET("obs") + " using the HMM " + PRINT_MODEL("hmm") + ", "
+    "storing the predicted state sequence to " + PRINT_DATASET("states") +
+    ", the following command could be used:"
+    "\n\n" +
+    PRINT_CALL("hmm_viterbi", "input", "obs", "input_model", "hmm", "output",
+        "states"));
+
+PARAM_MATRIX_IN_REQ("input", "Matrix containing observations,", "i");
+PARAM_MODEL_IN_REQ(HMMModel, "input_model", "Trained HMM to use.", "m");
+PARAM_UMATRIX_OUT("output", "File to save predicted state sequence to.", "o");
+
 // Because we don't know what the type of our HMM is, we need to write a
 // function that can take arbitrary HMM types.
 struct Viterbi
@@ -46,11 +55,7 @@ struct Viterbi
   static void Apply(HMMType& hmm, void* /* extraInfo */)
   {
     // Load observations.
-    const string inputFile = CLI::GetParam<string>("input_file");
-    const string outputFile = CLI::GetParam<string>("output_file");
-
-    mat dataSeq;
-    data::Load(inputFile, dataSeq, true);
+    mat dataSeq = std::move(CLI::GetParam<arma::mat>("input"));
 
     // See if transposing the data could make it the right dimensionality.
     if ((dataSeq.n_cols == 1) && (hmm.Emission()[0].Dimensionality() == 1))
@@ -62,28 +67,23 @@ struct Viterbi
 
     // Verify correct dimensionality.
     if (dataSeq.n_rows != hmm.Emission()[0].Dimensionality())
+    {
       Log::Fatal << "Observation dimensionality (" << dataSeq.n_rows << ") "
           << "does not match HMM Gaussian dimensionality ("
           << hmm.Emission()[0].Dimensionality() << ")!" << endl;
+    }
 
     arma::Row<size_t> sequence;
     hmm.Predict(dataSeq, sequence);
 
     // Save output.
-    if (CLI::HasParam("output_file"))
-      data::Save(outputFile, sequence, true);
+    CLI::GetParam<arma::Mat<size_t>>("output") = std::move(sequence);
   }
 };
 
-int main(int argc, char** argv)
+static void mlpackMain()
 {
-  // Parse command line options.
-  CLI::ParseCommandLine(argc, argv);
+  RequireAtLeastOnePassed({ "output" }, false, "no results will be saved");
 
-  if (!CLI::HasParam("output_file"))
-    Log::Warn << "--output_file (-o) is not specified; no results will be "
-        << "saved!" << endl;
-
-  const string modelFile = CLI::GetParam<string>("model_file");
-  LoadHMMAndPerformAction<Viterbi>(modelFile);
+  CLI::GetParam<HMMModel*>("input_model")->PerformAction<Viterbi>((void*) NULL);
 }

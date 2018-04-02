@@ -10,55 +10,51 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/prereqs.hpp>
+#include <mlpack/core/util/cli.hpp>
+#include <mlpack/core/util/mlpack_main.hpp>
 #include "gmm.hpp"
-#include <mlpack/core/data/load.hpp>
-#include <mlpack/core/data/save.hpp>
 
 using namespace std;
 using namespace mlpack;
 using namespace mlpack::gmm;
+using namespace mlpack::util;
 
 PROGRAM_INFO("GMM Probability Calculator",
     "This program calculates the probability that given points came from a "
-    "given GMM (that is, P(X | gmm)).  The GMM is specified with the "
-    "--input_model_file option, and the points are specified with the "
-    "--input_file option.  The output probabilities are stored in the file "
-    "specified by the --output_file option.");
+    "given GMM (that is, P(X | gmm)).  The GMM is specified with the " +
+    PRINT_PARAM_STRING("input_model") + " parameter, and the points are "
+    "specified with the " + PRINT_PARAM_STRING("input") + " parameter.  The "
+    "output probabilities may be saved via the " +
+    PRINT_PARAM_STRING("output") + " output parameter."
+    "\n\n"
+    "So, for example, to calculate the probabilities of each point in " +
+    PRINT_DATASET("points") + " coming from the pre-trained GMM " +
+    PRINT_MODEL("gmm") + ", while storing those probabilities in " +
+    PRINT_DATASET("probs") + ", the following command could be used:"
+    "\n\n" +
+    PRINT_CALL("gmm_probability", "input_model", "gmm", "input", "points",
+        "output", "probs"));
 
-PARAM_STRING_IN_REQ("input_model_file", "File containing input GMM.", "m");
-PARAM_STRING_IN_REQ("input_file", "File containing points.", "i");
+PARAM_MODEL_IN_REQ(GMM, "input_model", "Input GMM to use as model.", "m");
+PARAM_MATRIX_IN_REQ("input", "Input matrix to calculate probabilities of.",
+    "i");
 
-PARAM_STRING_OUT("output_file", "File to save calculated probabilities to.",
-    "o");
+PARAM_MATRIX_OUT("output", "Matrix to store calculated probabilities in.", "o");
 
-int main(int argc, char** argv)
+static void mlpackMain()
 {
-  CLI::ParseCommandLine(argc, argv);
-
-  const string inputFile = CLI::GetParam<string>("input_file");
-  const string inputModelFile = CLI::GetParam<string>("input_model_file");
-  const string outputFile = CLI::GetParam<string>("output_file");
-
-  if (!CLI::HasParam("output_file"))
-    Log::Warn << "--output_file (-o) is not specified;"
-        << "no results will be saved!" << endl;
+  RequireAtLeastOnePassed({ "output" }, false, "no results will be saved");
 
   // Get the GMM and the points.
-  GMM gmm;
-  data::Load(inputModelFile, "gmm", gmm);
+  GMM* gmm = CLI::GetParam<GMM*>("input_model");
 
-  arma::mat dataset;
-  data::Load(inputFile, dataset);
+  arma::mat dataset = std::move(CLI::GetParam<arma::mat>("input"));
 
   // Now calculate the probabilities.
   arma::rowvec probabilities(dataset.n_cols);
   for (size_t i = 0; i < dataset.n_cols; ++i)
-    probabilities[i] = gmm.Probability(dataset.unsafe_col(i));
+    probabilities[i] = gmm->Probability(dataset.unsafe_col(i));
 
   // And save the result.
-  if (CLI::HasParam("output_file"))
-    data::Save(CLI::GetParam<string>("output_file"), probabilities);
-  else
-    Log::Warn << "--output_file was not specified, so no output will be saved!"
-        << endl;
+  CLI::GetParam<arma::mat>("output") = std::move(probabilities);
 }

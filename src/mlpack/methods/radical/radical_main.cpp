@@ -9,33 +9,34 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-
 #include <mlpack/prereqs.hpp>
-#include <mlpack/core/data/load.hpp>
-#include <mlpack/core/data/save.hpp>
-#include <mlpack/core/util/param.hpp>
+#include <mlpack/core/util/cli.hpp>
 #include <mlpack/core/math/random.hpp>
+#include <mlpack/core/util/mlpack_main.hpp>
 #include "radical.hpp"
 
 PROGRAM_INFO("RADICAL", "An implementation of RADICAL, a method for independent"
     "component analysis (ICA).  Assuming that we have an input matrix X, the"
     "goal is to find a square unmixing matrix W such that Y = W * X and the "
     "dimensions of Y are independent components.  If the algorithm is running"
-    "particularly slowly, try reducing the number of replicates.");
+    "particularly slowly, try reducing the number of replicates."
+    "\n\n"
+    "The input matrix to perform ICA on should be specified with the " +
+    PRINT_PARAM_STRING("input") + " parameter.  The output matrix Y may be "
+    "saved with the " + PRINT_PARAM_STRING("output_ic") + " output parameter, "
+    "and the output unmixing matrix W may be saved with the " +
+    PRINT_PARAM_STRING("output_unmixing") + " output parameter."
+    "\n\n"
+    "For example, to perform ICA on the matrix " + PRINT_DATASET("X") + " with "
+    "40 replicates, saving the independent components to " +
+    PRINT_DATASET("ic") + ", the following command may be used: "
+    "\n\n" +
+    PRINT_CALL("radical", "input", "X", "replicates", 40, "output_ic", "ic"));
 
-PARAM_STRING_IN_REQ("input_file", "Input dataset filename for ICA.", "i");
+PARAM_MATRIX_IN_REQ("input", "Input dataset for ICA.", "i");
 
-// Kept for reverse compatibility until mlpack 3.0.0.
-PARAM_STRING_OUT("output_ic", "File to save independent components to "
-    "(deprecated: use --output_ic_file).", "");
-PARAM_STRING_OUT("output_unmixing", "File to save unmixing matrix to "
-    "(deprecated: use --output_unmixing_file).", "");
-
-// These are the new parameter names.
-PARAM_STRING_OUT("output_ic_file", "File to save independent components to.",
-    "o");
-PARAM_STRING_OUT("output_unmixing_file", "File to save unmixing matrix to.",
-    "u");
+PARAM_MATRIX_OUT("output_ic", "Matrix to save independent components to.", "o");
+PARAM_MATRIX_OUT("output_unmixing", "Matrix to save unmixing matrix to.", "u");
 
 PARAM_DOUBLE_IN("noise_std_dev", "Standard deviation of Gaussian noise.", "n",
     0.175);
@@ -52,54 +53,34 @@ PARAM_FLAG("objective", "If set, an estimate of the final objective function "
 using namespace mlpack;
 using namespace mlpack::radical;
 using namespace mlpack::math;
+using namespace mlpack::util;
 using namespace std;
 using namespace arma;
 
-int main(int argc, char* argv[])
+static void mlpackMain()
 {
-  // Handle parameters.
-  CLI::ParseCommandLine(argc, argv);
-
-  // Reverse compatibility.  We can remove these for mlpack 3.0.0.
-  if (CLI::HasParam("output_ic") && CLI::HasParam("output_ic_file"))
-    Log::Fatal << "Cannot specify both --output_ic and --output_ic_file!"
-        << endl;
-
-  if (CLI::HasParam("output_unmixing") && CLI::HasParam("output_unmixing_file"))
-    Log::Fatal << "Cannot specify both --output_unmixing and "
-        << "--output_unmixing_file!" << endl;
-
-  if (CLI::HasParam("output_ic"))
-  {
-    Log::Warn << "--output_ic is deprecated and will be removed in mlpack "
-        << "3.0.0; use --output_ic_file instead." << endl;
-    CLI::GetParam<string>("output_ic_file") =
-        CLI::GetParam<string>("output_ic");
-  }
-
-  if (CLI::HasParam("output_unmixing"))
-  {
-    Log::Warn << "--output_unmixing is deprecated and will be removed in mlpack"
-        << " 3.0.0; use --output_unmixing_file instead." << endl;
-    CLI::GetParam<string>("output_unmixing_file") =
-        CLI::GetParam<string>("output_unmixing");
-  }
-
   // Set random seed.
   if (CLI::GetParam<int>("seed") != 0)
     RandomSeed((size_t) CLI::GetParam<int>("seed"));
   else
     RandomSeed((size_t) std::time(NULL));
 
-  if ((CLI::GetParam<string>("output_ic_file") == "") &&
-      (CLI::GetParam<string>("output_unmixing_file") == ""))
-    Log::Warn << "Neither --output_ic_file nor --output_unmixing_file were "
-        << "specified; no output will be saved!" << endl;
+  RequireAtLeastOnePassed({ "output_ic", "output_unmixing" }, false, "no output"
+      " will be saved");
+
+  // Check validity of parameters.
+  RequireParamValue<int>("replicates", [](int x) { return x > 0; }, true,
+      "number of replicates must be positive");
+  RequireParamValue<double>("noise_std_dev", [](double x) { return x >= 0.0; },
+      true, "standard deviation of Gaussian noise must be greater than or equal"
+      " to 0");
+  RequireParamValue<int>("angles", [](int x) { return x > 0; }, true,
+      "number of angles must be positive");
+  RequireParamValue<int>("sweeps", [](int x) { return x >= 0; }, true,
+      "number of sweeps must be 0 or greater");
 
   // Load the data.
-  const string matXFilename = CLI::GetParam<string>("input_file");
-  mat matX;
-  data::Load(matXFilename, matX);
+  mat matX = std::move(CLI::GetParam<mat>("input"));
 
   // Load parameters.
   double noiseStdDev = CLI::GetParam<double>("noise_std_dev");
@@ -119,13 +100,11 @@ int main(int argc, char* argv[])
   rad.DoRadical(matX, matY, matW);
 
   // Save results.
-  const string matYFilename = CLI::GetParam<string>("output_ic_file");
-  if (matYFilename != "")
-    data::Save(matYFilename, matY);
+  if (CLI::HasParam("output_ic"))
+    CLI::GetParam<mat>("output_ic") = std::move(matY);
 
-  const string matWFilename = CLI::GetParam<string>("output_unmixing_file");
-  if (matWFilename != "")
-    data::Save(matWFilename, matW);
+  if (CLI::HasParam("output_unmixing"))
+    CLI::GetParam<mat>("output_unmixing") = std::move(matW);
 
   if (CLI::HasParam("objective"))
   {

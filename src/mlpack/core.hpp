@@ -1,8 +1,8 @@
 ﻿/**
  * @file core.hpp
  *
- * Include all of the base components required to write MLPACK methods, and the
- * main MLPACK Doxygen documentation.
+ * Include all of the base components required to write mlpack methods, and the
+ * main mlpack Doxygen documentation.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -17,11 +17,11 @@
  *
  * @section intro_sec Introduction
  *
- * mlpack is an intuitive, fast, scalable C++ machine learning library, meant to
- * be a machine learning analog to LAPACK.  It aims to implement a wide array of
- * machine learning methods and function as a "swiss army knife" for machine
- * learning researchers.  The mlpack development website can be found at
- * http://mlpack.org.
+ * mlpack is an intuitive, fast, and flexible C++ machine learning library with
+ * bindings to other languages.  It is meant to be a machine learning analog to
+ * LAPACK, and aims to implement a wide array of machine learning methods and
+ * function as a "swiss army knife" for machine learning researchers.  The
+ * mlpack development website can be found at http://mlpack.org.
  *
  * mlpack uses the Armadillo C++ matrix library (http://arma.sourceforge.net)
  * for general matrix, vector, and linear algebra support.  mlpack also uses the
@@ -100,6 +100,8 @@
  *  - @ref iodoc
  *  - @ref timer
  *  - @ref sample
+ *  - @ref cv
+ *  - @ref hpt
  *  - @ref verinfo
  *
  * Tutorials on specific methods are also available.
@@ -209,9 +211,36 @@
  *   - Sudhanshu Ranjan <sranjan.sud@gmail.com>
  *   - Piyush Jaiswal <piyush.jaiswal@st.niituniversity.in>
  *   - Dinesh Raj <dinu.iota@gmail.com>
+ *   - Prasanna Patil <prasannapatil08@gmail.com>
  *   - Lakshya Agrawal <zeeshan.lakshya@gmail.com>
  *   - Vivek Pal <vivekpal.dtu@gmail.com>
  *   - Praveen Ch <chvsp972911@gmail.com>
+ *   - Kirill Mishchenko <ki.mishchenko@gmail.com>
+ *   - Abhinav Moudgil <abhinavmoudgil95@gmail.com>
+ *   - Thyrix Yang <thyrixyang@gmail.com>
+ *   - Sagar B Hathwar <sagarbhathwar@gmail.com>
+ *   - Nishanth Hegde <hegde.nishanth@gmail.com>
+ *   - Parminder Singh <parmsingh101@gmail.com>
+ *   - CodeAi (deep learning bug detector) <benjamin.bales@assrc.us>
+ *   - Franciszek Stokowacki <franek.stokowacki@gmail.com>
+ *   - Samikshya Chand <samikshya289@gmail.com>
+ *   - N Rajiv Vaidyanathan <rajivvaidyanathan4@gmail.com>
+ *   - Kartik Nighania <kartiknighania@gmail.com>
+ *   - Eugene Freyman <evg.freyman@gmail.com>
+ *   - Manish Kumar <manish887kr@gmail.com>
+ *   - Haritha Sreedharan Nair <haritha1313@gmail.com>
+ *   - Sourabh Varshney <sourabhvarshney111@gmail.com>
+ *   - Projyal Dev <projyal@gmail.com>
+ *   - Nikhil Goel <nikhilgoel199797@gmail.com>
+ *   - Shikhar Jaiswal <jaiswalshikhar87@gmail.com>
+ *   - B Kartheek Reddy <bkartheekreddy@gmail.com>
+ *   - Atharva Khandait <akhandait45@gmail.com>
+ *   - Wenhao Huang <wenhao.huang.work@gmail.com>
+ *   - Roberto Hueso <robertohueso96@gmail.com>
+ *   - Prabhat Sharma <prabhatsharma7298@gmail.com>
+ *   - Tan Jun An <yamidarkxxx@gmail.com>
+ *   - Moksh Jain <mokshjn00@gmail.com>
+ *   - Manthan-R-Sheth <manthanrsheth96@gmail.com>
  */
 
 // First, include all of the prerequisites.
@@ -231,11 +260,14 @@
 #include <mlpack/core/math/lin_alg.hpp>
 #include <mlpack/core/math/range.hpp>
 #include <mlpack/core/math/round.hpp>
+#include <mlpack/core/math/shuffle_data.hpp>
+#include <mlpack/core/math/make_alias.hpp>
 #include <mlpack/core/dists/discrete_distribution.hpp>
 #include <mlpack/core/dists/gaussian_distribution.hpp>
 #include <mlpack/core/dists/laplace_distribution.hpp>
 #include <mlpack/core/dists/gamma_distribution.hpp>
-//mlpack::backtrace only for linux
+
+// mlpack::backtrace only for linux
 #ifdef HAS_BFD_DL
   #include <mlpack/core/util/backtrace.hpp>
 #endif

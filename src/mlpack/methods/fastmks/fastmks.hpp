@@ -17,6 +17,7 @@
 #include <mlpack/core/metrics/ip_metric.hpp>
 #include "fastmks_stat.hpp"
 #include <mlpack/core/tree/cover_tree.hpp>
+#include <queue>
 
 namespace mlpack {
 namespace fastmks /** Fast max-kernel search. */ {
@@ -116,6 +117,21 @@ class FastMKS
    */
   FastMKS(Tree* referenceTree,
           const bool singleMode = false);
+
+  /**
+   * Copy the parameters of the given model.
+   */
+  FastMKS(const FastMKS& other);
+
+  /**
+   * Take ownership of the given model.
+   */
+  FastMKS(FastMKS&& other);
+
+  /**
+   * Assign this model to be a copy of the given model.
+   */
+  FastMKS& operator=(const FastMKS& other);
 
   //! Destructor for the FastMKS object.
   ~FastMKS();
@@ -234,7 +250,7 @@ class FastMKS
 
   //! Serialize the model.
   template<typename Archive>
-  void Serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const unsigned int /* version */);
 
  private:
   //! The reference dataset.  We never own this; only the tree or a higher level

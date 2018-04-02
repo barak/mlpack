@@ -10,23 +10,13 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/prereqs.hpp>
-#include <mlpack/core/data/load.hpp>
-#include <mlpack/core/data/save.hpp>
+#include <mlpack/core/util/cli.hpp>
+#include <mlpack/core/util/mlpack_main.hpp>
 
 #include "hmm.hpp"
-#include "hmm_util.hpp"
+#include "hmm_model.hpp"
 
 #include <mlpack/methods/gmm/gmm.hpp>
-
-PROGRAM_INFO("Hidden Markov Model (HMM) Sequence Log-Likelihood", "This "
-    "utility takes an already-trained HMM (--model_file) and evaluates the "
-    "log-likelihood of a given sequence of observations (--input_file).  The "
-    "computed log-likelihood is given directly to stdout.");
-
-PARAM_STRING_IN_REQ("input_file", "File containing observations,", "i");
-PARAM_STRING_IN_REQ("model_file", "File containing HMM.", "m");
-
-PARAM_DOUBLE_OUT("log_likelihood", "Log-likelihood of the sequence.");
 
 using namespace mlpack;
 using namespace mlpack::hmm;
@@ -36,6 +26,24 @@ using namespace mlpack::gmm;
 using namespace arma;
 using namespace std;
 
+PROGRAM_INFO("Hidden Markov Model (HMM) Sequence Log-Likelihood", "This "
+    "utility takes an already-trained HMM, specified with the " +
+    PRINT_PARAM_STRING("input_model") + " parameter, and evaluates the "
+    "log-likelihood of a sequence of observations, given with the " +
+    PRINT_PARAM_STRING("input") + " parameter.  The computed log-likelihood is"
+    " given as output."
+    "\n\n"
+    "For example, to compute the log-likelihood of the sequence " +
+    PRINT_DATASET("seq") + " with the pre-trained HMM " + PRINT_MODEL("hmm") +
+    ", the following command may be used: "
+    "\n\n" +
+    PRINT_CALL("hmm_loglik", "input", "seq", "input_model", "hmm"));
+
+PARAM_MATRIX_IN_REQ("input", "File containing observations,", "i");
+PARAM_MODEL_IN_REQ(HMMModel, "input_model", "File containing HMM.", "m");
+
+PARAM_DOUBLE_OUT("log_likelihood", "Log-likelihood of the sequence.");
+
 // Because we don't know what the type of our HMM is, we need to write a
 // function that can take arbitrary HMM types.
 struct Loglik
@@ -44,9 +52,7 @@ struct Loglik
   static void Apply(HMMType& hmm, void* /* extraInfo */)
   {
     // Load the data sequence.
-    const string inputFile = CLI::GetParam<string>("input_file");
-    mat dataSeq;
-    data::Load(inputFile, dataSeq, true);
+    mat dataSeq = std::move(CLI::GetParam<mat>("input"));
 
     // Detect if we need to transpose the data, in the case where the input data
     // has one dimension.
@@ -58,9 +64,11 @@ struct Loglik
     }
 
     if (dataSeq.n_rows != hmm.Emission()[0].Dimensionality())
+    {
       Log::Fatal << "Dimensionality of sequence (" << dataSeq.n_rows << ") is "
           << "not equal to the dimensionality of the HMM ("
           << hmm.Emission()[0].Dimensionality() << ")!" << endl;
+    }
 
     const double loglik = hmm.LogLikelihood(dataSeq);
 
@@ -68,12 +76,8 @@ struct Loglik
   }
 };
 
-int main(int argc, char** argv)
+static void mlpackMain()
 {
-  // Parse command line options.
-  CLI::ParseCommandLine(argc, argv);
-
   // Load model, and calculate the log-likelihood of the sequence.
-  const string modelFile = CLI::GetParam<string>("model_file");
-  LoadHMMAndPerformAction<Loglik>(modelFile);
+  CLI::GetParam<HMMModel*>("input_model")->PerformAction<Loglik>((void*) NULL);
 }

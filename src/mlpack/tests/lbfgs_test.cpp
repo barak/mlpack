@@ -12,7 +12,10 @@
  */
 #include <mlpack/core.hpp>
 #include <mlpack/core/optimizers/lbfgs/lbfgs.hpp>
-#include <mlpack/core/optimizers/lbfgs/test_functions.hpp>
+
+#include <mlpack/core/optimizers/problems/rosenbrock_function.hpp>
+#include <mlpack/core/optimizers/problems/rosenbrock_wood_function.hpp>
+#include <mlpack/core/optimizers/problems/colville_function.hpp>
 
 #include <boost/test/unit_test.hpp>
 #include "test_tools.hpp"
@@ -28,11 +31,11 @@ BOOST_AUTO_TEST_SUITE(LBFGSTest);
 BOOST_AUTO_TEST_CASE(RosenbrockFunctionTest)
 {
   RosenbrockFunction f;
-  L_BFGS<RosenbrockFunction> lbfgs(f);
+  L_BFGS lbfgs;
   lbfgs.MaxIterations() = 10000;
 
   arma::vec coords = f.GetInitialPoint();
-  if (!lbfgs.Optimize(coords))
+  if (!lbfgs.Optimize(f, coords))
     BOOST_FAIL("L-BFGS optimization reported failure.");
 
   double finalValue = f.Evaluate(coords);
@@ -43,16 +46,33 @@ BOOST_AUTO_TEST_CASE(RosenbrockFunctionTest)
 }
 
 /**
+ * Tests the L-BFGS optimizer using the Colville Function.
+ */
+BOOST_AUTO_TEST_CASE(ColvilleFunctionTest)
+{
+  ColvilleFunction f;
+  L_BFGS lbfgs;
+  lbfgs.MaxIterations() = 10000;
+
+  arma::vec coords = f.GetInitialPoint();
+  if (!lbfgs.Optimize(f, coords))
+    BOOST_FAIL("L-BFGS optimization reported failure.");
+
+  BOOST_REQUIRE_CLOSE(coords[0], 1.0, 1e-5);
+  BOOST_REQUIRE_CLOSE(coords[1], 1.0, 1e-5);
+}
+
+/**
  * Tests the L-BFGS optimizer using the Wood Function.
  */
 BOOST_AUTO_TEST_CASE(WoodFunctionTest)
 {
   WoodFunction f;
-  L_BFGS<WoodFunction> lbfgs(f);
+  L_BFGS lbfgs;
   lbfgs.MaxIterations() = 10000;
 
   arma::vec coords = f.GetInitialPoint();
-  if (!lbfgs.Optimize(coords))
+  if (!lbfgs.Optimize(f, coords))
     BOOST_FAIL("L-BFGS optimization reported failure.");
 
   double finalValue = f.Evaluate(coords);
@@ -77,11 +97,11 @@ BOOST_AUTO_TEST_CASE(GeneralizedRosenbrockFunctionTest)
     int dim = std::pow(2.0, i);
 
     GeneralizedRosenbrockFunction f(dim);
-    L_BFGS<GeneralizedRosenbrockFunction> lbfgs(f, 20);
+    L_BFGS lbfgs(20);
     lbfgs.MaxIterations() = 10000;
 
     arma::vec coords = f.GetInitialPoint();
-    if (!lbfgs.Optimize(coords))
+    if (!lbfgs.Optimize(f, coords))
       BOOST_FAIL("L-BFGS optimization reported failure.");
 
     double finalValue = f.Evaluate(coords);
@@ -100,11 +120,11 @@ BOOST_AUTO_TEST_CASE(GeneralizedRosenbrockFunctionTest)
 BOOST_AUTO_TEST_CASE(RosenbrockWoodFunctionTest)
 {
   RosenbrockWoodFunction f;
-  L_BFGS<RosenbrockWoodFunction> lbfgs(f);
+  L_BFGS lbfgs;
   lbfgs.MaxIterations() = 10000;
 
   arma::mat coords = f.GetInitialPoint();
-  if (!lbfgs.Optimize(coords))
+  if (!lbfgs.Optimize(f, coords))
     BOOST_FAIL("L-BFGS optimization reported failure.");
 
   double finalValue = f.Evaluate(coords);

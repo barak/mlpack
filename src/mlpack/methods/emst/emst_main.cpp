@@ -24,24 +24,42 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
+#include <mlpack/prereqs.hpp>
+#include <mlpack/core/util/cli.hpp>
+#include <mlpack/core/util/mlpack_main.hpp>
+
 #include "dtb.hpp"
 
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/data/load.hpp>
-#include <mlpack/core/data/save.hpp>
-
-PROGRAM_INFO("Fast Euclidean Minimum Spanning Tree", "This program can compute "
-    "the Euclidean minimum spanning tree of a set of input points using the "
-    "dual-tree Boruvka algorithm."
+PROGRAM_INFO("Fast Euclidean Minimum Spanning Tree",
+    "This program can compute the Euclidean minimum spanning tree of a set of "
+    "input points using the dual-tree Boruvka algorithm."
     "\n\n"
-    "The output is saved in a three-column matrix, where each row indicates an "
-    "edge.  The first column corresponds to the lesser index of the edge; the "
-    "second column corresponds to the greater index of the edge; and the third "
-    "column corresponds to the distance between the two points.");
+    "The set to calculate the minimum spanning tree of is specified with the " +
+    PRINT_PARAM_STRING("input") + " parameter, and the output may be saved with"
+    " the " + PRINT_PARAM_STRING("output") + " output parameter."
+    "\n\n"
+    "The " + PRINT_PARAM_STRING("leaf_size") + " parameter controls the leaf "
+    "size of the kd-tree that is used to calculate the minimum spanning tree, "
+    "and if the " + PRINT_PARAM_STRING("naive") + " option is given, then "
+    "brute-force search is used (this is typically much slower in low "
+    "dimensions).  The leaf size does not affect the results, but it may have "
+    "some effect on the runtime of the algorithm."
+    "\n\n"
+    "For example, the minimum spanning tree of the input dataset " +
+    PRINT_DATASET("data") + " can be calculated with a leaf size of 20 and "
+    "stored as " + PRINT_DATASET("spanning_tree") + " using the following "
+    "command:"
+    "\n\n" +
+    PRINT_CALL("emst", "input", "data", "leaf_size", 20, "output",
+        "spanning_tree") +
+    "\n\n"
+    "The output matrix is a three-dimensional matrix, where each row indicates "
+    "an edge.  The first dimension corresponds to the lesser index of the edge;"
+    " the second dimension corresponds to the greater index of the edge; and "
+    "the third column corresponds to the distance between the two points.");
 
-PARAM_STRING_IN_REQ("input_file", "Data input file.", "i");
-PARAM_STRING_OUT("output_file", "Data output file.  Stored as an edge list.",
-    "o");
+PARAM_MATRIX_IN_REQ("input", "Input data matrix.", "i");
+PARAM_MATRIX_OUT("output", "Output data.  Stored as an edge list.", "o");
 PARAM_FLAG("naive", "Compute the MST using O(n^2) naive algorithm.", "n");
 PARAM_INT_IN("leaf_size", "Leaf size in the kd-tree.  One-element leaves give "
     "the empirically best performance, but at the cost of greater memory "
@@ -51,21 +69,14 @@ using namespace mlpack;
 using namespace mlpack::emst;
 using namespace mlpack::tree;
 using namespace mlpack::metric;
+using namespace mlpack::util;
 using namespace std;
 
-int main(int argc, char* argv[])
+static void mlpackMain()
 {
-  CLI::ParseCommandLine(argc, argv);
+  RequireAtLeastOnePassed({ "output" }, false, "no output will be saved");
 
-  const string inputFile = CLI::GetParam<string>("input_file");
-  const string outputFile = CLI::GetParam<string>("output_file");
-
-  if (!CLI::HasParam("output_file"))
-    Log::Warn << "--output_file is not specified, so no output will be saved!"
-        << endl;
-
-  arma::mat dataPoints;
-  data::Load(inputFile, dataPoints, true);
+  arma::mat dataPoints = std::move(CLI::GetParam<arma::mat>("input"));
 
   // Do naive computation if necessary.
   if (CLI::GetParam<bool>("naive"))
@@ -77,19 +88,16 @@ int main(int argc, char* argv[])
     arma::mat naiveResults;
     naive.ComputeMST(naiveResults);
 
-    if (CLI::HasParam("output_file"))
-      data::Save(outputFile, naiveResults, true);
+    if (CLI::HasParam("output"))
+      CLI::GetParam<arma::mat>("output") = std::move(naiveResults);
   }
   else
   {
     Log::Info << "Building tree.\n";
 
     // Check that the leaf size is reasonable.
-    if (CLI::GetParam<int>("leaf_size") <= 0)
-    {
-      Log::Fatal << "Invalid leaf size (" << CLI::GetParam<int>("leaf_size")
-          << ")!  Must be greater than or equal to 1." << std::endl;
-    }
+    RequireParamValue<int>("leaf_size", [](int x) { return x > 0; }, true,
+        "leaf size must be greater than or equal to 1");
 
     // Initialize the tree and get ready to compute the MST.  Compute the tree
     // by hand.
@@ -130,7 +138,7 @@ int main(int argc, char* argv[])
       unmappedResults(2, i) = results(2, i);
     }
 
-    if (CLI::HasParam("output_file"))
-      data::Save(outputFile, unmappedResults, true);
+    if (CLI::HasParam("output"))
+      CLI::GetParam<arma::mat>("output") = std::move(unmappedResults);
   }
 }

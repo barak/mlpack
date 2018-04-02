@@ -5,6 +5,8 @@ cmake_minimum_required(VERSION 2.8)
 set(SOURCES
   adaboost.hpp
   adaboost_impl.hpp
+  adaboost_model.hpp
+  adaboost_model.cpp
 )
 
 # Add directory name to sources.
@@ -16,4 +18,5 @@ endforeach()
 # the parent scope).
 set(MLPACK_SRCS ${MLPACK_SRCS} ${DIR_SRCS} PARENT_SCOPE)
 
-add_cli_executable (adaboost)
+add_cli_executable(adaboost)
+add_python_binding(adaboost)

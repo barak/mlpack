@@ -39,7 +39,7 @@ struct IsLMetric<metric::LMetric<Power, TakeRoot>>
   static const bool Value = true;
 };
 
-} // namespace util
+} // namespace meta
 
 /**
  * Hyper-rectangle bound for an L-metric.  This should be used in conjunction
@@ -122,7 +122,8 @@ class HRectBound
    */
   template<typename VecType>
   ElemType MinDistance(const VecType& point,
-                       typename boost::enable_if<IsVector<VecType>>* = 0) const;
+                       typename std::enable_if_t<IsVector<VecType>::value>* = 0)
+      const;
 
   /**
    * Calculates minimum bound-to-bound distance.
@@ -138,7 +139,8 @@ class HRectBound
    */
   template<typename VecType>
   ElemType MaxDistance(const VecType& point,
-                       typename boost::enable_if<IsVector<VecType>>* = 0) const;
+                       typename std::enable_if_t<IsVector<VecType>::value>* = 0)
+      const;
 
   /**
    * Computes maximum distance.
@@ -164,7 +166,7 @@ class HRectBound
   template<typename VecType>
   math::RangeType<ElemType> RangeDistance(
       const VecType& point,
-      typename boost::enable_if<IsVector<VecType>>* = 0) const;
+      typename std::enable_if_t<IsVector<VecType>::value>* = 0) const;
 
   /**
    * Expands this region to include new points.
@@ -216,7 +218,7 @@ class HRectBound
    * Serialize the bound object.
    */
   template<typename Archive>
-  void Serialize(Archive& ar, const unsigned int version);
+  void serialize(Archive& ar, const unsigned int version);
 
  private:
   //! The dimensionality of the bound.

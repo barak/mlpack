@@ -30,11 +30,12 @@ namespace det {
  * @param numClasses Number of classes in dataset.
  * @param leafClassMembershipFile Name of file to print to (optional).
  */
-void PrintLeafMembership(DTree* dtree,
-                         const arma::mat& data,
+template <typename MatType, typename TagType>
+void PrintLeafMembership(DTree<MatType, TagType>* dtree,
+                         const MatType& data,
                          const arma::Mat<size_t>& labels,
                          const size_t numClasses,
-                         const std::string leafClassMembershipFile = "");
+                         const std::string& leafClassMembershipFile = "");
 
 /**
  * Print the variable importance of each dimension of a density estimation tree.
@@ -44,7 +45,8 @@ void PrintLeafMembership(DTree* dtree,
  * @param dtree Density tree to use.
  * @param viFile Name of file to print to (optional).
  */
-void PrintVariableImportance(const DTree* dtree,
+template <typename MatType, typename TagType>
+void PrintVariableImportance(const DTree<MatType, TagType>* dtree,
                              const std::string viFile = "");
 
 /**
@@ -59,14 +61,89 @@ void PrintVariableImportance(const DTree* dtree,
  * @param minLeafSize Minimum number of points allowed in a leaf.
  * @param unprunedTreeOutput Filename to print unpruned tree to (optional).
  */
-DTree* Trainer(arma::mat& dataset,
-               const size_t folds,
-               const bool useVolumeReg = false,
-               const size_t maxLeafSize = 10,
-               const size_t minLeafSize = 5,
-               const std::string unprunedTreeOutput = "");
+template <typename MatType, typename TagType>
+DTree<MatType, TagType>* Trainer(MatType& dataset,
+                                 const size_t folds,
+                                 const bool useVolumeReg = false,
+                                 const size_t maxLeafSize = 10,
+                                 const size_t minLeafSize = 5,
+                                 const std::string unprunedTreeOutput = "",
+                                 const bool skipPruning = false);
+
+/**
+ * This class is responsible for caching the path to each node of the tree. Its
+ * instance is provided to EnumerateTree() utility ONCE and it caches the paths
+ * to all the leafs and then easily (and quickly) retrieves these paths for each
+ * test entry.
+ */
+class PathCacher
+{
+ public:
+  /**
+   * Possible formats to use for output.
+   */
+  enum PathFormat
+  {
+    //! Print only whether we went left or right.
+    FormatLR,
+    //! Print the direction, then the tag of the node.
+    FormatLR_ID,
+    //! Print the tag of the node, then the direction.
+    FormatID_LR
+  };
+
+  /**
+   * Construct a PathCacher object on the given tree with the given format.
+   *
+   * @param fmt Format to use for output.
+   * @param tree Tree to cache paths in.
+   */
+  template<typename MatType>
+  PathCacher(PathFormat fmt, DTree<MatType, int>* tree);
+
+  /**
+   * Enter a given node.
+   */
+  template<typename MatType>
+  void Enter(const DTree<MatType, int>* node,
+             const DTree<MatType, int>* parent);
+
+  /**
+   * Leave the given node.
+   */
+  template<typename MatType>
+  void Leave(const DTree<MatType, int>* node,
+             const DTree<MatType, int>* parent);
+
+  /**
+   * Return the constructed path for a given tag.
+   */
+  const std::string& PathFor(int tag) const;
+
+  /**
+   * Get the parent tag of a given tag.
+   */
+  int ParentOf(int tag) const;
+
+  /**
+   * Get the number of nodes in the path cache.
+   */
+  size_t NumNodes() const { return pathCache.size(); }
+
+ protected:
+  typedef std::list<std::pair<bool, int>>          PathType;
+  typedef std::vector<std::pair<int, std::string>> PathCacheType;
+
+  PathType      path;
+  PathFormat    format;
+  PathCacheType pathCache;
+
+  std::string   BuildString();
+};
 
 } // namespace det
 } // namespace mlpack
+
+#include "dt_utils_impl.hpp"
 
 #endif // MLPACK_METHODS_DET_DT_UTILS_HPP

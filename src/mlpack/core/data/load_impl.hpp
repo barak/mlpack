@@ -13,9 +13,6 @@
 #define MLPACK_CORE_DATA_LOAD_IMPL_HPP
 
 // In case it hasn't already been included.
-#include "load.hpp"
-#include "load_csv.hpp"
-#include "extension.hpp"
 
 #include <exception>
 #include <algorithm>
@@ -58,13 +55,13 @@ void TransposeTokens(std::vector<std::vector<std::string>> const &input,
                      size_t index)
 {
   output.clear();
-  for(size_t i = 0; i != input.size(); ++i)
+  for (size_t i = 0; i != input.size(); ++i)
   {
     output.emplace_back(input[i][index]);
   }
 }
 
-} //namespace details
+} // namespace details
 
 template<typename eT>
 bool inline inplace_transpose(arma::Mat<eT>& X)
@@ -76,35 +73,8 @@ bool inline inplace_transpose(arma::Mat<eT>& X)
   }
   catch (std::bad_alloc&)
   {
-#if (ARMA_VERSION_MAJOR >= 4) || \
-    ((ARMA_VERSION_MAJOR == 3) && (ARMA_VERSION_MINOR >= 930))
-    arma::inplace_trans(X, "lowmem");
     return true;
-#else
-    Log::Fatal << "data::Load(): inplace_trans() is only available on Armadillo"
-        << " 3.930 or higher. Ran out of memory to transpose matrix."
-        << std::endl;
-    return false;
-#endif
   }
-}
-
-// Load column vector.
-template<typename eT>
-bool Load(const std::string& filename,
-          arma::Col<eT>& vec,
-          const bool fatal)
-{
-  return Load(filename, vec, fatal, false);
-}
-
-// Load row vector.
-template<typename eT>
-bool Load(const std::string& filename,
-          arma::Row<eT>& rowvec,
-          const bool fatal)
-{
-  return Load(filename, rowvec, fatal, false);
 }
 
 template<typename eT>
@@ -192,7 +162,7 @@ bool Load(const std::string& filename,
 
     // This is taken from load_auto_detect() in diskio_meat.hpp
     const std::string ARMA_MAT_TXT = "ARMA_MAT_TXT";
-    //char* rawHeader = new char[ARMA_MAT_TXT.length() + 1];
+    // char* rawHeader = new char[ARMA_MAT_TXT.length() + 1];
     std::string rawHeader(ARMA_MAT_TXT.length(), '\0');
     std::streampos pos = stream.tellg();
 
@@ -215,13 +185,13 @@ bool Load(const std::string& filename,
         stringType = "CSV data";
       else // Unknown .txt... we will throw an error.
         unknownType = true;
-    }    
+    }
   }
   else if (extension == "bin")
   {
     // This could be raw binary or Armadillo binary (binary with header).  We
     // will check to see if it is Armadillo binary.
-    const std::string ARMA_MAT_BIN = "ARMA_MAT_BIN";    
+    const std::string ARMA_MAT_BIN = "ARMA_MAT_BIN";
     std::string rawHeader(ARMA_MAT_BIN.length(), '\0');
 
     std::streampos pos = stream.tellg();
@@ -239,7 +209,7 @@ bool Load(const std::string& filename,
     {
       stringType = "raw binary formatted data";
       loadType = arma::raw_binary;
-    }    
+    }
   }
   else if (extension == "pgm")
   {
@@ -252,22 +222,6 @@ bool Load(const std::string& filename,
 #ifdef ARMA_USE_HDF5
     loadType = arma::hdf5_binary;
     stringType = "HDF5 data";
-  #if ARMA_VERSION_MAJOR == 4 && \
-      (ARMA_VERSION_MINOR >= 300 && ARMA_VERSION_MINOR <= 400)
-    Timer::Stop("loading_data");
-    if (fatal)
-      Log::Fatal << "Attempted to load '" << filename << "' as HDF5 data, but "
-          << "Armadillo 4.300.0 through Armadillo 4.400.1 are known to have "
-          << "bugs and one of these versions is in use.  Load failed."
-          << std::endl;
-    else
-      Log::Warn << "Attempted to load '" << filename << "' as HDF5 data, but "
-          << "Armadillo 4.300.0 through Armadillo 4.400.1 are known to have "
-          << "bugs and one of these versions is in use.  Load failed."
-          << std::endl;
-
-    return false;
-  #endif
 #else
     Timer::Stop("loading_data");
     if (fatal)
@@ -333,13 +287,8 @@ bool Load(const std::string& filename,
     Log::Info << "Size is " << (transpose ? matrix.n_cols : matrix.n_rows)
         << " x " << (transpose ? matrix.n_rows : matrix.n_cols) << ".\n";
 
-  // Now transpose the matrix, if necessary.  Armadillo loads HDF5 matrices
-  // transposed, so we have to work around that.
-  if (transpose && loadType != arma::hdf5_binary)
-  {
-    inplace_transpose(matrix);
-  }
-  else if (!transpose && loadType == arma::hdf5_binary)
+  // Now transpose the matrix, if necessary.
+  if (transpose)
   {
     inplace_transpose(matrix);
   }
@@ -362,12 +311,42 @@ bool Load(const std::string& filename,
   Timer::Start("loading_data");
 
   // Get the extension.
-  const std::string extension = Extension(filename);
+  std::string extension = Extension(filename);
+
+  // Catch nonexistent files by opening the stream ourselves.
+  std::fstream stream;
+  stream.open(filename.c_str(), std::fstream::in);
+
+  if (!stream.is_open())
+  {
+    Timer::Stop("loading_data");
+    if (fatal)
+      Log::Fatal << "Cannot open file '" << filename << "'. " << std::endl;
+    else
+      Log::Warn << "Cannot open file '" << filename << "'; load failed."
+          << std::endl;
+
+    return false;
+  }
 
   if (extension == "csv" || extension == "tsv" || extension == "txt")
   {
-    LoadCSV loader(filename, fatal);
-    loader.Load(matrix, info, transpose);
+    Log::Info << "Loading '" << filename << "' as CSV dataset.  " << std::flush;
+    try
+    {
+      LoadCSV loader(filename);
+      loader.Load(matrix, info, transpose);
+    }
+    catch (std::exception& e)
+    {
+      Timer::Stop("loading_data");
+      if (fatal)
+        Log::Fatal << e.what() << std::endl;
+      else
+        Log::Warn << e.what() << std::endl;
+
+      return false;
+    }
   }
   else if (extension == "arff")
   {
@@ -383,10 +362,13 @@ bool Load(const std::string& filename,
     }
     catch (std::exception& e)
     {
+      Timer::Stop("loading_data");
       if (fatal)
         Log::Fatal << e.what() << std::endl;
       else
         Log::Warn << e.what() << std::endl;
+
+      return false;
     }
   }
   else

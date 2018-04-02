@@ -12,6 +12,8 @@ set(SOURCES
   hoeffding_numeric_split_impl.hpp
   hoeffding_tree.hpp
   hoeffding_tree_impl.hpp
+  hoeffding_tree_model.hpp
+  hoeffding_tree_model.cpp
   information_gain.hpp
   numeric_split_info.hpp
   typedef.hpp
@@ -27,3 +29,4 @@ endforeach()
 set(MLPACK_SRCS ${MLPACK_SRCS} ${DIR_SRCS} PARENT_SCOPE)
 
 add_cli_executable(hoeffding_tree)
+add_python_binding(hoeffding_tree)

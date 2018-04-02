@@ -99,7 +99,7 @@ class LARS
    * @param tolerance Run until the maximum correlation of elements in (X^T y)
    *     is less than this.
    */
-  LARS(const bool useCholesky,
+  LARS(const bool useCholesky = false,
        const double lambda1 = 0.0,
        const double lambda2 = 0.0,
        const double tolerance = 1e-16);
@@ -123,6 +123,54 @@ class LARS
        const double tolerance = 1e-16);
 
   /**
+   * Set the parameters to LARS and run training. Both lambda1 and lambda2
+   * are set by default to 0.
+   *
+   * @param data Input data.
+   * @param responses A vector of targets.
+   * @param transposeData Should be true if the input data is column-major and
+   *     false otherwise.
+   * @param useCholesky Whether or not to use Cholesky decomposition when
+   *     solving linear system (as opposed to using the full Gram matrix).
+   * @param lambda1 Regularization parameter for l1-norm penalty.
+   * @param lambda2 Regularization parameter for l2-norm penalty.
+   * @param tolerance Run until the maximum correlation of elements in (X^T y)
+   *     is less than this.
+   */
+  LARS(const arma::mat& data,
+       const arma::rowvec& responses,
+       const bool transposeData = true,
+       const bool useCholesky = false,
+       const double lambda1 = 0.0,
+       const double lambda2 = 0.0,
+       const double tolerance = 1e-16);
+
+  /**
+   * Set the parameters to LARS, pass in a precalculated Gram matrix, and run
+   * training. Both lambda1 and lambda2 are set by default to 0.
+   *
+   * @param data Input data.
+   * @param responses A vector of targets.
+   * @param transposeData Should be true if the input data is column-major and
+   *     false otherwise.
+   * @param useCholesky Whether or not to use Cholesky decomposition when
+   *     solving linear system (as opposed to using the full Gram matrix).
+   * @param gramMatrix Gram matrix.
+   * @param lambda1 Regularization parameter for l1-norm penalty.
+   * @param lambda2 Regularization parameter for l2-norm penalty.
+   * @param tolerance Run until the maximum correlation of elements in (X^T y)
+   *     is less than this.
+   */
+  LARS(const arma::mat& data,
+       const arma::rowvec& responses,
+       const bool transposeData,
+       const bool useCholesky,
+       const arma::mat& gramMatrix,
+       const double lambda1 = 0.0,
+       const double lambda2 = 0.0,
+       const double tolerance = 1e-16);
+
+  /**
    * Run LARS.  The input matrix (like all mlpack matrices) should be
    * column-major -- each column is an observation and each row is a dimension.
    * However, because LARS is more efficient on a row-major matrix, this method
@@ -137,21 +185,38 @@ class LARS
    * @param transposeData Set to false if the data is row-major.
    */
   void Train(const arma::mat& data,
-             const arma::vec& responses,
+             const arma::rowvec& responses,
              arma::vec& beta,
              const bool transposeData = true);
 
   /**
-   * Predict y_i for each data point in the given data matrix, using the
-   * currently-trained LARS model (so make sure you run Regress() first).  If
-   * the data matrix is row-major (as opposed to the usual column-major format
-   * for mlpack matrices), set rowMajor = true to avoid an extra transpose.
+   * Run LARS.  The input matrix (like all mlpack matrices) should be
+   * column-major -- each column is an observation and each row is a dimension.
+   * However, because LARS is more efficient on a row-major matrix, this method
+   * will (internally) transpose the matrix.  If this transposition is not
+   * necessary (i.e., you want to pass in a row-major matrix), pass 'false' for
+   * the transposeData parameter.
+   *
+   * @param data Input data.
+   * @param responses A vector of targets.
+   * @param transposeData Should be true if the input data is column-major and
+   *     false otherwise.
+   */
+  void Train(const arma::mat& data,
+             const arma::rowvec& responses,
+             const bool transposeData = true);
+
+  /**
+   * Predict y_i for each data point in the given data matrix using the
+   * currently-trained LARS model.
    *
    * @param points The data points to regress on.
    * @param predictions y, which will contained calculated values on completion.
+   * @param rowMajor Should be true if the data points matrix is row-major and
+   *     false otherwise.
    */
   void Predict(const arma::mat& points,
-               arma::vec& predictions,
+               arma::rowvec& predictions,
                const bool rowMajor = false) const;
 
   //! Access the set of active dimensions.
@@ -160,6 +225,9 @@ class LARS
   //! Access the set of coefficients after each iteration; the solution is the
   //! last element.
   const std::vector<arma::vec>& BetaPath() const { return betaPath; }
+
+  //! Access the solution coefficients
+  const arma::vec& Beta() const { return betaPath.back(); }
 
   //! Access the set of values for lambda1 after each iteration; the solution is
   //! the last element.
@@ -172,7 +240,7 @@ class LARS
    * Serialize the LARS model.
    */
   template<typename Archive>
-  void Serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const unsigned int /* version */);
 
  private:
   //! Gram matrix.
@@ -263,7 +331,7 @@ class LARS
 } // namespace regression
 } // namespace mlpack
 
-// Include implementation of Serialize().
+// Include implementation of serialize().
 #include "lars_impl.hpp"
 
 #endif

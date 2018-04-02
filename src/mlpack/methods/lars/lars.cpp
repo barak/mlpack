@@ -43,8 +43,33 @@ LARS::LARS(const bool useCholesky,
     tolerance(tolerance)
 { /* Nothing left to do */ }
 
+LARS::LARS(const arma::mat& data,
+           const arma::rowvec& responses,
+           const bool transposeData,
+           const bool useCholesky,
+           const double lambda1,
+           const double lambda2,
+           const double tolerance) :
+    LARS(useCholesky, lambda1, lambda2, tolerance)
+{
+  Train(data, responses, transposeData);
+}
+
+LARS::LARS(const arma::mat& data,
+           const arma::rowvec& responses,
+           const bool transposeData,
+           const bool useCholesky,
+           const arma::mat& gramMatrix,
+           const double lambda1,
+           const double lambda2,
+           const double tolerance) :
+    LARS(useCholesky, gramMatrix, lambda1, lambda2, tolerance)
+{
+  Train(data, responses, transposeData);
+}
+
 void LARS::Train(const arma::mat& matX,
-                 const arma::vec& y,
+                 const arma::rowvec& y,
                  arma::vec& beta,
                  const bool transposeData)
 {
@@ -67,7 +92,7 @@ void LARS::Train(const arma::mat& matX,
     dataTrans = trans(matX);
 
   // Compute X' * y.
-  arma::vec vecXTy = trans(dataRef) * y;
+  arma::vec vecXTy = trans(y * dataRef);
 
   // Set up active set variables.  In the beginning, the active set has size 0
   // (all dimensions are inactive).
@@ -338,15 +363,23 @@ void LARS::Train(const arma::mat& matX,
   Timer::Stop("lars_regression");
 }
 
+void LARS::Train(const arma::mat& data,
+                 const arma::rowvec& responses,
+                 const bool transposeData)
+{
+  arma::vec beta;
+  Train(data, responses, beta, transposeData);
+}
+
 void LARS::Predict(const arma::mat& points,
-                   arma::vec& predictions,
+                   arma::rowvec& predictions,
                    const bool rowMajor) const
 {
   // We really only need to store beta internally...
   if (rowMajor)
-    predictions = points * betaPath.back();
+    predictions = trans(points * betaPath.back());
   else
-    predictions = (betaPath.back().t() * points).t();
+    predictions = betaPath.back().t() * points;
 }
 
 // Private functions.

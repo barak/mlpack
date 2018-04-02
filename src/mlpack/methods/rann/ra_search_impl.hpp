@@ -23,51 +23,25 @@ namespace neighbor {
 namespace aux {
 
 //! Call the tree constructor that does mapping.
-template<typename TreeType>
+template<typename TreeType, typename MatType>
 TreeType* BuildTree(
-    const typename TreeType::Mat& dataset,
+    MatType&& dataset,
     std::vector<size_t>& oldFromNew,
-    typename boost::enable_if_c<
-        tree::TreeTraits<TreeType>::RearrangesDataset == true, TreeType*
-    >::type = 0)
+    typename std::enable_if<
+        tree::TreeTraits<TreeType>::RearrangesDataset>::type* = 0)
 {
-  return new TreeType(dataset, oldFromNew);
+  return new TreeType(std::forward<MatType>(dataset), oldFromNew);
 }
 
 //! Call the tree constructor that does not do mapping.
-template<typename TreeType>
+template<typename TreeType, typename MatType>
 TreeType* BuildTree(
-    const typename TreeType::Mat& dataset,
+    MatType&& dataset,
     const std::vector<size_t>& /* oldFromNew */,
-    const typename boost::enable_if_c<
-        tree::TreeTraits<TreeType>::RearrangesDataset == false, TreeType*
-    >::type = 0)
+    const typename std::enable_if<
+        !tree::TreeTraits<TreeType>::RearrangesDataset>::type* = 0)
 {
-  return new TreeType(dataset);
-}
-
-//! Call the tree constructor that does mapping.
-template<typename TreeType>
-TreeType* BuildTree(
-    typename TreeType::Mat&& dataset,
-    std::vector<size_t>& oldFromNew,
-    typename boost::enable_if_c<
-        tree::TreeTraits<TreeType>::RearrangesDataset == true, TreeType*
-    >::type = 0)
-{
-  return new TreeType(std::move(dataset), oldFromNew);
-}
-
-//! Call the tree constructor that does not do mapping.
-template<typename TreeType>
-TreeType* BuildTree(
-    typename TreeType::Mat&& dataset,
-    const std::vector<size_t>& /* oldFromNew */,
-    const typename boost::enable_if_c<
-        tree::TreeTraits<TreeType>::RearrangesDataset == false, TreeType*
-    >::type = 0)
-{
-  return new TreeType(std::move(dataset));
+  return new TreeType(std::forward<MatType>(dataset));
 }
 
 } // namespace aux
@@ -304,6 +278,31 @@ void RASearch<SortPolicy, MetricType, MatType, TreeType>::Train(
     this->referenceSet = new MatType(std::move(referenceSet));
     setOwner = true;
   }
+}
+
+//! Set the reference tree to a new reference tree.
+template<typename SortPolicy,
+         typename MetricType,
+         typename MatType,
+         template<typename TreeMetricType,
+                  typename TreeStatType,
+                  typename TreeMatType> class TreeType>
+void RASearch<SortPolicy, MetricType, MatType, TreeType>::Train(
+    Tree* referenceTree)
+{
+  if (naive)
+    throw std::invalid_argument("cannot train on given reference tree when "
+        "naive search (without trees) is desired");
+
+  if (treeOwner && referenceTree)
+    delete this->referenceTree;
+  if (setOwner && referenceSet)
+    delete this->referenceSet;
+
+  this->referenceTree = referenceTree;
+  this->referenceSet = &referenceTree->Dataset();
+  treeOwner = false;
+  setOwner = false;
 }
 
 /**
@@ -675,21 +674,19 @@ template<typename SortPolicy,
                   typename TreeStatType,
                   typename TreeMatType> class TreeType>
 template<typename Archive>
-void RASearch<SortPolicy, MetricType, MatType, TreeType>::Serialize(
+void RASearch<SortPolicy, MetricType, MatType, TreeType>::serialize(
     Archive& ar,
     const unsigned int /* version */)
 {
-  using data::CreateNVP;
-
   // Serialize preferences for search.
-  ar & CreateNVP(naive, "naive");
-  ar & CreateNVP(singleMode, "singleMode");
+  ar & BOOST_SERIALIZATION_NVP(naive);
+  ar & BOOST_SERIALIZATION_NVP(singleMode);
 
-  ar & CreateNVP(tau, "tau");
-  ar & CreateNVP(alpha, "alpha");
-  ar & CreateNVP(sampleAtLeaves, "sampleAtLeaves");
-  ar & CreateNVP(firstLeafExact, "firstLeafExact");
-  ar & CreateNVP(singleSampleLimit, "singleSampleLimit");
+  ar & BOOST_SERIALIZATION_NVP(tau);
+  ar & BOOST_SERIALIZATION_NVP(alpha);
+  ar & BOOST_SERIALIZATION_NVP(sampleAtLeaves);
+  ar & BOOST_SERIALIZATION_NVP(firstLeafExact);
+  ar & BOOST_SERIALIZATION_NVP(singleSampleLimit);
 
   // If we are doing naive search, we serialize the dataset.  Otherwise we
   // serialize the tree.
@@ -703,8 +700,8 @@ void RASearch<SortPolicy, MetricType, MatType, TreeType>::Serialize(
       setOwner = true;
     }
 
-    ar & CreateNVP(referenceSet, "referenceSet");
-    ar & CreateNVP(metric, "metric");
+    ar & BOOST_SERIALIZATION_NVP(referenceSet);
+    ar & BOOST_SERIALIZATION_NVP(metric);
 
     // If we are loading, set the tree to NULL and clean up memory if necessary.
     if (Archive::is_loading::value)
@@ -729,8 +726,8 @@ void RASearch<SortPolicy, MetricType, MatType, TreeType>::Serialize(
       treeOwner = true;
     }
 
-    ar & CreateNVP(referenceTree, "referenceTree");
-    ar & CreateNVP(oldFromNewReferences, "oldFromNewReferences");
+    ar & BOOST_SERIALIZATION_NVP(referenceTree);
+    ar & BOOST_SERIALIZATION_NVP(oldFromNewReferences);
 
     // If we are loading, set the dataset accordingly and clean up memory if
     // necessary.

@@ -335,7 +335,8 @@ BOOST_AUTO_TEST_CASE(RecallTest)
   arma::mat lshDistancesExp;
   lshTestExp.Search(qdata, k, lshNeighborsExp, lshDistancesExp);
 
-  const double recallExp = LSHSearch<>::ComputeRecall(lshNeighborsExp, groundTruth);
+  const double recallExp = LSHSearch<>::ComputeRecall(
+      lshNeighborsExp, groundTruth);
 
   // This run should have recall higher than the threshold.
   BOOST_REQUIRE_GE(recallExp, recallThreshExp);
@@ -408,7 +409,7 @@ BOOST_AUTO_TEST_CASE(DeterministicMerge)
 
     // Query 1 is in cluster 3, which under this projection was merged with
     // cluster 4. Clusters 3 and 4 have points 20:39, so only neighbors among
-    //those should be found.
+    // those should be found.
     q = 0;
     BOOST_REQUIRE_GE(neighbors(j, q), N / 2);
 
@@ -785,17 +786,19 @@ BOOST_AUTO_TEST_CASE(ParallelBichromatic)
   arma::mat distances;
 
   // Construct an LSH object. By default, it uses the maximum number of threads
-  LSHSearch<> lshTest(rdata, numProj, numTables); //default parameters
+  LSHSearch<> lshTest(rdata, numProj, numTables); // Default parameters.
   lshTest.Search(qdata, k, parallelNeighbors, distances);
 
   // Now perform same search but with 1 thread
-  size_t prevNumThreads = omp_get_max_threads(); // Store number of threads used.
+  // Store number of threads used.
+  size_t prevNumThreads = omp_get_max_threads();
   omp_set_num_threads(1);
   lshTest.Search(qdata, k, sequentialNeighbors, distances);
   omp_set_num_threads(prevNumThreads);
 
   // Require both have same results
-  double recall = LSHSearch<>::ComputeRecall(sequentialNeighbors, parallelNeighbors);
+  double recall = LSHSearch<>::ComputeRecall(
+      sequentialNeighbors, parallelNeighbors);
   BOOST_REQUIRE_EQUAL(recall, 1);
 }
 
@@ -825,15 +828,88 @@ BOOST_AUTO_TEST_CASE(ParallelMonochromatic)
   lshTest.Search(k, parallelNeighbors, distances);
 
   // Now perform same search but with 1 thread.
-  size_t prevNumThreads = omp_get_max_threads(); // Store number of threads used.
+  // Store number of threads used.
+  size_t prevNumThreads = omp_get_max_threads();
   omp_set_num_threads(1);
   lshTest.Search(k, sequentialNeighbors, distances);
   omp_set_num_threads(prevNumThreads);
 
   // Require both have same results.
-  double recall = LSHSearch<>::ComputeRecall(sequentialNeighbors, parallelNeighbors);
+  double recall = LSHSearch<>::ComputeRecall(
+      sequentialNeighbors, parallelNeighbors);
   BOOST_REQUIRE_EQUAL(recall, 1);
 }
 #endif
+
+// Test the copy constructor and the copy operator.
+BOOST_AUTO_TEST_CASE(CopyConstructorAndOperatorTest)
+{
+  arma::mat dataset = arma::randu<arma::mat>(10, 1000);
+
+  // Use default parameters.
+  LSHSearch<> lsh(dataset, 10, 10);
+
+  // Copy the model.
+  LSHSearch<> lsh2(lsh);
+  LSHSearch<> lsh3 = lsh;
+
+  arma::Mat<size_t> neighbors, neighbors2, neighbors3;
+  arma::mat distances, distances2, distances3;
+
+  lsh.Search(5, neighbors, distances);
+  lsh2.Search(5, neighbors2, distances2);
+  lsh3.Search(5, neighbors3, distances3);
+
+  CheckMatrices(neighbors, neighbors2);
+  CheckMatrices(neighbors, neighbors3);
+  CheckMatrices(distances, distances2);
+  CheckMatrices(distances, distances3);
+}
+
+// Test the move constructor.
+BOOST_AUTO_TEST_CASE(MoveConstructorTest)
+{
+  arma::mat dataset = arma::randu<arma::mat>(10, 1000);
+
+  // Use default parameters.
+  LSHSearch<>* lsh = new LSHSearch<>(dataset, 10, 10);
+
+  // Get results.
+  arma::Mat<size_t> neighbors, neighbors2;
+  arma::mat distances, distances2;
+
+  lsh->Search(5, neighbors, distances);
+
+  LSHSearch<> lsh2(std::move(*lsh));
+  delete lsh;
+
+  lsh2.Search(5, neighbors2, distances2);
+
+  CheckMatrices(neighbors, neighbors2);
+  CheckMatrices(distances, distances2);
+}
+
+// Test the move operator.
+BOOST_AUTO_TEST_CASE(MoveOperatorTest)
+{
+  arma::mat dataset = arma::randu<arma::mat>(10, 1000);
+
+  // Use default parameters.
+  LSHSearch<>* lsh = new LSHSearch<>(dataset, 10, 10);
+
+  // Get results.
+  arma::Mat<size_t> neighbors, neighbors2;
+  arma::mat distances, distances2;
+
+  lsh->Search(5, neighbors, distances);
+
+  LSHSearch<> lsh2 = std::move(*lsh);
+  delete lsh;
+
+  lsh2.Search(5, neighbors2, distances2);
+
+  CheckMatrices(neighbors, neighbors2);
+  CheckMatrices(distances, distances2);
+}
 
 BOOST_AUTO_TEST_SUITE_END();

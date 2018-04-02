@@ -129,11 +129,11 @@ class DiscreteDistribution
     // Ensure the observation has the same dimension with the probabilities
     if (observation.n_elem != probabilities.size())
     {
-      Log::Debug << "the obversation must has the same dimension with the probabilities"
-          << "the observation's dimension is" << observation.n_elem << "but the dimension of "
-          << "probabilities is" << probabilities.size() << std::endl;
-      return probability;
+      Log::Fatal << "DiscreteDistribution::Probability(): observation has "
+          << "incorrect dimension " << observation.n_elem << " but should have "
+          << "dimension " << probabilities.size() << "!" << std::endl;
     }
+
     for (size_t dimension = 0; dimension < observation.n_elem; dimension++)
     {
       // Adding 0.5 helps ensure that we cast the floating point to a size_t
@@ -143,9 +143,10 @@ class DiscreteDistribution
       // Ensure that the observation is within the bounds.
       if (obs >= probabilities[dimension].n_elem)
       {
-        Log::Debug << "DiscreteDistribution::Probability(): received observation "
-             << obs << "; observation must be in [0, " << probabilities[dimension].n_elem
-             << "] for this distribution." << std::endl;
+        Log::Fatal << "DiscreteDistribution::Probability(): received "
+            << "observation " << obs << "; observation must be in [0, "
+            << probabilities[dimension].n_elem << "] for this distribution."
+            << std::endl;
       }
       probability *= probabilities[dimension][obs];
     }
@@ -207,26 +208,9 @@ class DiscreteDistribution
    * Serialize the distribution.
    */
   template<typename Archive>
-  void Serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const unsigned int /* version */)
   {
-    // We serialize the vector manually since there seem to be some problems
-    // with some boost versions.
-    size_t dimensionality;
-    dimensionality = probabilities.size();
-    ar & data::CreateNVP(dimensionality, "dimensionality");
-
-    if (Archive::is_loading::value)
-    {
-      probabilities.clear();
-      probabilities.resize(dimensionality);
-    }
-
-    for (size_t i = 0; i < dimensionality; ++i)
-    {
-      std::ostringstream oss;
-      oss << "probabilities" << i;
-      ar & data::CreateNVP(probabilities[i], oss.str());
-    }
+    ar & BOOST_SERIALIZATION_NVP(probabilities);
   }
 
  private:

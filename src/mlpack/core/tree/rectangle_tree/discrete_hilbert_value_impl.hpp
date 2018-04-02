@@ -150,7 +150,8 @@ template<typename TreeElemType>
 template<typename VecType>
 arma::Col<typename DiscreteHilbertValue<TreeElemType>::HilbertElemType>
 DiscreteHilbertValue<TreeElemType>::
-CalculateValue(const VecType& pt,typename boost::enable_if<IsVector<VecType>>*)
+CalculateValue(const VecType& pt,
+               typename std::enable_if_t<IsVector<VecType>::value>*)
 {
   typedef typename VecType::elem_type VecElemType;
   arma::Col<HilbertElemType> res(pt.n_rows);
@@ -165,7 +166,7 @@ CalculateValue(const VecType& pt,typename boost::enable_if<IsVector<VecType>>*)
   for (size_t i = 0; i < pt.n_rows; i++)
   {
     int e;
-    VecElemType normalizedVal = std::frexp(pt(i),&e);
+    VecElemType normalizedVal = std::frexp(pt(i), &e);
     bool sgn = std::signbit(normalizedVal);
 
     if (pt(i) == 0)
@@ -281,8 +282,8 @@ template<typename VecType1, typename VecType2>
 int DiscreteHilbertValue<TreeElemType>::
 ComparePoints(const VecType1& pt1,
               const VecType2& pt2,
-              typename boost::enable_if<IsVector<VecType1>>*,
-              typename boost::enable_if<IsVector<VecType2>>*)
+              typename std::enable_if_t<IsVector<VecType1>::value>*,
+              typename std::enable_if_t<IsVector<VecType2>::value>*)
 {
   arma::Col<HilbertElemType> val1 = CalculateValue(pt1);
   arma::Col<HilbertElemType> val2 = CalculateValue(pt2);
@@ -317,21 +318,21 @@ template<typename TreeElemType>
 template<typename VecType>
 int DiscreteHilbertValue<TreeElemType>::
 CompareWith(const VecType& pt,
-            typename boost::enable_if<IsVector<VecType>>*) const
+            typename std::enable_if_t<IsVector<VecType>::value>*) const
 {
   arma::Col<HilbertElemType> val = CalculateValue(pt);
 
   if (numValues == 0)
     return -1;
 
-  return CompareValues(localHilbertValues->col(numValues - 1),val);
+  return CompareValues(localHilbertValues->col(numValues - 1), val);
 }
 
 template<typename TreeElemType>
 template<typename VecType>
 int DiscreteHilbertValue<TreeElemType>::
 CompareWithCachedPoint(const VecType& ,
-            typename boost::enable_if<IsVector<VecType>>*) const
+            typename std::enable_if_t<IsVector<VecType>::value>*) const
 {
   if (numValues == 0)
     return -1;
@@ -344,7 +345,7 @@ template<typename TreeType, typename VecType>
 size_t DiscreteHilbertValue<TreeElemType>::
 InsertPoint(TreeType *node,
             const VecType& pt,
-            typename boost::enable_if<IsVector<VecType>>*)
+            typename std::enable_if_t<IsVector<VecType>::value>*)
 {
   size_t i = 0;
 
@@ -383,7 +384,7 @@ void DiscreteHilbertValue<TreeElemType>::InsertNode(TreeType* node)
 {
   DiscreteHilbertValue &val = node->AuxiliaryInfo().HilbertValue();
 
-  if (CompareWith(node,val) < 0)
+  if (CompareWith(node, val) < 0)
   {
     localHilbertValues = val.LocalHilbertValues();
     numValues = val.NumValues();
@@ -395,7 +396,6 @@ template<typename TreeType>
 void DiscreteHilbertValue<TreeElemType>::
 DeletePoint(TreeType* /* node */, const size_t localIndex)
 {
-
   // Delete the Hilbert value from the local dataset
   for (size_t i = numValues - 1; i > localIndex; i--)
     localHilbertValues->col(i - 1) = localHilbertValues->col(i);
@@ -514,16 +514,15 @@ void DiscreteHilbertValue<TreeElemType>::RedistributeHilbertValues(
 
 template<typename TreeElemType>
 template<typename Archive>
-void DiscreteHilbertValue<TreeElemType>::
-Serialize(Archive& ar, const unsigned int /* version */)
+void DiscreteHilbertValue<TreeElemType>::serialize(
+    Archive& ar,
+    const unsigned int /* version */)
 {
-  using data::CreateNVP;
-
-  ar & CreateNVP(localHilbertValues, "localHilbertValues");
-  ar & CreateNVP(ownsLocalHilbertValues, "ownsLocalHilbertValues");
-  ar & CreateNVP(numValues, "numValues");
-  ar & CreateNVP(valueToInsert, "valueToInsert");
-  ar & CreateNVP(ownsValueToInsert, "ownsValueToInsert");
+  ar & BOOST_SERIALIZATION_NVP(localHilbertValues);
+  ar & BOOST_SERIALIZATION_NVP(ownsLocalHilbertValues);
+  ar & BOOST_SERIALIZATION_NVP(numValues);
+  ar & BOOST_SERIALIZATION_NVP(valueToInsert);
+  ar & BOOST_SERIALIZATION_NVP(ownsValueToInsert);
 }
 
 } // namespace tree

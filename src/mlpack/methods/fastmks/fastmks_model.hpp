@@ -51,6 +51,15 @@ class FastMKSModel
    */
   FastMKSModel(const int kernelType = LINEAR_KERNEL);
 
+  //! Copy constructor.
+  FastMKSModel(const FastMKSModel& other);
+
+  //! Move constructor.
+  FastMKSModel(FastMKSModel&& other);
+
+  //! Copy assignment operator.
+  FastMKSModel& operator=(const FastMKSModel& other);
+
   /**
    * Clean memory.
    */
@@ -117,7 +126,7 @@ class FastMKSModel
    * Serialize the model.
    */
   template<typename Archive>
-  void Serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const unsigned int /* version */);
 
  private:
   //! The type of kernel we are using.
