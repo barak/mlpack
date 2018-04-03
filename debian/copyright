@@ -1,8 +1,8 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: mlpack
 Upstream-Contact: Ryan Curtin <ryan@ratml.org>
-Source: http://www.mlpack.org/
-	git://github.com/mlpack/mlpack.git
+Source: https://www.mlpack.org/
+	https://github.com/mlpack/mlpack.git
 
 Files: *
 Copyright:
