@@ -5,8 +5,18 @@ mlpack (3.0.0-1) unstable; urgency=medium
   * Bump standards version
   * Swizzle packaging repo to salsa
   * Use latexmk --pdf to build manual to avoid problematic ps2pdf
+  * Secure some URLs
+  * Adjust html manual installation, new subdir search/
+  * Remove now-unnecessary chrpath --delete
+  * Adjust man page installation to upstream changes
+    - section 3 gone
+    - section 1 for executables, install into -bin package
+  * Refresh debian/copyright from COPYRIGHT.txt
+  * Add UPDATING.txt and CONTRIBUTING.md to doc package
+  * Install HISTORY.md as upstream changelog
+  * Bump .soname per upstream
 
- -- Barak A. Pearlmutter <bap@debian.org>  Tue, 03 Apr 2018 14:26:07 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 04 Apr 2018 09:16:00 +0100
 
 mlpack (2.2.5-1) unstable; urgency=medium
 
