@@ -67,12 +67,6 @@ override_dh_install:
 	for f in $$(find debian/mlpack-doc -name jquery.js); do \
 	  ln --verbose --symbolic --force /usr/share/javascript/jquery/jquery.js $$f; \
 	done
-	@echo List and remove any rpath in binaries, which are inappropriate as the
-	@echo shared libraries are installed into the usual system search path.
-	for f in debian/mlpack-bin/usr/bin/*; do \
-	  chrpath --list $$f; \
-	  chrpath --delete $$f; \
-	done
 
 override_dh_compress:
 	dh_compress -Xrefman.pdf -Xdoc/html/
