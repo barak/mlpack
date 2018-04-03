@@ -1,58 +1,104 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: mlpack
 Upstream-Contact: Ryan Curtin <ryan@ratml.org>
-Source: https://www.mlpack.org/
-	https://github.com/mlpack/mlpack.git
+Source:
+  https://www.mlpack.org/
+  https://github.com/mlpack/mlpack.git
 
 Files: *
 Copyright:
-  2008-2015, Ryan Curtin <ryan@ratml.org>
-  2008-2013, Bill March <march@gatech.edu>
-  2008-2012, Dongryeol Lee <dongryel@cc.gatech.edu>
-  2008-2013, Nishant Mehta <niche@cc.gatech.edu>
-  2008-2013, Parikshit Ram <p.ram@gatech.edu>
-  2010-2012, James Cline <james.cline@gatech.edu>
-  2010-2013, Sterling Peet <sterling.peet@gatech.edu>
-  2011-2012, Matthew Amidon <mamidon@gatech.edu>
-  2011-2012, Neil Slagle <npslagle@gmail.com>
-  2011, Ajinkya Kale <kaleajinkya@gmail.com>
-  2011, Vlad Grantcharov <vlad321@gatech.edu>
-  2011, Noah Kauffman <notoriousnoah@gmail.com>
-  2012, Rajendran Mohan <rmohan88@gatech.edu>
-  2012, Trironk Kiatkungwanglai <trironk@gmail.com>
-  2012, Patrick Mason <patrick.s.mason@gmail.com>
-  2013-2015, Marcus Edel <marcus.edel@fu-berlin.de>
-  2013, Mudit Raj Gupta <mudit.raaj.gupta@gmail.com>
-  2013, Sumedh Ghaisas <sumedhghaisas@gmail.com>
-  2014, Michael Fox <michaelfox99@gmail.com>
-  2014, Ryan Birmingham <birm@gatech.edu>
-  2014, Siddharth Agrawal <siddharth.950@gmail.com>
-  2014, Saheb Motiani <saheb210692@gmail.com>
-  2014, Yash Vadalia <yashdv@gmail.com>
-  2014, Abhishek Laddha <laddhaabhishek11@gmail.com>
-  2014, Vahab Akbarzadeh <v.akbarzadeh@gmail.com>
-  2014, Andrew Wells <andrewmw94@gmail.com>
-  2014, Zhihao Lou <lzh1984@gmail.com>
-  2014, Udit Saxena <saxenda.udit@gmail.com>
-  2014-2015, Stephen Tu <tu.stephenl@gmail.com>
-  2014-2015, Jaskaran Singh <jaskaranvirdi@ymail.com>
-  2015, Shangtong Zhang <zhangshangtong.cpp@icloud.com>
-  2015, Hritik Jain <hritik.jain.cse13@itbhu.ac.in>
-  2015, Vladimir Glazachev <glazachev.vladimir@gmail.com>
-  2015, QiaoAn Chen <kazenoyumechen@gmail.com>
-  2015, Janzen Brewer <jahabrewer@gmail.com>
-  2015, Trung Dinh <dinhanhtrung@gmail.com>
-  2015, Tham Ngap Wei <thamngapwei@gmail.com>
-  2015, Grzegorz Krajewski <krajekg@gmail.com>
-  2015, Joseph Mariadassou <joe.mariadassou@gmail.com>
-  2015, Pavel Zhigulin <pashaworking@gmail.com>
+  Copyright 2008-2018, Ryan Curtin <ryan@ratml.org>
+  Copyright 2008-2013, Bill March <march@gatech.edu>
+  Copyright 2008-2012, Dongryeol Lee <dongryel@cc.gatech.edu>
+  Copyright 2008-2013, Nishant Mehta <niche@cc.gatech.edu>
+  Copyright 2008-2013, Parikshit Ram <p.ram@gatech.edu>
+  Copyright 2010-2012, James Cline <james.cline@gatech.edu>
+  Copyright 2010-2013, Sterling Peet <sterling.peet@gatech.edu>
+  Copyright 2011-2012, Matthew Amidon <mamidon@gatech.edu>
+  Copyright 2011-2012, Neil Slagle <npslagle@gmail.com>
+  Copyright 2011, Ajinkya Kale <kaleajinkya@gmail.com>
+  Copyright 2011, Vlad Grantcharov <vlad321@gatech.edu>
+  Copyright 2011, Noah Kauffman <notoriousnoah@gmail.com>
+  Copyright 2012, Rajendran Mohan <rmohan88@gatech.edu>
+  Copyright 2012, Trironk Kiatkungwanglai <trironk@gmail.com>
+  Copyright 2012, Patrick Mason <patrick.s.mason@gmail.com>
+  Copyright 2013-2018, Marcus Edel <marcus.edel@fu-berlin.de>
+  Copyright 2013, Mudit Raj Gupta <mudit.raaj.gupta@gmail.com>
+  Copyright 2013, Sumedh Ghaisas <sumedhghaisas@gmail.com>
+  Copyright 2014, Michael Fox <michaelfox99@gmail.com>
+  Copyright 2014, Ryan Birmingham <birm@gatech.edu>
+  Copyright 2014, Siddharth Agrawal <siddharth.950@gmail.com>
+  Copyright 2014, Saheb Motiani <saheb210692@gmail.com>
+  Copyright 2014, Yash Vadalia <yashdv@gmail.com>
+  Copyright 2014, Abhishek Laddha <laddhaabhishek11@gmail.com>
+  Copyright 2014, Vahab Akbarzadeh <v.akbarzadeh@gmail.com>
+  Copyright 2014, Andrew Wells <andrewmw94@gmail.com>
+  Copyright 2014, Zhihao Lou <lzh1984@gmail.com>
+  Copyright 2014, Udit Saxena <saxenda.udit@gmail.com>
+  Copyright 2014-2015, Stephen Tu <tu.stephenl@gmail.com>
+  Copyright 2014-2015, Jaskaran Singh <jaskaranvirdi@ymail.com>
+  Copyright 2015&2017, Shangtong Zhang <zhangshangtong.cpp@gmail.com>
+  Copyright 2015, Hritik Jain <hritik.jain.cse13@itbhu.ac.in>
+  Copyright 2015, Vladimir Glazachev <glazachev.vladimir@gmail.com>
+  Copyright 2015, QiaoAn Chen <kazenoyumechen@gmail.com>
+  Copyright 2015, Janzen Brewer <jahabrewer@gmail.com>
+  Copyright 2015, Trung Dinh <dinhanhtrung@gmail.com>
+  Copyright 2015-2017, Tham Ngap Wei <thamngapwei@gmail.com>
+  Copyright 2015, Grzegorz Krajewski <krajekg@gmail.com>
+  Copyright 2015, Joseph Mariadassou <joe.mariadassou@gmail.com>
+  Copyright 2015, Pavel Zhigulin <pashaworking@gmail.com>
+  Copyright 2016, Andy Fang <AndyFang.DZ@gmail.com>
+  Copyright 2016, Barak Pearlmutter <barak+git@pearlmutter.net>
+  Copyright 2016, Ivari Horm <ivari@risk.ee>
+  Copyright 2016, Dhawal Arora <d.p.arora1@gmail.com>
+  Copyright 2016, Alexander Leinoff <alexander-leinoff@uiowa.edu>
+  Copyright 2016, Palash Ahuja <abhor902@gmail.com>
+  Copyright 2016, Yannis Mentekidis <mentekid@gmail.com>
+  Copyright 2016, Ranjan Mondal <ranjan.rev@gmail.com>
+  Copyright 2016, Mikhail Lozhnikov <lozhnikovma@gmail.com>
+  Copyright 2016, Marcos Pividori <marcos.pividori@gmail.com>
+  Copyright 2016, Keon Kim <kwk236@gmail.com>
+  Copyright 2016, Nilay Jain <nilayjain13@gmail.com>
+  Copyright 2016, Peter Lehner <peter.lehner@dlr.de>
+  Copyright 2016, Anuraj Kanodia <akanuraj200@gmail.com>
+  Copyright 2016, Ivan Georgiev <ivan@jonan.info>
+  Copyright 2016, Shikhar Bhardwaj <shikharbhardwaj68@gmail.com>
+  Copyright 2016, Yashu Seth <yashuseth2503@gmail.com>
+  Copyright 2016, Mike Izbicki <mike@izbicki.me>
+  Copyright 2017, Sudhanshu Ranjan <sranjan.sud@gmail.com>
+  Copyright 2017, Piyush Jaiswal <piyush.jaiswal@st.niituniversity.in>
+  Copyright 2017, Dinesh Raj <dinu.iota@gmail.com>
+  Copyright 2017, Vivek Pal <vivekpal.dtu@gmail.com>
+  Copyright 2017, Prasanna Patil <prasannapatil08@gmail.com>
+  Copyright 2017, Lakshya Agrawal <zeeshan.lakshya@gmail.com>
+  Copyright 2017, Praveen Ch <chvsp972911@gmail.com>
+  Copyright 2017, Kirill Mishchenko <ki.mishchenko@gmail.com>
+  Copyright 2017, Abhinav Moudgil <abhinavmoudgil95@gmail.com>
+  Copyright 2017, Thyrix Yang <thyrixyang@gmail.com>
+  Copyright 2017, Sagar B Hathwar <sagarbhathwar@gmail.com>
+  Copyright 2017, Nishanth Hegde <hegde.nishanth@gmail.com>
+  Copyright 2017, Parminder Singh <parmsingh101@gmail.com>
+  Copyright 2017, CodeAi <benjamin.bales@assrc.us>
+  Copyright 2017, Franciszek Stokowacki <franek.stokowacki@gmail.com>
+  Copyright 2017, Samikshya Chand <samikshya289@gmail.com>
+  Copyright 2017, N Rajiv Vaidyanathan <rajivvaidyanathan4@gmail.com>
+  Copyright 2017, Kartik Nighania <kartiknighania@gmail.com>
+  Copyright 2017-2018, Eugene Freyman <evg.freyman@gmail.com>
+  Copyright 2017, Manish Kumar <manish887kr@gmail.com>
+  Copyright 2017, Haritha Sreedharan Nair <haritha1313@gmail.com>
+  Copyright 2017&2018, Sourabh Varshney <sourabhvarshney111@gmail.com>
+  Copyright 2018, Projyal Dev <projyal@gmail.com>
+  Copyright 2018, Nikhil Goel <nikhilgoel199797@gmail.com>
+  Copyright 2018, Shikhar Jaiswal <jaiswalshikhar87@gmail.com>
+  Copyright 2018, B Kartheek Reddy <bkartheekreddy@gmail.com>
+  Copyright 2018, Atharva Khandait <akhandait45@gmail.com>
+  Copyright 2018, Wenhao Huang <wenhao.huang.work@gmail.com>
+  Copyright 2018, Roberto Hueso <robertohueso96@gmail.com>
+  Copyright 2018, Prabhat Sharma <prabhatsharma7298@gmail.com>
+  Copyright 2018, Tan Jun An <yamidarkxxx@gmail.com>
+  Copyright 2018, Moksh Jain <mokshjn00@gmail.com>
+  Copyright 2018, Manthan-R-Sheth <manthanrsheth96@gmail.com>
 License: BSD-3-clause
-  mlpack is provided without any warranty of fitness for any purpose.  You
-  can redistribute the library and/or modify it under the terms of the 3-clause
-  BSD license.  The text of the 3-clause BSD license is contained below.
-  .
-  ----
-  Copyright (c) 2007-2014, mlpack contributors (see COPYRIGHT.txt)
   All rights reserved.
   .
   Redistribution and use of mlpack in source and binary forms, with or without

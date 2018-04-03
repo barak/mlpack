@@ -3,3 +3,5 @@ obj-*/doc/latex/refman.pdf
 README.md
 doc/guide
 doc/tutorials
+UPDATING.txt
+CONTRIBUTING.md

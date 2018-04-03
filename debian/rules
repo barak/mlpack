@@ -68,5 +68,8 @@ override_dh_install:
 	  ln --verbose --symbolic --force /usr/share/javascript/jquery/jquery.js $$f; \
 	done
 
+override_dh_installchangelogs:
+	dh_installchangelogs HISTORY.md
+
 override_dh_compress:
 	dh_compress -Xrefman.pdf -Xdoc/html/
