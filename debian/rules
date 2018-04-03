@@ -43,12 +43,20 @@ endif
 %:
 	dh $@ ${DH_FLAGS}
 
+# Previously tweaked inputenc package option from utf8 to utf8x, no longer necesary:
+#	 sed --in-place 's:usepackage\[utf8\]{inputenc}:usepackage[utf8x]{inputenc}:' refman.tex &&
+
+# Previously used recursive make to build pdf documentation, that uses
+# latex/dvips/ps2pdf the last of which terminated with a mysterious
+# perhaps-font-related error, instead now just use latexmk --pdf which
+# uses pdflatex.
+#	 $(MAKE) pdf
+
 override_dh_auto_build:
 	dh_auto_build
 	@echo building PDF reference manual
 	cd obj-*/doc/latex && \
-	 sed --in-place 's:usepackage\[utf8\]{inputenc}:usepackage[utf8x]{inputenc}:' refman.tex && \
-	 $(MAKE) pdf
+	 latexmk --pdf refman.tex
 
 override_dh_auto_test:
 	@echo do not ask do not tell do not test
