@@ -1,0 +1,21 @@
+From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
+Date: Wed, 4 Apr 2018 11:55:52 +0100
+Subject: txt2man options
+
+---
+ CMake/exec2man.sh | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/CMake/exec2man.sh b/CMake/exec2man.sh
+index b0807fc..36c81b6 100755
+--- a/CMake/exec2man.sh
++++ b/CMake/exec2man.sh
+@@ -75,6 +75,7 @@ synopsis="$name [-h] [-v] $reqoptions $options";
+   sed 's/  / /g' | \
+   awk '/NAME/,/REQUIRED OPTIONS/ { print; } /ADDITIONAL INFORMATION/,0 { print; } /REQUIRED OPTIONS/,/ADDITIONAL INFORMATION/ { if (!/REQUIRED_OPTIONS/ && !/OPTIONS/ && !/ADDITIONAL INFORMATION/) { if (/ --/) { printf "\n" } sub(/^[ ]*/, ""); sub(/ [ ]*/, " "); printf "%s ", $0; } else { if (!/REQUIRED OPTIONS/ && !/ADDITIONAL INFORMATION/) { print "\n"$0; } } }' | \
+   sed 's/  ADDITIONAL INFORMATION/\n\nADDITIONAL INFORMATION/' | \
+-  txt2man -P mlpack -t "$name" -d 1 | \
++  txt2man -t "$name" -s 1 -d UNDATED -r "MLPACK Utilities" -v "User Commands" | \
++  sed "s/ \"UNDATED\" / \"\" /" | \
+   sed "s/^'/\\\\(aq/" > "$output"
+ 

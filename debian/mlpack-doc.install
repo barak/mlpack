@@ -9,3 +9,5 @@
 /usr/share/doc/mlpack/html/search/*.png		/usr/share/doc/mlpack/html/search/
 /usr/share/doc/mlpack/html/search/*.js		/usr/share/doc/mlpack/html/search/
 /usr/share/doc/mlpack/html/search/*.css		/usr/share/doc/mlpack/html/search/
+
+# /usr/share/man/man3/*

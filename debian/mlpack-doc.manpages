@@ -1,7 +1,0 @@
-# There is no make install target for these, and moreover, there are
-# inappropriate files with names starting with _ and build directory
-# paths baked in, like
-#  obj-*/doc/man/man3/_home_barak_src_git_mlpack_src_mlpack_core_optimizers_aug_lagrangian_.3
-# which are avoided by the following.
-
-obj-*/doc/man/man3/[A-Za-z]*
