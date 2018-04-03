@@ -1,8 +1,11 @@
 # reference manual in HTML
+
 /usr/share/doc/mlpack/html/*.html	/usr/share/doc/mlpack-doc/html/
 /usr/share/doc/mlpack/html/*.png	/usr/share/doc/mlpack-doc/html/
 /usr/share/doc/mlpack/html/*.js		/usr/share/doc/mlpack-doc/html/
 /usr/share/doc/mlpack/html/*.css	/usr/share/doc/mlpack-doc/html/
-# Not installed, these are not directly used:
-# /usr/share/doc/mlpack/html/*.md5
-# /usr/share/doc/mlpack/html/*.map
+
+/usr/share/doc/mlpack/html/search/*.html	/usr/share/doc/mlpack/html/search/
+/usr/share/doc/mlpack/html/search/*.png		/usr/share/doc/mlpack/html/search/
+/usr/share/doc/mlpack/html/search/*.js		/usr/share/doc/mlpack/html/search/
+/usr/share/doc/mlpack/html/search/*.css		/usr/share/doc/mlpack/html/search/
