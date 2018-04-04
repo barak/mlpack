@@ -126,6 +126,21 @@ License: BSD-3-clause
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+Files: CMake/ARMA_*.cmake CMake/LICENSE.txt
+Copyright: Conrad Sanderson and other Armadillo contributors
+License: MPL-2.0
+  The ARMA_*.cmake files in this directory are from the Armadillo project, and are
+  generally written by Conrad Sanderson and other Armadillo contributors.  The
+  Armadillo project, which is used heavily in mlpack, can be found at
+  .
+    http://arma.sourceforge.net/
+  .
+  Those files are subject to the terms of the Mozilla Public License, v. 2.0.  A
+  copy of the license may be obtained at http://mozilla.org/MPL/2.0/.
+  .
+  On Debian systems the full text of the MPL-2.0 can be found in
+  /usr/share/common-licenses/MPL-2.0.
+
 Files: debian/*
 Copyright: Barak A. Pearlmutter <bap@debian.org>
 License: Public-Domain
