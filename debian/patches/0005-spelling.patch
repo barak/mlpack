@@ -1,0 +1,39 @@
+From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
+Date: Wed, 4 Apr 2018 13:44:15 +0100
+Subject: spelling
+
+---
+ src/mlpack/methods/rann/ra_model_impl.hpp | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/mlpack/methods/rann/ra_model_impl.hpp b/src/mlpack/methods/rann/ra_model_impl.hpp
+index 093ce74..7e47536 100644
+--- a/src/mlpack/methods/rann/ra_model_impl.hpp
++++ b/src/mlpack/methods/rann/ra_model_impl.hpp
+@@ -222,7 +222,7 @@ bool& SingleModeVisitor::operator()(RAType* ra) const
+ {
+   if (ra)
+     return ra->SingleMode();
+-  throw std::runtime_error("no rank-approximate model is intialized");
++  throw std::runtime_error("no rank-approximate model is initialized");
+ }
+ 
+ //! Exposes the referenceSet of the given RAType.
+@@ -231,7 +231,7 @@ const arma::mat& ReferenceSetVisitor::operator()(RAType* ra) const
+ {
+   if (ra)
+     return ra->ReferenceSet();
+-  throw std::runtime_error("no rank-approximate model is intialized");
++  throw std::runtime_error("no rank-approximate model is initialized");
+ }
+ 
+ //! Exposes the Naive() method of the given RAType instance.
+@@ -240,7 +240,7 @@ bool& NaiveVisitor::operator()(RAType* ra) const
+ {
+   if (ra)
+     return ra->Naive();
+-  throw std::runtime_error("no rank-approximate search model is intialized");
++  throw std::runtime_error("no rank-approximate search model is initialized");
+ }
+ 
+ //! For cleaning memory
