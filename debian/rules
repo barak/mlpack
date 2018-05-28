@@ -62,11 +62,14 @@ override_dh_auto_test:
 	@echo do not ask do not tell do not test
 
 override_dh_install:
-	dh_install --list-missing
+	dh_install
 	@echo use shared jquery.js javascript library
 	for f in $$(find debian/mlpack-doc -name jquery.js); do \
 	  ln --verbose --symbolic --force /usr/share/javascript/jquery/jquery.js $$f; \
 	done
+
+override_dh_missing:
+	dh_missing --list-missing
 
 override_dh_installchangelogs:
 	dh_installchangelogs HISTORY.md
