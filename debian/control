@@ -15,7 +15,7 @@ Build-Depends: cmake, debhelper (>= 11), dh-exec,
 		libarmadillo-dev,
 		txt2man,
 		doxygen, doxygen-latex, graphviz, latexmk
-Standards-Version: 4.1.3
+Standards-Version: 4.1.4
 Homepage: https://www.mlpack.org/
 Vcs-Git: https://salsa.debian.org/science-team/mlpack.git
 Vcs-Browser: https://salsa.debian.org/science-team/mlpack
