@@ -1,3 +1,11 @@
+mlpack (3.0.3-2) unstable; urgency=medium
+
+  * remove chrpath build dependency, unused since 3.0.0-1
+  * bump standards version
+  * patch minor latex typo
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 02 Aug 2018 15:28:05 +0200
+
 mlpack (3.0.3-1) unstable; urgency=medium
 
   * New upstream version
