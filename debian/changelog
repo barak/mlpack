@@ -1,3 +1,9 @@
+mlpack (3.0.3-3) unstable; urgency=medium
+
+  * bump standards version
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 11 Sep 2018 22:53:07 +0100
+
 mlpack (3.0.3-2) unstable; urgency=medium
 
   * remove chrpath build dependency, unused since 3.0.0-1
