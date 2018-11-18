@@ -27,6 +27,7 @@
 #include "init_rules/network_init.hpp"
 
 #include <mlpack/methods/ann/layer/layer_types.hpp>
+#include <mlpack/methods/ann/layer/layer.hpp>
 #include <mlpack/methods/ann/init_rules/random_init.hpp>
 #include <mlpack/core/optimizers/rmsprop/rmsprop.hpp>
 
@@ -305,6 +306,22 @@ class FFN
   void Forward(arma::mat inputs, arma::mat& results);
 
   /**
+   * Perform a partial forward pass of the data.
+   *
+   * This function is meant for the cases when users require a forward pass only
+   * through certain layers and not the entire network.
+   *
+   * @param inputs The input data for the specified first layer.
+   * @param results The predicted results from the specified last layer.
+   * @param begin The index of the first layer.
+   * @param end The index of the last layer.
+   */
+  void Forward(arma::mat inputs,
+               arma::mat& results,
+               const size_t begin,
+               const size_t end);
+
+  /**
    * Perform the backward pass of the data in real batch mode.
    *
    * Forward and Backward should be used as a pair, and they are designed mainly
@@ -445,6 +462,23 @@ class FFN
 
 } // namespace ann
 } // namespace mlpack
+
+//! Set the serialization version of the FFN class.  Multiple template arguments
+//! makes this ugly...
+namespace boost {
+namespace serialization {
+
+template<typename OutputLayerType,
+         typename InitializationRuleType,
+         typename... CustomLayer>
+struct version<
+    mlpack::ann::FFN<OutputLayerType, InitializationRuleType, CustomLayer...>>
+{
+  BOOST_STATIC_CONSTANT(int, value = 1);
+};
+
+} // namespace serialization
+} // namespace boost
 
 // Include implementation.
 #include "ffn_impl.hpp"

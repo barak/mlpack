@@ -126,6 +126,26 @@ void FFN<OutputLayerType, InitializationRuleType, CustomLayers...>::Forward(
 
 template<typename OutputLayerType, typename InitializationRuleType,
          typename... CustomLayers>
+void FFN<OutputLayerType, InitializationRuleType, CustomLayers...>::Forward(
+    arma::mat inputs, arma::mat& results, const size_t begin, const size_t end)
+{
+  boost::apply_visitor(ForwardVisitor(std::move(inputs), std::move(
+      boost::apply_visitor(outputParameterVisitor, network[begin]))),
+      network[begin]);
+
+  for (size_t i = 1; i < end - begin + 1; ++i)
+  {
+    boost::apply_visitor(ForwardVisitor(std::move(boost::apply_visitor(
+        outputParameterVisitor, network[begin + i - 1])), std::move(
+        boost::apply_visitor(outputParameterVisitor, network[begin + i]))),
+        network[begin + i]);
+  }
+
+  results = boost::apply_visitor(outputParameterVisitor, network[end]);
+}
+
+template<typename OutputLayerType, typename InitializationRuleType,
+         typename... CustomLayers>
 double FFN<OutputLayerType, InitializationRuleType, CustomLayers...>::Backward(
     arma::mat targets, arma::mat& gradients)
 {
@@ -467,12 +487,19 @@ template<typename OutputLayerType, typename InitializationRuleType,
          typename... CustomLayers>
 template<typename Archive>
 void FFN<OutputLayerType, InitializationRuleType, CustomLayers...>::serialize(
-    Archive& ar, const unsigned int /* version */)
+    Archive& ar, const unsigned int version)
 {
   ar & BOOST_SERIALIZATION_NVP(parameter);
   ar & BOOST_SERIALIZATION_NVP(width);
   ar & BOOST_SERIALIZATION_NVP(height);
   ar & BOOST_SERIALIZATION_NVP(currentInput);
+
+  // Earlier versions of the FFN code did not serialize whether or not the model
+  // was reset.
+  if (version > 0)
+  {
+    ar & BOOST_SERIALIZATION_NVP(reset);
+  }
 
   // Be sure to clear other layers before loading.
   if (Archive::is_loading::value)
@@ -487,7 +514,10 @@ void FFN<OutputLayerType, InitializationRuleType, CustomLayers...>::serialize(
   // If we are loading, we need to initialize the weights.
   if (Archive::is_loading::value)
   {
-    reset = false;
+    // The behavior in earlier versions was to always assume the weights needed
+    // to be reset.
+    if (version == 0)
+      reset = false;
 
     size_t offset = 0;
     for (size_t i = 0; i < network.size(); ++i)
