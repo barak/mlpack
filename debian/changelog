@@ -1,3 +1,12 @@
+mlpack (3.0.4-1) unstable; urgency=medium
+
+  * new upstream version
+  * add missing whitespace in documentation string patch
+  * forward port patches (one patch has been upstreamed)
+  * include example app in documentation package
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Sun, 18 Nov 2018 22:45:44 +0000
+
 mlpack (3.0.3-3) unstable; urgency=medium
 
   * bump standards version
