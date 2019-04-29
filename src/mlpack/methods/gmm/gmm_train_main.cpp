@@ -14,6 +14,7 @@
 #include <mlpack/core/util/mlpack_main.hpp>
 
 #include "gmm.hpp"
+#include "diagonal_gmm.hpp"
 #include "no_constraint.hpp"
 #include "diagonal_constraint.hpp"
 
@@ -26,6 +27,11 @@ using namespace mlpack::kmeans;
 using namespace std;
 
 PROGRAM_INFO("Gaussian Mixture Model (GMM) Training",
+    // Short description.
+    "An implementation of the EM algorithm for training Gaussian mixture "
+    "models (GMMs).  Given a dataset, this can train a GMM for future use "
+    "with other tools.",
+    // Long description.
     "This program takes a parametric estimate of a Gaussian mixture model (GMM)"
     " using the EM algorithm to find the maximum likelihood estimate.  The "
     "model may be saved and reused by other mlpack GMM tools."
@@ -84,7 +90,13 @@ PROGRAM_INFO("Gaussian Mixture Model (GMM) Training",
     ", the following command may be used: "
     "\n\n" +
     PRINT_CALL("gmm_train", "input_model", "gmm", "input", "data2",
-        "gaussians", 6, "output_model", "new_gmm"));
+        "gaussians", 6, "output_model", "new_gmm"),
+    SEE_ALSO("@gmm_generate", "#gmm_generate"),
+    SEE_ALSO("@gmm_probability", "#gmm_probability"),
+    SEE_ALSO("Gaussian Mixture Models on Wikipedia",
+        "https://en.wikipedia.org/wiki/Mixture_model#Gaussian_mixture_model"),
+    SEE_ALSO("mlpack::gmm::GMM class documentation",
+        "@doxygen/classmlpack_1_1gmm_1_1GMM.html"));
 
 // Parameters for training.
 PARAM_MATRIX_IN_REQ("input", "The training data on which the model will be "
@@ -200,12 +212,34 @@ static void mlpackMain()
     // to use different types.
     if (diagonalCovariance)
     {
+      // Convert GMMs into DiagonalGMMs.
+      DiagonalGMM dgmm(gmm->Gaussians(), gmm->Dimensionality());
+      for (size_t i = 0; i < size_t(gaussians); i++)
+      {
+        dgmm.Component(i).Mean() = gmm->Component(i).Mean();
+        dgmm.Component(i).Covariance(
+            std::move(arma::diagvec(gmm->Component(i).Covariance())));
+      }
+      dgmm.Weights() = gmm->Weights();
+
       // Compute the parameters of the model using the EM algorithm.
       Timer::Start("em");
-      EMFit<KMeansType, DiagonalConstraint> em(maxIterations, tolerance, k);
-      likelihood = gmm->Train(dataPoints, CLI::GetParam<int>("trials"), false,
+      EMFit<KMeansType, PositiveDefiniteConstraint,
+          distribution::DiagonalGaussianDistribution> em(maxIterations,
+          tolerance, k);
+
+      likelihood = dgmm.Train(dataPoints, CLI::GetParam<int>("trials"), false,
           em);
       Timer::Stop("em");
+
+      // Convert DiagonalGMMs into GMMs.
+      for (size_t i = 0; i < size_t(gaussians); i++)
+      {
+        gmm->Component(i).Mean() = dgmm.Component(i).Mean();
+        gmm->Component(i).Covariance(
+            std::move(arma::diagmat(dgmm.Component(i).Covariance())));
+      }
+      gmm->Weights() = dgmm.Weights();
     }
     else if (forcePositive)
     {
@@ -232,12 +266,34 @@ static void mlpackMain()
     // to use different types.
     if (diagonalCovariance)
     {
+      // Convert GMMs into DiagonalGMMs.
+      DiagonalGMM dgmm(gmm->Gaussians(), gmm->Dimensionality());
+      for (size_t i = 0; i < size_t(gaussians); i++)
+      {
+        dgmm.Component(i).Mean() = gmm->Component(i).Mean();
+        dgmm.Component(i).Covariance(
+            std::move(arma::diagvec(gmm->Component(i).Covariance())));
+      }
+      dgmm.Weights() = gmm->Weights();
+
       // Compute the parameters of the model using the EM algorithm.
       Timer::Start("em");
-      EMFit<kmeans::KMeans<>, DiagonalConstraint> em(maxIterations, tolerance);
-      likelihood = gmm->Train(dataPoints, CLI::GetParam<int>("trials"), false,
+      EMFit<kmeans::KMeans<>, PositiveDefiniteConstraint,
+          distribution::DiagonalGaussianDistribution> em(maxIterations,
+          tolerance);
+
+      likelihood = dgmm.Train(dataPoints, CLI::GetParam<int>("trials"), false,
           em);
       Timer::Stop("em");
+
+      // Convert DiagonalGMMs into GMMs.
+      for (size_t i = 0; i < size_t(gaussians); i++)
+      {
+        gmm->Component(i).Mean() = dgmm.Component(i).Mean();
+        gmm->Component(i).Covariance(
+            std::move(arma::diagmat(dgmm.Component(i).Covariance())));
+      }
+      gmm->Weights() = dgmm.Weights();
     }
     else if (forcePositive)
     {

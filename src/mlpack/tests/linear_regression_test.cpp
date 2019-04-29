@@ -13,6 +13,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include "test_tools.hpp"
+#include "serialization.hpp"
 
 using namespace mlpack;
 using namespace mlpack::regression;
@@ -197,6 +198,74 @@ BOOST_AUTO_TEST_CASE(LinearRegressionTrainTest)
   BOOST_REQUIRE_EQUAL(lr.Parameters().n_elem, lrTrain.Parameters().n_elem);
   for (size_t i = 0; i < lr.Parameters().n_elem; ++i)
     BOOST_REQUIRE_CLOSE(lr.Parameters()[i], lrTrain.Parameters()[i], 1e-5);
+}
+
+/*
+ * Linear regression serialization test.
+ */
+BOOST_AUTO_TEST_CASE(LinearRegressionTest)
+{
+  // Generate some random data.
+  arma::mat data;
+  data.randn(15, 800);
+  arma::rowvec responses;
+  responses.randn(800);
+
+  LinearRegression lr(data, responses, 0.05); // Train the model.
+  LinearRegression xmlLr, textLr, binaryLr;
+
+  SerializeObjectAll(lr, xmlLr, textLr, binaryLr);
+
+  BOOST_REQUIRE_CLOSE(lr.Lambda(), xmlLr.Lambda(), 1e-8);
+  BOOST_REQUIRE_CLOSE(lr.Lambda(), textLr.Lambda(), 1e-8);
+  BOOST_REQUIRE_CLOSE(lr.Lambda(), binaryLr.Lambda(), 1e-8);
+
+  CheckMatrices(lr.Parameters(), xmlLr.Parameters(), textLr.Parameters(),
+      binaryLr.Parameters());
+}
+
+/**
+ * Test that LinearRegression::Train() returns finite OLS error.
+ */
+BOOST_AUTO_TEST_CASE(LinearRegressionTrainReturnObjective)
+{
+  arma::mat predictors(3, 10);
+  arma::mat points(3, 10);
+
+  // Responses is the "correct" value for each point in predictors and points.
+  arma::rowvec responses(10);
+
+  // The values we get back when we predict for points.
+  arma::rowvec predictions(10);
+
+  // We'll randomly select some coefficients for the linear response.
+  arma::vec coeffs;
+  coeffs.randu(4);
+
+  // Now generate each point.
+  for (size_t row = 0; row < 3; row++)
+    predictors.row(row) = arma::linspace<arma::rowvec>(0, 9, 10);
+
+  points = predictors;
+
+  // Now add a small amount of noise to each point.
+  for (size_t elem = 0; elem < points.n_elem; elem++)
+  {
+    // Max added noise is 0.02.
+    points[elem] += math::Random() / 50.0;
+    predictors[elem] += math::Random() / 50.0;
+  }
+
+  // Generate responses.
+  for (size_t elem = 0; elem < responses.n_elem; elem++)
+    responses[elem] = coeffs[0] +
+        dot(coeffs.rows(1, 3), arma::ones<arma::rowvec>(3) * elem);
+
+  // Initialize and predict.
+  LinearRegression lr;
+  double error = lr.Train(predictors, responses);
+
+  BOOST_REQUIRE_EQUAL(std::isfinite(error), true);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

@@ -5,6 +5,8 @@ set(SOURCES
   ffn_impl.hpp
   rnn.hpp
   rnn_impl.hpp
+  brnn.hpp
+  brnn_impl.hpp
 )
 
 add_subdirectory(visitor)
@@ -13,6 +15,7 @@ add_subdirectory(init_rules)
 add_subdirectory(layer)
 add_subdirectory(loss_functions)
 add_subdirectory(convolution_rules)
+add_subdirectory(rbm)
 add_subdirectory(augmented)
 
 # Add directory name to sources.

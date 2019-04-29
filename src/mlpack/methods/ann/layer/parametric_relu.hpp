@@ -99,11 +99,6 @@ class PReLU
   //! Modify the parameters.
   OutputDataType& Parameters() { return alpha; }
 
-  //! Get the input parameter.
-  InputDataType const& InputParameter() const { return inputParameter; }
-  //! Modify the input parameter.
-  InputDataType& InputParameter() { return inputParameter; }
-
   //! Get the output parameter.
   OutputDataType const& OutputParameter() const { return outputParameter; }
   //! Modify the output parameter.
@@ -170,14 +165,14 @@ class PReLU
   /**
    * Computes the first derivative of the PReLU function.
    *
-   * @param y Input activations.
-   * @param x The resulting derivatives.
+   * @param x Input activations.
+   * @param y The resulting derivatives.
    */
 
   template<typename InputType, typename OutputType>
   void Deriv(const InputType& x, OutputType& y)
   {
-    y = x;
+    y.set_size(arma::size(x));
 
     for (size_t i = 0; i < x.n_elem; i++)
     {
@@ -187,9 +182,6 @@ class PReLU
 
   //! Locally-stored delta object.
   OutputDataType delta;
-
-  //! Locally-stored input parameter object.
-  InputDataType inputParameter;
 
   //! Locally-stored output parameter object.
   OutputDataType outputParameter;

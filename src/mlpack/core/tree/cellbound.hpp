@@ -89,6 +89,8 @@ class CellBound
   /**
    * Initializes to specified dimensionality with each dimension the empty
    * set.
+   *
+   * @param dimension Dimensionality of bound.
    */
   CellBound(const size_t dimension);
 
@@ -141,6 +143,11 @@ class CellBound
   ElemType MinWidth() const { return minWidth; }
   //! Modify the minimum width of the bound.
   ElemType& MinWidth() { return minWidth; }
+
+  //! Get the metric associated with this bound.
+  const MetricType& Metric() const { return metric; }
+  //! Modify the metric associated with this bound.
+  MetricType& Metric() { return metric; }
 
   /**
    * Calculates the center of the range, placing it into the given vector.
@@ -214,11 +221,15 @@ class CellBound
 
   /**
    * Expands this region to encompass another bound.
+   *
+   * @param other Bound which needs to be encompassed.
    */
   CellBound& operator|=(const CellBound& other);
 
   /**
    * Determines if a point is within this bound.
+   *
+   * @param point Point to check the condition.
    */
   template<typename VecType>
   bool Contains(const VecType& point) const;
@@ -264,6 +275,8 @@ class CellBound
   arma::Col<AddressElemType> hiAddress;
   //! The minimal width of the outer rectangle.
   ElemType minWidth;
+  //! The instantiated metric (likely has size 0).
+  MetricType metric;
 
   /**
    * Add a subrectangle to the bound.

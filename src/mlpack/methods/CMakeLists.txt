@@ -5,6 +5,7 @@ set(DIRS
   amf
   ann
   approx_kfn
+  bias_svd
   block_krylov_svd
   cf
   dbscan
@@ -16,10 +17,13 @@ set(DIRS
   gmm
   hmm
   hoeffding_trees
+  kde
   kernel_pca
   kmeans
   lars
   linear_regression
+  linear_svm
+  lmnn
   local_coordinate_coding
   logistic_regression
   lsh
@@ -44,7 +48,7 @@ set(DIRS
   softmax_regression
   sparse_autoencoder
   sparse_coding
-  sparse_svm
+  svdplusplus
 )
 
 foreach(dir ${DIRS})
@@ -53,3 +57,7 @@ endforeach()
 
 set(MLPACK_SRCS ${MLPACK_SRCS} ${DIR_SRCS} PARENT_SCOPE)
 set(MLPACK_PYXS ${MLPACK_PYXS} PARENT_SCOPE)
+set(MARKDOWN_SRCS ${MARKDOWN_SRCS} PARENT_SCOPE)
+set(MARKDOWN_NAMES ${MARKDOWN_NAMES} PARENT_SCOPE)
+set(MARKDOWN_NAME_CATEGORIES ${MARKDOWN_NAME_CATEGORIES} PARENT_SCOPE)
+set(MARKDOWN_ALL_LANGUAGES_LIST ${MARKDOWN_ALL_LANGUAGES_LIST} PARENT_SCOPE)

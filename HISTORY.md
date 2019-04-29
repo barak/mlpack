@@ -1,14 +1,42 @@
+### mlpack 3.1.0
+###### 2019-04-25
+  * Add DiagonalGaussianDistribution and DiagonalGMM classes to speed up the
+    diagonal covariance computation and deprecate DiagonalConstraint (#1666).
+
+  * Add kernel density estimation (KDE) implementation with bindings to other
+    languages (#1301).
+
+  * Where relevant, all models with a `Train()` method now return a `double`
+    value representing the goodness of fit (i.e. final objective value, error,
+    etc.) (#1678).
+
+  * Add implementation for linear support vector machine (see
+    `src/mlpack/methods/linear_svm`).
+
+  * Change DBSCAN to use PointSelectionPolicy and add OrderedPointSelection (#1625).
+
+  * Residual block support (#1594).
+
+  * Bidirectional RNN (#1626).
+
+  * Dice loss layer (#1674, #1714) and hard sigmoid layer (#1776).
+
+  * `output` option changed to `predictions` and `output_probabilities` to
+    `probabilities` for Naive Bayes binding (`mlpack_nbc`/`nbc()`).  Old options
+    are now deprecated and will be preserved until mlpack 4.0.0 (#1616).
+
+  * Add support for Diagonal GMMs to HMM code (#1658, #1666).  This can provide
+    large speedup when a diagonal GMM is acceptable as an emission probability
+    distribution.
+
+  * Python binding improvements: check parameter type (#1717), avoid copying
+    Pandas dataframes (#1711), handle Pandas Series objects (#1700).
+
 ### mlpack 3.0.4
 ###### 2018-11-13
   * Bump minimum CMake version to 3.3.2.
 
-  * CMake fixes for Ninja generator by Marc Espie (#1550, #1537, #1523).
-
-  * More efficient linear regression implementation (#1500).
-
-  * Serialization fixes for neural networks (#1508, #1535).
-
-  * Mean shift now allows single-point clusters (#1536).
+  * CMake fixes for Ninja generator by Marc Espie.
 
 ### mlpack 3.0.3
 ###### 2018-07-27
@@ -326,7 +354,7 @@
 
   * Add support for observation weights to LinearRegression.
 
-  * MahalanobisDistance<> now takes root of the distance by default and
+  * MahalanobisDistance<> now takes the root of the distance by default and
     therefore satisfies the triangle inequality (TakeRoot now defaults to true).
 
   * Better handling of optional Armadillo HDF5 dependency.
@@ -540,7 +568,7 @@
 
   * Added range search executable (#192).
 
-  * Adapted citations in documentation to BiBTeX; no citations in -h output
+  * Adapted citations in documentation to BibTeX; no citations in -h output
     (#195).
 
   * Stop use of 'const char*' and prefer 'std::string' (#176).

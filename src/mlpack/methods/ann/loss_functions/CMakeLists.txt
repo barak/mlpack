@@ -3,10 +3,18 @@
 set(SOURCES
   cross_entropy_error.hpp
   cross_entropy_error_impl.hpp
+  dice_loss.hpp
+  dice_loss_impl.hpp
+  earth_mover_distance.hpp
+  earth_mover_distance_impl.hpp
   kl_divergence.hpp
   kl_divergence_impl.hpp
   mean_squared_error.hpp
   mean_squared_error_impl.hpp
+  negative_log_likelihood.hpp
+  negative_log_likelihood_impl.hpp
+  reconstruction_loss.hpp
+  reconstruction_loss_impl.hpp
   sigmoid_cross_entropy_error.hpp
   sigmoid_cross_entropy_error_impl.hpp
 )

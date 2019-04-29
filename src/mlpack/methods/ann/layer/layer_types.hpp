@@ -21,6 +21,7 @@
 #include <mlpack/methods/ann/layer/batch_norm.hpp>
 #include <mlpack/methods/ann/layer/bilinear_interpolation.hpp>
 #include <mlpack/methods/ann/layer/constant.hpp>
+#include <mlpack/methods/ann/layer/concatenate.hpp>
 #include <mlpack/methods/ann/layer/dropout.hpp>
 #include <mlpack/methods/ann/layer/elu.hpp>
 #include <mlpack/methods/ann/layer/hard_tanh.hpp>
@@ -31,17 +32,21 @@
 #include <mlpack/methods/ann/layer/log_softmax.hpp>
 #include <mlpack/methods/ann/layer/lookup.hpp>
 #include <mlpack/methods/ann/layer/multiply_constant.hpp>
-#include <mlpack/methods/ann/layer/negative_log_likelihood.hpp>
 #include <mlpack/methods/ann/layer/max_pooling.hpp>
 #include <mlpack/methods/ann/layer/mean_pooling.hpp>
 #include <mlpack/methods/ann/layer/parametric_relu.hpp>
 #include <mlpack/methods/ann/layer/reinforce_normal.hpp>
+#include <mlpack/methods/ann/layer/reparametrization.hpp>
 #include <mlpack/methods/ann/layer/select.hpp>
+#include <mlpack/methods/ann/layer/subview.hpp>
 
 // Convolution modules.
 #include <mlpack/methods/ann/convolution_rules/border_modes.hpp>
 #include <mlpack/methods/ann/convolution_rules/naive_convolution.hpp>
 #include <mlpack/methods/ann/convolution_rules/fft_convolution.hpp>
+
+// Loss function modules.
+#include <mlpack/methods/ann/loss_functions/negative_log_likelihood.hpp>
 
 namespace mlpack {
 namespace ann {
@@ -56,6 +61,12 @@ template<typename InputDataType, typename OutputDataType> class LSTM;
 template<typename InputDataType, typename OutputDataType> class GRU;
 template<typename InputDataType, typename OutputDataType> class FastLSTM;
 template<typename InputDataType, typename OutputDataType> class VRClassReward;
+template<typename InputDataType, typename OutputDataType> class Concatenate;
+
+template<typename InputDataType,
+         typename OutputDataType
+>
+class Reparametrization;
 
 template<typename InputDataType,
          typename OutputDataType,
@@ -65,6 +76,7 @@ class AddMerge;
 
 template<typename InputDataType,
          typename OutputDataType,
+         bool residual,
          typename... CustomLayers
 >
 class Sequential;
@@ -139,9 +151,11 @@ using LayerTypes = boost::variant<
     BaseLayer<IdentityFunction, arma::mat, arma::mat>*,
     BaseLayer<TanhFunction, arma::mat, arma::mat>*,
     BaseLayer<RectifierFunction, arma::mat, arma::mat>*,
+    BaseLayer<SoftplusFunction, arma::mat, arma::mat>*,
     BatchNorm<arma::mat, arma::mat>*,
     BilinearInterpolation<arma::mat, arma::mat>*,
     Concat<arma::mat, arma::mat>*,
+    Concatenate<arma::mat, arma::mat>*,
     ConcatPerformance<NegativeLogLikelihood<arma::mat, arma::mat>,
                       arma::mat, arma::mat>*,
     Constant<arma::mat, arma::mat>*,
@@ -177,8 +191,11 @@ using LayerTypes = boost::variant<
     Recurrent<arma::mat, arma::mat>*,
     RecurrentAttention<arma::mat, arma::mat>*,
     ReinforceNormal<arma::mat, arma::mat>*,
+    Reparametrization<arma::mat, arma::mat>*,
     Select<arma::mat, arma::mat>*,
-    Sequential<arma::mat, arma::mat>*,
+    Sequential<arma::mat, arma::mat, false>*,
+    Sequential<arma::mat, arma::mat, true>*,
+    Subview<arma::mat, arma::mat>*,
     VRClassReward<arma::mat, arma::mat>*,
     CustomLayers*...
 >;
