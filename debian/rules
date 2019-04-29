@@ -3,6 +3,7 @@
 # export DH_VERBOSE=1
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export LIBS="pthread"
 
 ## Memory consumption issues on some autobuilders have been causing
 ## build failures.  There are two ways to address such issues:
@@ -51,6 +52,9 @@ endif
 # perhaps-font-related error, instead now just use latexmk --pdf which
 # uses pdflatex.
 #	 $(MAKE) pdf
+
+override_dh_auto_configure:
+	dh_auto_configure -- -DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH)
 
 override_dh_auto_build:
 	dh_auto_build
