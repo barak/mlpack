@@ -1,3 +1,13 @@
+mlpack (3.1.0-1) unstable; urgency=medium
+
+  * fix debian/watch uscan support file
+  * new upstream version
+  * bump policy
+  * bump to debhelper 12
+  * build dependency on ensmallen C++ header library
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 02 May 2019 11:59:24 +0100
+
 mlpack (3.0.4-1) unstable; urgency=medium
 
   * new upstream version
