@@ -17,7 +17,8 @@ export LIBS="pthread"
 
 ## For that reason, I am activating all of the above space-reduction
 ## mechanisms on Ubuntu, all 32-bit architectures, and all kfreebsd
-## systems.
+## systems. And I am setting the build to single threaded on all
+## architectures.
 
 ifeq ($(shell dpkg-vendor --derives-from Ubuntu && echo yes),yes)
 SAVE_SPACE=yes
@@ -34,24 +35,15 @@ endif
 ifeq ($(SAVE_SPACE),yes)
 ifneq (, $(filter $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU),mips mipsel))
 	export DEB_CXXFLAGS_MAINT_APPEND = --param ggc-min-expand=5 -g0
-	DH_FLAGS += --max-parallel=1
 else
 	export DEB_CXXFLAGS_MAINT_APPEND = --param ggc-min-expand=20 -g0
-	DH_FLAGS += --max-parallel=2
 endif
 endif
+
+DH_FLAGS += --max-parallel=1
 
 %:
 	dh $@ ${DH_FLAGS}
-
-# Previously tweaked inputenc package option from utf8 to utf8x, no longer necesary:
-#	 sed --in-place 's:usepackage\[utf8\]{inputenc}:usepackage[utf8x]{inputenc}:' refman.tex &&
-
-# Previously used recursive make to build pdf documentation, that uses
-# latex/dvips/ps2pdf the last of which terminated with a mysterious
-# perhaps-font-related error, instead now just use latexmk --pdf which
-# uses pdflatex.
-#	 $(MAKE) pdf
 
 override_dh_auto_configure:
 	dh_auto_configure -- -DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH)
@@ -71,9 +63,6 @@ override_dh_install:
 	for f in $$(find debian/mlpack-doc -name jquery.js); do \
 	  ln --verbose --symbolic --force /usr/share/javascript/jquery/jquery.js $$f; \
 	done
-
-override_dh_missing:
-	dh_missing --list-missing
 
 override_dh_installchangelogs:
 	dh_installchangelogs HISTORY.md
