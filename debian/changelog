@@ -1,3 +1,15 @@
+mlpack (3.1.1-1) unstable; urgency=medium
+
+  * new upstream version
+  * add some missing run-time dependencies
+  * patch a grammatical error
+  * install mysterious formula.repository file
+  * account for upstream installing foo.1 in man/foo.1 instead of man/man1/foo.1
+  * scour away stray .gitignore installed in docs
+  * set --doc-main-package whatever that is
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 06 Jun 2019 13:42:17 +0100
+
 mlpack (3.1.0-1) unstable; urgency=medium
 
   * fix debian/watch uscan support file
