@@ -7,7 +7,7 @@ Abstract:
 Section: Programming/C++
 
 Format: PDF
-Files: /usr/share/doc/mlpack-doc/refman.pdf
+Files: /usr/share/doc/libmlpack-dev/refman.pdf
 
 Format: HTML
 Index: /usr/share/doc/mlpack-doc/html/index.html
