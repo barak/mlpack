@@ -64,6 +64,14 @@ override_dh_install:
 	  ln --verbose --symbolic --force /usr/share/javascript/jquery/jquery.js $$f; \
 	done
 
+override_dh_installdocs:
+	dh_installdocs -pmlpack-doc --doc-main-package libmlpack-dev
+	dh_installdocs -Nmlpack-doc
+
+override_dh_installexamples:
+	dh_installexamples -pmlpack-doc --doc-main-package libmlpack-dev
+	dh_installexamples -Nmlpack-doc
+
 override_dh_installchangelogs:
 	dh_installchangelogs HISTORY.md
 
