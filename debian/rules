@@ -81,6 +81,8 @@ override_dh_installexamples:
 	dh_installexamples
 	@echo Remove empty directory
 	-rmdir debian/mlpack-doc/usr/share/doc/libmlpack-dev/examples/sample-ml-app/sample-ml-app/data/
+	@echo Remove stray VCS file
+	-find debian/mlpack-doc -name .gitignore -print -delete
 
 override_dh_compress:
 	dh_compress -Xrefman.pdf -Xdoc/html/
