@@ -4,7 +4,8 @@ Subject: grammar
 
 ---
  src/mlpack/core/util/sfinae_utility.hpp | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ src/mlpack/methods/kde/kde_main.cpp     | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/src/mlpack/core/util/sfinae_utility.hpp b/src/mlpack/core/util/sfinae_utility.hpp
 index 5164af6..bbd69df 100644
@@ -39,3 +40,16 @@ index 5164af6..bbd69df 100644
   * whether a given class has a method of the requested form. For example, for
   * the following class
   *
+diff --git a/src/mlpack/methods/kde/kde_main.cpp b/src/mlpack/methods/kde/kde_main.cpp
+index 74e6603..9b19bb8 100644
+--- a/src/mlpack/methods/kde/kde_main.cpp
++++ b/src/mlpack/methods/kde/kde_main.cpp
+@@ -37,7 +37,7 @@ PROGRAM_INFO("Kernel Density Estimation",
+     "performance as it uses an approximate dual or single tree algorithm for "
+     "acceleration."
+     "\n\n"
+-    "Dual or single tree optimization allows to avoid lots of barely relevant "
++    "Dual or single tree optimization allows one to avoid lots of barely relevant "
+     "calculations (as kernel function values decrease with distance), so it is "
+     "an approximate computation. You can specify the maximum relative error "
+     "tolerance for each query value with " + PRINT_PARAM_STRING("rel_error") +
