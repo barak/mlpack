@@ -1,8 +1,12 @@
-### mlpack ?.?.?
-###### ????-??-??
+### mlpack 3.2.1
+###### 2019-10-01
   * Enforce CMake version check for ensmallen (#2032).
 
   * Fix CMake check for Armadillo version (#2029).
+
+  * Better handling of when STB is not installed (#2033).
+
+  * Fix Naive Bayes classifier computations in high dimensions (#2022).
 
 ### mlpack 3.2.0
 ###### 2019-09-25

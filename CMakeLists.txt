@@ -348,10 +348,12 @@ if (NOT STB_IMAGE_FOUND)
       list(GET STB_IMAGE_DOWNLOAD_STATUS_LIST 1 STB_DOWNLOAD_ERROR)
       message(WARNING
           "Could not download stb! Error code ${STB_DOWNLOAD_STATUS}: ${STB_DOWNLOAD_ERROR}!  Error log: ${STB_DOWNLOAD_LOG}")
+      message(WARNING
+          "stb/stb_image.h is not installed. Image utilities will not be available!")
     endif ()
   else ()
     message(WARNING
-        "stb/stb_image.h is not installed. Image utilites will not be available!")
+        "stb/stb_image.h is not installed. Image utilities will not be available!")
   endif ()
 else ()
   # Already has STB installed.
@@ -366,14 +368,14 @@ endif ()
 find_package(Ensmallen 2.10.0)
 if (NOT ENSMALLEN_FOUND)
   if (DOWNLOAD_ENSMALLEN)
-    file(DOWNLOAD http://www.ensmallen.org/files/ensmallen-latest.tar.gz
-        "${CMAKE_BINARY_DIR}/deps/ensmallen-latest.tar.gz"
+    file(DOWNLOAD http://www.ensmallen.org/files/ensmallen-2.10.3.tar.gz
+        "${CMAKE_BINARY_DIR}/deps/ensmallen-2.10.3.tar.gz"
         STATUS ENS_DOWNLOAD_STATUS_LIST LOG ENS_DOWNLOAD_LOG
         SHOW_PROGRESS)
     list(GET ENS_DOWNLOAD_STATUS_LIST 0 ENS_DOWNLOAD_STATUS)
     if (ENS_DOWNLOAD_STATUS EQUAL 0)
       execute_process(COMMAND ${CMAKE_COMMAND} -E
-          tar xzf "${CMAKE_BINARY_DIR}/deps/ensmallen-latest.tar.gz"
+          tar xzf "${CMAKE_BINARY_DIR}/deps/ensmallen-2.10.3.tar.gz"
           WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/deps/")
 
       # Get the name of the directory.
