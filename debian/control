@@ -13,6 +13,7 @@ Build-Depends: cmake, debhelper-compat (= 12),
 		libxml2-dev,
 		libarmadillo-dev,
 		libensmallen-dev,
+		libstb-dev,
 		txt2man,
 		doxygen, doxygen-latex, graphviz, latexmk
 Standards-Version: 4.4.1
