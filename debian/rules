@@ -73,18 +73,13 @@ override_dh_installdocs:
 override_dh_installexamples:
 	dh_installexamples -pmlpack-doc --doc-main-package libmlpack-dev
 	dh_installexamples -Nmlpack-doc
-	@echo Search and destroy stray VCS support file
-	find debian/mlpack-doc -name .gitignore -ls -delete || true
+	@echo Search and destroy stray VCS support files
+	-find debian/mlpack-doc -name .gitignore -ls -delete || true
+	@echo Remove empty directory
+	-rmdir debian/mlpack-doc/usr/share/doc/libmlpack-dev/examples/sample-ml-app/sample-ml-app/data/
 
 override_dh_installchangelogs:
 	dh_installchangelogs HISTORY.md
-
-override_dh_installexamples:
-	dh_installexamples
-	@echo Remove empty directory
-	-rmdir debian/mlpack-doc/usr/share/doc/libmlpack-dev/examples/sample-ml-app/sample-ml-app/data/
-	@echo Remove stray VCS file
-	-find debian/mlpack-doc -name .gitignore -print -delete
 
 override_dh_compress:
 	dh_compress -Xrefman.pdf -Xdoc/html/
