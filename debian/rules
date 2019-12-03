@@ -43,7 +43,7 @@ endif
 DH_FLAGS += --max-parallel=1
 
 %:
-	dh $@ ${DH_FLAGS}
+	dh $@ --with python2 ${DH_FLAGS}
 
 override_dh_auto_configure:
 	dh_auto_configure -- -DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH) \
@@ -60,12 +60,19 @@ override_dh_auto_build:
 override_dh_auto_test:
 	@echo do not ask do not tell do not test
 
+override_dh_python2:
+	dh_numpy
+	dh_python2
+
 override_dh_install:
 	dh_install
 	@echo use shared jquery.js javascript library
 	for f in $$(find debian/mlpack-doc -name jquery.js); do \
 	  ln --verbose --symbolic --force /usr/share/javascript/jquery/jquery.js $$f; \
 	done
+	@echo remove byte-compiled python files per policy
+	-find debian/python-mlpack  -name '*.pyc' -ls -delete || true
+	-find debian/python3-mlpack -name '*.pyc' -ls -delete || true
 
 override_dh_installdocs:
 	dh_installdocs -pmlpack-doc --doc-main-package libmlpack-dev

@@ -14,6 +14,7 @@ Build-Depends: cmake, debhelper-compat (= 12),
 		libarmadillo-dev (>= 1:8.400.0),
 		libensmallen-dev (>= 2.10.0),
 		libstb-dev,
+		python-pandas, python-numpy, cython, python-setuptools,
 		txt2man,
 		doxygen, doxygen-latex, graphviz, latexmk
 Standards-Version: 4.4.1
@@ -47,6 +48,19 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: intuitive, fast, scalable C++ machine learning library (runtime library)
  This package contains the mlpack Library runtime files.
+ .
+ Machine Learning Pack (mlpack) is an intuitive, fast, scalable C++
+ machine learning library, meant to be a machine learning analog to
+ LAPACK.  It aims to implement a wide array of machine learning
+ methods and function as a "swiss army knife" for machine learning
+ researchers.
+
+Package: python-mlpack
+Architecture: any
+Section: python
+Depends: libmlpack3 (= ${binary:Version}), ${python:Depends}, ${misc:Depends}, ${shlibs:Depends}
+Description: intuitive, fast, scalable C++ machine learning library (Python bindings)
+ This package contains Python bindings for the mlpack Library.
  .
  Machine Learning Pack (mlpack) is an intuitive, fast, scalable C++
  machine learning library, meant to be a machine learning analog to
