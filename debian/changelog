@@ -1,8 +1,11 @@
-mlpack (3.2.1-2) unstable; urgency=medium
+mlpack (3.2.2-1) unstable; urgency=medium
 
   * build dependency on libstb-dev (closes: #942393)
+  * new upstream version
+  * version some build dependencies
+  * disable built-time downloading for ensmallen and libstb
 
- -- Barak A. Pearlmutter <bap@debian.org>  Tue, 03 Dec 2019 13:09:48 +0000
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 03 Dec 2019 14:03:43 +0000
 
 mlpack (3.2.1-1) unstable; urgency=medium
 
