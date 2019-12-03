@@ -1,3 +1,16 @@
+mlpack (3.2.2-2) unstable; urgency=medium
+
+  * repair incorrectly-bifurcated dh_installexamples override
+  * install html-associated documentation formula.repository
+  * no need for root while building
+  * set STB_IMAGE_INCLUDE_DIR to make sure cmake finds stb include files
+  * generate Python2 bindings package
+    - various build dependencies
+    - debian/rules support for dh_python2 and dh_numpy
+    - install Python module per policy
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 04 Dec 2019 16:49:32 +0000
+
 mlpack (3.2.2-1) unstable; urgency=medium
 
   * build dependency on libstb-dev (closes: #942393)
