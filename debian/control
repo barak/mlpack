@@ -5,14 +5,14 @@ Maintainer: Debian Science Maintainers <debian-science-maintainers@lists.alioth.
 Uploaders: Barak A. Pearlmutter <bap@debian.org>
 Build-Depends: cmake, debhelper-compat (= 12),
 		pkg-config,
-		libboost-math-dev,
+		libboost-math-dev (>= 1.49),
 		libboost-program-options-dev,
 		libboost-random-dev,
 		libboost-test-dev,
 		libboost-serialization-dev,
 		libxml2-dev,
-		libarmadillo-dev,
-		libensmallen-dev,
+		libarmadillo-dev (>= 1:8.400.0),
+		libensmallen-dev (>= 2.10.0),
 		libstb-dev,
 		txt2man,
 		doxygen, doxygen-latex, graphviz, latexmk
