@@ -59,7 +59,8 @@ Description: intuitive, fast, scalable C++ machine learning library (runtime lib
 Package: python-mlpack
 Architecture: any
 Section: python
-Depends: libmlpack3 (= ${binary:Version}), ${python:Depends}, ${misc:Depends}, ${shlibs:Depends}
+Depends: libmlpack3 (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends},
+	 ${python:Provides}, ${python:Depends},
 Description: intuitive, fast, scalable C++ machine learning library (Python bindings)
  This package contains Python bindings for the mlpack Library.
  .
