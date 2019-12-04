@@ -11,10 +11,10 @@ to the debian/rules override_dh_auto_build target.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 472077e..e2ebbea 100644
+index 26757a5..922f141 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -625,7 +625,7 @@ if (DOXYGEN_FOUND)
+@@ -666,7 +666,7 @@ if (DOXYGEN_FOUND)
    )
  
    # Generate documentation.

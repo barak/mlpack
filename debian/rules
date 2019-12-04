@@ -43,14 +43,15 @@ endif
 DH_FLAGS += --max-parallel=1
 
 %:
-	dh $@ --with python2 ${DH_FLAGS}
+	dh $@ --without python2 --with python3 --buildsystem=cmake ${DH_FLAGS}
 
 override_dh_auto_configure:
 	dh_auto_configure -- -DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH) \
 		-DDISABLE_DOWNLOADS=ON \
 		-DDOWNLOAD_ENSMALLEN=OFF \
 		-DDOWNLOAD_STB_IMAGE=OFF \
-		-DSTB_IMAGE_INCLUDE_DIR=/usr/include/stb
+		-DSTB_IMAGE_INCLUDE_DIR=/usr/include/stb \
+		-DPYTHON_EXECUTABLE=/usr/bin/python3
 
 override_dh_auto_build:
 	dh_auto_build
@@ -61,9 +62,9 @@ override_dh_auto_build:
 override_dh_auto_test:
 	@echo do not ask do not tell do not test
 
-override_dh_python2:
-	dh_numpy
-	dh_python2
+override_dh_python3:
+	dh_numpy3
+	dh_python3
 
 override_dh_install:
 	dh_install

@@ -15,7 +15,7 @@ Build-Depends: cmake, debhelper-compat (= 12),
 		libensmallen-dev (>= 2.10.0),
 		libstb-dev,
 		dh-python,
-		python-pandas, python-numpy, cython, python-setuptools,
+		python3-pandas, python3-numpy, cython3, python3-setuptools,
 		txt2man,
 		doxygen, doxygen-latex, graphviz, latexmk
 Standards-Version: 4.4.1
@@ -56,11 +56,11 @@ Description: intuitive, fast, scalable C++ machine learning library (runtime lib
  methods and function as a "swiss army knife" for machine learning
  researchers.
 
-Package: python-mlpack
+Package: python3-mlpack
 Architecture: any
 Section: python
 Depends: libmlpack3 (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends},
-	 ${python:Provides}, ${python:Depends},
+	 ${python3:Provides}, ${python3:Depends},
 Description: intuitive, fast, scalable C++ machine learning library (Python bindings)
  This package contains Python bindings for the mlpack Library.
  .
