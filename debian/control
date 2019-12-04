@@ -14,6 +14,7 @@ Build-Depends: cmake, debhelper-compat (= 12),
 		libarmadillo-dev (>= 1:8.400.0),
 		libensmallen-dev (>= 2.10.0),
 		libstb-dev,
+		dh-python,
 		python-pandas, python-numpy, cython, python-setuptools,
 		txt2man,
 		doxygen, doxygen-latex, graphviz, latexmk
