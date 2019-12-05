@@ -47,6 +47,7 @@ DH_FLAGS += --max-parallel=1
 
 override_dh_auto_configure:
 	dh_auto_configure -- -DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH) \
+		-DDISABLE_DOWNLOADS=ON \
 		-DDOWNLOAD_ENSMALLEN=OFF \
 		-DDOWNLOAD_STB_IMAGE=OFF \
 		-DSTB_IMAGE_INCLUDE_DIR=/usr/include/stb
