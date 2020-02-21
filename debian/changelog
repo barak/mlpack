@@ -1,3 +1,14 @@
+mlpack (3.2.2-3) unstable; urgency=medium
+
+  [ Matthias Klose ]
+  * Don't hard-code Python 3.7 files.
+  * python3-mlpack: Remove python3:Provides from dependencies.
+
+  [ Barak A. Pearlmutter ]
+  * Merge useful Ubuntu patches (thanks Matthias!)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Fri, 21 Feb 2020 15:30:39 +0000
+
 mlpack (3.2.2-2) unstable; urgency=medium
 
   * repair incorrectly-bifurcated dh_installexamples override
