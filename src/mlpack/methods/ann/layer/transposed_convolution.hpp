@@ -63,29 +63,73 @@ class TransposedConvolution
    *
    * @param inSize The number of input maps.
    * @param outSize The number of output maps.
-   * @param kW Width of the filter/kernel.
-   * @param kH Height of the filter/kernel.
-   * @param dW Stride of filter application in the x direction.
-   * @param dH Stride of filter application in the y direction.
+   * @param kernelWidth Width of the filter/kernel.
+   * @param kernelHeight Height of the filter/kernel.
+   * @param strideWidth Stride of filter application in the x direction.
+   * @param strideHeight Stride of filter application in the y direction.
    * @param padW Padding width of the input.
    * @param padH Padding height of the input.
    * @param inputWidth The width of the input data.
    * @param inputHeight The height of the input data.
    * @param outputWidth The width of the output data.
    * @param outputHeight The height of the output data.
+   * @param paddingType The type of padding (Valid or Same). Defaults to None.
    */
   TransposedConvolution(const size_t inSize,
                         const size_t outSize,
-                        const size_t kW,
-                        const size_t kH,
-                        const size_t dW = 1,
-                        const size_t dH = 1,
+                        const size_t kernelWidth,
+                        const size_t kernelHeight,
+                        const size_t strideWidth = 1,
+                        const size_t strideHeight = 1,
                         const size_t padW = 0,
                         const size_t padH = 0,
                         const size_t inputWidth = 0,
                         const size_t inputHeight = 0,
                         const size_t outputWidth = 0,
-                        const size_t outputHeight = 0);
+                        const size_t outputHeight = 0,
+                        const std::string& paddingType = "None");
+
+  /**
+   * Create the Transposed Convolution object using the specified number of
+   * input maps, output maps, filter size, stride and padding parameter.
+   *
+   * Note: The equivalent stride of a transposed convolution operation is always
+   * equal to 1. In this implementation, stride of filter represents the stride
+   * of the associated convolution operation.
+   * Note: Padding of input represents padding of associated convolution
+   * operation.
+   *
+   * @param inSize The number of input maps.
+   * @param outSize The number of output maps.
+   * @param kernelWidth Width of the filter/kernel.
+   * @param kernelHeight Height of the filter/kernel.
+   * @param strideWidth Stride of filter application in the x direction.
+   * @param strideHeight Stride of filter application in the y direction.
+   * @param padW A two-value tuple indicating padding widths of the input.
+   *             First value is padding at left side. Second value is padding on
+   *             right side.
+   * @param padH A two-value tuple indicating padding heights of the input.
+   *             First value is padding at top. Second value is padding on
+   *             bottom.
+   * @param inputWidth The width of the input data.
+   * @param inputHeight The height of the input data.
+   * @param outputWidth The width of the output data.
+   * @param outputHeight The height of the output data.
+   * @param paddingType The type of padding (Valid or Same). Defaults to None.
+   */
+  TransposedConvolution(const size_t inSize,
+                        const size_t outSize,
+                        const size_t kernelWidth,
+                        const size_t kernelHeight,
+                        const size_t strideWidth,
+                        const size_t strideHeight,
+                        const std::tuple<size_t, size_t>& padW,
+                        const std::tuple<size_t, size_t>& padH,
+                        const size_t inputWidth = 0,
+                        const size_t inputHeight = 0,
+                        const size_t outputWidth = 0,
+                        const size_t outputHeight = 0,
+                        const std::string& paddingType = "None");
 
   /*
    * Set the weight and bias term.
@@ -100,7 +144,7 @@ class TransposedConvolution
    * @param output Resulting output activation.
    */
   template<typename eT>
-  void Forward(const arma::Mat<eT>&& input, arma::Mat<eT>&& output);
+  void Forward(const arma::Mat<eT>& input, arma::Mat<eT>& output);
 
   /**
    * Ordinary feed backward pass of a neural network, calculating the function
@@ -112,9 +156,9 @@ class TransposedConvolution
    * @param g The calculated gradient.
    */
   template<typename eT>
-  void Backward(const arma::Mat<eT>&& /* input */,
-                arma::Mat<eT>&& gy,
-                arma::Mat<eT>&& g);
+  void Backward(const arma::Mat<eT>& /* input */,
+                const arma::Mat<eT>& gy,
+                arma::Mat<eT>& g);
 
   /*
    * Calculate the gradient using the output delta and the input activation.
@@ -124,9 +168,9 @@ class TransposedConvolution
    * @param gradient The calculated gradient.
    */
   template<typename eT>
-  void Gradient(const arma::Mat<eT>&& /* input */,
-                arma::Mat<eT>&& error,
-                arma::Mat<eT>&& gradient);
+  void Gradient(const arma::Mat<eT>& /* input */,
+                const arma::Mat<eT>& error,
+                arma::Mat<eT>& gradient);
 
   //! Get the parameters.
   OutputDataType const& Parameters() const { return weights; }
@@ -173,11 +217,57 @@ class TransposedConvolution
   //! Modify the output height.
   size_t& OutputHeight() { return outputHeight; }
 
+  //! Get the input size.
+  size_t InputSize() const { return inSize; }
+
+  //! Get the output size.
+  size_t OutputSize() const { return outSize; }
+
+  //! Get the kernel width.
+  size_t KernelWidth() const { return kernelWidth; }
+  //! Modify the kernel width.
+  size_t& KernelWidth() { return kernelWidth; }
+
+  //! Get the kernel height.
+  size_t KernelHeight() const { return kernelHeight; }
+  //! Modify the kernel height.
+  size_t& KernelHeight() { return kernelHeight; }
+
+  //! Get the stride width.
+  size_t StrideWidth() const { return strideWidth; }
+  //! Modify the stride width.
+  size_t& StrideWidth() { return strideWidth; }
+
+  //! Get the stride height.
+  size_t StrideHeight() const { return strideHeight; }
+  //! Modify the stride height.
+  size_t& StrideHeight() { return strideHeight; }
+
+  //! Get the top padding height.
+  size_t PadHTop() const { return padHTop; }
+  //! Modify the top padding height.
+  size_t& PadHTop() { return padHTop; }
+
+  //! Get the bottom padding height.
+  size_t PadHBottom() const { return padHBottom; }
+  //! Modify the bottom padding height.
+  size_t& PadHBottom() { return padHBottom; }
+
+  //! Get the left padding width.
+  size_t PadWLeft() const { return padWLeft; }
+  //! Modify the left padding width.
+  size_t& PadWLeft() { return padWLeft; }
+
+  //! Get the right padding width.
+  size_t PadWRight() const { return padWRight; }
+  //! Modify the right padding width.
+  size_t& PadWRight() { return padWRight; }
+
   //! Modify the bias weights of the layer.
   arma::mat& Bias() { return bias; }
 
   /**
-   * Serialize the layer
+   * Serialize the layer.
    */
   template<typename Archive>
   void serialize(Archive& ar, const unsigned int /* version */);
@@ -200,6 +290,11 @@ class TransposedConvolution
   }
 
   /*
+   * Function to assign padding such that output size is same as input size.
+   */
+  void InitializeSamePadding();
+
+  /*
    * Rotates a dense matrix counterclockwise by 180 degrees.
    *
    * @param input The input data to be rotated.
@@ -212,116 +307,62 @@ class TransposedConvolution
     output = arma::fliplr(arma::flipud(input));
   }
 
-  /*
-   * Pad the given input data.
-   *
-   * @param input The input to be padded.
-   * @param wPad Padding width of the input.
-   * @param hPad Padding height of the input.
-   * @param wExtra The number of extra zeros to the right.
-   * @param hExtra The number of extra zeros to the bottom.
-   * @param output The padded output data.
-   */
-  template<typename eT>
-  void Pad(const arma::Mat<eT>& input,
-           const size_t wPad,
-           const size_t hPad,
-           const size_t wExtra,
-           const size_t hExtra,
-           arma::Mat<eT>& output)
-  {
-    if (output.n_rows != input.n_rows + wPad * 2 + wExtra ||
-        output.n_cols != input.n_cols + hPad * 2 + hExtra)
-    {
-      output = arma::zeros(input.n_rows + wPad * 2 + wExtra,
-          input.n_cols + hPad * 2 + hExtra);
-    }
-
-    output.submat(wPad, hPad, wPad + input.n_rows - 1,
-        hPad + input.n_cols - 1) = input;
-  }
-
-  /*
-   * Pad the given input data.
-   *
-   * @param input The input to be padded.
-   * @param wPad Padding width of the input.
-   * @param hPad Padding height of the input.
-   * @param wExtra The number of extra zeros to the right.
-   * @param hExtra The number of extra zeros to the bottom.
-   * @param output The padded output data.
-   */
-  template<typename eT>
-  void Pad(const arma::Cube<eT>& input,
-           const size_t wPad,
-           const size_t hPad,
-           const size_t wExtra,
-           const size_t hExtra,
-           arma::Cube<eT>& output)
-  {
-    output = arma::zeros(input.n_rows + wPad * 2 + wExtra,
-        input.n_cols + hPad * 2 + hExtra, input.n_slices);
-
-    for (size_t i = 0; i < input.n_slices; ++i)
-    {
-      Pad<eT>(input.slice(i), wPad, hPad, wExtra, hExtra, output.slice(i));
-    }
-  }
 
   /*
    * Insert zeros between the units of the given input data.
-   * Note: This function should be used before the Pad() function.
+   * Note: This function should be used before using padding layer.
    *
    * @param input The input to be padded.
-   * @param dW Stride of filter application in the x direction.
-   * @param dH Stride of filter application in the y direction.
+   * @param strideWidth Stride of filter application in the x direction.
+   * @param strideHeight Stride of filter application in the y direction.
    * @param output The padded output data.
    */
   template<typename eT>
   void InsertZeros(const arma::Mat<eT>& input,
-                   const size_t dW,
-                   const size_t dH,
+                   const size_t strideWidth,
+                   const size_t strideHeight,
                    arma::Mat<eT>& output)
   {
-    if (output.n_rows != input.n_rows * dW - dW + 1 ||
-        output.n_cols != input.n_cols * dH - dH + 1)
+    if (output.n_rows != input.n_rows * strideWidth - strideWidth + 1 ||
+        output.n_cols != input.n_cols * strideHeight - strideHeight + 1)
     {
-      output = arma::zeros(input.n_rows * dW - dW + 1,
-          input.n_cols * dH - dH + 1);
+      output = arma::zeros(input.n_rows * strideWidth - strideWidth + 1,
+          input.n_cols * strideHeight - strideHeight + 1);
     }
 
-    for (size_t i = 0; i < output.n_rows; i += dH)
+    for (size_t i = 0; i < output.n_rows; i += strideHeight)
     {
-      for (size_t j = 0; j < output.n_cols; j += dW)
+      for (size_t j = 0; j < output.n_cols; j += strideWidth)
       {
         // TODO: Use [] instead of () for speedup after this is completely
         // debugged and approved.
-        output(i, j) = input(i / dH, j / dW);
+        output(i, j) = input(i / strideHeight, j / strideWidth);
       }
     }
   }
 
   /*
    * Insert zeros between the units of the given input data.
-   * Note: This function should be used before the Pad() function.
+   * Note: This function should be used before using padding layer.
    *
    * @param input The input to be padded.
-   * @param dW Stride of filter application in the x direction.
-   * @param dH Stride of filter application in the y direction.
+   * @param strideWidth Stride of filter application in the x direction.
+   * @param strideHeight Stride of filter application in the y direction.
    * @param output The padded output data.
    */
   template<typename eT>
   void InsertZeros(const arma::Cube<eT>& input,
-                   const size_t dW,
-                   const size_t dH,
+                   const size_t strideWidth,
+                   const size_t strideHeight,
                    arma::Cube<eT>& output)
   {
-    output = arma::zeros(input.n_rows * dW - dW + 1,
-        input.n_cols * dH - dH + 1, input.n_slices);
+    output = arma::zeros(input.n_rows * strideWidth - strideWidth + 1,
+        input.n_cols * strideHeight - strideHeight + 1, input.n_slices);
 
     for (size_t i = 0; i < input.n_slices; ++i)
     {
-      InsertZeros<eT>(input.slice(i), dW, dH, output.slice(i));
+      InsertZeros<eT>(input.slice(i), strideWidth, strideHeight,
+          output.slice(i));
     }
   }
 
@@ -335,27 +376,33 @@ class TransposedConvolution
   size_t batchSize;
 
   //! Locally-stored filter/kernel width.
-  size_t kW;
+  size_t kernelWidth;
 
   //! Locally-stored filter/kernel height.
-  size_t kH;
+  size_t kernelHeight;
 
   //! Locally-stored stride of the filter in x-direction.
-  size_t dW;
+  size_t strideWidth;
 
   //! Locally-stored stride of the filter in y-direction.
-  size_t dH;
+  size_t strideHeight;
 
-  //! Locally-stored padding width.
-  size_t padW;
+  //! Locally-stored left-side padding width.
+  size_t padWLeft;
 
-  //! Locally-stored padding height.
-  size_t padH;
+  //! Locally-stored right-side padding width.
+  size_t padWRight;
+
+  //! Locally-stored bottom padding height.
+  size_t padHBottom;
+
+  //! Locally-stored top padding height.
+  size_t padHTop;
 
   //! Locally-stored number of zeros added to the right of input.
   size_t aW;
 
-  //! Locally-stored number of zeros added to the top of input.
+  //! Locally-stored number of zeros added to the bottom of input.
   size_t aH;
 
   //! Locally-stored weight object.
@@ -382,9 +429,6 @@ class TransposedConvolution
   //! Locally-stored transformed output parameter.
   arma::cube outputTemp;
 
-  //! Locally-stored transformed input parameter.
-  arma::cube inputTemp;
-
   //! Locally-stored transformed padded input parameter.
   arma::cube inputPaddedTemp;
 
@@ -397,8 +441,11 @@ class TransposedConvolution
   //! Locally-stored transformed gradient parameter.
   arma::cube gradientTemp;
 
-  //! Locally-stored padding layer.
-  Padding<>* padding;
+  //! Locally-stored padding layer for forward propagation.
+  ann::Padding<> paddingForward;
+
+  //! Locally-stored padding layer for back propagation.
+  ann::Padding<> paddingBackward;
 
   //! Locally-stored delta object.
   OutputDataType delta;
@@ -415,6 +462,28 @@ class TransposedConvolution
 
 } // namespace ann
 } // namespace mlpack
+
+//! Set the serialization version of the Transposed Convolution class.
+namespace boost {
+namespace serialization {
+
+template<
+    typename ForwardConvolutionRule,
+    typename BackwardConvolutionRule,
+    typename GradientConvolutionRule,
+    typename InputDataType,
+    typename OutputDataType
+>
+struct version<
+    mlpack::ann::TransposedConvolution<ForwardConvolutionRule,
+        BackwardConvolutionRule, GradientConvolutionRule, InputDataType,
+        OutputDataType> >
+{
+  BOOST_STATIC_CONSTANT(int, value = 1);
+};
+
+} // namespace serialization
+} // namespace boost
 
 // Include implementation.
 #include "transposed_convolution_impl.hpp"

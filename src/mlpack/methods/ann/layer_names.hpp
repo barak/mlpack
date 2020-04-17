@@ -30,7 +30,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
   {
   }
 
-  /*
+  /**
    * Return the name of the given layer of type AtrousConvolution as a string.
    * 
    * @param Given layer of type AtrousConvolution.
@@ -41,7 +41,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "atrousconvolution";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type AlphaDropout as a string.
    * 
    * @param Given layer of type AlphaDropout.
@@ -52,7 +52,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "alphadropout";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type BatchNorm as a string.
    * 
    * @param Given layer of type BatchNorm.
@@ -63,7 +63,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "batchnorm";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type Constant as a string.
    * 
    * @param Given layer of type Constant.
@@ -74,7 +74,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "constant";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type Convolution as a string.
    * 
    * @param Given layer of type Convolution.
@@ -85,7 +85,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "convolution";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type DropConnect as a string.
    * 
    * @param Given layer of type DropConnect.
@@ -96,7 +96,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "dropconnect";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type Dropout as a string.
    * 
    * @param Given layer of type Dropout.
@@ -107,7 +107,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "dropout";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type FlexibleReLU as a string.
    * 
    * @param Given layer of type FlexibleReLU.
@@ -118,7 +118,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "flexiblerelu";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type LayerNorm as a string.
    * 
    * @param Given layer of type LayerNorm.
@@ -129,7 +129,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "layernorm";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type Linear as a string.
    * 
    * @param Given layer of type Linear.
@@ -140,7 +140,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "linear";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type LinearNoBias as a string.
    * 
    * @param Given layer of type LinearNoBias.
@@ -151,7 +151,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "linearnobias";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type MaxPooling as a string.
    * 
    * @param Given layer of type MaxPooling.
@@ -162,7 +162,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "maxpooling";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type MeanPooling as a string.
    * 
    * @param Given layer of type MeanPooling.
@@ -173,7 +173,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "meanpooling";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type MultiplyConstant as a string.
    * 
    * @param Given layer of type MultiplyConstant.
@@ -184,7 +184,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "multiplyconstant";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type ReLULayer as a string.
    * 
    * @param Given layer of type ReLULayer.
@@ -195,7 +195,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "relu";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type TransposedConvolution as a
    * string.
    * 
@@ -207,7 +207,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "transposedconvolution";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type IdentityLayer as a string.
    * 
    * @param Given layer of type IdentityLayer.
@@ -218,7 +218,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "identity";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type TanHLayer as a string.
    * 
    * @param Given layer of type TanHLayer.
@@ -229,7 +229,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "tanh";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type ELU as a string.
    * 
    * @param Given layer of type ELU.
@@ -240,7 +240,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "elu";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type HardTanH as a string.
    * 
    * @param Given layer of type HardTanH.
@@ -251,7 +251,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "hardtanh";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type LeakyReLU as a string.
    * 
    * @param Given layer of type LeakyReLU.
@@ -262,7 +262,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "leakyrelu";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type PReLU as a string.
    * 
    * @param Given layer of type PReLU.
@@ -273,7 +273,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "prelu";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type SigmoidLayer as a string.
    * 
    * @param Given layer of type SigmoidLayer.
@@ -284,7 +284,7 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
     return "sigmoid";
   }
 
-  /*
+  /**
    * Return the name of the given layer of type LogSoftMax as a string.
    * 
    * @param Given layer of type LogSoftMax.
@@ -296,6 +296,83 @@ class LayerNameVisitor : public boost::static_visitor<std::string>
   }
 
   /*
+   * Return the name of the given layer of type LSTM as a string.
+   * 
+   * @param Given layer of type LSTM.
+   * @return The string representation of the layer.
+   */
+  std::string LayerString(LSTM<>* /*layer*/) const
+  {
+    return "lstm";
+  }
+
+  /**
+   * Return the name of the given layer of type CReLU as a string.
+   * 
+   * @param Given layer of type CReLU.
+   * @return The string representation of the layer.
+   */
+  std::string LayerString(CReLU<>* /*layer*/) const
+  {
+    return "crelu";
+  }
+
+  /**
+   * Return the name of the given layer of type Highway as a string.
+   * 
+   * @param Given layer of type Highway.
+   * @return The string representation of the layer.
+   */
+  std::string LayerString(Highway<>* /*layer*/) const
+  {
+    return "highway";
+  }
+
+  /**
+   * Return the name of the given layer of type GRU as a string.
+   * 
+   * @param Given layer of type GRU.
+   * @return The string representation of the layer.
+   */
+  std::string LayerString(GRU<>* /*layer*/) const
+  {
+    return "gru";
+  }
+
+  /**
+   * Return the name of the given layer of type Glimpse as a string.
+   * 
+   * @param Given layer of type Glimpse.
+   * @return The string representation of the layer.
+   */
+  std::string LayerString(Glimpse<>* /*layer*/) const
+  {
+    return "glimpse";
+  }
+
+  /**
+   * Return the name of the given layer of type FastLSTM as a string.
+   * 
+   * @param Given layer of type FastLSTM.
+   * @return The string representation of the layer.
+   */
+  std::string LayerString(FastLSTM<>* /*layer*/) const
+  {
+    return "fastlstm";
+  }
+
+  /**
+   * Return the name of the given layer of type WeightNorm as a string.
+   * 
+   * @param Given layer of type WeightNorm.
+   * @return The string representation of the layer.
+   */
+  std::string LayerString(WeightNorm<>* /*layer*/) const
+  {
+    return "weightnorm";
+  }
+
+  /**
    * Return the name of the layer of specified type as a string.
    * 
    * @param Given layer of any type.
