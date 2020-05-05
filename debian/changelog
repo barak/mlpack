@@ -1,8 +1,9 @@
 mlpack (3.3.1-1) unstable; urgency=medium
 
   * New upstream release
+  * Bump to debhelper 13
 
- -- Barak A. Pearlmutter <bap@debian.org>  Tue, 05 May 2020 10:34:37 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 05 May 2020 10:39:18 +0100
 
 mlpack (3.3.0-1) unstable; urgency=medium
 

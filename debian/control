@@ -3,7 +3,7 @@ Section: libs
 Priority: optional
 Maintainer: Debian Science Maintainers <debian-science-maintainers@lists.alioth.debian.org>
 Uploaders: Barak A. Pearlmutter <bap@debian.org>
-Build-Depends: cmake, debhelper-compat (= 12),
+Build-Depends: cmake, debhelper-compat (= 13),
 		pkg-config,
 		libboost-math-dev (>= 1.49),
 		libboost-program-options-dev,
