@@ -53,26 +53,23 @@ override_dh_auto_configure:
 		-DSTB_IMAGE_INCLUDE_DIR=/usr/include/stb \
 		-DPYTHON_EXECUTABLE=/usr/bin/python3
 
-override_dh_auto_build:
-	dh_auto_build
-	@echo building PDF reference manual
+execute_after_dh_auto_build:
+	@echo "building PDF reference manual"
 	cd obj-*/doc/latex && \
 	 latexmk --pdf refman.tex
 
 override_dh_auto_test:
-	@echo do not ask do not tell do not test
+	@echo "do not ask do not tell do not test"
 
-override_dh_python3:
+execute_before_dh_python3:
 	dh_numpy3
-	dh_python3
 
-override_dh_install:
-	dh_install
-	@echo use shared jquery.js javascript library
+execute_after_dh_install:
+	@echo "use shared jquery.js javascript library"
 	for f in $$(find debian/mlpack-doc -name jquery.js); do \
 	  ln --verbose --symbolic --force /usr/share/javascript/jquery/jquery.js $$f; \
 	done
-	@echo remove byte-compiled python files per policy
+	@echo "remove byte-compiled python files per policy"
 	-find debian/python-mlpack  -name '*.pyc' -ls -delete || true
 	-find debian/python3-mlpack -name '*.pyc' -ls -delete || true
 
@@ -83,9 +80,11 @@ override_dh_installdocs:
 override_dh_installexamples:
 	dh_installexamples -pmlpack-doc --doc-main-package libmlpack-dev
 	dh_installexamples -Nmlpack-doc
-	@echo Search and destroy stray VCS support files
+
+execute_after_dh_installexamples:
+	@echo "Search and destroy stray VCS support files"
 	-find debian/mlpack-doc -name .gitignore -ls -delete || true
-	@echo Remove empty directory
+	@echo "Remove empty directory"
 	-rmdir debian/mlpack-doc/usr/share/doc/libmlpack-dev/examples/sample-ml-app/sample-ml-app/data/
 
 override_dh_installchangelogs:
