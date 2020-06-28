@@ -1,5 +1,5 @@
 /**
- * @file lars.cpp
+ * @file methods/lars/lars.cpp
  * @author Nishant Mehta (niche)
  *
  * Implementation of LARS and LASSO.
@@ -77,8 +77,8 @@ LARS::LARS(const LARS& other) :
     useCholesky(other.useCholesky),
     lasso(other.lasso),
     lambda1(other.lambda1),
-    lambda2(other.lambda2),
     elasticNet(other.elasticNet),
+    lambda2(other.lambda2),
     tolerance(other.tolerance),
     betaPath(other.betaPath),
     lambdaPath(other.lambdaPath),
@@ -99,8 +99,8 @@ LARS::LARS(LARS&& other) :
     useCholesky(other.useCholesky),
     lasso(other.lasso),
     lambda1(other.lambda1),
-    lambda2(other.lambda2),
     elasticNet(other.elasticNet),
+    lambda2(other.lambda2),
     tolerance(other.tolerance),
     betaPath(std::move(other.betaPath)),
     lambdaPath(std::move(other.lambdaPath)),
@@ -125,8 +125,8 @@ LARS& LARS::operator=(const LARS& other)
   useCholesky = other.useCholesky;
   lasso = other.lasso;
   lambda1 = other.lambda1;
-  lambda2 = other.lambda2;
   elasticNet = other.elasticNet;
+  lambda2 = other.lambda2;
   tolerance = other.tolerance;
   betaPath = other.betaPath;
   lambdaPath = other.lambdaPath;
@@ -150,8 +150,8 @@ LARS& LARS::operator=(LARS&& other)
   useCholesky = other.useCholesky;
   lasso = other.lasso;
   lambda1 = other.lambda1;
-  lambda2 = other.lambda2;
   elasticNet = other.elasticNet;
+  lambda2 = other.lambda2;
   tolerance = other.tolerance;
   betaPath = std::move(other.betaPath);
   lambdaPath = std::move(other.lambdaPath);
