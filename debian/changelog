@@ -1,3 +1,14 @@
+mlpack (3.3.2-2) unstable; urgency=medium
+
+  * include cmake support files in development package
+  * update configuration options, including enabling building of tests
+  * enable Julia bindings
+  * avoid compile-time resource exhaustion by using CLANG instead of GCC
+  * quilt patch for build-killing LaTeX markup typo
+  * install stray html support file
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 01 Jul 2020 22:41:32 +0100
+
 mlpack (3.3.2-1) unstable; urgency=medium
 
   * New upstream release
