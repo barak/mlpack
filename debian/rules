@@ -47,11 +47,17 @@ DH_FLAGS += --max-parallel=1
 
 override_dh_auto_configure:
 	dh_auto_configure -- -DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH) \
+		-DDEBUG=ON \
+		-DPROFILE=OFF \
+		-DARMA_EXTRA_DEBUG=OFF \
+		-DBUILD_CLI_EXECUTABLES=ON \
+		-DBUILD_PYTHON_BINDINGS=ON \
+		-DPYTHON_EXECUTABLE=/usr/bin/python3 \
+		-DBUILD_TESTS=ON \
+		-DBUILD_SHARED_LIBS=ON \
 		-DDISABLE_DOWNLOADS=ON \
-		-DDOWNLOAD_ENSMALLEN=OFF \
-		-DDOWNLOAD_STB_IMAGE=OFF \
 		-DSTB_IMAGE_INCLUDE_DIR=/usr/include/stb \
-		-DPYTHON_EXECUTABLE=/usr/bin/python3
+		-DUSE_OPENMP=ON
 
 execute_after_dh_auto_build:
 	@echo "building PDF reference manual"
