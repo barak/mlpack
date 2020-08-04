@@ -7,8 +7,9 @@ mlpack (3.3.2-2) unstable; urgency=medium
     (closes: #962533)
   * quilt patch for build-killing LaTeX markup typo
   * install stray html support file
+  * Now formula.repository is gone, huh
 
- -- Barak A. Pearlmutter <bap@debian.org>  Tue, 04 Aug 2020 10:53:07 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 04 Aug 2020 13:39:14 +0100
 
 mlpack (3.3.2-1) unstable; urgency=medium
 
