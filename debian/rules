@@ -12,8 +12,6 @@ export LIBS="pthread"
 ## reduce abrupt memory spikes, and g++ -g0 to skip debugging info.
 ## (c) switch to clang.
 
-DH_FLAGS += --max-parallel=1
-
 # Force Compiler
 export CC=clang
 export CXX=clang++
