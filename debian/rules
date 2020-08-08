@@ -16,7 +16,7 @@ export LIBS="pthread"
 # conserve memory. The build dependencies try to install CLANG, but
 # give a dummy alternative so the build can proceed even if it is
 # unavailable.
-ifeq ($(shell type -t clang||true),file)
+ifeq ($(shell type clang > /dev/null && echo found),found)
 export CC=clang
 export CXX=clang++
 else
@@ -54,7 +54,7 @@ endif
 endif
 
 # Julia is an optional build dependency, listed with a dummy alternative.
-ifeq ($(shell type -t julia||true),file)
+ifeq ($(shell type julia > /dev/null && echo found),found)
 DO_IT_TO_JULIA=ON
 else
 DO_IT_TO_JULIA=OFF

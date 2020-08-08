@@ -1,3 +1,9 @@
+mlpack (3.3.2-4) unstable; urgency=medium
+
+  * fix broken debian/rules executable search non-POSIX logic
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Sat, 08 Aug 2020 22:13:47 +0100
+
 mlpack (3.3.2-3) unstable; urgency=medium
 
   * hotwire debian/rules to check for clang and use it iff found
