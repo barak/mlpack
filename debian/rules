@@ -12,9 +12,53 @@ export LIBS="pthread"
 ## reduce abrupt memory spikes, and g++ -g0 to skip debugging info.
 ## (c) switch to clang.
 
-# Force Compiler
+# Force Compiler to CLANG if installed. Otherwise use GCC but try to
+# conserve memory. The build dependencies try to install CLANG, but
+# give a dummy alternative so the build can proceed even if it is
+# unavailable.
+ifeq ($(shell type -t clang||true),file)
 export CC=clang
 export CXX=clang++
+else
+
+## These issues have occurred post-2.1.x in two places: Ubuntu
+## Launchpad, and some particular Debian architectures including
+## armhf, mips, mipsel, m68k, kfreebsd-amd64, kfreebsd-i386.
+
+## For that reason, I am activating all of the above space-reduction
+## mechanisms on Ubuntu, all 32-bit architectures, and all kfreebsd
+## systems. And I am setting the build to single threaded on all
+## architectures.
+
+DH_FLAGS += --max-parallel=1
+
+ifeq ($(shell dpkg-vendor --derives-from Ubuntu && echo yes),yes)
+SAVE_SPACE=yes
+endif
+
+ifeq ($(shell dpkg-architecture --query DEB_BUILD_ARCH_BITS),32)
+SAVE_SPACE=yes
+endif
+
+ifeq ($(shell dpkg-architecture --query DEB_BUILD_ARCH_OS),kfreebsd)
+SAVE_SPACE=yes
+endif
+
+ifeq ($(SAVE_SPACE),yes)
+ifneq (, $(filter $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU),mips mipsel))
+	export DEB_CXXFLAGS_MAINT_APPEND = --param ggc-min-expand=5 -g0
+else
+	export DEB_CXXFLAGS_MAINT_APPEND = --param ggc-min-expand=20 -g0
+endif
+endif
+endif
+
+# Julia is an optional build dependency, listed with a dummy alternative.
+ifeq ($(shell type -t julia||true),file)
+DO_IT_TO_JULIA=ON
+else
+DO_IT_TO_JULIA=OFF
+endif
 
 %:
 	dh $@ --without python2 --with python3 --buildsystem=cmake ${DH_FLAGS}
@@ -27,7 +71,7 @@ override_dh_auto_configure:
 		-DBUILD_CLI_EXECUTABLES=ON \
 		-DBUILD_PYTHON_BINDINGS=ON \
 		-DPYTHON_EXECUTABLE=/usr/bin/python3 \
-		-DBUILD_JULIA_BINDINGS=ON \
+		-DBUILD_JULIA_BINDINGS=$(DO_IT_TO_JULIA) \
 		-DBUILD_TESTS=ON \
 		-DBUILD_SHARED_LIBS=ON \
 		-DDISABLE_DOWNLOADS=ON \
