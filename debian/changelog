@@ -1,3 +1,9 @@
+mlpack (3.3.2-5) unstable; urgency=medium
+
+  * refine build dependency on clang and julian where available
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Sun, 09 Aug 2020 18:33:10 +0100
+
 mlpack (3.3.2-4) unstable; urgency=medium
 
   * fix broken debian/rules executable search non-POSIX logic
