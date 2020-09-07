@@ -1,0 +1,37 @@
+From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
+Date: Mon, 7 Sep 2020 11:50:48 +0100
+Subject: grammar
+
+---
+ src/mlpack/bindings/cli/third_party/CLI/CLI11.hpp                     | 2 +-
+ .../bayesian_linear_regression/bayesian_linear_regression_main.cpp    | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/mlpack/bindings/cli/third_party/CLI/CLI11.hpp b/src/mlpack/bindings/cli/third_party/CLI/CLI11.hpp
+index a65aecf..6674a32 100644
+--- a/src/mlpack/bindings/cli/third_party/CLI/CLI11.hpp
++++ b/src/mlpack/bindings/cli/third_party/CLI/CLI11.hpp
+@@ -691,7 +691,7 @@ class CallForVersion : public Success {
+         : CallForVersion("This should be caught in your main function, see examples", ExitCodes::Success) {}
+ };
+ 
+-/// Does not output a diagnostic in CLI11_PARSE, but allows to return from main() with a specific error code.
++/// Does not output a diagnostic in CLI11_PARSE, but allows main() to return with a specific error code.
+ class RuntimeError : public ParseError {
+     CLI11_ERROR_DEF(ParseError, RuntimeError)
+     explicit RuntimeError(int exit_code = 1) : RuntimeError("Runtime error", exit_code) {}
+diff --git a/src/mlpack/methods/bayesian_linear_regression/bayesian_linear_regression_main.cpp b/src/mlpack/methods/bayesian_linear_regression/bayesian_linear_regression_main.cpp
+index c69bdb4..01ce9ae 100644
+--- a/src/mlpack/methods/bayesian_linear_regression/bayesian_linear_regression_main.cpp
++++ b/src/mlpack/methods/bayesian_linear_regression/bayesian_linear_regression_main.cpp
+@@ -86,8 +86,8 @@ BINDING_EXAMPLE(
+                "predictions", "test_predictions") +
+     "\n\n"
+     "Because the estimator computes a predictive distribution instead of "
+-    "simple point estimate, the " + PRINT_PARAM_STRING("stds") + " parameter "
+-    "allows to save the prediction uncertainties: "
++    "a simple point estimate, the " + PRINT_PARAM_STRING("stds") + " parameter "
++    "allows one to save the prediction uncertainties: "
+     "\n\n" +
+     PRINT_CALL("bayesian_linear_regression", "input_model",
+                "blr_model", "test", "test",
