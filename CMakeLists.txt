@@ -360,14 +360,14 @@ endif ()
 find_package(Ensmallen "${ENSMALLEN_VERSION}")
 if (NOT ENSMALLEN_FOUND)
   if (DOWNLOAD_ENSMALLEN)
-    file(DOWNLOAD http://www.ensmallen.org/files/ensmallen-2.14.1.tar.gz
-        "${CMAKE_BINARY_DIR}/deps/ensmallen-2.14.1.tar.gz"
+    file(DOWNLOAD http://www.ensmallen.org/files/ensmallen-2.14.2.tar.gz
+        "${CMAKE_BINARY_DIR}/deps/ensmallen-2.14.2.tar.gz"
         STATUS ENS_DOWNLOAD_STATUS_LIST LOG ENS_DOWNLOAD_LOG
         SHOW_PROGRESS)
     list(GET ENS_DOWNLOAD_STATUS_LIST 0 ENS_DOWNLOAD_STATUS)
     if (ENS_DOWNLOAD_STATUS EQUAL 0)
       execute_process(COMMAND ${CMAKE_COMMAND} -E
-          tar xzf "${CMAKE_BINARY_DIR}/deps/ensmallen-2.14.1.tar.gz"
+          tar xzf "${CMAKE_BINARY_DIR}/deps/ensmallen-2.14.2.tar.gz"
           WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/deps/")
 
       # Get the name of the directory.
@@ -375,7 +375,7 @@ if (NOT ENSMALLEN_FOUND)
           "${CMAKE_BINARY_DIR}/deps/ensmallen-[0-9]*.[0-9]*.[0-9]*")
       # list(FILTER) is not available on 3.5 or older, but try to keep
       # configuring without filtering the list anyway (it might work if only
-      # the file ensmallen-2.14.1.tar.gz is present.
+      # the file ensmallen-2.14.2.tar.gz is present.
       if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.6.0")
         list(FILTER ENS_DIRECTORIES EXCLUDE REGEX "ensmallen-.*\.tar\.gz")
       endif ()
@@ -416,6 +416,8 @@ endif ()
 # Unfortunately this configuration variable is necessary and will need to be
 # updated as time goes on and new versions are released.
 set(Boost_ADDITIONAL_VERSIONS
+  "1.74.0" "1.74"  
+  "17.3.0" "17.3"		
   "1.72.0" "1.72"
   "1.71.0" "1.71"
   "1.70.0" "1.70"
