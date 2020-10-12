@@ -53,12 +53,7 @@ endif
 endif
 endif
 
-# Julia is an optional build dependency, listed with a dummy alternative.
-ifeq ($(shell type julia > /dev/null && echo found),found)
-DO_IT_TO_JULIA=ON
-else
 DO_IT_TO_JULIA=OFF
-endif
 
 %:
 	dh $@ --without python2 --with python3 --buildsystem=cmake ${DH_FLAGS}
