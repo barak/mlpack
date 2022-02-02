@@ -1,13 +1,22 @@
 # reference manual in HTML
 
-/usr/share/doc/mlpack/html/*.html	/usr/share/doc/mlpack-doc/html/
-/usr/share/doc/mlpack/html/*.png	/usr/share/doc/mlpack-doc/html/
-/usr/share/doc/mlpack/html/*.js		/usr/share/doc/mlpack-doc/html/
-/usr/share/doc/mlpack/html/*.css	/usr/share/doc/mlpack-doc/html/
-/usr/share/doc/mlpack/html/*.svg	/usr/share/doc/mlpack-doc/html/
+# /usr/share/doc/mlpack/html/*.html	/usr/share/doc/mlpack-doc/html/
+# /usr/share/doc/mlpack/html/*.png	/usr/share/doc/mlpack-doc/html/
+# /usr/share/doc/mlpack/html/*.js		/usr/share/doc/mlpack-doc/html/
+# /usr/share/doc/mlpack/html/*.css	/usr/share/doc/mlpack-doc/html/
+# /usr/share/doc/mlpack/html/*.svg	/usr/share/doc/mlpack-doc/html/
 
-/usr/share/doc/mlpack/html/search/*.html	/usr/share/doc/mlpack/html/search/
-/usr/share/doc/mlpack/html/search/*.png		/usr/share/doc/mlpack/html/search/
-/usr/share/doc/mlpack/html/search/*.js		/usr/share/doc/mlpack/html/search/
-/usr/share/doc/mlpack/html/search/*.css		/usr/share/doc/mlpack/html/search/
-/usr/share/doc/mlpack/html/search/*.svg		/usr/share/doc/mlpack/html/search/
+# /usr/share/doc/mlpack/html/search/*.html	/usr/share/doc/mlpack/html/search/
+# /usr/share/doc/mlpack/html/search/*.png		/usr/share/doc/mlpack/html/search/
+# /usr/share/doc/mlpack/html/search/*.js		/usr/share/doc/mlpack/html/search/
+# /usr/share/doc/mlpack/html/search/*.css		/usr/share/doc/mlpack/html/search/
+# /usr/share/doc/mlpack/html/search/*.svg		/usr/share/doc/mlpack/html/search/
+
+# Just install it all! Because changes to Doxygen version, or
+# configuration, can add files with a new extension or remove all
+# files with some extension, which makes the above pretty brittle.
+#
+# NOTE: Might need to remove formula.repository if there are formula
+# rendering issues; see Doxygen manual.
+
+/usr/share/doc/mlpack/html	/usr/share/doc/mlpack-doc/

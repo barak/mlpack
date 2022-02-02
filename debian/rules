@@ -2,6 +2,9 @@
 
 # export DH_VERBOSE=1
 
+# dh_python3 needs DEB_HOST_ARCH, so ... sledge hammer:
+include /usr/share/dpkg/default.mk
+
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 export LIBS="pthread"
 

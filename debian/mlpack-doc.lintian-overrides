@@ -1,2 +1,0 @@
-# It is too much to ask doxygen to generate hyphen-slash-dash clean man pages.
-mlpack-doc binary: hyphen-used-as-minus-sign usr/share/man/man3/*
