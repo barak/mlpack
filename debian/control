@@ -20,7 +20,7 @@ Build-Depends: cmake, debhelper-compat (= 13),
 		python3-pytest-runner,
 		txt2man,
 		doxygen, doxygen-latex, graphviz, latexmk
-Standards-Version: 4.5.0
+Standards-Version: 4.6.0
 Rules-Requires-Root: no
 Homepage: https://www.mlpack.org/
 Vcs-Git: https://salsa.debian.org/science-team/mlpack.git
