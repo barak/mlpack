@@ -3,10 +3,11 @@ mlpack (3.4.2-2) unstable; urgency=medium
   * Bump policy
   * Just install the entire Doxygen-generated html directory willy-nilly
   * Export vars in debian/rules for new dh_python3 ${DEB_HOST_ARCH} error
-  * Remove lintian override for obselete tag hyphen-used-ad-minus-sign
+  * Remove lintian override for obsolete tag hyphen-used-ad-minus-sign
   * Remove copyright stanza for long-removed ARMA cmake files
+  * Add some substitution variables that are being defined
 
- -- Barak A. Pearlmutter <bap@debian.org>  Thu, 03 Feb 2022 12:00:45 +0000
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 03 Feb 2022 14:21:59 +0000
 
 mlpack (3.4.2-1) unstable; urgency=medium
 
