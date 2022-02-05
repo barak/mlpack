@@ -6,60 +6,11 @@
 include /usr/share/dpkg/default.mk
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
-export LIBS="pthread"
-
-## Memory consumption issues on some autobuilders have been causing
-## build failures.  There are three ways to address such issues:
-## (a) reduce parallelism, e.g., dh $@ --max-parallel=2
-## (b) reduce GCC memory usage, e.g., g++ --param ggc-min-expand=20 to
-## reduce abrupt memory spikes, and g++ -g0 to skip debugging info.
-## (c) switch to clang.
-
-# Force Compiler to CLANG if installed. Otherwise use GCC but try to
-# conserve memory. The build dependencies try to install CLANG, but
-# give a dummy alternative so the build can proceed even if it is
-# unavailable.
-ifeq ($(shell type clang > /dev/null && echo found),found)
-export CC=clang
-export CXX=clang++
-else
-
-## These issues have occurred post-2.1.x in two places: Ubuntu
-## Launchpad, and some particular Debian architectures including
-## armhf, mips, mipsel, m68k, kfreebsd-amd64, kfreebsd-i386.
-
-## For that reason, I am activating all of the above space-reduction
-## mechanisms on Ubuntu, all 32-bit architectures, and all kfreebsd
-## systems. And I am setting the build to single threaded on all
-## architectures.
-
-DH_FLAGS += --max-parallel=1
-
-ifeq ($(shell dpkg-vendor --derives-from Ubuntu && echo yes),yes)
-SAVE_SPACE=yes
-endif
-
-ifeq ($(shell dpkg-architecture --query DEB_BUILD_ARCH_BITS),32)
-SAVE_SPACE=yes
-endif
-
-ifeq ($(shell dpkg-architecture --query DEB_BUILD_ARCH_OS),kfreebsd)
-SAVE_SPACE=yes
-endif
-
-ifeq ($(SAVE_SPACE),yes)
-ifneq (, $(filter $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU),mips mipsel))
-	export DEB_CXXFLAGS_MAINT_APPEND = --param ggc-min-expand=5 -g0
-else
-	export DEB_CXXFLAGS_MAINT_APPEND = --param ggc-min-expand=20 -g0
-endif
-endif
-endif
 
 DO_IT_TO_JULIA=OFF
 
 %:
-	dh $@ --without python2 --with python3 --buildsystem=cmake ${DH_FLAGS}
+	dh $@ --without python2 --with python3 --buildsystem=cmake
 
 override_dh_auto_configure:
 	dh_auto_configure -- -DCMAKE_LIBRARY_PATH=$(DEB_HOST_MULTIARCH) \
