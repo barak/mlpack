@@ -1,8 +1,9 @@
-mlpack (3.4.2-3) UNRELEASED; urgency=medium
+mlpack (3.4.2-3) unstable; urgency=medium
 
   * Disable building tests, per email suggestion from Curtis
+  * Build dependency so OpenMP will actually be used
 
- -- Barak A. Pearlmutter <bap@debian.org>  Sun, 06 Feb 2022 09:34:01 +0000
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 15 Feb 2022 19:28:14 +0000
 
 mlpack (3.4.2-2) unstable; urgency=medium
 
