@@ -1,3 +1,9 @@
+mlpack (3.4.2-4) unstable; urgency=medium
+
+  * Cherry-pick zoq:atomic-llvm 26855cd348c04c345fa6bf57aa8c33d0b181d396
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Thu, 17 Feb 2022 14:00:24 +0000
+
 mlpack (3.4.2-3) unstable; urgency=medium
 
   * Disable building tests, per email suggestion from Curtis
