@@ -63,7 +63,7 @@ Package: python3-mlpack
 Architecture: any
 Section: python
 Depends: libmlpack3 (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends},
-	 ${python3:Depends}, ${python3:Versions}
+	 ${python3:Depends}
 Provides: ${python3:Provides}
 Description: intuitive, fast, scalable C++ machine learning library (Python bindings)
  This package contains Python bindings for the mlpack Library.
