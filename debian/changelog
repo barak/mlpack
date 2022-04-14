@@ -1,4 +1,4 @@
-mlpack (3.4.2-5) UNRELEASED; urgency=medium
+mlpack (3.4.2-7) UNRELEASED; urgency=medium
 
   * Remove constraints unnecessary since buster:
     + Build-Depends: Drop versioned constraint on libarmadillo-dev and
