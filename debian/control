@@ -7,13 +7,13 @@ Build-Depends: cmake, debhelper-compat (= 13),
 	        clang [!alpha !hppa !ia64 !m68k !sh4 !x32],
 		libomp-dev [!alpha !hppa !ia64 !m68k !sh4 !x32],
 		pkg-config,
-		libboost-math-dev (>= 1.49),
+		libboost-math-dev,
 		libboost-program-options-dev,
 		libboost-random-dev,
 		libboost-test-dev,
 		libboost-serialization-dev,
 		libxml2-dev,
-		libarmadillo-dev (>= 1:8.400.0),
+		libarmadillo-dev,
 		libensmallen-dev (>= 2.10.0),
 		libstb-dev,
 		dh-python, dh-sequence-python3,
@@ -33,7 +33,7 @@ Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}, ${python3:Depends}, libmlpack3 (= ${binary:Version}),
-	 libarmadillo-dev (>= 1:3.6.0), liblapack-dev, libxml2-dev,
+	 libarmadillo-dev, liblapack-dev, libxml2-dev,
 	 libboost-dev, libboost-program-options-dev, libboost-serialization-dev, libboost-test-dev
 Suggests: mlpack-doc
 Description: intuitive, fast, scalable C++ machine learning library (development libs)
