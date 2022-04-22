@@ -1,11 +1,15 @@
-mlpack (3.4.2-7) UNRELEASED; urgency=medium
+mlpack (3.4.2-7) unstable; urgency=medium
 
+  [ Debian Janitor ]
   * Remove constraints unnecessary since buster:
     + Build-Depends: Drop versioned constraint on libarmadillo-dev and
       libboost-math-dev.
     + libmlpack-dev: Drop versioned constraint on libarmadillo-dev in Depends.
 
- -- Debian Janitor <janitor@jelmer.uk>  Thu, 17 Feb 2022 20:28:01 -0000
+  [ Barak A. Pearlmutter ]
+  * Remove unused cython patches
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Fri, 22 Apr 2022 13:32:17 +0100
 
 mlpack (3.4.2-6) unstable; urgency=medium
 
