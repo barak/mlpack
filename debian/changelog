@@ -1,3 +1,9 @@
+mlpack (3.4.2-8) unstable; urgency=medium
+
+  * tweak debian/watch to ignore the -windows version
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 26 Oct 2022 20:52:34 +0100
+
 mlpack (3.4.2-7) unstable; urgency=medium
 
   [ Debian Janitor ]

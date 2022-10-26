@@ -1,2 +1,3 @@
 version=4
-https://www.mlpack.org/files/@PACKAGE@-@ANY_VERSION@@ARCHIVE_EXT@
+#https://www.mlpack.org/files/@PACKAGE@-@ANY_VERSION@@ARCHIVE_EXT@
+https://www.mlpack.org/files/@PACKAGE@-([0-9.]+)@ARCHIVE_EXT@
