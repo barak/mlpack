@@ -1,1 +1,2 @@
-usr/lib/python3*/*-packages/mlpack*    /usr/lib/python3/dist-packages/
+# the "local/" here is new as of 4.0.
+usr/local/lib/python3*/*-packages/mlpack*    /usr/lib/python3/dist-packages/

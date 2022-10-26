@@ -4,14 +4,8 @@ Priority: optional
 Maintainer: Debian Science Maintainers <debian-science-maintainers@alioth-lists.debian.net>
 Uploaders: Barak A. Pearlmutter <bap@debian.org>
 Build-Depends: cmake, debhelper-compat (= 13),
-	        clang [!alpha !hppa !ia64 !m68k !sh4 !x32],
-		libomp-dev [!alpha !hppa !ia64 !m68k !sh4 !x32],
 		pkg-config,
-		libboost-math-dev,
-		libboost-program-options-dev,
-		libboost-random-dev,
-		libboost-test-dev,
-		libboost-serialization-dev,
+		libcereal-dev,
 		libxml2-dev,
 		libarmadillo-dev,
 		libensmallen-dev (>= 2.10.0),
@@ -20,8 +14,7 @@ Build-Depends: cmake, debhelper-compat (= 13),
 		python3, python3-dev, python3-pandas, python3-numpy, cython3, python3-setuptools,
 		python3-pytest-runner,
 		txt2man,
-		doxygen, doxygen-latex, graphviz, latexmk
-Standards-Version: 4.6.0
+Standards-Version: 4.6.1
 Rules-Requires-Root: no
 Homepage: https://www.mlpack.org/
 Vcs-Git: https://salsa.debian.org/science-team/mlpack.git
@@ -32,9 +25,9 @@ Section: libdevel
 Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends}, ${shlibs:Depends}, ${python3:Depends}, libmlpack3 (= ${binary:Version}),
+Depends: ${misc:Depends}, ${shlibs:Depends}, ${python3:Depends},
 	 libarmadillo-dev, liblapack-dev, libxml2-dev,
-	 libboost-dev, libboost-program-options-dev, libboost-serialization-dev, libboost-test-dev
+	 libcereal-dev
 Suggests: mlpack-doc
 Description: intuitive, fast, scalable C++ machine learning library (development libs)
  This package contains the mlpack Library development files.
@@ -45,24 +38,10 @@ Description: intuitive, fast, scalable C++ machine learning library (development
  methods and function as a "swiss army knife" for machine learning
  researchers.
 
-Package: libmlpack3
-Architecture: any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends}, ${shlibs:Depends}, ${python3:Depends}
-Description: intuitive, fast, scalable C++ machine learning library (runtime library)
- This package contains the mlpack Library runtime files.
- .
- Machine Learning Pack (mlpack) is an intuitive, fast, scalable C++
- machine learning library, meant to be a machine learning analog to
- LAPACK.  It aims to implement a wide array of machine learning
- methods and function as a "swiss army knife" for machine learning
- researchers.
-
 Package: python3-mlpack
 Architecture: any
 Section: python
-Depends: libmlpack3 (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends},
+Depends: ${misc:Depends}, ${shlibs:Depends},
 	 ${python3:Depends}
 Provides: ${python3:Provides}
 Description: intuitive, fast, scalable C++ machine learning library (Python bindings)
@@ -78,7 +57,7 @@ Package: mlpack-bin
 Section: science
 Architecture: any
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends}, ${shlibs:Depends}, ${python3:Depends}, libmlpack3 (>= ${binary:Version})
+Depends: ${misc:Depends}, ${shlibs:Depends}, ${python3:Depends}
 Description: intuitive, fast, scalable C++ machine learning library (binaries)
  This package contains example binaries using the mlpack Library.
  .

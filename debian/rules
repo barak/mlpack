@@ -15,14 +15,18 @@ export LIBS="pthread"
 ## reduce abrupt memory spikes, and g++ -g0 to skip debugging info.
 ## (c) switch to clang.
 
-# Force Compiler to CLANG if installed. Otherwise use GCC but try to
-# conserve memory. The build dependencies try to install CLANG, but
-# give a dummy alternative so the build can proceed even if it is
-# unavailable.
-ifeq ($(shell type clang > /dev/null && echo found),found)
-export CC=clang
-export CXX=clang++
-else
+## Force Compiler to CLANG if installed. Otherwise use GCC but try to
+## conserve memory. The build dependencies try to install CLANG, but
+## give a dummy alternative so the build can proceed even if it is
+## unavailable.
+## Note: this requires build dependencies of the form
+##     clang [!alpha !hppa !ia64 !m68k !sh4 !x32],
+##     libomp-dev [!alpha !hppa !ia64 !m68k !sh4 !x32],
+
+# ifeq ($(shell type clang > /dev/null && echo found),found)
+# export CC=clang
+# export CXX=clang++
+# else
 
 ## These issues have occurred post-2.1.x in two places: Ubuntu
 ## Launchpad, and some particular Debian architectures including
@@ -54,9 +58,10 @@ else
 	export DEB_CXXFLAGS_MAINT_APPEND = --param ggc-min-expand=20 -g0
 endif
 endif
-endif
+# endif
 
 DO_IT_TO_JULIA=OFF
+TAKE_IT_TO_GO=OFF
 
 %:
 	dh $@ --without python2 --with python3 --buildsystem=cmake ${DH_FLAGS}
@@ -70,16 +75,12 @@ override_dh_auto_configure:
 		-DBUILD_PYTHON_BINDINGS=ON \
 		-DPYTHON_EXECUTABLE=/usr/bin/python3 \
 		-DBUILD_JULIA_BINDINGS=$(DO_IT_TO_JULIA) \
+		-DBUILD_GO_BINDINGS=$(TAKE_IT_TO_GO) \
 		-DBUILD_TESTS=OFF \
 		-DBUILD_SHARED_LIBS=ON \
 		-DDISABLE_DOWNLOADS=ON \
 		-DSTB_IMAGE_INCLUDE_DIR=/usr/include/stb \
 		-DUSE_OPENMP=ON
-
-execute_after_dh_auto_build:
-	@echo "building PDF reference manual"
-	cd obj-*/doc/latex && \
-	 latexmk --pdf refman.tex
 
 override_dh_auto_test:
 	@echo "do not ask do not tell do not test"
@@ -112,6 +113,3 @@ execute_after_dh_installexamples:
 
 override_dh_installchangelogs:
 	dh_installchangelogs HISTORY.md
-
-override_dh_compress:
-	dh_compress -Xrefman.pdf -Xdoc/html/

@@ -1,7 +1,9 @@
-# reference manual in PDF
-obj-*/doc/latex/refman.pdf
 README.md
-doc/guide
 doc/tutorials
 UPDATING.txt
 CONTRIBUTING.md
+
+doc/developer
+doc/joss_paper
+doc/quickstart
+doc/user
