@@ -12,17 +12,14 @@
 #ifndef MLPACK_CORE_CV_METRICS_ACCURACY_IMPL_HPP
 #define MLPACK_CORE_CV_METRICS_ACCURACY_IMPL_HPP
 
-#include <mlpack/core/cv/metrics/facilities.hpp>
-
 namespace mlpack {
-namespace cv {
 
 template<typename MLAlgorithm, typename DataType>
 double Accuracy::Evaluate(MLAlgorithm& model,
                           const DataType& data,
                           const arma::Row<size_t>& labels)
 {
-  AssertSizes(data, labels, "Accuracy::Evaluate()");
+  util::CheckSameSizes(data, labels, "Accuracy::Evaluate()");
 
   arma::Row<size_t> predictedLabels;
   model.Classify(data, predictedLabels);
@@ -31,7 +28,6 @@ double Accuracy::Evaluate(MLAlgorithm& model,
   return (double) amountOfCorrectPredictions / labels.n_elem;
 }
 
-} // namespace cv
 } // namespace mlpack
 
 #endif

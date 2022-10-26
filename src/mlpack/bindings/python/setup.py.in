@@ -30,19 +30,10 @@ if not '${OpenMP_CXX_FLAGS}':
 else:
   extra_link_args=['${OpenMP_CXX_FLAGS}']
 
-# Get list of library dirs.  Note that for the list of directories, any
-# directories with a (valid) space in the name will be given to us as '\ '; so,
-# in order to split these right, we first convert all spaces to ';', then
-# convert '\;' back to ' ', then split on ';'.
-library_dirs = list(filter(None, ['${MLPACK_LIBDIR}'] +
-    '${Boost_LIBRARY_DIRS}'.replace(' ', ';').replace('\;', ' ').split(' ')))
-
 # We'll link with the exact paths to each library using extra_objects, instead
 # of linking with 'libraries' and 'library_dirs', because of differences in
 # Windows and Linux linking behavior.
-libraries = ['${MLPACK_LIBRARY}',
-             '${Boost_SERIALIZATION_LIBRARY}'] + \
-             '${ARMADILLO_LIBRARIES}'.split(' ')
+libraries = '${MLPACK_LIBRARIES}'.split(' ')
 
 # Potentially faulty assumption: we can always link against libraries directly
 # by just specifying the full path to them on the command line.
@@ -54,18 +45,19 @@ if os.getenv('NO_BUILD') == '1':
 else:
   cxx_flags = '${CMAKE_CXX_FLAGS}'.strip()
   cxx_flags = re.sub(' +', ' ', cxx_flags)
+  extra_cxx_flags = '${EXTRA_CXX_FLAGS}'.strip()
+  extra_cxx_flags = re.sub(' +', ' ', cxx_flags)
+  cxx_flags += ' '
+  cxx_flags += extra_cxx_flags
+  extra_args = ['-DBINDING_TYPE=BINDING_TYPE_PYX', '-std=c++14']
+  if '${OpenMP_CXX_FLAGS}' != '':
+    extra_args.append('${OpenMP_CXX_FLAGS}')
   if cxx_flags:
-    extra_args = ['-DBINDING_TYPE=BINDING_TYPE_PYX',
-                  '-std=c++11',
-                  '${OpenMP_CXX_FLAGS}'] + cxx_flags.split(' ')
-  else:
-    extra_args = ['-DBINDING_TYPE=BINDING_TYPE_PYX',
-                  '-std=c++11',
-                  '${OpenMP_CXX_FLAGS}']
+    extra_args.extend(cxx_flags.split(' '))
 
   # Extra options for MSVC compiler.
   if platform.system() == 'Windows':
-    extra_args = extra_args + ['/MD', '/O2', '/Ob2', '/DNDEBUG']
+    extra_args.extend(['/MD', '/O2', '/Ob2', '/DNDEBUG'])
 
   # This is used for parallel builds; CMake will set PYX_TO_BUILD accordingly.
   if module is not None:
@@ -79,10 +71,10 @@ else:
                       '${CYTHON_INCLUDE_DIRECTORIES}'.replace(' ', ';')
                                                      .replace('\;', ' ')
                                                      .split(';'),
-                  library_dirs=library_dirs,
                   # CMAKE_CXX_FLAGS seems to have an extra space.
                   extra_compile_args=extra_args,
                   extra_link_args=extra_link_args,
+                  define_macros=[('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')],
                   undef_macros=[] if len("${DISABLE_CFLAGS}") == 0 \
                       else '${DISABLE_CFLAGS}'.split(' ')) \
         for name in pyxs if name == module]
@@ -97,10 +89,10 @@ else:
                       '${CYTHON_INCLUDE_DIRECTORIES}'.replace(' ', ';')
                                                      .replace('\;', ' ')
                                                      .split(';'),
-                  library_dirs=library_dirs,
                   # CMAKE_CXX_FLAGS seems to have an extra space.
                   extra_compile_args=extra_args,
                   extra_link_args=extra_link_args,
+                  define_macros=[('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')],
                   undef_macros=[] if len("${DISABLE_CFLAGS}") == 0 \
                       else '${DISABLE_CFLAGS}'.split(' ')) \
         for name in pyxs]

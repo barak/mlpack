@@ -16,7 +16,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * The Kullback–Leibler divergence is often used for continuous
@@ -33,73 +32,67 @@ namespace ann /** Artificial Neural Network. */ {
  * }
  * @endcode
  *
- * @tparam InputDataType Type of the input data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam OutputDataType Type of the output data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
+ * @tparam MatType Matrix representation to accept as input and use for
+ *    computation.
  */
-template <
-        typename InputDataType = arma::mat,
-        typename OutputDataType = arma::mat
->
-class KLDivergence
+template<typename MatType = arma::mat>
+class KLDivergenceType
 {
  public:
   /**
    * Create the Kullback–Leibler Divergence object with the specified
    * parameters.
    *
-   * @param takeMean Boolean variable to specify whether to take mean or not.
+   * @param reduction Specifies the reduction to apply to the output. If false,
+   *                  'mean' reduction is used, where sum of the output will be
+   *                  divided by the number of elements in the output. If true,
+   *                  'sum' reduction is used and the output will be summed. It
+   *                  is set to true by default.
    */
-  KLDivergence(const bool takeMean = false);
+  KLDivergenceType(const bool reduction = true);
 
   /**
    * Computes the Kullback–Leibler divergence error function.
    *
-   * @param input Input data used for evaluating the specified function.
+   * @param prediction Predictions used for evaluating the specified loss
+   *     function.
    * @param target Target data to compare with.
    */
-  template<typename InputType, typename TargetType>
-  typename InputType::elem_type Forward(const InputType& input,
-                                        const TargetType& target);
+  typename MatType::elem_type Forward(const MatType& prediction,
+                                      const MatType& target);
 
   /**
    * Ordinary feed backward pass of a neural network.
    *
-   * @param input The propagated input activation.
+   * @param prediction Predictions used for evaluating the specified loss
+   *     function.
    * @param target The target vector.
-   * @param output The calculated error.
+   * @param loss The calculated error.
    */
-  template<typename InputType, typename TargetType, typename OutputType>
-  void Backward(const InputType& input,
-                const TargetType& target,
-                OutputType& output);
+  void Backward(const MatType& prediction,
+                const MatType& target,
+                MatType& loss);
 
-  //! Get the output parameter.
-  OutputDataType& OutputParameter() const { return outputParameter; }
-  //! Modify the output parameter.
-  OutputDataType& OutputParameter() { return outputParameter; }
-
-  //! Get the value of takeMean.
-  bool TakeMean() const { return takeMean; }
-  //! Modify the value of takeMean.
-  bool& TakeMean() { return takeMean; }
+  //! Get the reduction type, represented as boolean
+  //! (false 'mean' reduction, true 'sum' reduction).
+  bool Reduction() const { return reduction; }
+  //! Modify the type of reduction used.
+  bool& Reduction() { return reduction; }
 
   /**
-   * Serialize the loss function
+   * Serialize the loss function.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
-  //! Locally-stored output parameter object.
-  OutputDataType outputParameter;
+  //! Boolean value that tells if reduction is 'sum' or 'mean'.
+  bool reduction;
+}; // class KLDivergenceType
 
-  //! Boolean variable for taking mean or not.
-  bool takeMean;
-}; // class KLDivergence
+// Default typedef for typical `arma::mat` usage.
+typedef KLDivergenceType<arma::mat> KLDivergence;
 
-} // namespace ann
 } // namespace mlpack
 
 // include implementation

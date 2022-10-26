@@ -15,7 +15,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace kernel {
 
 /**
  * The standard Laplacian kernel.  Given two vectors @f$ x @f$, @f$ y @f$, and a
@@ -61,7 +60,7 @@ class LaplacianKernel
   double Evaluate(const VecTypeA& a, const VecTypeB& b) const
   {
     // The precalculation of gamma saves us a little computation time.
-    return exp(-metric::EuclideanDistance::Evaluate(a, b) / bandwidth);
+    return exp(-EuclideanDistance::Evaluate(a, b) / bandwidth);
   }
 
   /**
@@ -98,9 +97,9 @@ class LaplacianKernel
 
   //! Serialize the kernel.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(bandwidth);
+    ar(CEREAL_NVP(bandwidth));
   }
 
  private:
@@ -119,7 +118,6 @@ class KernelTraits<LaplacianKernel>
   static const bool UsesSquaredDistance = false;
 };
 
-} // namespace kernel
 } // namespace mlpack
 
 #endif

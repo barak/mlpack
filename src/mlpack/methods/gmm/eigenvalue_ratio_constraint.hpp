@@ -15,7 +15,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace gmm {
 
 /**
  * Given a vector of eigenvalue ratios, ensure that the covariance matrix always
@@ -104,11 +103,11 @@ class EigenvalueRatioConstraint
 
   //! Serialize the constraint.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
     // Strip the const for the sake of loading/saving.  This is the only time it
     // is modified (other than the constructor).
-    ar & BOOST_SERIALIZATION_NVP(const_cast<arma::vec&>(ratios));
+    ar(CEREAL_NVP(const_cast<arma::vec&>(ratios)));
   }
 
  private:
@@ -116,7 +115,6 @@ class EigenvalueRatioConstraint
   const arma::vec ratios;
 };
 
-} // namespace gmm
 } // namespace mlpack
 
 #endif

@@ -14,15 +14,11 @@
 #ifndef MLPACK_METHODS_SVDPLUSPLUS_SVDPLUSPLUS_HPP
 #define MLPACK_METHODS_SVDPLUSPLUS_SVDPLUSPLUS_HPP
 
-#include <mlpack/prereqs.hpp>
-#include <mlpack/methods/cf/cf.hpp>
-
-#include <ensmallen.hpp>
+#include <mlpack/core.hpp>
 
 #include "svdplusplus_function.hpp"
 
 namespace mlpack {
-namespace svd {
 
 /**
  * SVD++ is a matrix decomposition tenique used in collaborative filtering.
@@ -148,7 +144,6 @@ class SVDPlusPlus
   double lambda;
 };
 
-} // namespace svd
 } // namespace mlpack
 
 // Include implementation.

@@ -21,7 +21,6 @@
 #include <mlpack/methods/amf/termination_policies/simple_residue_termination.hpp>
 
 namespace mlpack {
-namespace cf {
 
 /**
  * Implementation of the SVD incomplete incremental to act as a wrapper when
@@ -66,21 +65,21 @@ class SVDIncompletePolicy
   {
     if (mit)
     {
-      amf::MaxIterationTermination iter(maxIterations);
+      MaxIterationTermination iter(maxIterations);
 
       // Do singular value decomposition using incomplete incremental method.
-      amf::AMF<amf::MaxIterationTermination, amf::RandomInitialization,
-          amf::SVDIncompleteIncrementalLearning> svdici(iter);
+      AMF<MaxIterationTermination, RandomAMFInitialization,
+          SVDIncompleteIncrementalLearning> svdici(iter);
 
       svdici.Apply(cleanedData, rank, w, h);
     }
     else
     {
-      amf::SimpleResidueTermination srt(minResidue, maxIterations);
+      SimpleResidueTermination srt(minResidue, maxIterations);
 
       // Do singular value decomposition using incomplete incremental method
       // using cleaned data in form of sparse matrix.
-      amf::SVDIncompleteIncrementalFactorizer<arma::sp_mat> svdici(srt);
+      SVDIncompleteIncrementalFactorizer<arma::sp_mat> svdici(srt);
 
       svdici.Apply(cleanedData, rank, w, h);
     }
@@ -157,10 +156,10 @@ class SVDIncompletePolicy
    * Serialization.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(w);
-    ar & BOOST_SERIALIZATION_NVP(h);
+    ar(CEREAL_NVP(w));
+    ar(CEREAL_NVP(h));
   }
 
  private:
@@ -170,7 +169,6 @@ class SVDIncompletePolicy
   arma::mat h;
 };
 
-} // namespace cf
 } // namespace mlpack
 
 #endif

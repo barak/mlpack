@@ -10,18 +10,12 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/amf/amf.hpp>
-#include <mlpack/methods/amf/update_rules/svd_batch_learning.hpp>
-#include <mlpack/methods/amf/init_rules/random_init.hpp>
-#include <mlpack/methods/amf/init_rules/average_init.hpp>
-#include <mlpack/methods/amf/termination_policies/validation_rmse_termination.hpp>
-#include <mlpack/methods/amf/termination_policies/simple_tolerance_termination.hpp>
+#include <mlpack/methods/amf.hpp>
 
 #include "catch.hpp"
 
 using namespace std;
 using namespace mlpack;
-using namespace mlpack::amf;
 using namespace arma;
 
 /**
@@ -70,7 +64,8 @@ class SpecificRandomInitialization
 TEST_CASE("SVDBatchMomentumTest", "[SVDBatchTest]")
 {
   mat dataset;
-  data::Load("GroupLensSmall.csv", dataset);
+  if (!data::Load("GroupLensSmall.csv", dataset))
+    FAIL("Cannot load dataset GroupLensSmall.csv!");
 
   // Generate list of locations for batch insert constructor for sparse
   // matrices.
@@ -117,7 +112,8 @@ TEST_CASE("SVDBatchMomentumTest", "[SVDBatchTest]")
 TEST_CASE("SVDBatchRegularizationTest", "[SVDBatchTest]")
 {
   mat dataset;
-  data::Load("GroupLensSmall.csv", dataset);
+  if (!data::Load("GroupLensSmall.csv", dataset))
+    FAIL("Cannot load dataset GroupLensSmall.csv!");
 
   // Generate list of locations for batch insert constructor for sparse
   // matrices.
@@ -176,9 +172,9 @@ TEST_CASE("SVDBatchNegativeElementTest", "[SVDBatchTest]")
   mat test = testLeft * testRight;
 
   AMF<SimpleToleranceTermination<mat>,
-      RandomInitialization,
+      RandomAMFInitialization,
       SVDBatchLearning> amf(SimpleToleranceTermination<mat>(),
-                            RandomInitialization(),
+                            RandomAMFInitialization(),
                             SVDBatchLearning(0.1, 0.001, 0.001, 0));
   mat m1, m2;
   amf.Apply(test, 3, m1, m2);

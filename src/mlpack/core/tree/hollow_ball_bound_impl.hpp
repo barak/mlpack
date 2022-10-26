@@ -16,7 +16,6 @@
 #include "hollow_ball_bound.hpp"
 
 namespace mlpack {
-namespace bound {
 
 //! Empty Constructor.
 template<typename TMetricType, typename ElemType>
@@ -80,15 +79,17 @@ template<typename TMetricType, typename ElemType>
 HollowBallBound<TMetricType, ElemType>& HollowBallBound<TMetricType, ElemType>::
 operator=(const HollowBallBound& other)
 {
-  if (ownsMetric)
-    delete metric;
+  if (this != &other)
+  {
+    if (ownsMetric)
+      delete metric;
 
-  radii = other.radii;
-  center = other.center;
-  hollowCenter = other.hollowCenter;
-  metric = other.metric;
-  ownsMetric = false;
-
+    radii = other.radii;
+    center = other.center;
+    hollowCenter = other.hollowCenter;
+    metric = other.metric;
+    ownsMetric = false;
+  }
   return *this;
 }
 
@@ -111,6 +112,29 @@ HollowBallBound<TMetricType, ElemType>::HollowBallBound(
   other.ownsMetric = false;
 }
 
+//! Move assignment operator.
+template<typename TMetricType, typename ElemType>
+HollowBallBound<TMetricType, ElemType>& HollowBallBound<TMetricType, ElemType>::
+operator=(HollowBallBound&& other)
+{
+  if (this != &other)
+  {
+    radii = other.radii;
+    center = std::move(other.center);
+    hollowCenter = std::move(other.hollowCenter);
+    metric = other.metric;
+    ownsMetric = other.ownsMetric;
+
+    other.radii.Hi() = 0.0;
+    other.radii.Lo() = 0.0;
+    other.center = arma::Col<ElemType>();
+    other.hollowCenter = arma::Col<ElemType>();
+    other.metric = nullptr;
+    other.ownsMetric = false;
+  }
+  return *this;
+}
+
 //! Destructor to release allocated memory.
 template<typename TMetricType, typename ElemType>
 HollowBallBound<TMetricType, ElemType>::~HollowBallBound()
@@ -121,13 +145,13 @@ HollowBallBound<TMetricType, ElemType>::~HollowBallBound()
 
 //! Get the range in a certain dimension.
 template<typename TMetricType, typename ElemType>
-math::RangeType<ElemType> HollowBallBound<TMetricType, ElemType>::operator[](
+RangeType<ElemType> HollowBallBound<TMetricType, ElemType>::operator[](
     const size_t i) const
 {
   if (radii.Hi() < 0)
-    return math::Range();
+    return Range();
   else
-    return math::Range(center[i] - radii.Hi(), center[i] + radii.Hi());
+    return Range(center[i] - radii.Hi(), center[i] + radii.Hi());
 }
 
 /**
@@ -207,7 +231,7 @@ ElemType HollowBallBound<TMetricType, ElemType>::MinDistance(
       return outerDistance; // The outer ball does not contain the point.
 
     // Check if the point is situated in the hole.
-    const ElemType innerDistance = math::ClampNonNegative(radii.Lo() -
+    const ElemType innerDistance = ClampNonNegative(radii.Lo() -
         metric->Evaluate(point, hollowCenter));
 
     return innerDistance;
@@ -240,7 +264,7 @@ ElemType HollowBallBound<TMetricType, ElemType>::MinDistance(
 
     // Check if the hole of the first bound contains the outer ball of the
     // second bound.
-    const ElemType innerDistance2 = math::ClampNonNegative(radii.Lo() -
+    const ElemType innerDistance2 = ClampNonNegative(radii.Lo() -
         metric->Evaluate(hollowCenter, other.center) - other.radii.Hi());
 
     return innerDistance2;
@@ -284,16 +308,16 @@ ElemType HollowBallBound<TMetricType, ElemType>::MaxDistance(
  */
 template<typename TMetricType, typename ElemType>
 template<typename VecType>
-math::RangeType<ElemType> HollowBallBound<TMetricType, ElemType>::RangeDistance(
+RangeType<ElemType> HollowBallBound<TMetricType, ElemType>::RangeDistance(
     const VecType& point,
     typename std::enable_if_t<IsVector<VecType>::value>* /* junk */) const
 {
   if (radii.Hi() < 0)
-    return math::Range(std::numeric_limits<ElemType>::max(),
+    return Range(std::numeric_limits<ElemType>::max(),
                        std::numeric_limits<ElemType>::max());
   else
   {
-    math::RangeType<ElemType> range;
+    RangeType<ElemType> range;
     const ElemType dist = metric->Evaluate(point, center);
 
     if (dist >= radii.Hi()) // The outer ball does not contain the point.
@@ -301,7 +325,7 @@ math::RangeType<ElemType> HollowBallBound<TMetricType, ElemType>::RangeDistance(
     else
     {
       // Check if the point is situated in the hole.
-      range.Lo() = math::ClampNonNegative(radii.Lo() -
+      range.Lo() = ClampNonNegative(radii.Lo() -
           metric->Evaluate(point, hollowCenter));
     }
     range.Hi() = dist + radii.Hi();
@@ -311,15 +335,15 @@ math::RangeType<ElemType> HollowBallBound<TMetricType, ElemType>::RangeDistance(
 }
 
 template<typename TMetricType, typename ElemType>
-math::RangeType<ElemType> HollowBallBound<TMetricType, ElemType>::RangeDistance(
+RangeType<ElemType> HollowBallBound<TMetricType, ElemType>::RangeDistance(
     const HollowBallBound& other) const
 {
   if (radii.Hi() < 0)
-    return math::Range(std::numeric_limits<ElemType>::max(),
+    return Range(std::numeric_limits<ElemType>::max(),
                        std::numeric_limits<ElemType>::max());
   else
   {
-    math::RangeType<ElemType> range;
+    RangeType<ElemType> range;
 
     const ElemType dist = metric->Evaluate(center, other.center);
 
@@ -338,7 +362,7 @@ math::RangeType<ElemType> HollowBallBound<TMetricType, ElemType>::RangeDistance(
       {
         // Check if the outer ball of the second bound is contained in the
         // hole of the first bound.
-        range.Lo() = math::ClampNonNegative(radii.Lo() -
+        range.Lo() = ClampNonNegative(radii.Lo() -
             metric->Evaluate(hollowCenter, other.center) - other.radii.Hi());
       }
     }
@@ -411,7 +435,7 @@ HollowBallBound<TMetricType, ElemType>::operator|=(const HollowBallBound& other)
   if (radii.Hi() < dist + other.radii.Hi())
     radii.Hi() = dist + other.radii.Hi();
 
-  const ElemType innerDist = math::ClampNonNegative(other.radii.Lo() -
+  const ElemType innerDist = ClampNonNegative(other.radii.Lo() -
       metric->Evaluate(hollowCenter, other.hollowCenter));
   // Check if the hole of the first bound is not contained in the hole of the
   // second bound.
@@ -427,24 +451,22 @@ template<typename TMetricType, typename ElemType>
 template<typename Archive>
 void HollowBallBound<TMetricType, ElemType>::serialize(
     Archive& ar,
-    const unsigned int /* version */)
+    const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(radii);
-  ar & BOOST_SERIALIZATION_NVP(center);
-  ar & BOOST_SERIALIZATION_NVP(hollowCenter);
-
-  if (Archive::is_loading::value)
+  ar(CEREAL_NVP(radii));
+  ar(CEREAL_NVP(center));
+  ar(CEREAL_NVP(hollowCenter));
+  ar(CEREAL_POINTER(metric));
+  if (cereal::is_loading<Archive>())
   {
     // If we're loading, delete the local metric since we'll have a new one.
     if (ownsMetric)
       delete metric;
-  }
 
-  ar & BOOST_SERIALIZATION_NVP(metric);
-  ar & BOOST_SERIALIZATION_NVP(ownsMetric);
+    ownsMetric = true;
+  }
 }
 
-} // namespace bound
 } // namespace mlpack
 
 #endif // MLPACK_CORE_TREE_HOLLOW_BALL_BOUND_IMPL_HPP

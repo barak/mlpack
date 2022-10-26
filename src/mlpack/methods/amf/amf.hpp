@@ -18,22 +18,13 @@
 #ifndef MLPACK_METHODS_AMF_AMF_HPP
 #define MLPACK_METHODS_AMF_AMF_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 
-#include <mlpack/methods/amf/update_rules/nmf_mult_dist.hpp>
-#include <mlpack/methods/amf/update_rules/nmf_als.hpp>
-#include <mlpack/methods/amf/update_rules/svd_batch_learning.hpp>
-#include <mlpack/methods/amf/update_rules/svd_incomplete_incremental_learning.hpp>
-#include <mlpack/methods/amf/update_rules/svd_complete_incremental_learning.hpp>
-
-#include <mlpack/methods/amf/init_rules/random_init.hpp>
-#include <mlpack/methods/amf/init_rules/random_acol_init.hpp>
-
-#include <mlpack/methods/amf/termination_policies/simple_residue_termination.hpp>
-#include <mlpack/methods/amf/termination_policies/simple_tolerance_termination.hpp>
+#include "update_rules/update_rules.hpp"
+#include "init_rules/init_rules.hpp"
+#include "termination_policies/termination_policies.hpp"
 
 namespace mlpack {
-namespace amf /** Alternating Matrix Factorization **/ {
 
 /**
  * This class implements AMF (alternating matrix factorization) on the given
@@ -138,9 +129,9 @@ class AMF
   UpdateRuleType update;
 }; // class AMF
 
-typedef amf::AMF<amf::SimpleResidueTermination,
-                 amf::RandomAcolInitialization<>,
-                 amf::NMFALSUpdate> NMFALSFactorizer;
+typedef AMF<SimpleResidueTermination,
+            RandomAcolInitialization<>,
+            NMFALSUpdate> NMFALSFactorizer;
 
 //! Convenience typedefs.
 
@@ -152,10 +143,10 @@ typedef amf::AMF<amf::SimpleResidueTermination,
  * @see SVDBatchLearning
  */
 template<typename MatType = arma::mat>
-using SVDBatchFactorizer = amf::AMF<
-    amf::SimpleResidueTermination,
-    amf::RandomAcolInitialization<>,
-    amf::SVDBatchLearning>;
+using SVDBatchFactorizer = AMF<
+    SimpleResidueTermination,
+    RandomAcolInitialization<>,
+    SVDBatchLearning>;
 
 /**
  * SVDIncompleteIncrementalFactorizer factorizes given matrix V into two
@@ -166,10 +157,10 @@ using SVDBatchFactorizer = amf::AMF<
  * @see SVDIncompleteIncrementalLearning
  */
 template<class MatType = arma::mat>
-using SVDIncompleteIncrementalFactorizer = amf::AMF<
-    amf::SimpleResidueTermination,
-    amf::RandomAcolInitialization<>,
-    amf::SVDIncompleteIncrementalLearning>;
+using SVDIncompleteIncrementalFactorizer = AMF<
+    SimpleResidueTermination,
+    RandomAcolInitialization<>,
+    SVDIncompleteIncrementalLearning>;
 /**
  * SVDCompleteIncrementalFactorizer factorizes given matrix V into two matrices
  * W and H by complete incremental gradient descent. SVD complete incremental
@@ -179,11 +170,11 @@ using SVDIncompleteIncrementalFactorizer = amf::AMF<
  * @see SVDCompleteIncrementalLearning
  */
 template<class MatType = arma::mat>
-using SVDCompleteIncrementalFactorizer = amf::AMF<
-    amf::SimpleResidueTermination,
-    amf::RandomAcolInitialization<>,
-    amf::SVDCompleteIncrementalLearning<MatType>>;
-} // namespace amf
+using SVDCompleteIncrementalFactorizer = AMF<
+    SimpleResidueTermination,
+    RandomAcolInitialization<>,
+    SVDCompleteIncrementalLearning<MatType>>;
+
 } // namespace mlpack
 
 // Include implementation.

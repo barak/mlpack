@@ -15,7 +15,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace amf {
 
 /**
  * This class acts as a wrapper for basic termination policies to be used by
@@ -35,7 +34,8 @@ class IncompleteIncrementalTermination
    */
   IncompleteIncrementalTermination(
       TerminationPolicy tPolicy = TerminationPolicy()) :
-      tPolicy(tPolicy) { }
+      tPolicy(tPolicy), incrementalIndex(0), iteration(0)
+  { /* Nothing to do here. */ }
 
   /**
    * Initializes the termination policy before stating the factorization.
@@ -97,7 +97,6 @@ class IncompleteIncrementalTermination
   size_t iteration;
 }; // class IncompleteIncrementalTermination
 
-} // namespace amf
 } // namespace mlpack
 
 #endif

@@ -16,7 +16,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace tree {
 
 /**
  * The standard information gain criterion, used for calculating gain in
@@ -26,7 +25,7 @@ class InformationGain
 {
  public:
   /**
-   * Evaluate the Gini impurity given a vector of class weight counts.
+   * Evaluate the information gain given a vector of class weight counts.
    */
   template<bool UseWeights, typename CountType>
   static double EvaluatePtr(const CountType* counts,
@@ -209,7 +208,6 @@ class InformationGain
   }
 };
 
-} // namespace tree
 } // namespace mlpack
 
 #endif

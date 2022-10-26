@@ -10,26 +10,13 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#include <mlpack/core/kernels/cosine_distance.hpp>
-#include <mlpack/core/kernels/epanechnikov_kernel.hpp>
-#include <mlpack/core/kernels/gaussian_kernel.hpp>
-#include <mlpack/core/kernels/hyperbolic_tangent_kernel.hpp>
-#include <mlpack/core/kernels/laplacian_kernel.hpp>
-#include <mlpack/core/kernels/linear_kernel.hpp>
-#include <mlpack/core/kernels/polynomial_kernel.hpp>
-#include <mlpack/core/kernels/spherical_kernel.hpp>
-#include <mlpack/core/kernels/pspectrum_string_kernel.hpp>
-#include <mlpack/core/kernels/cauchy_kernel.hpp>
-#include <mlpack/core/metrics/lmetric.hpp>
-#include <mlpack/core/metrics/mahalanobis_distance.hpp>
+#include <mlpack/core.hpp>
 
 #include "catch.hpp"
 #include "test_catch_tools.hpp"
-#include "serialization_catch.hpp"
+#include "serialization.hpp"
 
 using namespace mlpack;
-using namespace mlpack::kernel;
-using namespace mlpack::metric;
 
 /**
  * Basic test of the Manhattan distance.
@@ -311,14 +298,14 @@ TEST_CASE("GaussianKernelTest", "[KernelTest]")
 TEST_CASE("GaussianKernelSerializationTest", "[KernelTest]")
 {
   GaussianKernel gk(0.5);
-  GaussianKernel xmlGk(1.5), textGk, binaryGk(15.0);
+  GaussianKernel xmlGk(1.5), jsonGk, binaryGk(15.0);
 
   // Serialize the kernels.
-  SerializeObjectAll(gk, xmlGk, textGk, binaryGk);
+  SerializeObjectAll(gk, xmlGk, jsonGk, binaryGk);
 
   REQUIRE(gk.Bandwidth() == Approx(0.5).epsilon(1e-7));
   REQUIRE(xmlGk.Bandwidth() == Approx(0.5).epsilon(1e-7));
-  REQUIRE(textGk.Bandwidth() == Approx(0.5).epsilon(1e-7));
+  REQUIRE(jsonGk.Bandwidth() == Approx(0.5).epsilon(1e-7));
   REQUIRE(binaryGk.Bandwidth() == Approx(0.5).epsilon(1e-7));
 }
 

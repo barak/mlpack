@@ -18,7 +18,6 @@
 #include <mlpack/methods/bias_svd/bias_svd.hpp>
 
 namespace mlpack {
-namespace cf {
 
 /**
  * Implementation of the Bias SVD policy to act as a wrapper when
@@ -78,7 +77,7 @@ class BiasSVDPolicy
              const bool /* mit */)
   {
     // Perform decomposition using the bias SVD algorithm.
-    svd::BiasSVD<> biassvd(maxIterations, alpha, lambda);
+    BiasSVD<> biassvd(maxIterations, alpha, lambda);
     biassvd.Apply(data, rank, w, h, p, q);
   }
 
@@ -164,15 +163,15 @@ class BiasSVDPolicy
    * Serialization.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(maxIterations);
-    ar & BOOST_SERIALIZATION_NVP(alpha);
-    ar & BOOST_SERIALIZATION_NVP(lambda);
-    ar & BOOST_SERIALIZATION_NVP(w);
-    ar & BOOST_SERIALIZATION_NVP(h);
-    ar & BOOST_SERIALIZATION_NVP(p);
-    ar & BOOST_SERIALIZATION_NVP(q);
+    ar(CEREAL_NVP(maxIterations));
+    ar(CEREAL_NVP(alpha));
+    ar(CEREAL_NVP(lambda));
+    ar(CEREAL_NVP(w));
+    ar(CEREAL_NVP(h));
+    ar(CEREAL_NVP(p));
+    ar(CEREAL_NVP(q));
   }
 
  private:
@@ -192,7 +191,6 @@ class BiasSVDPolicy
   arma::vec q;
 };
 
-} // namespace cf
 } // namespace mlpack
 
 #endif

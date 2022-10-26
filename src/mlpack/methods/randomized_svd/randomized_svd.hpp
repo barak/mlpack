@@ -13,10 +13,9 @@
 #ifndef MLPACK_METHODS_RANDOMIZED_SVD_RANDOMIZED_SVD_HPP
 #define MLPACK_METHODS_RANDOMIZED_SVD_RANDOMIZED_SVD_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 
 namespace mlpack {
-namespace svd {
 
 /**
  * Randomized SVD is a matrix factorization that is based on randomized matrix
@@ -257,7 +256,9 @@ class RandomizedSVD
   double eps;
 };
 
-} // namespace svd
 } // namespace mlpack
+
+// Include implementation.
+#include "randomized_svd_impl.hpp"
 
 #endif

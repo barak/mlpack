@@ -16,11 +16,11 @@
 #ifndef MLPACK_METHODS_PCA_PCA_HPP
 #define MLPACK_METHODS_PCA_PCA_HPP
 
-#include <mlpack/prereqs.hpp>
-#include <mlpack/methods/pca/decomposition_policies/exact_svd_method.hpp>
+#include <mlpack/core.hpp>
+
+#include "decomposition_policies/decomposition_policies.hpp"
 
 namespace mlpack {
-namespace pca {
 
 /**
  * This class implements principal components analysis (PCA). This is a
@@ -68,6 +68,14 @@ class PCA
   void Apply(const arma::mat& data,
              arma::mat& transformedData,
              arma::vec& eigVal);
+  /**
+   * Apply Principal Component Analysis to the provided data set. It is safe
+   * to pass the same matrix reference for both data and transformedData.
+   * @param data Data matrix.
+   * @param transformedData Matrix to store results of PCA in.
+   */
+  void Apply(const arma::mat& data,
+             arma::mat& transformedData);
 
   /**
    * Use PCA for dimensionality reduction on the given dataset. This will save
@@ -141,7 +149,6 @@ class PCA
   DecompositionPolicy decomposition;
 }; // class PCA
 
-} // namespace pca
 } // namespace mlpack
 
 // Include implementation.

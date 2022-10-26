@@ -15,62 +15,55 @@
 
 #include <mlpack/prereqs.hpp>
 
-#include "../visitor/delete_visitor.hpp"
-#include "../visitor/delta_visitor.hpp"
-#include "../visitor/output_parameter_visitor.hpp"
-
-#include <boost/ptr_container/ptr_vector.hpp>
-
-#include "layer_types.hpp"
+#include "layer.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * Implementation of the Concat class. The Concat class works as a
  * feed-forward fully connected network container which plugs various layers
  * together.
  *
- * @tparam InputDataType Type of the input data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam OutputDataType Type of the output data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam CustomLayers Additional custom layers if required.
+ * NOTE: this class is not intended to exist for long!  It will be replaced with
+ * a more flexible DAG network type.
+ *
+ * @tparam MatType Matrix representation to accept as input and use for
+ *    computation.
  */
-template <
-    typename InputDataType = arma::mat,
-    typename OutputDataType = arma::mat,
-    typename... CustomLayers
->
-class Concat
+template <typename MatType = arma::mat>
+class ConcatType : public MultiLayer<MatType>
 {
  public:
   /**
-   * Create the Concat object using the specified parameters.
-   *
-   * @param model Expose all network modules.
-   * @param run Call the Forward/Backward method before the output is merged.
+   * Create the Concat object.  The axis used for concatenation will be the last
+   * one.
    */
-  Concat(const bool model = false,
-         const bool run = true);
+  ConcatType();
 
   /**
-   * Create the Concat object using the specified parameters.
+   * Create the Concat object, specifying a particular axis on which the layer
+   * outputs should be concatenated.
    *
-   * @param inputSize A vector denoting input size of each layer added.
    * @param axis Concat axis.
-   * @param model Expose all network modules.
-   * @param run Call the Forward/Backward method before the output is merged.
    */
-  Concat(arma::Row<size_t>& inputSize,
-         const size_t axis,
-         const bool model = false,
-         const bool run = true);
+  ConcatType(const size_t axis);
 
   /**
    * Destroy the layers held by the model.
    */
-  ~Concat();
+  virtual ~ConcatType();
+
+  //! Clone the ConcatType object. This handles polymorphism correctly.
+  ConcatType* Clone() const { return new ConcatType(*this); }
+
+  //! Copy the given ConcatType layer.
+  ConcatType(const ConcatType& other);
+  //! Take ownership of the given ConcatType layer.
+  ConcatType(ConcatType&& other);
+  //! Copy the given ConcatType layer.
+  ConcatType& operator=(const ConcatType& other);
+  //! Take ownership of the given ConcatType layer.
+  ConcatType& operator=(ConcatType&& other);
 
   /**
    * Ordinary feed forward pass of a neural network, evaluating the function
@@ -79,8 +72,7 @@ class Concat
    * @param input Input data used for evaluating the specified function.
    * @param output Resulting output activation.
    */
-  template<typename eT>
-  void Forward(const arma::Mat<eT>& input, arma::Mat<eT>& output);
+  void Forward(const MatType& input, MatType& output);
 
   /**
    * Ordinary feed backward pass of a neural network, using 3rd-order tensors as
@@ -91,10 +83,9 @@ class Concat
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
-  template<typename eT>
-  void Backward(const arma::Mat<eT>& /* input */,
-                const arma::Mat<eT>& gy,
-                arma::Mat<eT>& g);
+  void Backward(const MatType& /* input */,
+                const MatType& gy,
+                MatType& g);
 
   /**
    * This is the overload of Backward() that runs only a specific layer with
@@ -105,25 +96,23 @@ class Concat
    * @param g The calculated gradient.
    * @param index The index of the layer to run.
    */
-  template<typename eT>
-  void Backward(const arma::Mat<eT>& /* input */,
-                const arma::Mat<eT>& gy,
-                arma::Mat<eT>& g,
+  void Backward(const MatType& /* input */,
+                const MatType& gy,
+                MatType& g,
                 const size_t index);
 
-  /*
+  /**
    * Calculate the gradient using the output delta and the input activation.
    *
    * @param input The input parameter used for calculating the gradient.
    * @param error The calculated error.
    * @param gradient The calculated gradient.
    */
-  template<typename eT>
-  void Gradient(const arma::Mat<eT>& /* input */,
-                const arma::Mat<eT>& error,
-                arma::Mat<eT>& /* gradient */);
+  void Gradient(const MatType& /* input */,
+                const MatType& error,
+                MatType& /* gradient */);
 
-  /*
+  /**
    * This is the overload of Gradient() that runs a specific layer with the
    * given input.
    *
@@ -132,128 +121,111 @@ class Concat
    * @param gradient The calculated gradient.
    * @param The index of the layer to run.
    */
-  template<typename eT>
-  void Gradient(const arma::Mat<eT>& input,
-                const arma::Mat<eT>& error,
-                arma::Mat<eT>& gradient,
+  void Gradient(const MatType& input,
+                const MatType& error,
+                MatType& gradient,
                 const size_t index);
 
-  /*
-   * Add a new module to the model.
-   *
-   * @param args The layer parameter.
-   */
-  template <class LayerType, class... Args>
-  void Add(Args... args) { network.push_back(new LayerType(args...)); }
+  //! Get the axis of concatenation.
+  size_t Axis() const { return axis; }
 
-  /*
-   * Add a new module to the model.
-   *
-   * @param layer The Layer to be added to the model.
-   */
-  void Add(LayerTypes<CustomLayers...> layer) { network.push_back(layer); }
+  // We don't need to overload WeightSize(); MultiLayer already computes this
+  // correctly.  (It is the sum of weights of all child layers.)
 
-  //! Return the model modules.
-  std::vector<LayerTypes<CustomLayers...> >& Model()
+  void ComputeOutputDimensions()
   {
-    if (model)
+    // The input is sent to every layer.
+    for (size_t i = 0; i < this->network.size(); ++i)
     {
-      return network;
+      this->network[i]->InputDimensions() = this->inputDimensions;
+      this->network[i]->ComputeOutputDimensions();
     }
 
-    return empty;
+    const size_t numOutputDimensions = (this->network.size() == 0) ?
+        this->inputDimensions.size() :
+        this->network[0]->OutputDimensions().size();
+
+    // If the user did not specify an axis, we will use the last one.
+    // Otherwise, we must sanity check to ensure that the axis we are
+    // concatenating along is valid.
+    if (!useAxis)
+    {
+      axis = this->inputDimensions.size() - 1;
+    }
+    else if (axis >= numOutputDimensions)
+    {
+      std::ostringstream oss;
+      oss << "Concat::ComputeOutputDimensions(): cannot concatenate outputs "
+          << "along axis " << axis << " when input only has "
+          << this->inputDimensions.size() << " axes!";
+      throw std::invalid_argument(oss.str());
+    }
+
+    // Now, we concatenate the output along a specific axis.
+    this->outputDimensions = std::vector<size_t>(numOutputDimensions, 0);
+    for (size_t i = 0; i < this->outputDimensions.size(); ++i)
+    {
+      if (i == axis)
+      {
+        // Accumulate output size along this axis for each layer output.
+        for (size_t n = 0; n < this->network.size(); ++n)
+          this->outputDimensions[i] += this->network[n]->OutputDimensions()[i];
+      }
+      else
+      {
+        // Ensure that the output size is the same along this axis.
+        const size_t axisDim = this->network[0]->OutputDimensions()[i];
+        for (size_t n = 1; n < this->network.size(); ++n)
+        {
+          const size_t axisDim2 = this->network[n]->OutputDimensions()[i];
+          if (axisDim != axisDim2)
+          {
+            std::ostringstream oss;
+            oss << "Concat::ComputeOutputDimensions(): cannot concatenate "
+                << "outputs along axis " << axis << "; held layer " << n
+                << " has output size " << axisDim2 << " along axis " << i
+                << ", but the first held layer has output size " << axisDim
+                << "!  All layers must have identical output size in any "
+                << "axis other than the concatenated axis.";
+            throw std::invalid_argument(oss.str());
+          }
+        }
+
+        this->outputDimensions[i] = axisDim;
+      }
+    }
+
+    // Recompute total input and output sizes.  Note that we pass the input to
+    // each layer held in the network, so the "total" input size (which is used
+    // by the backwards pass to compute how much memory to use for holding
+    // deltas) should be the number of layers multiplied by the input size for
+    // each layer.
+    this->totalInputSize = 1;
+    this->totalOutputSize = 1;
+    for (size_t i = 0; i < this->inputDimensions.size(); ++i)
+      this->totalInputSize *= this->inputDimensions[i];
+    this->totalInputSize *= this->network.size();
+    for (size_t i = 0; i < this->outputDimensions.size(); ++i)
+      this->totalOutputSize *= this->outputDimensions[i];
   }
 
-  //! Return the initial point for the optimization.
-  const arma::mat& Parameters() const { return parameters; }
-  //! Modify the initial point for the optimization.
-  arma::mat& Parameters() { return parameters; }
-
-  //! Get the value of run parameter.
-  bool Run() const { return run; }
-  //! Modify the value of run parameter.
-  bool& Run() { return run; }
-
-  arma::mat const& InputParameter() const { return inputParameter; }
-  //! Modify the input parameter.
-  arma::mat& InputParameter() { return inputParameter; }
-
-  //! Get the output parameter.
-  arma::mat const& OutputParameter() const { return outputParameter; }
-  //! Modify the output parameter.
-  arma::mat& OutputParameter() { return outputParameter; }
-
-  //! Get the delta.e
-  arma::mat const& Delta() const { return delta; }
-  //! Modify the delta.
-  arma::mat& Delta() { return delta; }
-
-  //! Get the gradient.
-  arma::mat const& Gradient() const { return gradient; }
-  //! Modify the gradient.
-  arma::mat& Gradient() { return gradient; }
-
-  //! Get the axis of concatenation.
-  size_t const& ConcatAxis() const { return axis; }
-
   /**
-   * Serialize the layer
+   * Serialize the layer.
    */
   template<typename Archive>
-  void serialize(Archive& /* ar */, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
-  //! Parameter which indicates the input size of modules.
-  arma::Row<size_t> inputSize;
-
   //! Parameter which indicates the axis of concatenation.
   size_t axis;
 
   //! Parameter which indicates whether to use the axis of concatenation.
   bool useAxis;
+}; // class ConcatType.
 
-  //! Parameter which indicates if the modules should be exposed.
-  bool model;
+// Standard Concat layer.
+typedef ConcatType<arma::mat> Concat;
 
-  //! Parameter which indicates if the Forward/Backward method should be called
-  //! before merging the output.
-  bool run;
-
-  //! Parameter to store channels.
-  size_t channels;
-
-  //! Locally-stored network modules.
-  std::vector<LayerTypes<CustomLayers...> > network;
-
-  //! Locally-stored model parameters.
-  arma::mat parameters;
-
-  //! Locally-stored delta visitor.
-  DeltaVisitor deltaVisitor;
-
-  //! Locally-stored output parameter visitor.
-  OutputParameterVisitor outputParameterVisitor;
-
-  //! Locally-stored delete visitor.
-  DeleteVisitor deleteVisitor;
-
-  //! Locally-stored empty list of modules.
-  std::vector<LayerTypes<CustomLayers...> > empty;
-
-  //! Locally-stored delta object.
-  arma::mat delta;
-
-  //! Locally-stored input parameter object.
-  arma::mat inputParameter;
-
-  //! Locally-stored output parameter object.
-  arma::mat outputParameter;
-
-  //! Locally-stored gradient object.
-  arma::mat gradient;
-}; // class Concat
-
-} // namespace ann
 } // namespace mlpack
 
 // Include implementation.

@@ -15,7 +15,6 @@
 #define MLPACK_CORE_TREE_STATISTIC_HPP
 
 namespace mlpack {
-namespace tree {
 
 /**
  * Empty statistic if you are not interested in storing statistics in your
@@ -41,11 +40,10 @@ class EmptyStatistic
    * Serialize the statistic (there's nothing to be saved).
    */
   template<typename Archive>
-  void serialize(Archive& /* ar */, const unsigned int /* version */)
+  void serialize(Archive& /* ar */, const uint32_t /* version */)
   { }
 };
 
-} // namespace tree
 } // namespace mlpack
 
 #endif // MLPACK_CORE_TREE_STATISTIC_HPP

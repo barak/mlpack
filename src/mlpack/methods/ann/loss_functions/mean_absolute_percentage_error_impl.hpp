@@ -16,48 +16,33 @@
 #include "mean_absolute_percentage_error.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-MeanAbsolutePercentageError<InputDataType, OutputDataType>::
-MeanAbsolutePercentageError()
+template<typename MatType>
+MeanAbsolutePercentageErrorType<MatType>::MeanAbsolutePercentageErrorType()
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type
-MeanAbsolutePercentageError<InputDataType, OutputDataType>::Forward(
-    const InputType& input,
-    const TargetType& target)
+template<typename MatType>
+typename MatType::elem_type MeanAbsolutePercentageErrorType<MatType>::Forward(
+    const MatType& prediction,
+    const MatType& target)
 {
-  InputType loss = arma::abs((input - target) / target); 
+  MatType loss = arma::abs((prediction - target) / target);
   return arma::accu(loss) * (100 / target.n_cols);
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void MeanAbsolutePercentageError<InputDataType, OutputDataType>::Backward(
-    const InputType& input,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType>
+void MeanAbsolutePercentageErrorType<MatType>::Backward(
+    const MatType& prediction,
+    const MatType& target,
+    MatType& loss)
 
-{ 
-  output = (((arma::conv_to<arma::mat>::from(input < target) * -2) + 1) /
-      target) * (100 / target.n_cols) ;
-}
-
-template<typename InputDataType, typename OutputDataType>
-template<typename Archive>
-void MeanAbsolutePercentageError<InputDataType, OutputDataType>::serialize(
-    Archive& /* ar */,
-    const unsigned int /* version */)
 {
-  // Nothing to do here.
+  loss = (((arma::conv_to<arma::mat>::from(prediction < target) * -2) + 1) /
+      target) * (100 / target.n_cols);
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

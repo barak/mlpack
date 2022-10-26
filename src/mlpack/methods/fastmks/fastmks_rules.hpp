@@ -16,10 +16,9 @@
 #include <mlpack/core/kernels/kernel_traits.hpp>
 #include <mlpack/core/tree/cover_tree/cover_tree.hpp>
 #include <mlpack/core/tree/traversal_info.hpp>
-#include <boost/heap/priority_queue.hpp>
+#include <algorithm>
 
 namespace mlpack {
-namespace fastmks {
 
 /**
  * The FastMKSRules class is a template helper class used by FastMKS class when
@@ -119,7 +118,7 @@ class FastMKSRules
   //! Modify the number of times Score() was called.
   size_t& Scores() { return scores; }
 
-  typedef typename tree::TraversalInfo<TreeType> TraversalInfoType;
+  typedef typename mlpack::TraversalInfo<TreeType> TraversalInfoType;
 
   const TraversalInfoType& TraversalInfo() const { return traversalInfo; }
   TraversalInfoType& TraversalInfo() { return traversalInfo; }
@@ -145,15 +144,10 @@ class FastMKSRules
     };
   };
 
-  //! Use a min heap to represent the list of candidate points.
-  //! We will use a boost::heap::priority_queue instead of a std::priority_queue
-  //! because we need to iterate over all the candidates and std::priority_queue
-  //! doesn't provide that interface.
-  typedef boost::heap::priority_queue<Candidate,
-      boost::heap::compare<CandidateCmp>> CandidateList;
-
-  //! Set of candidates for each point.
-  std::vector<CandidateList> candidates;
+  //! Set of candidates for each point.  We use a min-heap built on a
+  //! std::vector to represent the list of candidate points for each query
+  //! point.
+  std::vector<std::vector<Candidate>> candidates;
 
   //! Number of points to search for.
   const size_t k;
@@ -195,7 +189,6 @@ class FastMKSRules
   TraversalInfoType traversalInfo;
 };
 
-} // namespace fastmks
 } // namespace mlpack
 
 // Include implementation.

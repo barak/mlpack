@@ -9,14 +9,13 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/linear_regression/linear_regression.hpp>
+#include <mlpack/methods/linear_regression.hpp>
 
-#include "serialization_catch.hpp"
+#include "serialization.hpp"
 #include "test_catch_tools.hpp"
 #include "catch.hpp"
 
 using namespace mlpack;
-using namespace mlpack::regression;
 
 /**
  * Creates two 10x3 random matrices and one 10x1 "results" matrix.
@@ -48,8 +47,8 @@ TEST_CASE("LinearRegressionTestCase", "[LinearRegressionTest]")
   for (size_t elem = 0; elem < points.n_elem; elem++)
   {
     // Max added noise is 0.02.
-    points[elem] += math::Random() / 50.0;
-    predictors[elem] += math::Random() / 50.0;
+    points[elem] += Random() / 50.0;
+    predictors[elem] += Random() / 50.0;
   }
 
   // Generate responses.
@@ -73,8 +72,8 @@ TEST_CASE("LinearRegressionTestCase", "[LinearRegressionTest]")
 TEST_CASE("ComputeErrorTest", "[LinearRegressionTest]")
 {
   arma::mat predictors;
-  predictors << 0 << 1 << 2 << 4 << 8 << 16 << arma::endr
-             << 16 << 8 << 4 << 2 << 1 << 0 << arma::endr;
+  predictors = { {  0, 1, 2, 4, 8, 16 },
+                 { 16, 8, 4, 2, 1,  0 } };
   arma::rowvec responses = "0 2 4 3 8 8";
 
   // http://www.mlpack.org/trac/ticket/298
@@ -92,8 +91,8 @@ TEST_CASE("ComputeErrorPerfectFitTest", "[LinearRegressionTest]")
 {
   // Linear regression should perfectly model this dataset.
   arma::mat predictors;
-  predictors << 0 << 1 << 2 << 1 << 6 << 2 << arma::endr
-             << 0 << 1 << 2 << 2 << 2 << 6 << arma::endr;
+  predictors = { { 0, 1, 2, 1, 6, 2 },
+                 { 0, 1, 2, 2, 2, 6 } };
   arma::rowvec responses = "0 2 4 3 8 8";
 
   LinearRegression lr(predictors, responses);
@@ -158,8 +157,8 @@ TEST_CASE("RidgeRegressionTestCase", "[LinearRegressionTest]")
   for (size_t elem = 0; elem < points.n_elem; elem++)
   {
     // Max added noise is 0.02.
-    points[elem] += math::Random() / 50.0;
-    predictors[elem] += math::Random() / 50.0;
+    points[elem] += Random() / 50.0;
+    predictors[elem] += Random() / 50.0;
   }
 
   // Generate responses.
@@ -211,15 +210,15 @@ TEST_CASE("LinearRegressionTest", "[LinearRegressionTest]")
   responses.randn(800);
 
   LinearRegression lr(data, responses, 0.05); // Train the model.
-  LinearRegression xmlLr, textLr, binaryLr;
+  LinearRegression xmlLr, jsonLr, binaryLr;
 
-  SerializeObjectAll(lr, xmlLr, textLr, binaryLr);
+  SerializeObjectAll(lr, xmlLr, jsonLr, binaryLr);
 
   REQUIRE(lr.Lambda() == Approx(xmlLr.Lambda()).epsilon(1e-10));
-  REQUIRE(lr.Lambda() == Approx(textLr.Lambda()).epsilon(1e-10));
+  REQUIRE(lr.Lambda() == Approx(jsonLr.Lambda()).epsilon(1e-10));
   REQUIRE(lr.Lambda() == Approx(binaryLr.Lambda()).epsilon(1e-10));
 
-  CheckMatrices(lr.Parameters(), xmlLr.Parameters(), textLr.Parameters(),
+  CheckMatrices(lr.Parameters(), xmlLr.Parameters(), jsonLr.Parameters(),
       binaryLr.Parameters());
 }
 
@@ -251,8 +250,8 @@ TEST_CASE("LinearRegressionTrainReturnObjective", "[LinearRegressionTest]")
   for (size_t elem = 0; elem < points.n_elem; elem++)
   {
     // Max added noise is 0.02.
-    points[elem] += math::Random() / 50.0;
-    predictors[elem] += math::Random() / 50.0;
+    points[elem] += Random() / 50.0;
+    predictors[elem] += Random() / 50.0;
   }
 
   // Generate responses.

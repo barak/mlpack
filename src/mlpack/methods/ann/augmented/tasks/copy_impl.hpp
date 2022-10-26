@@ -16,13 +16,10 @@
 #include "copy.hpp"
 
 namespace mlpack {
-namespace ann /* Artificial Neural Network */ {
-namespace augmented /* Augmented neural network */ {
-namespace tasks /* Task utilities for augmented */ {
 
-CopyTask::CopyTask(const size_t maxLength,
-                   const size_t nRepeats,
-                   const bool addSeparator) :
+inline CopyTask::CopyTask(const size_t maxLength,
+                          const size_t nRepeats,
+                          const bool addSeparator) :
     maxLength(maxLength),
     nRepeats(nRepeats),
     addSeparator(addSeparator)
@@ -47,10 +44,10 @@ CopyTask::CopyTask(const size_t maxLength,
   // Just storing task-specific parameters.
 }
 
-void CopyTask::Generate(arma::field<arma::mat>& input,
-                        arma::field<arma::mat>& labels,
-                        const size_t batchSize,
-                        bool fixedLength) const
+inline void CopyTask::Generate(arma::field<arma::mat>& input,
+                               arma::field<arma::mat>& labels,
+                               const size_t batchSize,
+                               bool fixedLength) const
 {
   input = arma::field<arma::mat>(batchSize);
   labels = arma::field<arma::mat>(batchSize);
@@ -61,7 +58,7 @@ void CopyTask::Generate(arma::field<arma::mat>& input,
     {
       arma::vec weights(maxLength - 1);
 
-      mlpack::distribution::DiscreteDistribution d(1);
+      DiscreteDistribution d(1);
       // We have two binary numbers with exactly two digits (10 and 11).
       // Increasing length by 1 double the number of valid numbers.
       d.Probabilities(0) =
@@ -89,9 +86,9 @@ void CopyTask::Generate(arma::field<arma::mat>& input,
   }
 }
 
-void CopyTask::Generate(arma::mat& input,
-                        arma::mat& labels,
-                        const size_t batchSize) const
+inline void CopyTask::Generate(arma::mat& input,
+                               arma::mat& labels,
+                               const size_t batchSize) const
 {
   arma::field<arma::mat> fieldInput, fieldLabels;
   Generate(fieldInput, fieldLabels, batchSize, true);
@@ -105,10 +102,6 @@ void CopyTask::Generate(arma::mat& input,
   }
 }
 
-
-} // namespace tasks
-} // namespace augmented
-} // namespace ann
 } // namespace mlpack
 
 #endif

@@ -14,10 +14,11 @@
 #define MLPACK_CORE_DATA_STRING_ENCODING_DICTIONARY_HPP
 
 #include <mlpack/prereqs.hpp>
-#include <mlpack/core/boost_backport/boost_backport_string_view.hpp>
-#include <unordered_map>
-#include <deque>
+
 #include <array>
+#include <deque>
+#include <functional>
+#include <unordered_map>
 
 namespace mlpack {
 namespace data {
@@ -94,9 +95,9 @@ class StringEncodingDictionary
    * Serialize the class to the given archive.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(mapping);
+    ar(CEREAL_NVP(mapping));
   }
 
  private:
@@ -105,20 +106,20 @@ class StringEncodingDictionary
 };
 
 /*
- * Specialization of the StringEncodingDictionary class for boost::string_view.
+ * Specialization of the StringEncodingDictionary class for MLPACK_STRING_VIEW.
  */
 template<>
-class StringEncodingDictionary<boost::string_view>
+class StringEncodingDictionary<MLPACK_STRING_VIEW>
 {
  public:
   //! A convenient alias for the internal type of the map.
   using MapType = std::unordered_map<
-      boost::string_view,
+      MLPACK_STRING_VIEW,
       size_t,
-      boost::hash<boost::string_view>>;
+      std::hash<MLPACK_STRING_VIEW>>;
 
   //! The type of the token that the dictionary stores.
-  using TokenType = boost::string_view;
+  using TokenType = MLPACK_STRING_VIEW;
 
   //! Construct the default class.
   StringEncodingDictionary() = default;
@@ -155,7 +156,7 @@ class StringEncodingDictionary<boost::string_view>
    *
    * @param token The given token.
    */
-  bool HasToken(const boost::string_view token) const
+  bool HasToken(const MLPACK_STRING_VIEW token) const
   {
     return mapping.find(token) != mapping.end();
   }
@@ -167,7 +168,7 @@ class StringEncodingDictionary<boost::string_view>
    *
    * @param token The given token.
    */
-  size_t AddToken(const boost::string_view token)
+  size_t AddToken(const MLPACK_STRING_VIEW token)
   {
     tokens.emplace_back(token);
 
@@ -184,7 +185,7 @@ class StringEncodingDictionary<boost::string_view>
    *
    * @param token The given token.
    */
-  size_t Value(const boost::string_view token) const
+  size_t Value(const MLPACK_STRING_VIEW token) const
   {
     return mapping.at(token);
   }
@@ -213,33 +214,33 @@ class StringEncodingDictionary<boost::string_view>
    * Serialize the class to the given archive.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
     size_t numTokens = tokens.size();
 
-    ar & BOOST_SERIALIZATION_NVP(numTokens);
+    ar(CEREAL_NVP(numTokens));
 
-    if (Archive::is_loading::value)
+    if (cereal::is_loading<Archive>())
     {
       tokens.resize(numTokens);
 
       for (std::string& token : tokens)
       {
-        ar & BOOST_SERIALIZATION_NVP(token);
+        ar(CEREAL_NVP(token));
 
         size_t tokenValue = 0;
-        ar & BOOST_SERIALIZATION_NVP(tokenValue);
+        ar(CEREAL_NVP(tokenValue));
         mapping[token] = tokenValue;
       }
     }
-    if (Archive::is_saving::value)
+    if (cereal::is_saving<Archive>())
     {
       for (std::string& token : tokens)
       {
-        ar & BOOST_SERIALIZATION_NVP(token);
+        ar(CEREAL_NVP(token));
 
         size_t tokenValue = mapping.at(token);
-        ar & BOOST_SERIALIZATION_NVP(tokenValue);
+        ar(CEREAL_NVP(tokenValue));
       }
     }
   }
@@ -328,10 +329,10 @@ class StringEncodingDictionary<int>
    * Serialize the class to the given archive.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(mapping);
-    ar & BOOST_SERIALIZATION_NVP(size);
+    ar(CEREAL_NVP(mapping));
+    ar(CEREAL_NVP(size));
   }
 
  private:

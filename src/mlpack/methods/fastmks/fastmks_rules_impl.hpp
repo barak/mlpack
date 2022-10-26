@@ -16,7 +16,6 @@
 #include "fastmks_rules.hpp"
 
 namespace mlpack {
-namespace fastmks {
 
 template<typename KernelType, typename TreeType>
 FastMKSRules<KernelType, TreeType>::FastMKSRules(
@@ -56,12 +55,9 @@ FastMKSRules<KernelType, TreeType>::FastMKSRules(
   // BaseCase() method.
   const Candidate def = std::make_pair(-DBL_MAX, size_t() - 1);
 
-  CandidateList pqueue;
-  pqueue.reserve(k);
-  for (size_t i = 0; i < k; ++i)
-    pqueue.push(def);
-  std::vector<CandidateList> tmp(querySet.n_cols, pqueue);
-  candidates.swap(tmp);
+  std::vector<Candidate> pqueue(k, def);
+  std::make_heap(pqueue.begin(), pqueue.end(), CandidateCmp());
+  candidates = std::vector<std::vector<Candidate>>(querySet.n_cols, pqueue);
 }
 
 template<typename KernelType, typename TreeType>
@@ -74,18 +70,18 @@ void FastMKSRules<KernelType, TreeType>::GetResults(
 
   for (size_t i = 0; i < querySet.n_cols; ++i)
   {
-    CandidateList& pqueue = candidates[i];
-    for (size_t j = 1; j <= k; ++j)
+    std::vector<Candidate>& pqueue = candidates[i];
+    std::sort_heap(pqueue.begin(), pqueue.end(), CandidateCmp());
+    for (size_t j = 0; j < k; ++j)
     {
-      indices(k - j, i) = pqueue.top().second;
-      products(k - j, i) = pqueue.top().first;
-      pqueue.pop();
+      indices(j, i) = pqueue[j].second;
+      products(j, i) = pqueue[j].first;
     }
   }
 }
 
 template<typename KernelType, typename TreeType>
-inline force_inline
+inline mlpack_force_inline
 double FastMKSRules<KernelType, TreeType>::BaseCase(
     const size_t queryIndex,
     const size_t referenceIndex)
@@ -94,7 +90,7 @@ double FastMKSRules<KernelType, TreeType>::BaseCase(
   // cover trees, the kernel evaluation between the two centroid points already
   // happened.  So we don't need to do it.  Note that this optimizes out if the
   // first conditional is false (its result is known at compile time).
-  if (tree::TreeTraits<TreeType>::FirstPointIsCentroid)
+  if (TreeTraits<TreeType>::FirstPointIsCentroid)
   {
     if ((queryIndex == lastQueryIndex) &&
         (referenceIndex == lastReferenceIndex))
@@ -110,7 +106,7 @@ double FastMKSRules<KernelType, TreeType>::BaseCase(
                                       referenceSet.col(referenceIndex));
 
   // Update the last kernel value, if we need to.
-  if (tree::TreeTraits<TreeType>::FirstPointIsCentroid)
+  if (TreeTraits<TreeType>::FirstPointIsCentroid)
     lastKernel = kernelEval;
 
   // If the reference and query sets are identical, we still need to compute the
@@ -129,7 +125,7 @@ double FastMKSRules<KernelType, TreeType>::Score(const size_t queryIndex,
                                                  TreeType& referenceNode)
 {
   // Compare with the current best.
-  const double bestKernel = candidates[queryIndex].top().first;
+  const double bestKernel = candidates[queryIndex].front().first;
 
   // See if we can perform a parent-child prune.
   const double furthestDist = referenceNode.FurthestDescendantDistance();
@@ -139,7 +135,7 @@ double FastMKSRules<KernelType, TreeType>::Score(const size_t queryIndex,
     const double parentDist = referenceNode.ParentDistance();
     const double combinedDistBound = parentDist + furthestDist;
     const double lastKernel = referenceNode.Parent()->Stat().LastKernel();
-    if (kernel::KernelTraits<KernelType>::IsNormalized)
+    if (KernelTraits<KernelType>::IsNormalized)
     {
       const double squaredDist = std::pow(combinedDistBound, 2.0);
       const double delta = (1 - 0.5 * squaredDist);
@@ -168,10 +164,10 @@ double FastMKSRules<KernelType, TreeType>::Score(const size_t queryIndex,
   // centroid or, if the centroid is a point, use that.
   ++scores;
   double kernelEval;
-  if (tree::TreeTraits<TreeType>::FirstPointIsCentroid)
+  if (TreeTraits<TreeType>::FirstPointIsCentroid)
   {
     // Could it be that this kernel evaluation has already been calculated?
-    if (tree::TreeTraits<TreeType>::HasSelfChildren &&
+    if (TreeTraits<TreeType>::HasSelfChildren &&
         referenceNode.Parent() != NULL &&
         referenceNode.Point(0) == referenceNode.Parent()->Point(0))
     {
@@ -193,7 +189,7 @@ double FastMKSRules<KernelType, TreeType>::Score(const size_t queryIndex,
   referenceNode.Stat().LastKernel() = kernelEval;
 
   double maxKernel;
-  if (kernel::KernelTraits<KernelType>::IsNormalized)
+  if (KernelTraits<KernelType>::IsNormalized)
   {
     const double squaredDist = std::pow(furthestDist, 2.0);
     const double delta = (1 - 0.5 * squaredDist);
@@ -322,7 +318,7 @@ double FastMKSRules<KernelType, TreeType>::Score(TreeType& queryNode,
   // We were unable to perform a parent-child or parent-parent prune, so now we
   // must calculate kernel evaluation, if necessary.
   double kernelEval = 0.0;
-  if (tree::TreeTraits<TreeType>::FirstPointIsCentroid)
+  if (TreeTraits<TreeType>::FirstPointIsCentroid)
   {
     // For this type of tree, we may have already calculated the base case in
     // the parents.
@@ -364,7 +360,7 @@ double FastMKSRules<KernelType, TreeType>::Score(TreeType& queryNode,
   ++scores;
 
   double maxKernel;
-  if (kernel::KernelTraits<KernelType>::IsNormalized)
+  if (KernelTraits<KernelType>::IsNormalized)
   {
     // We have a tighter bound for normalized kernels.
     const double querySqDist = std::pow(queryDescDist, 2.0);
@@ -412,7 +408,7 @@ double FastMKSRules<KernelType, TreeType>::Rescore(const size_t queryIndex,
                                                    TreeType& /*referenceNode*/,
                                                    const double oldScore) const
 {
-  const double bestKernel = candidates[queryIndex].top().first;
+  const double bestKernel = candidates[queryIndex].front().first;
 
   return ((1.0 / oldScore) >= bestKernel) ? oldScore : DBL_MAX;
 }
@@ -459,11 +455,11 @@ double FastMKSRules<KernelType, TreeType>::CalculateBound(TreeType& queryNode)
   for (size_t i = 0; i < queryNode.NumPoints(); ++i)
   {
     const size_t point = queryNode.Point(i);
-    const CandidateList& candidatesPoints = candidates[point];
-    if (candidatesPoints.top().first < worstPointKernel)
-      worstPointKernel = candidatesPoints.top().first;
+    const std::vector<Candidate>& candidatesPoints = candidates[point];
+    if (candidatesPoints.front().first < worstPointKernel)
+      worstPointKernel = candidatesPoints.front().first;
 
-    if (candidatesPoints.top().first == -DBL_MAX)
+    if (candidatesPoints.front().first == -DBL_MAX)
       continue; // Avoid underflow.
 
     // This should be (queryDescendantDistance + centroidDistance) for any tree
@@ -478,7 +474,7 @@ double FastMKSRules<KernelType, TreeType>::CalculateBound(TreeType& queryNode)
     // where p_j^*(p_q) is the j'th kernel candidate for query point p_q and
     // k_j^*(p_q) is K(p_q, p_j^*(p_q)).
     double worstPointCandidateKernel = DBL_MAX;
-    typedef typename CandidateList::const_iterator iter;
+    typedef std::vector<Candidate>::const_iterator iter;
     for (iter it = candidatesPoints.begin(); it != candidatesPoints.end(); ++it)
     {
       const double candidateKernel = it->first - queryDescendantDistance *
@@ -529,16 +525,17 @@ inline void FastMKSRules<KernelType, TreeType>::InsertNeighbor(
     const size_t index,
     const double product)
 {
-  CandidateList& pqueue = candidates[queryIndex];
-  if (product > pqueue.top().first)
+  std::vector<Candidate>& pqueue = candidates[queryIndex];
+  if (product > pqueue.front().first)
   {
     Candidate c = std::make_pair(product, index);
-    pqueue.pop();
-    pqueue.push(c);
+    // Update the min-heap with the new element.
+    std::pop_heap(pqueue.begin(), pqueue.end(), CandidateCmp());
+    pqueue.back() = c;
+    std::push_heap(pqueue.begin(), pqueue.end(), CandidateCmp());
   }
 }
 
-} // namespace fastmks
 } // namespace mlpack
 
 #endif

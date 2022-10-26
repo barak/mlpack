@@ -18,46 +18,86 @@
 #include "leaky_relu.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-LeakyReLU<InputDataType, OutputDataType>::LeakyReLU(
-    const double alpha) : alpha(alpha)
+template<typename MatType>
+LeakyReLUType<MatType>::LeakyReLUType(const double alpha) :
+    Layer<MatType>(),
+    alpha(alpha)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename OutputType>
-void LeakyReLU<InputDataType, OutputDataType>::Forward(
-    const InputType& input, OutputType& output)
+template<typename MatType>
+LeakyReLUType<MatType>::LeakyReLUType(const LeakyReLUType& other) :
+    Layer<MatType>(other),
+    alpha(other.alpha)
 {
-  output = arma::max(input, alpha * input);
+  // Nothing to do.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename DataType>
-void LeakyReLU<InputDataType, OutputDataType>::Backward(
-    const DataType& input, const DataType& gy, DataType& g)
+template<typename MatType>
+LeakyReLUType<MatType>::LeakyReLUType(
+    LeakyReLUType&& other) :
+    Layer<MatType>(std::move(other)),
+    alpha(std::move(other.alpha))
 {
-  DataType derivative;
-  derivative.set_size(arma::size(input));
-  for (size_t i = 0; i < input.n_elem; ++i)
-    derivative(i) = (input(i) >= 0) ? 1 : alpha;
-
-  g = gy % derivative;
+  // Nothing to do.
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
+LeakyReLUType<MatType>&
+LeakyReLUType<MatType>::operator=(const LeakyReLUType& other)
+{
+  if (&other != this)
+  {
+    Layer<MatType>::operator=(other);
+    alpha = other.alpha;
+  }
+
+  return *this;
+}
+
+template<typename MatType>
+LeakyReLUType<MatType>&
+LeakyReLUType<MatType>::operator=(LeakyReLUType&& other)
+{
+  if (&other != this)
+  {
+    Layer<MatType>::operator=(std::move(other));
+    alpha = std::move(other.alpha);
+  }
+
+  return *this;
+}
+
+template<typename MatType>
+void LeakyReLUType<MatType>::Forward(const MatType& input, MatType& output)
+{
+  #pragma omp for
+  for (size_t i = 0; i < (size_t) input.n_elem; ++i)
+    output(i) = std::max(input(i), alpha * input(i));
+}
+
+template<typename MatType>
+void LeakyReLUType<MatType>::Backward(
+    const MatType& input, const MatType& gy, MatType& g)
+{
+  #pragma omp for
+  for (size_t i = 0; i < (size_t) input.n_elem; ++i)
+    g(i) = gy(i) * ((input(i) >= 0) ? 1 : alpha);
+}
+
+template<typename MatType>
 template<typename Archive>
-void LeakyReLU<InputDataType, OutputDataType>::serialize(
+void LeakyReLUType<MatType>::serialize(
     Archive& ar,
-    const unsigned int /* version */)
+    const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(alpha);
+  ar(cereal::base_class<Layer<MatType>>(this));
+
+  ar(CEREAL_NVP(alpha));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

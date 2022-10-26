@@ -2,6 +2,7 @@
  * @file methods/ann/layer/batch_norm.hpp
  * @author Praveen Ch
  * @author Manthan-R-Sheth
+ * @author Shubham Agrawal
  *
  * Definition of the Batch Normalization layer class.
  *
@@ -15,8 +16,9 @@
 
 #include <mlpack/prereqs.hpp>
 
+#include "layer.hpp"
+
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * Declaration of the Batch Normalization layer class. The layer transforms
@@ -44,39 +46,89 @@ namespace ann /** Artificial Neural Network. */ {
  * }
  * @endcode
  *
- * @tparam InputDataType Type of the input data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam OutputDataType Type of the output data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
+ * @tparam MatType Matrix representation to accept as input and use for
+ *         computation.
  */
-template <
-  typename InputDataType = arma::mat,
-  typename OutputDataType = arma::mat
->
-class BatchNorm
+template <typename MatType = arma::mat>
+class BatchNormType : public Layer<MatType>
 {
  public:
-  //! Create the BatchNorm object.
-  BatchNorm();
+  /**
+   * Create the BatchNorm object. 
+   *
+   * With batch normalization, the same exact normalization is applied to every
+   * element in an individual channel.  To control what axes normalization is
+   * applied to, set the `minAxis` and `maxAxis` parameters.
+   *
+   * The last axis of the input data will be chosen as channels.  So, if the
+   * input is 3-dimensional or higher, this constructor will set the minimum
+   * and maximum axes to 2; this will take only the 3rd axis of the input as
+   * channels. If the input is 1-dimensional, then the minimum and maximum axis
+   * will be 0, and thus every element of the input will have a different
+   * normalization applied to it.
+   *
+   * As an example, if we have a 3-dimensional input (call the 
+   * three dimensions rows, columns and slices), and `minAxis` & `maxAxis` is 
+   * 2, then we apply the same normalization across different slices.
+   */
+  BatchNormType();
 
   /**
-   * Create the BatchNorm layer object for a specified number of input units.
+   * Create the BatchNorm layer object for a specified axis of input units as 
+   * channels.  With batch normalization, the same exact normalization is
+   * applied to every element in an individual channel.  To control what axes
+   * normalization is applied to, set the `minAxis` and `maxAxis` parameters.
+   * 
+   * As an example, if we have a 3-dimensional input (call the three dimensions
+   * rows, columns and slices), and `minAxis` is 1 & `maxAxis` is 2, then the 
+   * number of channels is equal to `columns * slices`.
    *
-   * @param size The number of input units / channels.
+   * @param minAxis The min axis along which BatchNorm is applied. Before that,
+   *                it will be treated as input point.
+   * @param maxAxis The max axis along which BatchNorm is applied. After that,
+   *                it will be treated as another higher dimension point.
    * @param eps The epsilon added to variance to ensure numerical stability.
    * @param average Boolean to determine whether cumulative average is used for
    *                updating the parameters or momentum is used.
    * @param momentum Parameter used to to update the running mean and variance.
    */
-  BatchNorm(const size_t size,
-            const double eps = 1e-8,
-            const bool average = true,
-            const double momentum = 0.1);
+  BatchNormType(const size_t minAxis,
+                const size_t maxAxis,
+                const double eps = 1e-8,
+                const bool average = true,
+                const double momentum = 0.1);
+  
+  virtual ~BatchNormType() { }
+
+  //! Clone the BatchNormType object. This handles polymorphism correctly.
+  BatchNormType* Clone() const { return new BatchNormType(*this); }
+
+  //! Copy the other BatchNorm layer (but not weights).
+  BatchNormType(const BatchNormType& layer);
+
+  //! Take ownership of the members of the other BatchNorm layer (but not weights).
+  BatchNormType(BatchNormType&& layer);
+
+  //! Copy the other BatchNorm layer (but not weights).
+  BatchNormType& operator=(const BatchNormType& layer);
+
+  //! Take ownership of the members of the other BatchNorm layer (but not weights).
+  BatchNormType& operator=(BatchNormType&& layer);
 
   /**
-   * Reset the layer parameters
+   * Reset the layer parameters.
    */
-  void Reset();
+  void SetWeights(typename MatType::elem_type* weightsPtr);
+
+  /**
+   * Initialize the weight matrix of the layer.
+   *
+   * @param W Weight matrix to initialize.
+   * @param elements Number of elements.
+   */
+  void CustomInitialize(
+      MatType& W,
+      const size_t elements);
 
   /**
    * Forward pass of the Batch Normalization layer. Transforms the input data
@@ -86,8 +138,7 @@ class BatchNorm
    * @param input Input data for the layer
    * @param output Resulting output activations.
    */
-  template<typename eT>
-  void Forward(const arma::Mat<eT>& input, arma::Mat<eT>& output);
+  void Forward(const MatType& input, MatType& output);
 
   /**
    * Backward pass through the layer.
@@ -96,10 +147,9 @@ class BatchNorm
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
-  template<typename eT>
-  void Backward(const arma::Mat<eT>& input,
-                const arma::Mat<eT>& gy,
-                arma::Mat<eT>& g);
+  void Backward(const MatType& input,
+                const MatType& gy,
+                MatType& g);
 
   /**
    * Calculate the gradient using the output delta and the input activations.
@@ -108,45 +158,24 @@ class BatchNorm
    * @param error The calculated error
    * @param gradient The calculated gradient.
    */
-  template<typename eT>
-  void Gradient(const arma::Mat<eT>& input,
-                const arma::Mat<eT>& error,
-                arma::Mat<eT>& gradient);
+  void Gradient(const MatType& input,
+                const MatType& error,
+                MatType& gradient);
 
   //! Get the parameters.
-  OutputDataType const& Parameters() const { return weights; }
+  const MatType& Parameters() const { return weights; }
   //! Modify the parameters.
-  OutputDataType& Parameters() { return weights; }
-
-  //! Get the output parameter.
-  OutputDataType const& OutputParameter() const { return outputParameter; }
-  //! Modify the output parameter.
-  OutputDataType& OutputParameter() { return outputParameter; }
-
-  //! Get the delta.
-  OutputDataType const& Delta() const { return delta; }
-  //! Modify the delta.
-  OutputDataType& Delta() { return delta; }
-
-  //! Get the gradient.
-  OutputDataType const& Gradient() const { return gradient; }
-  //! Modify the gradient.
-  OutputDataType& Gradient() { return gradient; }
-
-  //! Get the value of deterministic parameter.
-  bool Deterministic() const { return deterministic; }
-  //! Modify the value of deterministic parameter.
-  bool& Deterministic() { return deterministic; }
+  MatType& Parameters() { return weights; }
 
   //! Get the mean over the training data.
-  OutputDataType const& TrainingMean() const { return runningMean; }
+  const MatType& TrainingMean() const { return runningMean; }
   //! Modify the mean over the training data.
-  OutputDataType& TrainingMean() { return runningMean; }
+  MatType& TrainingMean() { return runningMean; }
 
   //! Get the variance over the training data.
-  OutputDataType const& TrainingVariance() const { return runningVariance; }
+  const MatType& TrainingVariance() const { return runningVariance; }
   //! Modify the variance over the training data.
-  OutputDataType& TrainingVariance() { return runningVariance; }
+  MatType& TrainingVariance() { return runningVariance; }
 
   //! Get the number of input units / channels.
   size_t InputSize() const { return size; }
@@ -163,15 +192,21 @@ class BatchNorm
   //! Get size of weights.
   size_t WeightSize() const { return 2 * size; }
 
+  //! Compute the output dimensions of the layer given `InputDimensions()`.
+  void ComputeOutputDimensions();
+
   /**
    * Serialize the layer
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
-  //! Locally-stored number of input units.
-  size_t size;
+  //! Locally-stored minAxis along which BatchNorm will apply.
+  size_t minAxis;
+
+  //! Locally-stored maxAxis along which BatchNorm will apply.
+  size_t maxAxis;
 
   //! Locally-stored epsilon value.
   double eps;
@@ -183,60 +218,53 @@ class BatchNorm
   //! Locally-stored value for momentum.
   double momentum;
 
-  //! Variable to keep track of whether we are in loading or saving mode.
-  bool loading;
-
   //! Locally-stored scale parameter.
-  OutputDataType gamma;
+  MatType gamma;
 
   //! Locally-stored shift parameter.
-  OutputDataType beta;
-
-  //! Locally-stored mean object.
-  OutputDataType mean;
+  MatType beta;
 
   //! Locally-stored variance object.
-  OutputDataType variance;
+  MatType variance;
 
   //! Locally-stored parameters.
-  OutputDataType weights;
-
-  /**
-   * If true then mean and variance over the training set will be considered
-   * instead of being calculated over the batch.
-   */
-  bool deterministic;
+  MatType weights;
 
   //! Locally-stored running mean/variance counter.
   size_t count;
 
-  //! Locally-stored value for average factor which used to update running
-  //! mean and variance.
-  double averageFactor;
+  //! Locally-stored number of input dimensions that we are applying 
+  //! batch normalization over.  (This is the product of this->inputDimensions 
+  //! from index 0 to (minAxis - 1)).
+  size_t inputDimension;
+
+  //! Locally-stored number of input units.  (This is the product of all
+  //! dimensions between minAxis and maxAxis, inclusive.)
+  size_t size;
+
+  //! Locally-stored number of higher dimension we are not applying 
+  //! batch normalization to.  This is the product of this->inputDimensions
+  //! for all dimensions greater than or equal to maxAxis.
+  size_t higherDimension;
 
   //! Locally-stored mean object.
-  OutputDataType runningMean;
+  MatType runningMean;
 
   //! Locally-stored variance object.
-  OutputDataType runningVariance;
-
-  //! Locally-stored gradient object.
-  OutputDataType gradient;
-
-  //! Locally-stored delta object.
-  OutputDataType delta;
-
-  //! Locally-stored output parameter object.
-  OutputDataType outputParameter;
+  MatType runningVariance;
 
   //! Locally-stored normalized input.
-  arma::cube normalized;
+  arma::Cube<typename MatType::elem_type> normalized;
 
   //! Locally-stored zero mean input.
-  arma::cube inputMean;
+  arma::Cube<typename MatType::elem_type> inputMean;
 }; // class BatchNorm
 
-} // namespace ann
+// Convenience typedefs.
+
+// Standard Adaptive max pooling layer.
+typedef BatchNormType<arma::mat> BatchNorm;
+
 } // namespace mlpack
 
 // Include the implementation.

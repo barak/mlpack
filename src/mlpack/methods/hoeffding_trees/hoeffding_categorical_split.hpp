@@ -17,7 +17,6 @@
 #include "categorical_split_info.hpp"
 
 namespace mlpack {
-namespace tree {
 
 /**
  * This is the standard Hoeffding-bound categorical feature proposed in the
@@ -108,9 +107,9 @@ class HoeffdingCategoricalSplit
 
   //! Serialize the categorical split.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(sufficientStatistics);
+    ar(CEREAL_NVP(sufficientStatistics));
   }
 
  private:
@@ -120,7 +119,6 @@ class HoeffdingCategoricalSplit
   arma::Mat<size_t> sufficientStatistics;
 };
 
-} // namespace tree
 } // namespace mlpack
 
 // Include implementation.

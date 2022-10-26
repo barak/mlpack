@@ -17,9 +17,8 @@
 #include "../statistic.hpp"
 
 namespace mlpack {
-namespace tree {
 
-template<typename MetricType = metric::EuclideanDistance,
+template<typename MetricType = EuclideanDistance,
          typename StatisticType = EmptyStatistic,
          typename MatType = arma::mat>
 class Octree
@@ -50,7 +49,7 @@ class Octree
   size_t count;
   //! The minimum bounding rectangle of the points held in the node (and its
   //! children).
-  bound::HRectBound<MetricType> bound;
+  HRectBound<MetricType> bound;
   //! The dataset.
   MatType* dataset;
   //! The parent (NULL if this node is the root).
@@ -235,14 +234,14 @@ class Octree
   Octree& operator=(Octree&& other);
 
   /**
-   * Initialize the tree from a boost::serialization archive.
+   * Initialize the tree from a cereal archive.
    *
    * @param ar Archive to load tree from.  Must be an iarchive, not an oarchive.
    */
   template<typename Archive>
   Octree(
       Archive& ar,
-      const typename std::enable_if_t<Archive::is_loading::value>* = 0);
+      const typename std::enable_if_t<cereal::is_loading<Archive>()>* = 0);
 
   /**
    * Destroy the tree.
@@ -258,9 +257,9 @@ class Octree
   Octree*& Parent() { return parent; }
 
   //! Return the bound object for this node.
-  const bound::HRectBound<MetricType>& Bound() const { return bound; }
+  const HRectBound<MetricType>& Bound() const { return bound; }
   //! Modify the bound object for this node.
-  bound::HRectBound<MetricType>& Bound() { return bound; }
+  HRectBound<MetricType>& Bound() { return bound; }
 
   //! Return the statistic object for this node.
   const StatisticType& Stat() const { return stat; }
@@ -375,7 +374,7 @@ class Octree
   //! Return the maximum distance to another node.
   ElemType MaxDistance(const Octree& other) const;
   //! Return the minimum and maximum distance to another node.
-  math::RangeType<ElemType> RangeDistance(const Octree& other) const;
+  RangeType<ElemType> RangeDistance(const Octree& other) const;
 
   //! Return the minimum distance to the given point.
   template<typename VecType>
@@ -389,7 +388,7 @@ class Octree
       typename std::enable_if_t<IsVector<VecType>::value>* = 0) const;
   //! Return the minimum and maximum distance to another node.
   template<typename VecType>
-  math::RangeType<ElemType> RangeDistance(
+  RangeType<ElemType> RangeDistance(
       const VecType& point,
       typename std::enable_if_t<IsVector<VecType>::value>* = 0) const;
 
@@ -398,19 +397,19 @@ class Octree
 
   //! Serialize the tree.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  protected:
   /**
    * A default constructor.  This is meant to only be used with
-   * boost::serialization, which is allowed with the friend declaration below.
+   * cereal, which is allowed with the friend declaration below.
    * This does not return a valid treee!  The method must be protected, so that
    * the serialization shim can work with the default constructor.
    */
   Octree();
 
   //! Friend access is given for the default constructor.
-  friend class boost::serialization::access;
+  friend class cereal::access;
 
  private:
   /**
@@ -463,7 +462,6 @@ class Octree
   };
 };
 
-} // namespace tree
 } // namespace mlpack
 
 // Include implementation.

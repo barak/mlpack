@@ -16,7 +16,6 @@
 #include "lmnn.hpp"
 
 namespace mlpack {
-namespace lmnn {
 
 /**
  * Takes in a reference to the dataset. Copies the data, initializes
@@ -56,15 +55,10 @@ void LMNN<MetricType, OptimizerType>::LearnDistance(arma::mat& outputMatrix,
     outputMatrix.eye(dataset.n_rows, dataset.n_rows);
   }
 
-  Timer::Start("lmnn_optimization");
-
   optimizer.Optimize(objFunction, outputMatrix, callbacks...);
-
-  Timer::Stop("lmnn_optimization");
 }
 
 
-} // namespace lmnn
 } // namespace mlpack
 
 #endif

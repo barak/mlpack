@@ -16,48 +16,49 @@
 #include "l1_loss.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-L1Loss<InputDataType, OutputDataType>::L1Loss(const bool mean):
-  mean(mean)
+template<typename MatType>
+L1LossType<MatType>::L1LossType(const bool reduction):
+    reduction(reduction)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type
-L1Loss<InputDataType, OutputDataType>::Forward(
-    const InputType& input,
-    const TargetType& target)
+template<typename MatType>
+typename MatType::elem_type L1LossType<MatType>::Forward(
+    const MatType& prediction,
+    const MatType& target)
 {
-  if (mean)
-    return arma::accu(arma::mean(input - target));
+  MatType loss = arma::abs(prediction - target);
+  typename MatType::elem_type lossSum = arma::accu(loss);
 
-  return arma::accu(input - target);
+  if (reduction)
+    return lossSum;
+
+  return lossSum / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void L1Loss<InputDataType, OutputDataType>::Backward(
-    const InputType& input,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType>
+void L1LossType<MatType>::Backward(
+    const MatType& prediction,
+    const MatType& target,
+    MatType& loss)
 {
-  output = arma::sign(input - target);
+  loss = arma::sign(prediction - target);
+
+  if (!reduction)
+    loss = loss / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void L1Loss<InputDataType, OutputDataType>::serialize(
+void L1LossType<MatType>::serialize(
     Archive& ar,
-    const unsigned int /* version */)
+    const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(mean);
+  ar(CEREAL_NVP(reduction));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

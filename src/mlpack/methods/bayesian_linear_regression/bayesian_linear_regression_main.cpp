@@ -9,8 +9,11 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/util/io.hpp>
+#include <mlpack/core.hpp>
+
+#undef BINDING_NAME
+#define BINDING_NAME bayesian_linear_regression
+
 #include <mlpack/core/util/mlpack_main.hpp>
 
 #include "bayesian_linear_regression.hpp"
@@ -18,11 +21,10 @@
 using namespace arma;
 using namespace std;
 using namespace mlpack;
-using namespace mlpack::regression;
 using namespace mlpack::util;
 
 // Program Name.
-BINDING_NAME("BayesianLinearRegression");
+BINDING_USER_NAME("BayesianLinearRegression");
 
 // Short description.
 BINDING_SHORT_DESC(
@@ -95,13 +97,13 @@ BINDING_EXAMPLE(
 
 // See also...
 BINDING_SEE_ALSO("Bayesian Interpolation",
-        "https://authors.library.caltech.edu/13792/1/MACnc92a.pdf");
-BINDING_SEE_ALSO("Bayesian Linear Regression, Section 3.3",
-        "MLA Bishop, Christopher M. Pattern Recognition and Machine "
-        "Learning. New York :Springer, 2006, section 3.3.");
-BINDING_SEE_ALSO("mlpack::regression::BayesianLinearRegression C++ class "
-        "documentation",
-        "@doxygen/classmlpack_1_1regression_1_1BayesianLinearRegression.html");
+    "https://authors.library.caltech.edu/13792/1/MACnc92a.pdf");
+BINDING_SEE_ALSO("Bayesian Linear Regression, Section 3.3", "MLA Bishop, "
+    "Christopher M. Pattern Recognition and Machine Learning. New York: "
+    "Springer, 2006, section 3.3.");
+BINDING_SEE_ALSO("BayesianLinearRegression C++ class documentation",
+    "@src/mlpack/methods/bayesian_linear_regression/"
+    "bayesian_linear_regression.hpp");
 
 PARAM_MATRIX_IN("input", "Matrix of covariates (X).", "i");
 
@@ -127,42 +129,42 @@ PARAM_FLAG("center", "Center the data and fit the intercept if enabled.", "c");
 PARAM_FLAG("scale", "Scale each feature by their standard deviations if "
            "enabled.", "s");
 
-static void mlpackMain()
+void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
 {
-  bool center = IO::GetParam<bool>("center");
-  bool scale = IO::GetParam<bool>("scale");
+  bool center = params.Get<bool>("center");
+  bool scale = params.Get<bool>("scale");
 
   // Check parameters -- make sure everything given makes sense.
-  RequireOnlyOnePassed({"input", "input_model"}, true);
-  if (IO::HasParam("input"))
+  RequireOnlyOnePassed(params, {"input", "input_model"}, true);
+  if (params.Has("input"))
   {
-    RequireOnlyOnePassed({"responses"}, true, "if input data is specified, "
-        "responses must also be specified");
+    RequireOnlyOnePassed(params, {"responses"}, true, "if input data is "
+        "specified, responses must also be specified");
   }
-  ReportIgnoredParam({{"input", false }}, "responses");
+  ReportIgnoredParam(params, {{"input", false }}, "responses");
 
-  RequireAtLeastOnePassed({"predictions", "output_model", "stds"}, false,
-      "no results will be saved");
+  RequireAtLeastOnePassed(params, {"predictions", "output_model", "stds"},
+      false, "no results will be saved");
 
   // Ignore out_predictions unless test is specified.
-  ReportIgnoredParam({{"test", false}}, "predictions");
+  ReportIgnoredParam(params, {{"test", false}}, "predictions");
 
   BayesianLinearRegression* bayesLinReg;
-  if (IO::HasParam("input"))
+  if (params.Has("input"))
   {
-    Log::Info << "input detected " << std::endl;
+    Log::Info << "Input given; model will be trained." << std::endl;
     // Initialize the object.
     bayesLinReg = new BayesianLinearRegression(center, scale);
 
     // Load covariates.  We can avoid LARS transposing our data by choosing to
     // not transpose this data (that's why we used PARAM_TMATRIX_IN).
-    mat matX = std::move(IO::GetParam<arma::mat>("input"));
+    mat matX = std::move(params.Get<arma::mat>("input"));
 
     // Load responses.  The responses should be a one-dimensional vector, and it
     // seems more likely that these will be stored with one response per line
     // (one per row). So we should not transpose upon loading.
     arma::rowvec responses = std::move(
-        IO::GetParam<arma::rowvec>("responses"));
+        params.Get<arma::rowvec>("responses"));
 
     if (responses.n_elem != matX.n_cols)
     {
@@ -173,36 +175,40 @@ static void mlpackMain()
 
     arma::rowvec predictionsTrain;
     // The Train method is ready to take data in column-major format.
+    timers.Start("bayesian_linear_regression_training");
     bayesLinReg->Train(matX, responses);
+    timers.Stop("bayesian_linear_regression_training");
   }
   else // We must have --input_model_file.
   {
-    bayesLinReg = IO::GetParam<BayesianLinearRegression*>("input_model");
+    bayesLinReg = params.Get<BayesianLinearRegression*>("input_model");
   }
 
-  if (IO::HasParam("test"))
+  if (params.Has("test"))
   {
     Log::Info << "Regressing on test points." << endl;
     // Load test points.
-    mat testPoints = std::move(IO::GetParam<arma::mat>("test"));
+    mat testPoints = std::move(params.Get<arma::mat>("test"));
     arma::rowvec predictions;
 
-    if (IO::HasParam("stds"))
+    timers.Start("bayesian_linear_regression_prediction");
+    if (params.Has("stds"))
     {
       arma::rowvec std;
       bayesLinReg->Predict(testPoints, predictions, std);
 
       // Save the standard deviation of the test points (one per line).
-      IO::GetParam<arma::mat>("stds") = std::move(std);
+      params.Get<arma::mat>("stds") = std::move(std);
     }
     else
     {
       bayesLinReg->Predict(testPoints, predictions);
     }
+    timers.Stop("bayesian_linear_regression_prediction");
 
     // Save test predictions (one per line).
-    IO::GetParam<arma::mat>("predictions") = std::move(predictions);
+    params.Get<arma::mat>("predictions") = std::move(predictions);
   }
 
-  IO::GetParam<BayesianLinearRegression*>("output_model") = bayesLinReg;
+  params.Get<BayesianLinearRegression*>("output_model") = bayesLinReg;
 }

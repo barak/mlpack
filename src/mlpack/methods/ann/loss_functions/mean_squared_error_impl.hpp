@@ -16,44 +16,49 @@
 #include "mean_squared_error.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-MeanSquaredError<InputDataType, OutputDataType>::MeanSquaredError()
+template<typename MatType>
+MeanSquaredErrorType<MatType>::MeanSquaredErrorType(const bool reduction) :
+    reduction(reduction)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type
-MeanSquaredError<InputDataType, OutputDataType>::Forward(
-    const InputType& input,
-    const TargetType& target)
+template<typename MatType>
+typename MatType::elem_type MeanSquaredErrorType<MatType>::Forward(
+    const MatType& prediction,
+    const MatType& target)
 {
-  return arma::accu(arma::square(input - target)) / target.n_cols;
+  typename MatType::elem_type lossSum =
+      arma::accu(arma::square(prediction - target));
+
+  if (reduction)
+    return lossSum;
+
+  return lossSum / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void MeanSquaredError<InputDataType, OutputDataType>::Backward(
-    const InputType& input,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType>
+void MeanSquaredErrorType<MatType>::Backward(
+    const MatType& prediction,
+    const MatType& target,
+    MatType& loss)
 {
-  output = 2 * (input - target) / target.n_cols;
+  loss = 2 * (prediction - target);
+
+  if (!reduction)
+    loss = loss / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void MeanSquaredError<InputDataType, OutputDataType>::serialize(
-    Archive& /* ar */,
-    const unsigned int /* version */)
+void MeanSquaredErrorType<MatType>::serialize(
+    Archive& ar,
+    const uint32_t /* version */)
 {
-  // Nothing to do here.
+  ar(CEREAL_NVP(reduction));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

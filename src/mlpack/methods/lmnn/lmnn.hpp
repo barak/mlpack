@@ -12,14 +12,12 @@
 #ifndef MLPACK_METHODS_LMNN_LMNN_HPP
 #define MLPACK_METHODS_LMNN_LMNN_HPP
 
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/metrics/lmetric.hpp>
-#include <ensmallen.hpp>
+#include <mlpack/core.hpp>
 
+#include "constraints.hpp"
 #include "lmnn_function.hpp"
 
 namespace mlpack {
-namespace lmnn /** Large Margin Nearest Neighbor. */ {
 
 /**
  * An implementation of Large Margin nearest neighbor metric learning technique.
@@ -50,7 +48,7 @@ namespace lmnn /** Large Margin Nearest Neighbor. */ {
  * @tparam MetricType The type of metric to use for computation.
  * @tparam OptimizerType Optimizer to use for developing distance.
  */
-template<typename MetricType = metric::SquaredEuclideanDistance,
+template<typename MetricType = SquaredEuclideanDistance,
          typename OptimizerType = ens::AMSGrad>
 class LMNN
 {
@@ -134,7 +132,6 @@ class LMNN
   OptimizerType optimizer;
 }; // class LMNN
 
-} // namespace lmnn
 } // namespace mlpack
 
 // Include the implementation.

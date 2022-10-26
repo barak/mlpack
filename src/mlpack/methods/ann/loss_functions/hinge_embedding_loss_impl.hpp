@@ -17,46 +17,49 @@
 #include "hinge_embedding_loss.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-HingeEmbeddingLoss<InputDataType, OutputDataType>::HingeEmbeddingLoss()
+template<typename MatType>
+HingeEmbeddingLossType<MatType>::HingeEmbeddingLossType(const bool reduction) :
+    reduction(reduction)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type
-HingeEmbeddingLoss<InputDataType, OutputDataType>::Forward(
-    const InputType& input,
-    const TargetType& target)
+template<typename MatType>
+typename MatType::elem_type HingeEmbeddingLossType<MatType>::Forward(
+    const MatType& prediction,
+    const MatType& target)
 {
-  TargetType temp = target - (target == 0);
-  return (arma::accu(arma::max(1-input % temp, 0.))) / target.n_elem;
+  MatType loss = (1 - target) / 2 + prediction % (target);
+  typename MatType::elem_type lossSum = arma::accu(loss);
+
+  if (reduction)
+    return lossSum;
+
+  return lossSum / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void HingeEmbeddingLoss<InputDataType, OutputDataType>::Backward(
-    const InputType& input,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType>
+void HingeEmbeddingLossType<MatType>::Backward(
+    const MatType& /* prediction */,
+    const MatType& target,
+    MatType& loss)
 {
-  TargetType temp = target - (target == 0);
-  output = (input < 1 / temp) % -temp;
+  loss = target;
+
+  if (!reduction)
+    loss = loss / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void HingeEmbeddingLoss<InputDataType, OutputDataType>::serialize(
-    Archive& /* ar */,
-    const unsigned int /* version */)
+void HingeEmbeddingLossType<MatType>::serialize(
+    Archive& ar,
+    const uint32_t /* version */)
 {
-  // Nothing to do here.
+  ar(CEREAL_NVP(reduction));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

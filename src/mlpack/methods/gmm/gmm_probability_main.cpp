@@ -9,18 +9,20 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/util/io.hpp>
+#include <mlpack/core.hpp>
+
+#undef BINDING_NAME
+#define BINDING_NAME gmm_probability
+
 #include <mlpack/core/util/mlpack_main.hpp>
 #include "gmm.hpp"
 
 using namespace std;
 using namespace mlpack;
-using namespace mlpack::gmm;
 using namespace mlpack::util;
 
 // Program Name.
-BINDING_NAME("GMM Probability Calculator");
+BINDING_USER_NAME("GMM Probability Calculator");
 
 // Short description.
 BINDING_SHORT_DESC(
@@ -51,9 +53,8 @@ BINDING_EXAMPLE(
 BINDING_SEE_ALSO("@gmm_train", "#gmm_train");
 BINDING_SEE_ALSO("@gmm_generate", "#gmm_generate");
 BINDING_SEE_ALSO("Gaussian Mixture Models on Wikipedia",
-        "https://en.wikipedia.org/wiki/Mixture_model#Gaussian_mixture_model");
-BINDING_SEE_ALSO("mlpack::gmm::GMM class documentation",
-        "@doxygen/classmlpack_1_1gmm_1_1GMM.html");
+    "https://en.wikipedia.org/wiki/Mixture_model#Gaussian_mixture_model");
+BINDING_SEE_ALSO("GMM class documentation", "@src/mlpack/methods/gmm/gmm.hpp");
 
 PARAM_MODEL_IN_REQ(GMM, "input_model", "Input GMM to use as model.", "m");
 PARAM_MATRIX_IN_REQ("input", "Input matrix to calculate probabilities of.",
@@ -61,14 +62,15 @@ PARAM_MATRIX_IN_REQ("input", "Input matrix to calculate probabilities of.",
 
 PARAM_MATRIX_OUT("output", "Matrix to store calculated probabilities in.", "o");
 
-static void mlpackMain()
+void BINDING_FUNCTION(util::Params& params, util::Timers& /* timers */)
 {
-  RequireAtLeastOnePassed({ "output" }, false, "no results will be saved");
+  RequireAtLeastOnePassed(params, { "output" }, false,
+      "no results will be saved");
 
   // Get the GMM and the points.
-  GMM* gmm = IO::GetParam<GMM*>("input_model");
+  GMM* gmm = params.Get<GMM*>("input_model");
 
-  arma::mat dataset = std::move(IO::GetParam<arma::mat>("input"));
+  arma::mat dataset = std::move(params.Get<arma::mat>("input"));
 
   // Now calculate the probabilities.
   arma::rowvec probabilities(dataset.n_cols);
@@ -76,5 +78,5 @@ static void mlpackMain()
     probabilities[i] = gmm->Probability(dataset.unsafe_col(i));
 
   // And save the result.
-  IO::GetParam<arma::mat>("output") = std::move(probabilities);
+  params.Get<arma::mat>("output") = std::move(probabilities);
 }

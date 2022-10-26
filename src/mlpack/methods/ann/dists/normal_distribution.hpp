@@ -17,7 +17,6 @@
 #include "../activation_functions/logistic_function.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * Implementation of the Normal Distribution function.
@@ -126,7 +125,7 @@ class NormalDistribution
    * Serialize the distribution.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
   //! Mean of the distribution.
@@ -136,7 +135,6 @@ class NormalDistribution
   DataType sigma;
 }; // class NormalDistribution
 
-} // namespace ann
 } // namespace mlpack
 
 // Include implementation.

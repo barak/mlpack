@@ -15,7 +15,6 @@
 #include "mahalanobis_distance.hpp"
 
 namespace mlpack {
-namespace metric {
 
 /**
  * Specialization for non-rooted case.
@@ -51,12 +50,11 @@ double MahalanobisDistance<true>::Evaluate(const VecTypeA& a,
 template<bool TakeRoot>
 template<typename Archive>
 void MahalanobisDistance<TakeRoot>::serialize(Archive& ar,
-                                              const unsigned int /* version */)
+                                              const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(covariance);
+  ar(CEREAL_NVP(covariance));
 }
 
-} // namespace metric
 } // namespace mlpack
 
 #endif

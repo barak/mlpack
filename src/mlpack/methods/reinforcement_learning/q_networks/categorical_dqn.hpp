@@ -21,9 +21,6 @@
 #include "../training_config.hpp"
 
 namespace mlpack {
-namespace rl {
-
-using namespace mlpack::ann;
 
 /**
  * Implementation of the Categorical Deep Q-Learning network.
@@ -37,13 +34,13 @@ using namespace mlpack::ann;
  *   url     = {http://arxiv.org/abs/1707.06887}
  * }
  * @endcode
- * 
+ *
  * @tparam OutputLayerType The output layer type of the network.
  * @tparam InitType The initialization type used for the network.
  * @tparam NetworkType The type of network used for simple dqn.
  */
 template<
-  typename OutputLayerType = EmptyLoss<>,
+  typename OutputLayerType = EmptyLoss,
   typename InitType = GaussianInitialization,
   typename NetworkType = FFN<OutputLayerType, InitType>
 >
@@ -53,13 +50,13 @@ class CategoricalDQN
   /**
    * Default constructor.
    */
-  CategoricalDQN() : network(), isNoisy(false)
+  CategoricalDQN() :
+      network(), atomSize(0), vMin(0.0), vMax(0.0), isNoisy(false)
   { /* Nothing to do here. */ }
 
   /**
    * Construct an instance of CategoricalDQN class.
    *
-   * @param inputDim Number of inputs.
    * @param h1 Number of neurons in hiddenlayer-1.
    * @param h2 Number of neurons in hiddenlayer-2.
    * @param outputDim Number of neurons in output layer.
@@ -68,8 +65,7 @@ class CategoricalDQN
    * @param init Specifies the initialization rule for the network.
    * @param outputLayer Specifies the output layer type for network.
    */
-  CategoricalDQN(const int inputDim,
-                 const int h1,
+  CategoricalDQN(const int h1,
                  const int h2,
                  const int outputDim,
                  TrainingConfig config,
@@ -82,26 +78,27 @@ class CategoricalDQN
       vMax(config.VMax()),
       isNoisy(isNoisy)
   {
-    network.Add(new Linear<>(inputDim, h1));
-    network.Add(new ReLULayer<>());
+    network.Add(new Linear(h1));
+    network.Add(new ReLU());
     if (isNoisy)
     {
-      noisyLayerIndex.push_back(network.Model().size());
-      network.Add(new NoisyLinear<>(h1, h2));
-      network.Add(new ReLULayer<>());
-      noisyLayerIndex.push_back(network.Model().size());
-      network.Add(new NoisyLinear<>(h2, outputDim * atomSize));
+      noisyLayerIndex.push_back(network.Network().size());
+      network.Add(new NoisyLinear(h2));
+      network.Add(new ReLU());
+      noisyLayerIndex.push_back(network.Network().size());
+      network.Add(new NoisyLinear(outputDim * atomSize));
     }
     else
     {
-      network.Add(new Linear<>(h1, h2));
-      network.Add(new ReLULayer<>());
-      network.Add(new Linear<>(h2, outputDim * atomSize));
+      network.Add(new Linear(h2));
+      network.Add(new ReLU());
+      network.Add(new Linear(outputDim * atomSize));
     }
   }
 
   /**
-   * Construct an instance of CategoricalDQN class from a pre-constructed network.
+   * Construct an instance of CategoricalDQN class from a pre-constructed
+   * network.
    *
    * @param network The network to be used by CategoricalDQN class.
    * @param config Hyper-parameters for categorical dqn.
@@ -169,9 +166,9 @@ class CategoricalDQN
   /**
    * Resets the parameters of the network.
    */
-  void ResetParameters()
+  void Reset(const size_t inputDimensionality = 0)
   {
-    network.ResetParameters();
+    network.Reset(inputDimensionality);
   }
 
   /**
@@ -179,10 +176,10 @@ class CategoricalDQN
    */
   void ResetNoise()
   {
-    for (size_t i = 0; i < noisyLayerIndex.size(); i++)
+    for (size_t i = 0; i < noisyLayerIndex.size(); ++i)
     {
-      boost::get<NoisyLinear<>*>
-          (network.Model()[noisyLayerIndex[i]])->ResetNoise();
+      dynamic_cast<NoisyLinear*>(
+          (network.Network()[noisyLayerIndex[i]]))->ResetNoise();
     }
   }
 
@@ -234,13 +231,12 @@ class CategoricalDQN
   std::vector<size_t> noisyLayerIndex;
 
   //! Locally-stored softmax activation function.
-  Softmax<> softMax;
+  Softmax softMax;
 
   //! Locally-stored activations from softMax.
   arma::mat activations;
 };
 
-} // namespace rl
 } // namespace mlpack
 
 #endif

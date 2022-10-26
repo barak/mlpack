@@ -12,14 +12,12 @@
 #ifndef MLPACK_METHODS_PERCEPTRON_PERCEPTRON_HPP
 #define MLPACK_METHODS_PERCEPTRON_PERCEPTRON_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 
-#include "initialization_methods/zero_init.hpp"
-#include "initialization_methods/random_init.hpp"
-#include "learning_policies/simple_weight_update.hpp"
+#include "initialization_methods/initialization_methods.hpp"
+#include "learning_policies/learning_policies.hpp"
 
 namespace mlpack {
-namespace perceptron {
 
 /**
  * This class implements a simple perceptron (i.e., a single layer neural
@@ -28,7 +26,7 @@ namespace perceptron {
  *
  * @tparam LearnPolicy Options of SimpleWeightUpdate and GradientDescent.
  * @tparam WeightInitializationPolicy Option of ZeroInitialization and
- *      RandomInitialization.
+ *      RandomPerceptronInitialization.
  */
 template<typename LearnPolicy = SimpleWeightUpdate,
          typename WeightInitializationPolicy = ZeroInitialization,
@@ -66,6 +64,29 @@ class Perceptron
   Perceptron(const MatType& data,
              const arma::Row<size_t>& labels,
              const size_t numClasses,
+             const size_t maxIterations = 1000);
+
+  /**
+   * Constructor: construct the perceptron by building the weights matrix, which
+   * is later used in classification.  The number of classes should be specified
+   * separately, and the labels vector should contain values in the range [0,
+   * numClasses - 1].  The data::NormalizeLabels() function can be used if the
+   * labels vector does not contain values in the required range.
+   *
+   * This constructor supports weights for each data point.
+   *
+   * @param data Input, training data.
+   * @param labels Labels of dataset.
+   * @param numClasses Number of classes in the dataset.
+   * @param instanceWeights Weight vector to use for each training point while
+   *     training.
+   * @param maxIterations Maximum number of iterations for the perceptron
+   *     learning algorithm.
+   */
+  Perceptron(const MatType& data,
+             const arma::Row<size_t>& labels,
+             const size_t numClasses,
+             const arma::rowvec& instanceWeights,
              const size_t maxIterations = 1000);
 
   /**
@@ -120,7 +141,7 @@ class Perceptron
    * Serialize the perceptron.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
   //! Get the maximum number of iterations.
   size_t MaxIterations() const { return maxIterations; }
@@ -156,7 +177,6 @@ class Perceptron
   arma::vec biases;
 };
 
-} // namespace perceptron
 } // namespace mlpack
 
 #include "perceptron_impl.hpp"

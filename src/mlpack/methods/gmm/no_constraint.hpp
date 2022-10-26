@@ -15,7 +15,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace gmm {
 
 /**
  * This class enforces no constraint on the covariance matrix.  It's faster this
@@ -30,10 +29,9 @@ class NoConstraint
 
   //! Serialize the object (nothing to do).
   template<typename Archive>
-  static void serialize(Archive& /* ar */, const unsigned int /* version */) { }
+  static void serialize(Archive& /* ar */, const uint32_t /* version */) { }
 };
 
-} // namespace gmm
 } // namespace mlpack
 
 #endif

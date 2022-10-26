@@ -19,13 +19,12 @@
 #include <mlpack/core/metrics/lmetric.hpp>
 
 namespace mlpack {
-namespace kernel {
 
 template<typename VecTypeA, typename VecTypeB>
 inline double EpanechnikovKernel::Evaluate(const VecTypeA& a, const VecTypeB& b)
     const
 {
-  return std::max(0.0, 1.0 - metric::SquaredEuclideanDistance::Evaluate(a, b)
+  return std::max(0.0, 1.0 - SquaredEuclideanDistance::Evaluate(a, b)
       * inverseBandwidthSquared);
 }
 
@@ -41,10 +40,10 @@ inline double EpanechnikovKernel::Evaluate(const VecTypeA& a, const VecTypeB& b)
  * @return the convolution integral value.
  */
 template<typename VecTypeA, typename VecTypeB>
-double EpanechnikovKernel::ConvolutionIntegral(const VecTypeA& a,
-                                               const VecTypeB& b)
+inline double EpanechnikovKernel::ConvolutionIntegral(const VecTypeA& a,
+                                                      const VecTypeB& b)
 {
-  double distance = sqrt(metric::SquaredEuclideanDistance::Evaluate(a, b));
+  double distance = sqrt(SquaredEuclideanDistance::Evaluate(a, b));
   if (distance >= 2.0 * bandwidth)
     return 0.0;
 
@@ -58,7 +57,6 @@ double EpanechnikovKernel::ConvolutionIntegral(const VecTypeA& a,
           (3.0 * bandwidth) + 2.0 * distance * distance * distance /
           (3.0 * bandwidth * bandwidth) -
           std::pow(distance, 5.0) / (30.0 * std::pow(bandwidth, 4.0)));
-      break;
     case 2:
       return 1.0 / volumeSquared *
           ((2.0 / 3.0 * bandwidth * bandwidth - distance * distance) *
@@ -67,25 +65,86 @@ double EpanechnikovKernel::ConvolutionIntegral(const VecTypeA& a,
           (distance / 6.0 + 2.0 / 9.0 * distance *
           std::pow(distance / bandwidth, 2.0) - distance / 72.0 *
           std::pow(distance / bandwidth, 4.0)));
-      break;
     default:
       Log::Fatal << "EpanechnikovKernel::ConvolutionIntegral(): dimension "
           << a.n_rows << " not supported.";
       return -1.0; // This line will not execute.
-      break;
   }
 }
 
+/**
+ * Compute the normalizer of this Epanechnikov kernel for the given dimension.
+ *
+ * @param dimension Dimension to calculate the normalizer for.
+ */
+inline double EpanechnikovKernel::Normalizer(const size_t dimension)
+{
+  return 2.0 * pow(bandwidth, (double) dimension) *
+      std::pow(M_PI, dimension / 2.0) /
+      (std::tgamma(dimension / 2.0 + 1.0) * (dimension + 2.0));
+}
+
+/**
+ * Evaluate the kernel not for two points but for a numerical value.
+ */
+inline double EpanechnikovKernel::Evaluate(const double distance) const
+{
+  return std::max(0.0, 1 - std::pow(distance, 2.0) * inverseBandwidthSquared);
+}
+
+/**
+ * Evaluate gradient of the kernel not for two points
+ * but for a numerical value.
+ */
+inline double EpanechnikovKernel::Gradient(const double distance) const
+{
+  if (std::abs(bandwidth) < std::abs(distance))
+  {
+    return 0;
+  }
+  else if (std::abs(bandwidth) > std::abs(distance))
+  {
+    return -2 * inverseBandwidthSquared * distance;
+  }
+  else
+  {
+    // The gradient doesn't exist.
+    return arma::datum::nan;
+  }
+}
+
+/**
+ * Evaluate gradient of the kernel not for two points
+ * but for a numerical value.
+ */
+inline double EpanechnikovKernel::GradientForSquaredDistance(
+    const double distanceSquared) const
+{
+  double bandwidthSquared = bandwidth * bandwidth;
+  if (distanceSquared < bandwidthSquared)
+  {
+    return -1 * inverseBandwidthSquared;
+  }
+  else if (distanceSquared > bandwidthSquared &&
+           distanceSquared >= 0)
+  {
+    return  0;
+  }
+  else
+  {
+    // The gradient doesn't exist.
+    return arma::datum::nan;
+  }
+}
 //! Serialize the kernel.
 template<typename Archive>
 void EpanechnikovKernel::serialize(Archive& ar,
-                                   const unsigned int /* version */)
+                                   const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(bandwidth);
-  ar & BOOST_SERIALIZATION_NVP(inverseBandwidthSquared);
+  ar(CEREAL_NVP(bandwidth));
+  ar(CEREAL_NVP(inverseBandwidthSquared));
 }
 
-} // namespace kernel
 } // namespace mlpack
 
 #endif

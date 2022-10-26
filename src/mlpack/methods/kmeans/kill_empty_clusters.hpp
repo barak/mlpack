@@ -16,7 +16,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace kmeans {
 
 /**
  * Policy which allows K-Means to "kill" empty clusters without any error being
@@ -46,7 +45,7 @@ class KillEmptyClusters
    * @return Number of points changed (0).
    */
   template<typename MetricType, typename MatType>
-  static inline force_inline void EmptyCluster(
+  static inline mlpack_force_inline void EmptyCluster(
       const MatType& /* data */,
       const size_t emptyCluster,
       const arma::mat& /* oldCentroids */,
@@ -65,10 +64,9 @@ class KillEmptyClusters
 
   //! Serialize the empty cluster policy (nothing to do).
   template<typename Archive>
-  void serialize(Archive& /* ar */, const unsigned int /* version */) { }
+  void serialize(Archive& /* ar */, const uint32_t /* version */) { }
 };
 
-} // namespace kmeans
 } // namespace mlpack
 
 #endif

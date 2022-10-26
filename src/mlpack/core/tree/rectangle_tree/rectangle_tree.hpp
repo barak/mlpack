@@ -22,7 +22,6 @@
 #include "no_auxiliary_information.hpp"
 
 namespace mlpack {
-namespace tree /** Trees and tree-building procedures. */ {
 
 /**
  * A rectangle type tree tree, such as an R-tree or X-tree.  Once the
@@ -44,7 +43,7 @@ namespace tree /** Trees and tree-building procedures. */ {
  *    in the node. This information depends on the type of the RectangleTree.
  */
 
-template<typename MetricType = metric::EuclideanDistance,
+template<typename MetricType = EuclideanDistance,
          typename StatisticType = EmptyStatistic,
          typename MatType = arma::mat,
          typename SplitType = RTreeSplit,
@@ -54,8 +53,8 @@ template<typename MetricType = metric::EuclideanDistance,
 class RectangleTree
 {
   // The metric *must* be the euclidean distance.
-  static_assert(boost::is_same<MetricType, metric::EuclideanDistance>::value,
-      "RectangleTree: MetricType must be metric::EuclideanDistance.");
+  static_assert(std::is_same<MetricType, EuclideanDistance>::value,
+      "RectangleTree: MetricType must be EuclideanDistance.");
 
  public:
   //! So other classes can use TreeType::Mat.
@@ -90,7 +89,7 @@ class RectangleTree
   //! The minimum leaf size.
   size_t minLeafSize;
   //! The bound object for this node.
-  bound::HRectBound<metric::EuclideanDistance, ElemType> bound;
+  HRectBound<EuclideanDistance, ElemType> bound;
   //! Any extra data contained in the node.
   StatisticType stat;
   //! The distance from the centroid of this node to the centroid of the parent.
@@ -201,12 +200,12 @@ class RectangleTree
   RectangleTree& operator=(RectangleTree&& other);
 
   /**
-   * Construct the tree from a boost::serialization archive.
+   * Construct the tree from a cereal archive.
    */
   template<typename Archive>
   RectangleTree(
       Archive& ar,
-      const typename std::enable_if_t<Archive::is_loading::value>* = 0);
+      const typename std::enable_if_t<cereal::is_loading<Archive>()>* = 0);
 
   /**
    * Deletes this node, deallocating the memory for the children and calling
@@ -312,9 +311,9 @@ class RectangleTree
   RectangleTree* FindByBeginCount(size_t begin, size_t count);
 
   //! Return the bound object for this node.
-  const bound::HRectBound<MetricType>& Bound() const { return bound; }
+  const HRectBound<MetricType>& Bound() const { return bound; }
   //! Modify the bound object for this node.
-  bound::HRectBound<MetricType>& Bound() { return bound; }
+  HRectBound<MetricType>& Bound() { return bound; }
 
   //! Return the statistic object for this node.
   const StatisticType& Stat() const { return stat; }
@@ -496,7 +495,7 @@ class RectangleTree
   }
 
   //! Return the minimum and maximum distance to another node.
-  math::RangeType<ElemType> RangeDistance(const RectangleTree& other) const
+  RangeType<ElemType> RangeDistance(const RectangleTree& other) const
   {
     return bound.RangeDistance(other.Bound());
   }
@@ -521,7 +520,7 @@ class RectangleTree
 
   //! Return the minimum and maximum distance to another point.
   template<typename VecType>
-  math::RangeType<ElemType> RangeDistance(
+  RangeType<ElemType> RangeDistance(
       const VecType& point,
       typename std::enable_if_t<IsVector<VecType>::value>* = 0) const
   {
@@ -567,14 +566,14 @@ class RectangleTree
  protected:
   /**
    * A default constructor.  This is meant to only be used with
-   * boost::serialization, which is allowed with the friend declaration below.
+   * cereal, which is allowed with the friend declaration below.
    * This does not return a valid tree!  This method must be protected, so that
    * the serialization shim can work with the default constructor.
    */
   RectangleTree();
 
   //! Friend access is given for the default constructor.
-  friend class boost::serialization::access;
+  friend class cereal::access;
 
   //! Give friend access for DescentType.
   friend DescentType;
@@ -619,7 +618,7 @@ class RectangleTree
    *      shrinking.
    * @return true if the bound needed to be changed, false if it did not.
    */
-  bool ShrinkBoundForBound(const bound::HRectBound<MetricType>& changedBound);
+  bool ShrinkBoundForBound(const HRectBound<MetricType>& changedBound);
 
   /**
    * Make an exact copy of this node, pointers and everything.
@@ -630,10 +629,9 @@ class RectangleTree
    * Serialize the tree.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 };
 
-} // namespace tree
 } // namespace mlpack
 
 // Include implementation.

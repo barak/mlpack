@@ -17,7 +17,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * This class is used to initialize weight matrix with constant values.
@@ -98,14 +97,19 @@ class ConstInitialization
   //! Get the initialization value.
   double const& InitValue() const { return initVal; }
   //! Modify the initialization value.
-  double& initValue() { return initVal; }
+  double& InitValue() { return initVal; }
+
+  template<typename Archive>
+  void serialize(Archive& ar, const uint32_t /* version */)
+  {
+    ar(CEREAL_NVP(initVal));
+  }
 
  private:
   //! Value to be initialized with
   double initVal;
 }; // class ConstInitialization
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

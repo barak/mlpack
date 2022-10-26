@@ -13,19 +13,17 @@
 #ifndef MLPACK_METHODS_KDE_KDE_HPP
 #define MLPACK_METHODS_KDE_KDE_HPP
 
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/tree/binary_space_tree.hpp>
+#include <mlpack/core.hpp>
 
 #include "kde_stat.hpp"
 
 namespace mlpack {
-namespace kde /** Kernel Density Estimation. */ {
 
 //! KDEMode represents the ways in which KDE algorithm can be executed.
 enum KDEMode
 {
-  DUAL_TREE_MODE,
-  SINGLE_TREE_MODE
+  KDE_DUAL_TREE_MODE,
+  KDE_SINGLE_TREE_MODE
 };
 
 //! KDEDefaultParams contains the default input parameter values for KDE.
@@ -38,7 +36,7 @@ struct KDEDefaultParams
   static constexpr double absError = 0;
 
   //! KDE algorithm mode.
-  static constexpr KDEMode mode = KDEMode::DUAL_TREE_MODE;
+  static constexpr KDEMode mode = KDEMode::KDE_DUAL_TREE_MODE;
 
   //! Whether to use Monte Carlo estimations when possible.
   static constexpr bool monteCarlo = false;
@@ -71,25 +69,22 @@ struct KDEDefaultParams
  * @tparam DualTreeTraversalType Type of dual-tree traversal to use.
  * @tparam SingleTreeTraversalType Type of single-tree traversal to use.
  */
-template<typename KernelType = kernel::GaussianKernel,
-         typename MetricType = mlpack::metric::EuclideanDistance,
+template<typename KernelType = GaussianKernel,
+         typename MetricType = EuclideanDistance,
          typename MatType = arma::mat,
          template<typename TreeMetricType,
                   typename TreeStatType,
-                  typename TreeMatType> class TreeType = tree::KDTree,
+                  typename TreeMatType> class TreeType = KDTree,
          template<typename RuleType> class DualTreeTraversalType =
-             TreeType<MetricType,
-                      kde::KDEStat,
-                      MatType>::template DualTreeTraverser,
+             TreeType<MetricType, KDEStat, MatType>::template DualTreeTraverser,
          template<typename RuleType> class SingleTreeTraversalType =
-             TreeType<MetricType,
-                      kde::KDEStat,
-                      MatType>::template SingleTreeTraverser>
+             TreeType<MetricType, KDEStat, MatType>::template
+             SingleTreeTraverser>
 class KDE
 {
  public:
   //! Convenience typedef.
-  typedef TreeType<MetricType, kde::KDEStat, MatType> Tree;
+  typedef TreeType<MetricType, KDEStat, MatType> Tree;
 
   /**
    * Initialize KDE object using custom instantiated Metric and Kernel objects.
@@ -140,11 +135,16 @@ class KDE
   /**
    * Copy a KDE model.
    *
-   * Use std::move if the object to copy is no longer needed.
+   * @param other KDE model to copy.
+   */
+  KDE& operator=(const KDE& other);
+
+  /**
+   * Move a KDE model.
    *
    * @param other KDE model to copy.
    */
-  KDE& operator=(KDE other);
+  KDE& operator=(KDE&& other);
 
   /**
    * Destroy the KDE object. If this object created any trees, they will be
@@ -292,7 +292,7 @@ class KDE
 
   //! Serialize the model.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int version);
+  void serialize(Archive& ar, const uint32_t version);
 
  private:
   //! Kernel.
@@ -349,43 +349,7 @@ class KDE
                                    arma::vec& estimations);
 };
 
-} // namespace kde
 } // namespace mlpack
-
-//! Set the serialization version of the KDE class.
-/* TODO FIX
-Cannot use BOOST_TEMPLATE_CLASS_VERSION because of the problem stated in
-https://stackoverflow.com/questions/8942912/how-to-pass-multi-argument-templates
--to-macros
-*/
-
-namespace boost {
-namespace serialization{
-
-template<typename KernelType,
-         typename MetricType,
-         typename MatType,
-         template<typename TreeMetricType,
-                  typename TreeStatType,
-                  typename TreeMatType> class TreeType,
-         template<typename RuleType> class DualTreeTraversalType,
-         template<typename RuleType> class SingleTreeTraversalType>
-struct version<mlpack::kde::KDE<KernelType,
-                                MetricType,
-                                MatType,
-                                TreeType,
-                                DualTreeTraversalType,
-                                SingleTreeTraversalType>>
-{
-  typedef mpl::int_<1> type;
-  typedef mpl::integral_c_tag tag;
-  BOOST_STATIC_CONSTANT(int, value = version::type::value);
-  BOOST_MPL_ASSERT((boost::mpl::less<boost::mpl::int_<1>,
-                    boost::mpl::int_<256>>));
-};
-
-} // namespace serialization.
-} // namespace boost.
 
 // Include implementation.
 #include "kde_impl.hpp"

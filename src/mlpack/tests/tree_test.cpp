@@ -9,12 +9,6 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/core/tree/bounds.hpp>
-#include <mlpack/core/tree/binary_space_tree.hpp>
-#include <mlpack/core/metrics/lmetric.hpp>
-#include <mlpack/core/metrics/mahalanobis_distance.hpp>
-#include <mlpack/core/tree/cover_tree/cover_tree.hpp>
-#include <mlpack/core/tree/rectangle_tree.hpp>
 
 #include <queue>
 #include <stack>
@@ -23,10 +17,6 @@
 #include "test_catch_tools.hpp"
 
 using namespace mlpack;
-using namespace mlpack::math;
-using namespace mlpack::tree;
-using namespace mlpack::metric;
-using namespace mlpack::bound;
 
 /**
  * Ensure that a bound, by default, is empty and has no dimensionality.
@@ -408,7 +398,7 @@ TEST_CASE("HRectBoundRangeDistanceBound", "[TreeTest]")
 {
   for (int i = 0; i < 50; ++i)
   {
-    size_t dim = math::RandInt(20);
+    size_t dim = RandInt(20);
 
     HRectBound<EuclideanDistance> a(dim);
     HRectBound<EuclideanDistance> b(dim);
@@ -459,7 +449,7 @@ TEST_CASE("HRectBoundRangeDistancePoint", "[TreeTest]")
 {
   for (int i = 0; i < 20; ++i)
   {
-    size_t dim = math::RandInt(20);
+    size_t dim = RandInt(20);
 
     HRectBound<EuclideanDistance> a(dim);
 
@@ -931,7 +921,7 @@ TEST_CASE("HRectBoundRootRangeDistanceBound", "[TreeTest]")
 {
   for (int i = 0; i < 50; ++i)
   {
-    size_t dim = math::RandInt(20);
+    size_t dim = RandInt(20);
 
     HRectBound<EuclideanDistance> a(dim);
     HRectBound<EuclideanDistance> b(dim);
@@ -982,7 +972,7 @@ TEST_CASE("HRectBoundRootRangeDistancePoint", "[TreeTest]")
 {
   for (int i = 0; i < 20; ++i)
   {
-    size_t dim = math::RandInt(20);
+    size_t dim = RandInt(20);
 
     HRectBound<EuclideanDistance> a(dim);
 
@@ -1018,24 +1008,24 @@ TEST_CASE("HRectBoundRootRangeDistancePoint", "[TreeTest]")
 TEST_CASE("HRectBoundDiameter", "[TreeTest]")
 {
   HRectBound<LMetric<3, true>> b(4);
-  b[0] = math::Range(0.0, 1.0);
-  b[1] = math::Range(-1.0, 0.0);
-  b[2] = math::Range(2.0, 3.0);
-  b[3] = math::Range(7.0, 7.0);
+  b[0] = Range(0.0, 1.0);
+  b[1] = Range(-1.0, 0.0);
+  b[2] = Range(2.0, 3.0);
+  b[3] = Range(7.0, 7.0);
 
   REQUIRE(b.Diameter()== Approx(std::pow(3.0, 1.0 / 3.0)).epsilon(1e-7));
 
   HRectBound<LMetric<2, false>> c(4);
-  c[0] = math::Range(0.0, 1.0);
-  c[1] = math::Range(-1.0, 0.0);
-  c[2] = math::Range(2.0, 3.0);
-  c[3] = math::Range(0.0, 0.0);
+  c[0] = Range(0.0, 1.0);
+  c[1] = Range(-1.0, 0.0);
+  c[2] = Range(2.0, 3.0);
+  c[3] = Range(0.0, 0.0);
 
   REQUIRE(c.Diameter() == Approx(3.0).epsilon(1e-7));
 
   HRectBound<LMetric<5, true>> d(2);
-  d[0] = math::Range(2.2, 2.2);
-  d[1] = math::Range(1.0, 1.0);
+  d[0] = Range(2.2, 2.2);
+  d[1] = Range(1.0, 1.0);
 
   REQUIRE(d.Diameter() == Approx(0.0).margin(1e-5));
 }
@@ -1163,7 +1153,7 @@ TEST_CASE("FurthestPointDistanceTest", "[TreeTest]")
       double maxDist = 0.0;
       for (size_t i = 0; i < node->NumPoints(); ++i)
       {
-        const double dist = metric::EuclideanDistance::Evaluate(center,
+        const double dist = EuclideanDistance::Evaluate(center,
             dataset.col(node->Point(i)));
         if (dist > maxDist)
           maxDist = dist;
@@ -1472,7 +1462,7 @@ bool CheckHyperplaneSplit(const TreeType& tree)
     // The norm of the direction shouldn't be equal to zero.
     if (arma::norm(x.rows(0, dataset.n_rows-1)) < 1e-8)
     {
-      x[math::RandInt(0, dataset.n_rows)] = 1.0;
+      x[RandInt(0, dataset.n_rows)] = 1.0;
       success = false;
     }
 

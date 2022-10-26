@@ -18,7 +18,6 @@
 #include <mlpack/methods/block_krylov_svd/randomized_block_krylov_svd.hpp>
 
 namespace mlpack {
-namespace pca {
 
 /**
  * Implementation of the randomized block krylov SVD policy.
@@ -60,12 +59,12 @@ class RandomizedBlockKrylovSVDPolicy
              arma::mat& eigvec,
              const size_t rank)
   {
-    // This matrix will store the right singular values; we do not need them.
+    // This matrix will store the right singular vectors; we do not need them.
     arma::mat v;
 
     // Do singular value decomposition using the randomized block krylov SVD
     // algorithm.
-    svd::RandomizedBlockKrylovSVD rsvd(maxIterations, blockSize);
+    RandomizedBlockKrylovSVD rsvd(maxIterations, blockSize);
     rsvd.Apply(centeredData, eigvec, eigVal, v, rank);
 
     // Now we must square the singular values to get the eigenvalues.
@@ -95,7 +94,6 @@ class RandomizedBlockKrylovSVDPolicy
   size_t blockSize;
 };
 
-} // namespace pca
 } // namespace mlpack
 
 #endif

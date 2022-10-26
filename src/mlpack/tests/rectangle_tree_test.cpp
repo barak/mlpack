@@ -12,17 +12,12 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/core/tree/tree_traits.hpp>
-#include <mlpack/core/tree/rectangle_tree.hpp>
-#include <mlpack/methods/neighbor_search/neighbor_search.hpp>
+#include <mlpack/methods/neighbor_search.hpp>
 
 #include "catch.hpp"
 #include "test_catch_tools.hpp"
 
 using namespace mlpack;
-using namespace mlpack::neighbor;
-using namespace mlpack::tree;
-using namespace mlpack::metric;
 
 // Test the traits on RectangleTrees.
 
@@ -364,7 +359,7 @@ TEST_CASE("TreeBalance", "[RectangleTreeTraitsTest]")
   TreeType tree(dataset, 20, 6, 5, 2, 0);
 
   REQUIRE(GetMinLevel(tree) == GetMaxLevel(tree));
-  REQUIRE(tree.TreeDepth() == GetMinLevel(tree));
+  REQUIRE((int) tree.TreeDepth() == GetMinLevel(tree));
 }
 
 // A test to see if point deletion is working correctly.  We build a tree, then
@@ -416,8 +411,8 @@ TEST_CASE("PointDeletion", "[RectangleTreeTraitsTest]")
   CheckNumDescendants(tree);
 
   // Single-tree search.
-  NeighborSearch<NearestNeighborSort, metric::LMetric<2, true>, arma::mat,
-      RTree> knn1(std::move(tree), SINGLE_TREE_MODE);
+  NeighborSearch<NearestNeighborSort, LMetric<2, true>, arma::mat, RTree>
+      knn1(std::move(tree), SINGLE_TREE_MODE);
 
   arma::Mat<size_t> neighbors1;
   arma::mat distances1;
@@ -506,8 +501,8 @@ TEST_CASE("PointDynamicAdd", "[RectangleTreeTraitsTest]")
   arma::mat distances2;
 
   // Nearest neighbor search with the R tree.
-  NeighborSearch<NearestNeighborSort, metric::LMetric<2, true>, arma::mat,
-      RTree> knn1(std::move(tree), SINGLE_TREE_MODE);
+  NeighborSearch<NearestNeighborSort, LMetric<2, true>, arma::mat, RTree>
+      knn1(std::move(tree), SINGLE_TREE_MODE);
 
   knn1.Search(5, neighbors1, distances1);
 
@@ -546,8 +541,8 @@ TEST_CASE("SingleTreeTraverserTest", "[RectangleTreeTraitsTest]")
   CheckNumDescendants(rTree);
 
   // Nearest neighbor search with the R tree.
-  NeighborSearch<NearestNeighborSort, metric::LMetric<2, true>, arma::mat,
-      RStarTree> knn1(std::move(rTree), SINGLE_TREE_MODE);
+  NeighborSearch<NearestNeighborSort, LMetric<2, true>, arma::mat, RStarTree>
+      knn1(std::move(rTree), SINGLE_TREE_MODE);
 
   knn1.Search(5, neighbors1, distances1);
 
@@ -589,8 +584,8 @@ TEST_CASE("XTreeTraverserTest", "[RectangleTreeTraitsTest]")
   CheckNumDescendants(xTree);
 
   // Nearest neighbor search with the X tree.
-  NeighborSearch<NearestNeighborSort, metric::LMetric<2, true>, arma::mat,
-      XTree> knn1(std::move(xTree), SINGLE_TREE_MODE);
+  NeighborSearch<NearestNeighborSort, LMetric<2, true>, arma::mat, XTree>
+      knn1(std::move(xTree), SINGLE_TREE_MODE);
 
   knn1.Search(5, neighbors1, distances1);
 
@@ -630,8 +625,8 @@ TEST_CASE("HilbertRTreeTraverserTest", "[RectangleTreeTraitsTest]")
   CheckNumDescendants(hilbertRTree);
 
   // Nearest neighbor search with the Hilbert R tree.
-  NeighborSearch<NearestNeighborSort, metric::LMetric<2, true>, arma::mat,
-      HilbertRTree> knn1(std::move(hilbertRTree), SINGLE_TREE_MODE);
+  NeighborSearch<NearestNeighborSort, LMetric<2, true>, arma::mat, HilbertRTree>
+      knn1(std::move(hilbertRTree), SINGLE_TREE_MODE);
 
   knn1.Search(5, neighbors1, distances1);
 
@@ -982,7 +977,7 @@ TEST_CASE("RPlusTreeOverlapTest", "[RectangleTreeTraitsTest]")
 
   // Ensure that all leaf nodes are at the same level.
   REQUIRE(GetMinLevel(rPlusTree) == GetMaxLevel(rPlusTree));
-  REQUIRE(rPlusTree.TreeDepth() == GetMinLevel(rPlusTree));
+  REQUIRE((int) rPlusTree.TreeDepth() == GetMinLevel(rPlusTree));
 }
 
 
@@ -1011,8 +1006,8 @@ TEST_CASE("RPlusTreeTraverserTest", "[RectangleTreeTraitsTest]")
   CheckNumDescendants(rPlusTree);
 
   // Nearest neighbor search with the R+ tree.
-  NeighborSearch<NearestNeighborSort, metric::LMetric<2, true>, arma::mat,
-      RPlusTree > knn1(std::move(rPlusTree), SINGLE_TREE_MODE);
+  NeighborSearch<NearestNeighborSort, LMetric<2, true>, arma::mat, RPlusTree>
+      knn1(std::move(rPlusTree), SINGLE_TREE_MODE);
 
   knn1.Search(5, neighbors1, distances1);
 
@@ -1031,8 +1026,7 @@ TEST_CASE("RPlusTreeTraverserTest", "[RectangleTreeTraitsTest]")
 template<typename TreeType>
 void CheckRPlusPlusTreeBound(const TreeType& tree)
 {
-  typedef bound::HRectBound<metric::EuclideanDistance,
-      typename TreeType::ElemType> Bound;
+  typedef HRectBound<EuclideanDistance, typename TreeType::ElemType> Bound;
 
   bool success = true;
 
@@ -1099,7 +1093,7 @@ TEST_CASE("RPlusPlusTreeBoundTest", "[RectangleTreeTraitsTest]")
   REQUIRE(b == false);
 
   REQUIRE(GetMinLevel(rPlusPlusTree) == GetMaxLevel(rPlusPlusTree));
-  REQUIRE(rPlusPlusTree.TreeDepth() == GetMinLevel(rPlusPlusTree));
+  REQUIRE((int) rPlusPlusTree.TreeDepth() == GetMinLevel(rPlusPlusTree));
 
   // Check the MinimalSplitsNumberSweep.
   typedef RectangleTree<EuclideanDistance,
@@ -1113,7 +1107,7 @@ TEST_CASE("RPlusPlusTreeBoundTest", "[RectangleTreeTraitsTest]")
   CheckRPlusPlusTreeBound(rPlusPlusTree2);
 
   REQUIRE(GetMinLevel(rPlusPlusTree2) == GetMaxLevel(rPlusPlusTree2));
-  REQUIRE(rPlusPlusTree2.TreeDepth() == GetMinLevel(rPlusPlusTree2));
+  REQUIRE((int) rPlusPlusTree2.TreeDepth() == GetMinLevel(rPlusPlusTree2));
 }
 
 TEST_CASE("RPlusPlusTreeTraverserTest", "[RectangleTreeTraitsTest]")
@@ -1141,8 +1135,8 @@ TEST_CASE("RPlusPlusTreeTraverserTest", "[RectangleTreeTraitsTest]")
   CheckNumDescendants(rPlusPlusTree);
 
   // Nearest neighbor search with the R++ tree.
-  NeighborSearch<NearestNeighborSort, metric::LMetric<2, true>,
-      arma::mat, RPlusPlusTree > knn1(std::move(rPlusPlusTree),
+  NeighborSearch<NearestNeighborSort, LMetric<2, true>,
+      arma::mat, RPlusPlusTree> knn1(std::move(rPlusPlusTree),
       SINGLE_TREE_MODE);
 
   knn1.Search(5, neighbors1, distances1);

@@ -8,43 +8,21 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-
-#include <type_traits>
-
-#include <mlpack/core/cv/meta_info_extractor.hpp>
-#include <mlpack/core/cv/metrics/accuracy.hpp>
-#include <mlpack/core/cv/metrics/f1.hpp>
-#include <mlpack/core/cv/metrics/mse.hpp>
-#include <mlpack/core/cv/metrics/precision.hpp>
-#include <mlpack/core/cv/metrics/recall.hpp>
-#include <mlpack/core/cv/metrics/r2_score.hpp>
-#include <mlpack/core/cv/metrics/silhouette_score.hpp>
-#include <mlpack/core/cv/simple_cv.hpp>
-#include <mlpack/core/cv/k_fold_cv.hpp>
-#include <mlpack/methods/ann/ffn.hpp>
-#include <mlpack/methods/ann/init_rules/const_init.hpp>
-#include <mlpack/methods/ann/layer/layer.hpp>
-#include <mlpack/methods/ann/loss_functions/mean_squared_error.hpp>
-#include <mlpack/methods/decision_tree/decision_tree.hpp>
-#include <mlpack/methods/decision_tree/information_gain.hpp>
-#include <mlpack/methods/hoeffding_trees/hoeffding_tree.hpp>
-#include <mlpack/methods/lars/lars.hpp>
-#include <mlpack/methods/linear_regression/linear_regression.hpp>
-#include <mlpack/methods/logistic_regression/logistic_regression.hpp>
-#include <mlpack/methods/naive_bayes/naive_bayes_classifier.hpp>
-#include <mlpack/methods/softmax_regression/softmax_regression.hpp>
-#include <mlpack/core/data/confusion_matrix.hpp>
-#include <ensmallen.hpp>
+#include <mlpack/core.hpp>
+#include <mlpack/methods/ann.hpp>
+#include <mlpack/methods/decision_tree.hpp>
+#include <mlpack/methods/hoeffding_trees.hpp>
+#include <mlpack/methods/lars.hpp>
+#include <mlpack/methods/linear_regression.hpp>
+#include <mlpack/methods/logistic_regression.hpp>
+#include <mlpack/methods/naive_bayes.hpp>
+#include <mlpack/methods/perceptron.hpp>
+#include <mlpack/methods/softmax_regression.hpp>
 
 #include "catch.hpp"
 #include "mock_categorical_data.hpp"
 
 using namespace mlpack;
-using namespace mlpack::ann;
-using namespace mlpack::cv;
-using namespace mlpack::naive_bayes;
-using namespace mlpack::regression;
-using namespace mlpack::tree;
 using namespace mlpack::data;
 
 /**
@@ -74,6 +52,80 @@ TEST_CASE("BinaryClassificationMetricsTest", "[CVTest]")
 
   double f1 = 2 * 0.6 * 0.75 / (0.6 + 0.75);
   REQUIRE(F1<Binary>::Evaluate(lr, data, labels) == Approx(f1).epsilon(1e-7));
+
+  // Testing binary ROC-AUC Score.
+  //
+  // NOTE:
+  // For comparing these ROCAUCScore testcases with "scikit-learn"
+  // library's "roc_auc_score", refer the pull request thread comment
+  // https://github.com/mlpack/mlpack/pull/3086#issuecomment-1046003548
+  //
+  arma::Row<size_t> rocTrueLabels;
+  arma::Row<double> rocScoresOfPC;
+  double rocAucScore;
+
+  // Test - 1
+  rocTrueLabels = arma::Row<size_t>("0 0 0 0 0  1 1 1 1 1");
+  rocScoresOfPC = arma::Row<double>("0.1 0.2 0.3 0.4 0.5  0.6 0.7 0.8 0.9 1");
+
+  rocAucScore = 0;
+  REQUIRE(ROCAUCScore<0>::Evaluate(rocTrueLabels, rocScoresOfPC)
+          == Approx(rocAucScore).epsilon(1e-7));
+
+  rocAucScore = 1;
+  REQUIRE(ROCAUCScore<1>::Evaluate(rocTrueLabels, rocScoresOfPC)
+          == Approx(rocAucScore).epsilon(1e-7));
+
+  // Test - 2
+  rocTrueLabels = arma::Row<size_t>("1 0 1 0 1  0 1 0 1 0");
+  rocScoresOfPC = arma::Row<double>("0.1 0.2 0.3 0.4 0.5  0.6 0.7 0.8 0.9 1");
+
+  rocAucScore = 0.6;
+  REQUIRE(ROCAUCScore<0>::Evaluate(rocTrueLabels, rocScoresOfPC)
+          == Approx(rocAucScore).epsilon(1e-7));
+
+  rocAucScore = 0.4;
+  REQUIRE(ROCAUCScore<1>::Evaluate(rocTrueLabels, rocScoresOfPC)
+          == Approx(rocAucScore).epsilon(1e-7));
+
+  // Test - 3
+  rocTrueLabels = arma::Row<size_t>("1 0 1 0 1  0 1 0 1 0");
+  rocScoresOfPC = arma::Row<double>("0.8 0.3 0.5 0.4 0.9  0.2 0.7 0.6 0 0.1");
+
+  rocAucScore = 0.24;
+  REQUIRE(ROCAUCScore<0>::Evaluate(rocTrueLabels, rocScoresOfPC)
+          == Approx(rocAucScore).epsilon(1e-7));
+
+  rocAucScore = 0.76;
+  REQUIRE(ROCAUCScore<1>::Evaluate(rocTrueLabels, rocScoresOfPC)
+          == Approx(rocAucScore).epsilon(1e-7));
+
+  // Test - 4 (labels and scores with zero size)
+  rocTrueLabels = arma::Row<size_t>();
+  rocScoresOfPC = arma::Row<double>();
+
+  REQUIRE_THROWS_AS(ROCAUCScore<0>::Evaluate(rocTrueLabels, rocScoresOfPC),
+                    std::invalid_argument);
+  REQUIRE_THROWS_AS(ROCAUCScore<1>::Evaluate(rocTrueLabels, rocScoresOfPC),
+                    std::invalid_argument);
+
+  // Test - 5 (labels and scores with one size)
+  rocTrueLabels = arma::Row<size_t>("1");
+  rocScoresOfPC = arma::Row<double>("0.8");
+
+  REQUIRE_THROWS_AS(ROCAUCScore<0>::Evaluate(rocTrueLabels, rocScoresOfPC),
+                    std::invalid_argument);
+  REQUIRE_THROWS_AS(ROCAUCScore<1>::Evaluate(rocTrueLabels, rocScoresOfPC),
+                    std::invalid_argument);
+
+  // Test - 6 (mismatch labels and scores size)
+  rocTrueLabels = arma::Row<size_t>("1 0 1 0 1  0 1 0 1 0");
+  rocScoresOfPC = arma::Row<double>("0.1 0.2 0.3 0.4 0.5");
+
+  REQUIRE_THROWS_AS(ROCAUCScore<0>::Evaluate(rocTrueLabels, rocScoresOfPC),
+                    std::invalid_argument);
+  REQUIRE_THROWS_AS(ROCAUCScore<1>::Evaluate(rocTrueLabels, rocScoresOfPC),
+                    std::invalid_argument);
 }
 
 /**
@@ -187,8 +239,29 @@ TEST_CASE("R2ScoreTest", "[CVTest]")
 
   double expectedR2 = 0.99999779;
 
-  REQUIRE(R2Score::Evaluate(lr, data, responses)
+  REQUIRE(R2Score<false>::Evaluate(lr, data, responses)
           == Approx(expectedR2).epsilon(1e-7));
+}
+
+/**
+ * Test the Adjusted R squared metric.
+ */
+TEST_CASE("AdjR2ScoreTest", "[CVTest]")
+{
+  // Making two variables that define the linear function is
+  // f(x1, x2) = x1 + x2.
+  arma::mat X;
+  X = { { 1, 2, 3, 4, 5, 6 },
+        { 2, 3, 4, 5, 6, 7 } };
+  arma::rowvec Y;
+  Y = { 3, 5, 7, 9, 11, 13 };
+
+  LinearRegression lr(X, Y);
+
+  // Theoretically Adjusted R squared should be equal 1
+  double expAdjR2 = 1;
+  REQUIRE(std::abs(R2Score<true>::Evaluate(lr, X, Y) - expAdjR2)
+          <= 1e-7);
 }
 
 /**
@@ -199,10 +272,9 @@ TEST_CASE("MSEMatResponsesTest", "[CVTest]")
   arma::mat data("1 2");
   arma::mat trainingResponses("1 2; 3 4");
 
-  FFN<MeanSquaredError<>, ConstInitialization> ffn(MeanSquaredError<>(),
+  FFN<MeanSquaredError, ConstInitialization> ffn(MeanSquaredError(),
     ConstInitialization(0));
-  ffn.Add<Linear<>>(1, 2);
-  ffn.Add<IdentityLayer<>>();
+  ffn.Add<Linear>(2);
 
   ens::RMSProp opt(0.2);
   opt.BatchSize() = 1;
@@ -511,6 +583,34 @@ TEST_CASE("KFoldCVAccuracyTest", "[CVTest]")
 }
 
 /**
+ * Test k-fold cross-validation with the perceptron.
+ */
+TEST_CASE("KFoldCVPerceptronTest", "[CVTest]")
+{
+  // Basically the same as the test above (for Naive Bayes), but with the
+  // perceptron.
+
+  // Making a 10-points dataset. All points should always be correctly
+  // classified.
+  arma::mat data("0 0 0 0 0 1 1 1 1 1");
+  arma::Row<size_t> labels("0 0 0 0 0 1 1 1 1 1");
+  size_t numClasses = 2;
+
+  // 10-fold cross-validation, no shuffling.
+  KFoldCV<Perceptron<>, Accuracy> cv(10, data, labels, numClasses);
+
+  // We should succeed in classifying separately the first nine samples, and
+  // fail with the remaining one.
+  double expectedAccuracy = 1.0;
+
+  REQUIRE(cv.Evaluate() == Approx(expectedAccuracy).epsilon(1e-7));
+
+  // Assert we can access a trained model without the exception of
+  // uninitialization.
+  REQUIRE_NOTHROW(cv.Model());
+}
+
+/**
  * Test k-fold cross-validation with weighted linear regression.
  */
 TEST_CASE("KFoldCVWithWeightedLRTest", "[CVTest]")
@@ -750,11 +850,11 @@ TEST_CASE("KFoldCVWithDTTestUnevenBinsWeighted", "[CVTest]")
 TEST_CASE("SilhouetteScoreTest", "[CVTest]")
 {
   arma::mat X;
-  X << 0 << 1 << 1 << 0 << 0 << arma::endr
-    << 0 << 1 << 2 << 0 << 0 << arma::endr
-    << 1 << 1 << 3 << 2 << 0 << arma::endr;
-  arma::Row<size_t> labels = {0, 1, 2, 0, 0};
-  metric::EuclideanDistance metric;
+  X = { { 0, 1, 1, 0, 0 },
+        { 0, 1, 2, 0, 0 },
+        { 1, 1, 3, 2, 0 } };
+  arma::Row<size_t> labels = { 0, 1, 2, 0, 0 };
+  EuclideanDistance metric;
   double silhouetteScore = SilhouetteScore::Overall(X, labels, metric);
   REQUIRE(silhouetteScore == Approx(0.1121684822489150).epsilon(1e-7));
 }

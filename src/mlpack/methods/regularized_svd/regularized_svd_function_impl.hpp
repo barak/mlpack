@@ -16,13 +16,12 @@
 #include <mlpack/core/math/make_alias.hpp>
 
 namespace mlpack {
-namespace svd {
 
 template <typename MatType>
 RegularizedSVDFunction<MatType>::RegularizedSVDFunction(const MatType& data,
                                                         const size_t rank,
                                                         const double lambda) :
-    data(math::MakeAlias(const_cast<MatType&>(data), false)),
+    data(MakeAlias(const_cast<MatType&>(data), false)),
     rank(rank),
     lambda(lambda)
 {
@@ -150,7 +149,6 @@ void RegularizedSVDFunction<MatType>::Gradient(const arma::mat& parameters,
   }
 }
 
-} // namespace svd
 } // namespace mlpack
 
 // Template specialization for the SGD optimizer.
@@ -159,7 +157,7 @@ namespace ens {
 template <>
 template <>
 double StandardSGD::Optimize(
-    mlpack::svd::RegularizedSVDFunction<arma::mat>& function,
+    mlpack::RegularizedSVDFunction<arma::mat>& function,
     arma::mat& parameters)
 {
   // Find the number of functions to use.
@@ -221,7 +219,7 @@ double StandardSGD::Optimize(
 template <>
 template <>
 inline double ParallelSGD<ExponentialBackoff>::Optimize(
-    mlpack::svd::RegularizedSVDFunction<arma::mat>& function,
+    mlpack::RegularizedSVDFunction<arma::mat>& function,
     arma::mat& iterate)
 {
   double overallObjective = DBL_MAX;
@@ -243,7 +241,7 @@ inline double ParallelSGD<ExponentialBackoff>::Optimize(
     overallObjective = 0;
 
     #pragma omp parallel for reduction(+:overallObjective)
-    for (omp_size_t j = 0; j < (omp_size_t) function.NumFunctions(); ++j)
+    for (size_t j = 0; j < (size_t) function.NumFunctions(); ++j)
     {
       overallObjective += function.Evaluate(iterate, j);
     }
@@ -272,14 +270,14 @@ inline double ParallelSGD<ExponentialBackoff>::Optimize(
 
     if (shuffle) // Determine order of visitation.
       std::shuffle(visitationOrder.begin(), visitationOrder.end(),
-          mlpack::math::randGen);
+          mlpack::RandGen());
 
     #pragma omp parallel
     {
       // Each processor gets a subset of the instances.
       // Each subset is of size threadShareSize.
       size_t threadId = 0;
-      #ifdef HAS_OPENMP
+      #ifdef MLPACK_USE_OPENMP
         threadId = omp_get_thread_num();
       #endif
 

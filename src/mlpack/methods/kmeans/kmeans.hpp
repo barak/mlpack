@@ -12,17 +12,26 @@
 #ifndef MLPACK_METHODS_KMEANS_KMEANS_HPP
 #define MLPACK_METHODS_KMEANS_KMEANS_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 
-#include <mlpack/core/metrics/lmetric.hpp>
+// Include initialization strategies.
 #include "sample_initialization.hpp"
-#include "max_variance_new_cluster.hpp"
-#include "naive_kmeans.hpp"
+#include "kmeans_plus_plus_initialization.hpp"
+#include "random_partition.hpp"
 
-#include <mlpack/core/tree/binary_space_tree.hpp>
+// Include empty cluster policies.
+#include "max_variance_new_cluster.hpp"
+#include "kill_empty_clusters.hpp"
+#include "allow_empty_clusters.hpp"
+
+// Include Lloyd step types.
+#include "naive_kmeans.hpp"
+#include "dual_tree_kmeans.hpp"
+#include "elkan_kmeans.hpp"
+#include "hamerly_kmeans.hpp"
+#include "pelleg_moore_kmeans.hpp"
 
 namespace mlpack {
-namespace kmeans /** K-Means clustering. */ {
 
 /**
  * This class implements K-Means clustering, using a variety of possible
@@ -45,12 +54,12 @@ namespace kmeans /** K-Means clustering. */ {
  *
  * // Cluster using the Manhattan distance, 100 iterations maximum, saving only
  * // the centroids.
- * KMeans<metric::ManhattanDistance> k(100);
+ * KMeans<ManhattanDistance> k(100);
  * k.Cluster(data, 6, centroids); // 6 clusters.
  * @endcode
  *
- * @tparam MetricType The distance metric to use for this KMeans; see
- *     metric::LMetric for an example.
+ * @tparam MetricType The distance metric to use for this KMeans; see LMetric
+ *     for an example.
  * @tparam InitialPartitionPolicy Initial partitioning policy; must implement a
  *     default constructor and either 'void Cluster(const arma::mat&, const
  *     size_t, arma::Row<size_t>&)' or 'void Cluster(const arma::mat&, const
@@ -65,7 +74,7 @@ namespace kmeans /** K-Means clustering. */ {
  * @see RandomPartition, SampleInitialization, RefinedStart, AllowEmptyClusters,
  *      MaxVarianceNewCluster, NaiveKMeans, ElkanKMeans
  */
-template<typename MetricType = metric::EuclideanDistance,
+template<typename MetricType = EuclideanDistance,
          typename InitialPartitionPolicy = SampleInitialization,
          typename EmptyClusterPolicy = MaxVarianceNewCluster,
          template<class, class> class LloydStepType = NaiveKMeans,
@@ -178,7 +187,7 @@ class KMeans
 
   //! Serialize the k-means object.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int version);
+  void serialize(Archive& ar, const uint32_t version);
 
  private:
   //! Maximum number of iterations before giving up.
@@ -191,10 +200,13 @@ class KMeans
   EmptyClusterPolicy emptyClusterAction;
 };
 
-} // namespace kmeans
 } // namespace mlpack
 
 // Include implementation.
 #include "kmeans_impl.hpp"
+
+// The refined start initialization strategy uses KMeans, so it must be included
+// afterwards.
+#include "refined_start.hpp"
 
 #endif // MLPACK_METHODS_KMEANS_KMEANS_HPP

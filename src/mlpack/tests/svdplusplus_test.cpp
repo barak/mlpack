@@ -11,14 +11,11 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/svdplusplus/svdplusplus.hpp>
-
-#include <ensmallen.hpp>
+#include <mlpack/methods/svdplusplus.hpp>
 
 #include "catch.hpp"
 
 using namespace mlpack;
-using namespace mlpack::svd;
 
 TEST_CASE("SVDPlusPlusEvaluate", "[SVDPlusPlusTest]")
 {
@@ -255,7 +252,8 @@ TEST_CASE("SVDplusPlusOutputSizeTest", "[SVDPlusPlusTest]")
 {
   // Load small GroupLens dataset.
   arma::mat data;
-  data::Load("GroupLensSmall.csv", data);
+  if (!data::Load("GroupLensSmall.csv", data))
+    FAIL("Cannot load dataset GroupLensSmall.csv");
 
   // Define useful constants.
   const size_t numUsers = max(data.row(0)) + 1;
@@ -288,7 +286,8 @@ TEST_CASE("SVDPlusPlusCleanDataTest", "[SVDPlusPlusTest]")
 {
   // Load small GroupLens dataset.
   arma::mat data;
-  data::Load("GroupLensSmall.csv", data);
+  if (!data::Load("GroupLensSmall.csv", data))
+    FAIL("Cannot load dataset GroupLensSmall.csv");
 
   // Define useful constants.
   const size_t numUsers = max(data.row(0)) + 1;
@@ -435,7 +434,7 @@ TEST_CASE("SVDPlusPlusFunctionOptimize", "[SVDPlusPlusTest]")
 
 // The test is only compiled if the user has specified OpenMP to be
 // used.
-#ifdef HAS_OPENMP
+#ifdef MLPACK_USE_OPENMP
 
 // Test SVDPlusPlus with parallel SGD.
 TEST_CASE("SVDPlusPlusFunctionParallelOptimize", "[SVDPlusPlusTest]")

@@ -10,19 +10,13 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/range_search/range_search.hpp>
-#include <mlpack/core/tree/cover_tree.hpp>
+#include <mlpack/methods/range_search.hpp>
 #include <mlpack/methods/range_search/rs_model.hpp>
 
 #include "catch.hpp"
 #include "test_catch_tools.hpp"
 
 using namespace mlpack;
-using namespace mlpack::range;
-using namespace mlpack::math;
-using namespace mlpack::tree;
-using namespace mlpack::bound;
-using namespace mlpack::metric;
 using namespace std;
 
 // Get our results into a sorted format, so we can actually then test for
@@ -206,13 +200,20 @@ TEST_CASE("ExhaustiveSyntheticTest", "[RangeSearchTest]")
     // Neighbors of point 10.
     REQUIRE(sortedOutput[newFromOld[10]].size() == 4);
     REQUIRE(sortedOutput[newFromOld[10]][0].second == newFromOld[9]);
-    REQUIRE(sortedOutput[newFromOld[10]][0].first == Approx(0.10).epsilon(1e-7));
-    REQUIRE(sortedOutput[newFromOld[10]][1].second == newFromOld[3]);
-    REQUIRE(sortedOutput[newFromOld[10]][1].first == Approx(0.25).epsilon(1e-7));
-    REQUIRE(sortedOutput[newFromOld[10]][2].second == newFromOld[8]);
-    REQUIRE(sortedOutput[newFromOld[10]][2].first == Approx(0.55).epsilon(1e-7));
-    REQUIRE(sortedOutput[newFromOld[10]][3].second == newFromOld[1]);
-    REQUIRE(sortedOutput[newFromOld[10]][3].first == Approx(0.65).epsilon(1e-7));
+    REQUIRE(sortedOutput[newFromOld[10]][0].first ==
+        Approx(0.10).epsilon(1e-7));
+    REQUIRE(sortedOutput[newFromOld[10]][1].second ==
+        newFromOld[3]);
+    REQUIRE(sortedOutput[newFromOld[10]][1].first ==
+        Approx(0.25).epsilon(1e-7));
+    REQUIRE(sortedOutput[newFromOld[10]][2].second ==
+        newFromOld[8]);
+    REQUIRE(sortedOutput[newFromOld[10]][2].first ==
+        Approx(0.55).epsilon(1e-7));
+    REQUIRE(sortedOutput[newFromOld[10]][3].second ==
+        newFromOld[1]);
+    REQUIRE(sortedOutput[newFromOld[10]][3].first ==
+        Approx(0.65).epsilon(1e-7));
 
     // Now do it again with a different range: [sqrt(0.5) 1.0].
     if (rs->ReferenceTree())
@@ -273,9 +274,11 @@ TEST_CASE("ExhaustiveSyntheticTest", "[RangeSearchTest]")
     // Neighbors of point 10.
     REQUIRE(sortedOutput[newFromOld[10]].size() == 2);
     REQUIRE(sortedOutput[newFromOld[10]][0].second == newFromOld[2]);
-    REQUIRE(sortedOutput[newFromOld[10]][0].first == Approx(0.85).epsilon(1e-7));
+    REQUIRE(sortedOutput[newFromOld[10]][0].first ==
+        Approx(0.85).epsilon(1e-7));
     REQUIRE(sortedOutput[newFromOld[10]][1].second == newFromOld[0]);
-    REQUIRE(sortedOutput[newFromOld[10]][1].first == Approx(0.95).epsilon(1e-7));
+    REQUIRE(sortedOutput[newFromOld[10]][1].first ==
+        Approx(0.95).epsilon(1e-7));
 
     // Now do it again with a different range: [1.0 inf].
     if (rs->ReferenceTree())
@@ -433,13 +436,20 @@ TEST_CASE("ExhaustiveSyntheticTest", "[RangeSearchTest]")
     // Neighbors of point 10.
     REQUIRE(sortedOutput[newFromOld[10]].size() == 4);
     REQUIRE(sortedOutput[newFromOld[10]][0].second == newFromOld[5]);
-    REQUIRE(sortedOutput[newFromOld[10]][0].first == Approx(1.22).epsilon(1e-7));
-    REQUIRE(sortedOutput[newFromOld[10]][1].second == newFromOld[7]);
-    REQUIRE(sortedOutput[newFromOld[10]][1].first == Approx(2.30).epsilon(1e-7));
-    REQUIRE(sortedOutput[newFromOld[10]][2].second == newFromOld[6]);
-    REQUIRE(sortedOutput[newFromOld[10]][2].first == Approx(3.00).epsilon(1e-7));
-    REQUIRE(sortedOutput[newFromOld[10]][3].second == newFromOld[4]);
-    REQUIRE(sortedOutput[newFromOld[10]][3].first == Approx(4.05).epsilon(1e-7));
+    REQUIRE(sortedOutput[newFromOld[10]][0].first ==
+        Approx(1.22).epsilon(1e-7));
+    REQUIRE(sortedOutput[newFromOld[10]][1].second ==
+        newFromOld[7]);
+    REQUIRE(sortedOutput[newFromOld[10]][1].first ==
+        Approx(2.30).epsilon(1e-7));
+    REQUIRE(sortedOutput[newFromOld[10]][2].second ==
+        newFromOld[6]);
+    REQUIRE(sortedOutput[newFromOld[10]][2].first ==
+        Approx(3.00).epsilon(1e-7));
+    REQUIRE(sortedOutput[newFromOld[10]][3].second ==
+        newFromOld[4]);
+    REQUIRE(sortedOutput[newFromOld[10]][3].first ==
+        Approx(4.05).epsilon(1e-7));
 
     // Clean the memory.
     delete rs;
@@ -599,7 +609,7 @@ TEST_CASE("SingleTreeVsNaive", "[RangeSearchTest]")
  * Ensure that dual tree range search with cover trees works by comparing
  * with the kd-tree implementation.
  */
-TEST_CASE("CoverTreeTest", "[RangeSearchTest]")
+TEST_CASE("RSCoverTreeTest", "[RangeSearchTest]")
 {
   arma::mat data;
   data.randu(8, 1000); // 1000 points in 8 dimensions.
@@ -1042,7 +1052,7 @@ TEST_CASE("DualBallTreeTest2", "[RangeSearchTest]")
       {
         REQUIRE(kdSorted[i][j].second == ballSorted[i][j].second);
         REQUIRE(kdSorted[i][j].first ==
-            Approx(ballSorted[i][j].first).epsilon (1e-7));
+            Approx(ballSorted[i][j].first).epsilon(1e-7));
       }
     }
   }
@@ -1059,7 +1069,7 @@ TEST_CASE("EmptySearchTest", "[RangeSearchTest]")
   vector<vector<size_t>> neighbors;
   vector<vector<double>> distances;
 
-  rs.Search(math::Range(0.0, 10.0), neighbors, distances);
+  rs.Search(Range(0.0, 10.0), neighbors, distances);
 
   REQUIRE(neighbors.size() == 0);
   REQUIRE(distances.size() == 0);
@@ -1067,7 +1077,7 @@ TEST_CASE("EmptySearchTest", "[RangeSearchTest]")
   // Now check with a query set.
   arma::mat querySet = arma::randu<arma::mat>(3, 100);
 
-  REQUIRE_THROWS_AS(rs.Search(querySet, math::Range(0.0, 10.0), neighbors,
+  REQUIRE_THROWS_AS(rs.Search(querySet, Range(0.0, 10.0), neighbors,
       distances), std::invalid_argument);
 }
 
@@ -1086,8 +1096,8 @@ TEST_CASE("RangeSearchTrainTest", "[RangeSearchTest]")
 
   empty.Train(dataset);
 
-  empty.Search(math::Range(0.5, 0.7), neighbors, distances);
-  baseline.Search(math::Range(0.5, 0.7), baselineNeighbors, baselineDistances);
+  empty.Search(Range(0.5, 0.7), neighbors, distances);
+  baseline.Search(Range(0.5, 0.7), baselineNeighbors, baselineDistances);
 
   REQUIRE(neighbors.size() == baselineNeighbors.size());
   REQUIRE(distances.size() == baselineDistances.size());
@@ -1128,8 +1138,8 @@ TEST_CASE("TrainTreeTest", "[RangeSearchTest]")
   RSType::Tree tree(dataset);
   empty.Train(&tree);
 
-  empty.Search(math::Range(0.5, 0.7), neighbors, distances);
-  baseline.Search(math::Range(0.5, 0.7), baselineNeighbors, baselineDistances);
+  empty.Search(Range(0.5, 0.7), neighbors, distances);
+  baseline.Search(Range(0.5, 0.7), baselineNeighbors, baselineDistances);
 
   REQUIRE(neighbors.size() == baselineNeighbors.size());
   REQUIRE(distances.size() == baselineDistances.size());
@@ -1183,8 +1193,8 @@ TEST_CASE("MoveConstructorMatrixTest", "[RangeSearchTest]")
   vector<vector<size_t>> moveNeighbors, neighbors;
   vector<vector<double>> moveDistances, distances;
 
-  movers.Search(math::Range(0.5, 0.7), moveNeighbors, moveDistances);
-  rs.Search(math::Range(0.5, 0.7), neighbors, distances);
+  movers.Search(Range(0.5, 0.7), moveNeighbors, moveDistances);
+  rs.Search(Range(0.5, 0.7), neighbors, distances);
 
   REQUIRE(neighbors.size() == moveNeighbors.size());
   REQUIRE(distances.size() == moveDistances.size());
@@ -1226,8 +1236,8 @@ TEST_CASE("MoveTrainTest", "[RangeSearchTest]")
   vector<vector<size_t>> moveNeighbors, neighbors;
   vector<vector<double>> moveDistances, distances;
 
-  movers.Search(math::Range(0.5, 0.7), moveNeighbors, moveDistances);
-  rs.Search(math::Range(0.5, 0.7), neighbors, distances);
+  movers.Search(Range(0.5, 0.7), moveNeighbors, moveDistances);
+  rs.Search(Range(0.5, 0.7), neighbors, distances);
 
   REQUIRE(neighbors.size() == moveNeighbors.size());
   REQUIRE(distances.size() == moveDistances.size());
@@ -1287,13 +1297,15 @@ TEST_CASE("RSModelTest", "[RangeSearchTest]")
   models[26] = RSModel(RSModel::TreeTypes::OCTREE, true);
   models[27] = RSModel(RSModel::TreeTypes::OCTREE, false);
 
+  util::Timers timers;
+
   for (size_t j = 0; j < 3; ++j)
   {
     // Get a baseline.
     RangeSearch<> rs(referenceData);
     vector<vector<size_t>> baselineNeighbors;
     vector<vector<double>> baselineDistances;
-    rs.Search(queryData, math::Range(0.25, 0.75), baselineNeighbors,
+    rs.Search(queryData, Range(0.25, 0.75), baselineNeighbors,
         baselineDistances);
 
     vector<vector<pair<double, size_t>>> baselineSorted;
@@ -1305,17 +1317,17 @@ TEST_CASE("RSModelTest", "[RangeSearchTest]")
       arma::mat referenceCopy(referenceData);
       arma::mat queryCopy(queryData);
       if (j == 0)
-        models[i].BuildModel(std::move(referenceCopy), 5, false, false);
+        models[i].BuildModel(timers, std::move(referenceCopy), 5, false, false);
       else if (j == 1)
-        models[i].BuildModel(std::move(referenceCopy), 5, false, true);
+        models[i].BuildModel(timers, std::move(referenceCopy), 5, false, true);
       else if (j == 2)
-        models[i].BuildModel(std::move(referenceCopy), 5, true, false);
+        models[i].BuildModel(timers, std::move(referenceCopy), 5, true, false);
 
       vector<vector<size_t>> neighbors;
       vector<vector<double>> distances;
 
-      models[i].Search(std::move(queryCopy), math::Range(0.25, 0.75), neighbors,
-          distances);
+      models[i].Search(timers, std::move(queryCopy), Range(0.25, 0.75),
+          neighbors, distances);
 
       REQUIRE(neighbors.size() == baselineNeighbors.size());
       REQUIRE(distances.size() == baselineDistances.size());
@@ -1373,13 +1385,15 @@ TEST_CASE("RSModelMonochromaticTest", "[RangeSearchTest]")
   models[26] = RSModel(RSModel::TreeTypes::OCTREE, true);
   models[27] = RSModel(RSModel::TreeTypes::OCTREE, false);
 
+  util::Timers timers;
+
   for (size_t j = 0; j < 3; ++j)
   {
     // Get a baseline.
     RangeSearch<> rs(referenceData);
     vector<vector<size_t>> baselineNeighbors;
     vector<vector<double>> baselineDistances;
-    rs.Search(math::Range(0.25, 0.5), baselineNeighbors, baselineDistances);
+    rs.Search(Range(0.25, 0.5), baselineNeighbors, baselineDistances);
 
     vector<vector<pair<double, size_t>>> baselineSorted;
     SortResults(baselineNeighbors, baselineDistances, baselineSorted);
@@ -1389,16 +1403,16 @@ TEST_CASE("RSModelMonochromaticTest", "[RangeSearchTest]")
       // We only have std::move() cosntructors, so make a copy of our data.
       arma::mat referenceCopy(referenceData);
       if (j == 0)
-        models[i].BuildModel(std::move(referenceCopy), 5, false, false);
+        models[i].BuildModel(timers, std::move(referenceCopy), 5, false, false);
       else if (j == 1)
-        models[i].BuildModel(std::move(referenceCopy), 5, false, true);
+        models[i].BuildModel(timers, std::move(referenceCopy), 5, false, true);
       else if (j == 2)
-        models[i].BuildModel(std::move(referenceCopy), 5, true, false);
+        models[i].BuildModel(timers, std::move(referenceCopy), 5, true, false);
 
       vector<vector<size_t>> neighbors;
       vector<vector<double>> distances;
 
-      models[i].Search(math::Range(0.25, 0.5), neighbors, distances);
+      models[i].Search(timers, Range(0.25, 0.5), neighbors, distances);
 
       REQUIRE(neighbors.size() == baselineNeighbors.size());
       REQUIRE(distances.size() == baselineDistances.size());
@@ -1437,7 +1451,7 @@ TEST_CASE("NeighborPtrDeleteTest", "[RangeSearchTest]")
   arma::mat queryset = arma::randu<arma::mat>(5, 50);
   vector<vector<double>> distances;
   vector<vector<size_t>> neighbors;
-  ra.Search(queryset, math::Range(0.2, 0.5), neighbors, distances);
+  ra.Search(queryset, Range(0.2, 0.5), neighbors, distances);
 
   // These will (hopefully) fail is either the neighbors or the distances matrix
   // has been accidentally deleted.
@@ -1461,9 +1475,9 @@ TEST_CASE("RangeSearchCopyConstructorAndOperatorTest", "[RangeSearchTest]")
   vector<vector<double>> distances, distances2, distances3;
   vector<vector<size_t>> neighbors, neighbors2, neighbors3;
 
-  rs.Search(math::Range(0.2, 0.3), neighbors, distances);
-  rs2.Search(math::Range(0.2, 0.3), neighbors2, distances2);
-  rs3.Search(math::Range(0.2, 0.3), neighbors3, distances3);
+  rs.Search(Range(0.2, 0.3), neighbors, distances);
+  rs2.Search(Range(0.2, 0.3), neighbors2, distances2);
+  rs3.Search(Range(0.2, 0.3), neighbors3, distances3);
 
   // Check results.
   REQUIRE(distances.size() == distances2.size());
@@ -1502,13 +1516,13 @@ TEST_CASE("RangeSearchMoveConstructorTest", "[RangeSearchTest]")
   vector<vector<double>> distances, distances2;
   vector<vector<size_t>> neighbors, neighbors2;
 
-  rs->Search(math::Range(0.2, 0.3), neighbors, distances);
+  rs->Search(Range(0.2, 0.3), neighbors, distances);
 
   RangeSearch<> rs2(std::move(*rs));
 
   delete rs;
 
-  rs2.Search(math::Range(0.2, 0.3), neighbors2, distances2);
+  rs2.Search(Range(0.2, 0.3), neighbors2, distances2);
 
   // Check results.
   REQUIRE(distances.size() == distances2.size());
@@ -1541,13 +1555,13 @@ TEST_CASE("RangeSearchMoveOperatorTest", "[RangeSearchTest]")
   vector<vector<double>> distances, distances2;
   vector<vector<size_t>> neighbors, neighbors2;
 
-  rs->Search(math::Range(0.2, 0.3), neighbors, distances);
+  rs->Search(Range(0.2, 0.3), neighbors, distances);
 
   RangeSearch<> rs2 = std::move(*rs);
 
   delete rs;
 
-  rs2.Search(math::Range(0.2, 0.3), neighbors2, distances2);
+  rs2.Search(Range(0.2, 0.3), neighbors2, distances2);
 
   // Check results.
   REQUIRE(distances.size() == distances2.size());
@@ -1588,9 +1602,9 @@ TEST_CASE("CopyConstructorAndOperatorNaiveTest", "[RangeSearchTest]")
   vector<vector<double>> distances, distances2, distances3;
   vector<vector<size_t>> neighbors, neighbors2, neighbors3;
 
-  rs.Search(math::Range(0.2, 0.3), neighbors, distances);
-  rs2.Search(math::Range(0.2, 0.3), neighbors2, distances2);
-  rs3.Search(math::Range(0.2, 0.3), neighbors3, distances3);
+  rs.Search(Range(0.2, 0.3), neighbors, distances);
+  rs2.Search(Range(0.2, 0.3), neighbors2, distances2);
+  rs3.Search(Range(0.2, 0.3), neighbors3, distances3);
 
   // Check results.
   REQUIRE(distances.size() == distances2.size());
@@ -1629,7 +1643,7 @@ TEST_CASE("MoveConstructorNaiveTest", "[RangeSearchTest]")
   vector<vector<double>> distances, distances2;
   vector<vector<size_t>> neighbors, neighbors2;
 
-  rs->Search(math::Range(0.2, 0.3), neighbors, distances);
+  rs->Search(Range(0.2, 0.3), neighbors, distances);
 
   RangeSearch<> rs2(std::move(*rs));
 
@@ -1637,7 +1651,7 @@ TEST_CASE("MoveConstructorNaiveTest", "[RangeSearchTest]")
 
   delete rs;
 
-  rs2.Search(math::Range(0.2, 0.3), neighbors2, distances2);
+  rs2.Search(Range(0.2, 0.3), neighbors2, distances2);
 
   // Check results.
   REQUIRE(distances.size() == distances2.size());
@@ -1670,7 +1684,7 @@ TEST_CASE("MoveOperatorNaiveTest", "[RangeSearchTest]")
   vector<vector<double>> distances, distances2;
   vector<vector<size_t>> neighbors, neighbors2;
 
-  rs->Search(math::Range(0.2, 0.3), neighbors, distances);
+  rs->Search(Range(0.2, 0.3), neighbors, distances);
 
   RangeSearch<> rs2 = std::move(*rs);
 
@@ -1678,7 +1692,7 @@ TEST_CASE("MoveOperatorNaiveTest", "[RangeSearchTest]")
 
   delete rs;
 
-  rs2.Search(math::Range(0.2, 0.3), neighbors2, distances2);
+  rs2.Search(Range(0.2, 0.3), neighbors2, distances2);
 
   // Check results.
   REQUIRE(distances.size() == distances2.size());

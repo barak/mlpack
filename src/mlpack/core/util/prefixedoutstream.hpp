@@ -13,7 +13,7 @@
 #ifndef MLPACK_CORE_UTIL_PREFIXEDOUTSTREAM_HPP
 #define MLPACK_CORE_UTIL_PREFIXEDOUTSTREAM_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/base.hpp>
 
 namespace mlpack {
 namespace util {
@@ -55,7 +55,7 @@ class PrefixedOutStream
    * @param fatal If true, a std::runtime_error exception is thrown after
    *     printing a newline.
    * @param backtrace If true, attempt to print a backtrace (will only be
-   *     done if HAS_BFD_DL is defined).
+   *     done if MLPACK_HAS_BFD_DL is defined).
    */
   PrefixedOutStream(std::ostream& destination,
                     const char* prefix,
@@ -118,8 +118,8 @@ class PrefixedOutStream
   //! Discards input, prints nothing if true.
   bool ignoreInput;
 
-  //! If true, on a fatal error, a backtrace will be printed if HAS_BFD_DL is
-  //! defined.
+  //! If true, on a fatal error, a backtrace will be printed if
+  //! MLPACK_HAS_BFD_DL is ! defined.
   bool backtrace;
 
  private:

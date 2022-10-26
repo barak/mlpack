@@ -13,10 +13,9 @@
 #ifndef MLPACK_METHODS_BLOCK_KRYLOV_SVD_RANDOMIZED_BLOCK_KRYLOV_SVD_HPP
 #define MLPACK_METHODS_BLOCK_KRYLOV_SVD_RANDOMIZED_BLOCK_KRYLOV_SVD_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 
 namespace mlpack {
-namespace svd {
 
 /**
  * Randomized block krylov SVD is a matrix factorization that is based on
@@ -122,7 +121,9 @@ class RandomizedBlockKrylovSVD
   size_t blockSize;
 };
 
-} // namespace svd
 } // namespace mlpack
+
+// Include implementation.
+#include "randomized_block_krylov_svd_impl.hpp"
 
 #endif

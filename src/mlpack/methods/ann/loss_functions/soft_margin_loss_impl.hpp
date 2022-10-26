@@ -16,57 +16,51 @@
 #include "soft_margin_loss.hpp"
 
 namespace mlpack {
-namespace ann /** Artifical Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-SoftMarginLoss<InputDataType, OutputDataType>::
-SoftMarginLoss(const bool reduction) : reduction(reduction)
+template<typename MatType>
+SoftMarginLossType<MatType>::
+SoftMarginLossType(const bool reduction) : reduction(reduction)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type
-SoftMarginLoss<InputDataType, OutputDataType>::Forward(
-    const InputType& input, const TargetType& target)
+template<typename MatType>
+typename MatType::elem_type SoftMarginLossType<MatType>::Forward(
+    const MatType& prediction, const MatType& target)
 {
-  InputType loss = arma::log(1 + arma::exp(-target % input));
-  typename InputType::elem_type lossSum = arma::accu(loss);
+  MatType loss = arma::log(1 + arma::exp(-target % prediction));
+  typename MatType::elem_type lossSum = arma::accu(loss);
 
   if (reduction)
     return lossSum;
 
-  return lossSum / input.n_elem;
+  return lossSum / prediction.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void SoftMarginLoss<InputDataType, OutputDataType>::Backward(
-    const InputType& input,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType>
+void SoftMarginLossType<MatType>::Backward(
+    const MatType& prediction,
+    const MatType& target,
+    MatType& loss)
 {
-  output.set_size(size(input));
-  InputType temp = arma::exp(-target % input);
-  InputType numerator = -target % temp;
-  InputType denominator = 1 + temp;
-  output = numerator / denominator;
+  loss.set_size(size(prediction));
+  MatType temp = arma::exp(-target % prediction);
+  MatType numerator = -target % temp;
+  MatType denominator = 1 + temp;
+  loss = numerator / denominator;
 
   if (!reduction)
-    output = output / input.n_elem;
+    loss = loss / prediction.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void SoftMarginLoss<InputDataType, OutputDataType>::serialize(
-    Archive& ar,
-    const unsigned int /* version */)
+void SoftMarginLossType<MatType>::serialize(
+    Archive& ar, const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(reduction);
+  ar(CEREAL_NVP(reduction));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

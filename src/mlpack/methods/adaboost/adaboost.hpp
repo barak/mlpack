@@ -28,12 +28,11 @@
 #ifndef MLPACK_METHODS_ADABOOST_ADABOOST_HPP
 #define MLPACK_METHODS_ADABOOST_ADABOOST_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 #include <mlpack/methods/perceptron/perceptron.hpp>
 #include <mlpack/methods/decision_tree/decision_tree.hpp>
 
 namespace mlpack {
-namespace adaboost {
 
 /**
  * The AdaBoost class.  AdaBoost is a boosting algorithm, meaning that it
@@ -70,13 +69,13 @@ namespace adaboost {
  * void Classify(const MatType& data, arma::Row<size_t>& predictedLabels);
  * @endcode
  *
- * For more information on and examples of weak learners, see
- * perceptron::Perceptron<> and decision_stump::DecisionStump<>.
+ * For more information on and examples of weak learners, see Perceptron<> and
+ * ID3DecisionStump.
  *
  * @tparam MatType Data matrix type (i.e. arma::mat or arma::sp_mat).
  * @tparam WeakLearnerType Type of weak learner to use.
  */
-template<typename WeakLearnerType = mlpack::perceptron::Perceptron<>,
+template<typename WeakLearnerType = Perceptron<>,
          typename MatType = arma::mat>
 class AdaBoost
 {
@@ -177,7 +176,7 @@ class AdaBoost
    * Serialize the AdaBoost model.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
   //! The number of classes in the model.
@@ -191,21 +190,7 @@ class AdaBoost
   std::vector<double> alpha;
 }; // class AdaBoost
 
-} // namespace adaboost
 } // namespace mlpack
-
-//! Set the serialization version of the adaboost class.
-namespace boost {
-namespace serialization {
-
-template<typename WeakLearnerType, typename MatType>
-struct version<mlpack::adaboost::AdaBoost<WeakLearnerType, MatType>>
-{
-  BOOST_STATIC_CONSTANT(int, value = 1);
-};
-
-} // namespace serialization
-} // namespace boost
 
 // Include implementation.
 #include "adaboost_impl.hpp"

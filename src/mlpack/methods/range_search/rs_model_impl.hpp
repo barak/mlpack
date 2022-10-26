@@ -16,10 +16,8 @@
 #include "rs_model.hpp"
 
 #include <mlpack/core/math/random_basis.hpp>
-#include <boost/serialization/variant.hpp>
 
 namespace mlpack {
-namespace range {
 
 /**
  * Initialize the RSModel with the given tree type and whether or not a random
@@ -28,7 +26,8 @@ namespace range {
 inline RSModel::RSModel(TreeTypes treeType, bool randomBasis) :
     treeType(treeType),
     leafSize(0),
-    randomBasis(randomBasis)
+    randomBasis(randomBasis),
+    rSearch(NULL)
 {
   // Nothing to do.
 }
@@ -39,7 +38,7 @@ inline RSModel::RSModel(const RSModel& other) :
     leafSize(other.leafSize),
     randomBasis(other.randomBasis),
     q(other.q),
-    rSearch(other.rSearch)
+    rSearch(other.rSearch->Clone())
 {
   // Nothing to do.
 }
@@ -56,18 +55,42 @@ inline RSModel::RSModel(RSModel&& other) :
   other.treeType = TreeTypes::KD_TREE;
   other.leafSize = 0;
   other.randomBasis = false;
-  other.rSearch = decltype(other.rSearch)();
 }
 
-inline RSModel& RSModel::operator=(RSModel other)
+// Copy operator.
+inline RSModel& RSModel::operator=(const RSModel& other)
 {
-  boost::apply_visitor(DeleteVisitor(), rSearch);
+  if (this != &other)
+  {
+    delete rSearch;
 
-  treeType = other.treeType;
-  leafSize = other.leafSize;
-  randomBasis = other.randomBasis;
-  q = std::move(other.q);
-  rSearch = std::move(other.rSearch);
+    treeType = other.treeType;
+    leafSize = other.leafSize;
+    randomBasis = other.randomBasis;
+    q = other.q;
+    rSearch = other.rSearch->Clone();
+  }
+
+  return *this;
+}
+
+// Move operator.
+inline RSModel& RSModel::operator=(RSModel&& other)
+{
+  if (this != &other)
+  {
+    delete rSearch;
+
+    treeType = other.treeType;
+    leafSize = other.leafSize;
+    randomBasis = other.randomBasis;
+    q = std::move(other.q);
+    rSearch = std::move(other.rSearch);
+
+    other.treeType = TreeTypes::KD_TREE;
+    other.leafSize = 0;
+    other.randomBasis = false;
+  }
 
   return *this;
 }
@@ -75,10 +98,77 @@ inline RSModel& RSModel::operator=(RSModel other)
 // Clean memory, if necessary.
 inline RSModel::~RSModel()
 {
-  boost::apply_visitor(DeleteVisitor(), rSearch);
+  delete rSearch;
 }
 
-inline void RSModel::BuildModel(arma::mat&& referenceSet,
+inline void RSModel::InitializeModel(const bool naive,
+                                     const bool singleMode)
+{
+  // Clean memory, if necessary.
+  delete rSearch;
+
+  switch (treeType)
+  {
+    case KD_TREE:
+      rSearch = new LeafSizeRSWrapper<KDTree>(naive, singleMode);
+      break;
+
+    case COVER_TREE:
+      rSearch = new RSWrapper<StandardCoverTree>(naive, singleMode);
+      break;
+
+    case R_TREE:
+      rSearch = new RSWrapper<RTree>(naive, singleMode);
+      break;
+
+    case R_STAR_TREE:
+      rSearch = new RSWrapper<RStarTree>(naive, singleMode);
+      break;
+
+    case BALL_TREE:
+      rSearch = new LeafSizeRSWrapper<BallTree>(naive, singleMode);
+      break;
+
+    case X_TREE:
+      rSearch = new RSWrapper<XTree>(naive, singleMode);
+      break;
+
+    case HILBERT_R_TREE:
+      rSearch = new RSWrapper<HilbertRTree>(naive, singleMode);
+      break;
+
+    case R_PLUS_TREE:
+      rSearch = new RSWrapper<RPlusTree>(naive, singleMode);
+      break;
+
+    case R_PLUS_PLUS_TREE:
+      rSearch = new RSWrapper<RPlusPlusTree>(naive, singleMode);
+      break;
+
+    case VP_TREE:
+      rSearch = new LeafSizeRSWrapper<VPTree>(naive, singleMode);
+      break;
+
+    case RP_TREE:
+      rSearch = new LeafSizeRSWrapper<RPTree>(naive, singleMode);
+      break;
+
+    case MAX_RP_TREE:
+      rSearch = new LeafSizeRSWrapper<MaxRPTree>(naive, singleMode);
+      break;
+
+    case UB_TREE:
+      rSearch = new LeafSizeRSWrapper<UBTree>(naive, singleMode);
+      break;
+
+    case OCTREE:
+      rSearch = new LeafSizeRSWrapper<Octree>(naive, singleMode);
+      break;
+  }
+}
+
+inline void RSModel::BuildModel(util::Timers& timers,
+                                arma::mat&& referenceSet,
                                 const size_t leafSize,
                                 const bool naive,
                                 const bool singleMode)
@@ -86,103 +176,43 @@ inline void RSModel::BuildModel(arma::mat&& referenceSet,
   // Initialize random basis if necessary.
   if (randomBasis)
   {
+    timers.Start("computing_random_basis");
     Log::Info << "Creating random basis..." << std::endl;
-    math::RandomBasis(q, referenceSet.n_rows);
+    mlpack::RandomBasis(q, referenceSet.n_rows);
+
+    // Do we need to modify the reference set?
+    if (randomBasis)
+      referenceSet = q * referenceSet;
+    timers.Stop("computing_random_basis");
   }
 
   this->leafSize = leafSize;
 
-  // Clean memory, if necessary.
-  boost::apply_visitor(DeleteVisitor(), rSearch);
-
-  // Do we need to modify the reference set?
-  if (randomBasis)
-    referenceSet = q * referenceSet;
-
   if (!naive)
-  {
-    Timer::Start("tree_building");
     Log::Info << "Building reference tree..." << std::endl;
-  }
 
-  switch (treeType)
-  {
-    case KD_TREE:
-      rSearch = new RSType<tree::KDTree> (naive, singleMode);
-      break;
+  InitializeModel(naive, singleMode);
 
-    case COVER_TREE:
-      rSearch = new RSType<tree::StandardCoverTree>(naive, singleMode);
-      break;
-
-    case R_TREE:
-      rSearch = new RSType<tree::RTree>(naive, singleMode);
-      break;
-
-    case R_STAR_TREE:
-      rSearch = new RSType<tree::RStarTree>(naive, singleMode);
-      break;
-
-    case BALL_TREE:
-      rSearch = new RSType<tree::BallTree>(naive, singleMode);
-      break;
-
-    case X_TREE:
-      rSearch = new RSType<tree::XTree>(naive, singleMode);
-      break;
-
-    case HILBERT_R_TREE:
-      rSearch = new RSType<tree::HilbertRTree>(naive, singleMode);
-      break;
-
-    case R_PLUS_TREE:
-      rSearch = new RSType<tree::RPlusTree>(naive, singleMode);
-      break;
-
-    case R_PLUS_PLUS_TREE:
-      rSearch = new RSType<tree::RPlusPlusTree>(naive, singleMode);
-      break;
-
-    case VP_TREE:
-      rSearch = new RSType<tree::VPTree>(naive, singleMode);
-      break;
-
-    case RP_TREE:
-      rSearch = new RSType<tree::RPTree>(naive, singleMode);
-      break;
-
-    case MAX_RP_TREE:
-      rSearch = new RSType<tree::MaxRPTree>(naive, singleMode);
-      break;
-
-    case UB_TREE:
-      rSearch = new RSType<tree::UBTree>(naive, singleMode);
-      break;
-
-    case OCTREE:
-      rSearch = new RSType<tree::Octree>(naive, singleMode);
-      break;
-  }
-
-  TrainVisitor tn(std::move(referenceSet), leafSize);
-  boost::apply_visitor(tn, rSearch);
+  rSearch->Train(timers, std::move(referenceSet), leafSize);
 
   if (!naive)
-  {
-    Timer::Stop("tree_building");
     Log::Info << "Tree built." << std::endl;
-  }
 }
 
 // Perform range search.
-inline void RSModel::Search(arma::mat&& querySet,
-                            const math::Range& range,
+inline void RSModel::Search(util::Timers& timers,
+                            arma::mat&& querySet,
+                            const Range& range,
                             std::vector<std::vector<size_t>>& neighbors,
                             std::vector<std::vector<double>>& distances)
 {
   // We may need to map the query set randomly.
   if (randomBasis)
+  {
+    timers.Start("applying_random_basis");
     querySet = q * querySet;
+    timers.Stop("applying_random_basis");
+  }
 
   Log::Info << "Search for points in the range [" << range.Lo() << ", "
       << range.Hi() << "] with ";
@@ -193,14 +223,13 @@ inline void RSModel::Search(arma::mat&& querySet,
   else
     Log::Info << "brute-force (naive) search..." << std::endl;
 
-
-  BiSearchVisitor search(querySet, range, neighbors, distances,
+  rSearch->Search(timers, std::move(querySet), range, neighbors, distances,
       leafSize);
-  boost::apply_visitor(search, rSearch);
 }
 
 // Perform range search (monochromatic case).
-inline void RSModel::Search(const math::Range& range,
+inline void RSModel::Search(util::Timers& timers,
+                            const Range& range,
                             std::vector<std::vector<size_t>>& neighbors,
                             std::vector<std::vector<double>>& distances)
 {
@@ -213,8 +242,7 @@ inline void RSModel::Search(const math::Range& range,
   else
     Log::Info << "brute-force (naive) search..." << std::endl;
 
-  MonoSearchVisitor search(range, neighbors, distances);
-  boost::apply_visitor(search, rSearch);
+  rSearch->Search(timers, range, neighbors, distances);
 }
 
 // Get the name of the tree type.
@@ -258,85 +286,122 @@ inline std::string RSModel::TreeName() const
 // Clean memory.
 inline void RSModel::CleanMemory()
 {
-  boost::apply_visitor(DeleteVisitor(), rSearch);
+  delete rSearch;
 }
 
-//! Monochromatic range search on the given RSType instance.
-template<typename RSType>
-void MonoSearchVisitor::operator()(RSType* rs) const
-{
-  if (rs)
-    return rs->Search(range, neighbors, distances);
-  throw std::runtime_error("no range search model initialized");
-}
-
-//! Save parameters for bichromatic range search.
-inline BiSearchVisitor::BiSearchVisitor(
-    const arma::mat& querySet,
-    const math::Range& range,
-    std::vector<std::vector<size_t>>& neighbors,
-    std::vector<std::vector<double>>& distances,
-    const size_t leafSize) :
-    querySet(querySet),
-    range(range),
-    neighbors(neighbors),
-    distances(distances),
-    leafSize(leafSize)
-{}
-
-//! Default Bichromatic range search on the given RSType instance.
 template<template<typename TreeMetricType,
                   typename TreeStatType,
                   typename TreeMatType> class TreeType>
-void BiSearchVisitor::operator()(RSTypeT<TreeType>* rs) const
+void RSWrapper<TreeType>::Train(util::Timers& timers,
+                                arma::mat&& referenceSet,
+                                const size_t /* leafSize */)
 {
-  if (rs)
-    return rs->Search(querySet, range, neighbors, distances);
-  throw std::runtime_error("no range search model initialized");
+  if (!Naive())
+    timers.Start("tree_building");
+
+  rs.Train(std::move(referenceSet));
+  if (!Naive())
+    timers.Stop("tree_building");
 }
 
-//! Bichromatic range search on the given RSType specialized for KDTrees.
-inline void BiSearchVisitor::operator()(RSTypeT<tree::KDTree>* rs) const
+template<template<typename TreeMetricType,
+                  typename TreeStatType,
+                  typename TreeMatType> class TreeType>
+void RSWrapper<TreeType>::Search(util::Timers& timers,
+                                 arma::mat&& querySet,
+                                 const Range& range,
+                                 std::vector<std::vector<size_t>>& neighbors,
+                                 std::vector<std::vector<double>>& distances,
+                                 const size_t /* leafSize */)
 {
-  if (rs)
-    return SearchLeaf(rs);
-  throw std::runtime_error("no range search model initialized");
+  if (!Naive() && !SingleMode())
+  {
+    // We build the query tree manually, so that we can time how long it takes.
+    timers.Start("tree_building");
+    typename decltype(rs)::Tree queryTree(std::move(querySet));
+    timers.Stop("tree_building");
+
+    timers.Start("computing_neighbors");
+    rs.Search(&queryTree, range, neighbors, distances);
+    timers.Stop("computing_neighbors");
+  }
+  else
+  {
+    timers.Start("computing_neighbors");
+    rs.Search(std::move(querySet), range, neighbors, distances);
+    timers.Stop("computing_neighbors");
+  }
 }
 
-//! Bichromatic range search on the given RSType specialized for BallTrees.
-inline void BiSearchVisitor::operator()(RSTypeT<tree::BallTree>* rs) const
+template<template<typename TreeMetricType,
+                  typename TreeStatType,
+                  typename TreeMatType> class TreeType>
+void RSWrapper<TreeType>::Search(util::Timers& timers,
+                                 const Range& range,
+                                 std::vector<std::vector<size_t>>& neighbors,
+                                 std::vector<std::vector<double>>& distances)
 {
-  if (rs)
-    return SearchLeaf(rs);
-  throw std::runtime_error("no range search model initialized");
+  timers.Start("computing_neighbors");
+  rs.Search(range, neighbors, distances);
+  timers.Stop("computing_neighbors");
 }
 
-//! Bichromatic range search specialized for Ocrees.
-inline void BiSearchVisitor::operator()(RSTypeT<tree::Octree>* rs) const
+template<template<typename TreeMetricType,
+                  typename TreeStatType,
+                  typename TreeMatType> class TreeType>
+void LeafSizeRSWrapper<TreeType>::Train(util::Timers& timers,
+                                        arma::mat&& referenceSet,
+                                        const size_t leafSize)
 {
-  if (rs)
-    return SearchLeaf(rs);
-  throw std::runtime_error("no range search model initialized");
+  if (rs.Naive())
+  {
+    rs.Train(std::move(referenceSet));
+  }
+  else
+  {
+    timers.Start("tree_building");
+    std::vector<size_t> oldFromNewReferences;
+    typename decltype(rs)::Tree* tree =
+        new typename decltype(rs)::Tree(std::move(referenceSet),
+                                        oldFromNewReferences,
+                                        leafSize);
+    rs.Train(tree);
+
+    // Give the model ownership of the tree and the mappings.
+    rs.treeOwner = true;
+    rs.oldFromNewReferences = std::move(oldFromNewReferences);
+    timers.Stop("tree_building");
+  }
 }
 
-//! Bichromatic range search on the given RSType considering the leafSize.
-template<typename RSType>
-void BiSearchVisitor::SearchLeaf(RSType* rs) const
+template<template<typename TreeMetricType,
+                  typename TreeStatType,
+                  typename TreeMatType> class TreeType>
+void LeafSizeRSWrapper<TreeType>::Search(
+    util::Timers& timers,
+    arma::mat&& querySet,
+    const Range& range,
+    std::vector<std::vector<size_t>>& neighbors,
+    std::vector<std::vector<double>>& distances,
+    const size_t leafSize)
 {
-  if (!rs->Naive() && !rs->SingleMode())
+  if (!rs.Naive() && !rs.SingleMode())
   {
     // Build a second tree and search.
-    Timer::Start("tree_building");
+    timers.Start("tree_building");
     Log::Info << "Building query tree..." << std::endl;
     std::vector<size_t> oldFromNewQueries;
-    typename RSType::Tree queryTree(std::move(querySet), oldFromNewQueries,
-        leafSize);
+    typename decltype(rs)::Tree queryTree(std::move(querySet),
+                                          oldFromNewQueries,
+                                          leafSize);
     Log::Info << "Tree built." << std::endl;
-    Timer::Stop("tree_building");
+    timers.Stop("tree_building");
 
     std::vector<std::vector<size_t>> neighborsOut;
     std::vector<std::vector<double>> distancesOut;
-    rs->Search(&queryTree, range, neighborsOut, distancesOut);
+    timers.Start("computing_neighbors");
+    rs.Search(&queryTree, range, neighborsOut, distancesOut);
+    timers.Stop("computing_neighbors");
 
     // Remap the query points.
     neighbors.resize(queryTree.Dataset().n_cols);
@@ -348,148 +413,138 @@ void BiSearchVisitor::SearchLeaf(RSType* rs) const
     }
   }
   else
-    rs->Search(querySet, range, neighbors, distances);
-}
-
-//! Save parameters for Train.
-inline TrainVisitor::TrainVisitor(arma::mat&& referenceSet,
-                                  const size_t leafSize) :
-    referenceSet(std::move(referenceSet)),
-    leafSize(leafSize)
-{}
-
-//! Default Train on the given RSType instance.
-template<template<typename TreeMetricType,
-                  typename TreeStatType,
-                  typename TreeMatType> class TreeType>
-void TrainVisitor::operator()(RSTypeT<TreeType>* rs) const
-{
-  if (rs)
-    return rs->Train(std::move(referenceSet));
-  throw std::runtime_error("no range search model initialized");
-}
-
-//! Train on the given RSType specialized for KDTrees.
-inline void TrainVisitor::operator()(RSTypeT<tree::KDTree>* rs) const
-{
-  if (rs)
-    return TrainLeaf(rs);
-  throw std::runtime_error("no range search model initialized");
-}
-
-//! Train on the given RSType specialized for BallTrees.
-inline void TrainVisitor::operator()(RSTypeT<tree::BallTree>* rs) const
-{
-  if (rs)
-    return TrainLeaf(rs);
-  throw std::runtime_error("no range search model initialized");
-}
-
-//! Train specialized for Octrees.
-inline void TrainVisitor::operator()(RSTypeT<tree::Octree>* rs) const
-{
-  if (rs)
-    return TrainLeaf(rs);
-  throw std::runtime_error("no range search model initialized");
-}
-
-//! Train on the given RSType considering the leafSize.
-template<typename RSType>
-void TrainVisitor::TrainLeaf(RSType* rs) const
-{
-  if (rs->Naive())
-    rs->Train(std::move(referenceSet));
-  else
   {
-    std::vector<size_t> oldFromNewReferences;
-    typename RSType::Tree* tree =
-        new typename RSType::Tree(std::move(referenceSet), oldFromNewReferences,
-        leafSize);
-    rs->Train(tree);
-
-    // Give the model ownership of the tree and the mappings.
-    rs->treeOwner = true;
-    rs->oldFromNewReferences = std::move(oldFromNewReferences);
+    timers.Start("computing_neighbors");
+    rs.Search(std::move(querySet), range, neighbors, distances);
+    timers.Stop("computing_neighbors");
   }
-}
-
-//! Expose the referenceSet of the given RSType.
-template<typename RSType>
-const arma::mat& ReferenceSetVisitor::operator()(RSType* rs) const
-{
-  if (rs)
-    return rs->ReferenceSet();
-  throw std::runtime_error("no range search model initialized");
-}
-
-//! For cleaning memory
-template<typename RSType>
-void DeleteVisitor::operator()(RSType* rs) const
-{
-  if (rs)
-    delete rs;
-}
-
-//! Return whether single mode enabled
-template<typename RSType>
-bool& SingleModeVisitor::operator()(RSType* rs) const
-{
-  if (rs)
-    return rs->SingleMode();
-  throw std::runtime_error("no range search model initialized");
-}
-
-//! Exposes Naive() function of given RSType
-template<typename RSType>
-bool& NaiveVisitor::operator()(RSType* rs) const
-{
-  if (rs)
-    return rs->Naive();
-  throw std::runtime_error("no range search model initialized");
 }
 
 // Serialize the model.
 template<typename Archive>
-void RSModel::serialize(Archive& ar, const unsigned int /* version */)
+void RSModel::serialize(Archive& ar, const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(treeType);
-  ar & BOOST_SERIALIZATION_NVP(randomBasis);
-  ar & BOOST_SERIALIZATION_NVP(q);
+  ar(CEREAL_NVP(treeType));
+  ar(CEREAL_NVP(randomBasis));
+  ar(CEREAL_NVP(q));
 
   // This should never happen, but just in case...
-  if (Archive::is_loading::value)
-    boost::apply_visitor(DeleteVisitor(), rSearch);
+  if (cereal::is_loading<Archive>())
+    InitializeModel(false, false); // Values will be overwritten.
 
-  // We'll only need to serialize one of the model objects, based on the type.
-  ar & BOOST_SERIALIZATION_NVP(rSearch);
+  // Avoid polymorphic serialization by explicitly serializing the correct type.
+  switch (treeType)
+  {
+    case KD_TREE:
+      {
+        LeafSizeRSWrapper<KDTree>& typedSearch =
+            dynamic_cast<LeafSizeRSWrapper<KDTree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+    case COVER_TREE:
+      {
+        RSWrapper<StandardCoverTree>& typedSearch =
+            dynamic_cast<RSWrapper<StandardCoverTree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+
+    case R_TREE:
+      {
+        RSWrapper<RTree>& typedSearch =
+            dynamic_cast<RSWrapper<RTree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+
+    case R_STAR_TREE:
+      {
+        RSWrapper<RStarTree>& typedSearch =
+            dynamic_cast<RSWrapper<RStarTree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+
+    case BALL_TREE:
+      {
+        LeafSizeRSWrapper<BallTree>& typedSearch =
+            dynamic_cast<LeafSizeRSWrapper<BallTree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+    case X_TREE:
+      {
+        RSWrapper<XTree>& typedSearch =
+            dynamic_cast<RSWrapper<XTree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+
+    case HILBERT_R_TREE:
+      {
+        RSWrapper<HilbertRTree>& typedSearch =
+            dynamic_cast<RSWrapper<HilbertRTree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+
+    case R_PLUS_TREE:
+      {
+        RSWrapper<RPlusTree>& typedSearch =
+            dynamic_cast<RSWrapper<RPlusTree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+
+    case R_PLUS_PLUS_TREE:
+      {
+        RSWrapper<RPlusPlusTree>& typedSearch =
+            dynamic_cast<RSWrapper<RPlusPlusTree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+
+    case VP_TREE:
+      {
+        LeafSizeRSWrapper<VPTree>& typedSearch =
+            dynamic_cast<LeafSizeRSWrapper<VPTree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+
+    case RP_TREE:
+      {
+        LeafSizeRSWrapper<RPTree>& typedSearch =
+            dynamic_cast<LeafSizeRSWrapper<RPTree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+
+    case MAX_RP_TREE:
+      {
+        LeafSizeRSWrapper<MaxRPTree>& typedSearch =
+            dynamic_cast<LeafSizeRSWrapper<MaxRPTree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+    case UB_TREE:
+      {
+        LeafSizeRSWrapper<UBTree>& typedSearch =
+            dynamic_cast<LeafSizeRSWrapper<UBTree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+    case OCTREE:
+      {
+        LeafSizeRSWrapper<Octree>& typedSearch =
+            dynamic_cast<LeafSizeRSWrapper<Octree>&>(*rSearch);
+        ar(CEREAL_NVP(typedSearch));
+        break;
+      }
+  }
 }
 
-inline const arma::mat& RSModel::Dataset() const
-{
-  return boost::apply_visitor(ReferenceSetVisitor(), rSearch);
-}
-
-inline bool RSModel::SingleMode() const
-{
-  return boost::apply_visitor(SingleModeVisitor(), rSearch);
-}
-
-inline bool& RSModel::SingleMode()
-{
-  return boost::apply_visitor(SingleModeVisitor(), rSearch);
-}
-
-inline bool RSModel::Naive() const
-{
-  return boost::apply_visitor(NaiveVisitor(), rSearch);
-}
-
-inline bool& RSModel::Naive()
-{
-  return boost::apply_visitor(NaiveVisitor(), rSearch);
-}
-
-} // namespace range
 } // namespace mlpack
 
 #endif

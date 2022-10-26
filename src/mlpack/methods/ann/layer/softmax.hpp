@@ -16,8 +16,9 @@
 
 #include <mlpack/prereqs.hpp>
 
+#include "layer.hpp"
+
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * Implementation of the Softmax layer. The softmax function takes as input a
@@ -26,22 +27,30 @@ namespace ann /** Artificial Neural Network. */ {
  * numbers. It should be used for inference only and not with NLL loss (use
  * LogSoftMax instead).
  *
- * @tparam InputDataType Type of the input data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam OutputDataType Type of the output data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
+ * @tparam MatType Matrix representation to accept as input and use for
+ *    computation.
  */
-template <
-    typename InputDataType = arma::mat,
-    typename OutputDataType = arma::mat
->
-class Softmax
+template<typename MatType = arma::mat>
+class SoftmaxType : public Layer<MatType>
 {
  public:
-  /**
-   * Create the Softmax object.
-   */
-  Softmax();
+  //! Create the Softmax object.
+  SoftmaxType();
+
+  //! Clone the SoftmaxType object. This handles polymorphism correctly.
+  SoftmaxType* Clone() const { return new SoftmaxType(*this); }
+
+  //! Virtual destructor.
+  virtual ~SoftmaxType() { }
+
+  //! Copy the given SoftmaxType.
+  SoftmaxType(const SoftmaxType& other);
+  //! Take ownership of the given SoftmaxType.
+  SoftmaxType(SoftmaxType&& other);
+  //! Copy the given SoftmaxType.
+  SoftmaxType& operator=(const SoftmaxType& other);
+  //! Take ownership of the given SoftmaxType.
+  SoftmaxType& operator=(SoftmaxType&& other);
 
   /**
    * Ordinary feed forward pass of a neural network, evaluating the function
@@ -50,8 +59,7 @@ class Softmax
    * @param input Input data used for evaluating the specified function.
    * @param output Resulting output activation.
    */
-  template<typename InputType, typename OutputType>
-  void Forward(const InputType& input, OutputType& output);
+  void Forward(const MatType& input, MatType& output);
 
   /**
    * Ordinary feed backward pass of a neural network, calculating the function
@@ -62,36 +70,18 @@ class Softmax
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
-  template<typename eT>
-  void Backward(const arma::Mat<eT>& input,
-                const arma::Mat<eT>& gy,
-                arma::Mat<eT>& g);
+  void Backward(const MatType& input, const MatType& gy, MatType& g);
 
-  //! Get the output parameter.
-  OutputDataType& OutputParameter() const { return outputParameter; }
-  //! Modify the output parameter.
-  OutputDataType& OutputParameter() { return outputParameter; }
-
-  //! Get the delta.
-  InputDataType& Delta() const { return delta; }
-  //! Modify the delta.
-  InputDataType& Delta() { return delta; }
-
-  /**
-   * Serialize the layer.
-   */
+  //! Serialize the layer.
   template<typename Archive>
-  void serialize(Archive& /* ar */, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
-  //! Locally-stored delta object.
-  OutputDataType delta;
+}; // class SoftmaxType
 
-  //! Locally-stored output parameter object.
-  OutputDataType outputParameter;
-}; // class Softmax
+// Convenience typedef.
+typedef SoftmaxType<arma::mat> Softmax;
 
-} // namespace ann
 } // namespace mlpack
 
 // Include implementation.

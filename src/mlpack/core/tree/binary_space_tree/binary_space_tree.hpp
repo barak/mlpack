@@ -17,7 +17,6 @@
 #include "midpoint_split.hpp"
 
 namespace mlpack {
-namespace tree /** Trees and tree-building procedures. */ {
 
 /**
  * A binary space partitioning tree, such as a KD-tree or a ball tree.  Once the
@@ -48,7 +47,7 @@ template<typename MetricType,
          typename StatisticType = EmptyStatistic,
          typename MatType = arma::mat,
          template<typename BoundMetricType, typename...> class BoundType =
-            bound::HRectBound,
+            HRectBound,
          template<typename SplitBoundType, typename SplitMatType>
             class SplitType = MidpointSplit>
 class BinarySpaceTree
@@ -299,14 +298,14 @@ class BinarySpaceTree
   BinarySpaceTree& operator=(BinarySpaceTree&& other);
 
   /**
-   * Initialize the tree from a boost::serialization archive.
+   * Initialize the tree from a cereal archive.
    *
    * @param ar Archive to load tree from.  Must be an iarchive, not an oarchive.
    */
   template<typename Archive>
   BinarySpaceTree(
       Archive& ar,
-      const typename std::enable_if_t<Archive::is_loading::value>* = 0);
+      const typename std::enable_if_t<cereal::is_loading<Archive>()>* = 0);
 
   /**
    * Deletes this node, deallocating the memory for the children and calling
@@ -462,7 +461,7 @@ class BinarySpaceTree
   }
 
   //! Return the minimum and maximum distance to another node.
-  math::RangeType<ElemType> RangeDistance(const BinarySpaceTree& other) const
+  RangeType<ElemType> RangeDistance(const BinarySpaceTree& other) const
   {
     return bound.RangeDistance(other.Bound());
   }
@@ -487,7 +486,7 @@ class BinarySpaceTree
 
   //! Return the minimum and maximum distance to another point.
   template<typename VecType>
-  math::RangeType<ElemType>
+  RangeType<ElemType>
   RangeDistance(const VecType& point,
                 typename std::enable_if_t<IsVector<VecType>::value>* = 0) const
   {
@@ -544,29 +543,28 @@ class BinarySpaceTree
    *
    * @param boundToUpdate The bound to update.
    */
-  void UpdateBound(bound::HollowBallBound<MetricType>& boundToUpdate);
+  void UpdateBound(HollowBallBound<MetricType>& boundToUpdate);
 
  protected:
   /**
    * A default constructor.  This is meant to only be used with
-   * boost::serialization, which is allowed with the friend declaration below.
+   * cereal, which is allowed with the friend declaration below.
    * This does not return a valid tree!  The method must be protected, so that
    * the serialization shim can work with the default constructor.
    */
   BinarySpaceTree();
 
   //! Friend access is given for the default constructor.
-  friend class boost::serialization::access;
+  friend class cereal::access;
 
  public:
   /**
    * Serialize the tree.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int version);
+  void serialize(Archive& ar, const uint32_t version);
 };
 
-} // namespace tree
 } // namespace mlpack
 
 // Include implementation.

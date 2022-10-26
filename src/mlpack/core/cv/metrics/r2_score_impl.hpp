@@ -13,21 +13,15 @@
 #define MLPACK_CORE_CV_METRICS_R2SCORE_IMPL_HPP
 
 namespace mlpack {
-namespace cv {
 
+template<bool AdjustedR2>
 template<typename MLAlgorithm, typename DataType, typename ResponsesType>
-double R2Score::Evaluate(MLAlgorithm& model,
-                         const DataType& data,
-                         const ResponsesType& responses)
+double R2Score<AdjustedR2>::Evaluate(MLAlgorithm& model,
+                                     const DataType& data,
+                                     const ResponsesType& responses)
 {
-  if (data.n_cols != responses.n_cols)
-  {
-    std::ostringstream oss;
-    oss << "R2Score::Evaluate(): number of points (" << data.n_cols << ") "
-        << "does not match number of responses (" << responses.n_cols << ")!"
-        << std::endl;
-    throw std::invalid_argument(oss.str());
-  }
+  util::CheckSameSizes(data, (size_t) responses.n_cols, "R2Score::Evaluate()",
+      "responses");
 
   ResponsesType predictedResponses;
   // Taking Predicted Output from the model.
@@ -46,10 +40,20 @@ double R2Score::Evaluate(MLAlgorithm& model,
   if (residualSumSquared == 0.0)
     return totalSumSquared ? 1.0 : DBL_MIN;
 
-  return 1 - residualSumSquared / totalSumSquared;
+  if (AdjustedR2)
+  {
+    // Returning adjusted R-squared.
+    double rsq = 1 - (residualSumSquared / totalSumSquared);
+    return (1 - ((1 - rsq) * ((data.n_cols - 1) /
+        (data.n_cols - data.n_rows - 1))));
+  }
+  else
+  {
+    // Returning R-squared
+    return 1 - residualSumSquared / totalSumSquared;
+  }
 }
 
-} // namespace cv
 } // namespace mlpack
 
 #endif

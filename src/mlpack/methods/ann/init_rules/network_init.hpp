@@ -14,22 +14,17 @@
 #define MLPACK_METHODS_ANN_INIT_RULES_NETWORK_INIT_HPP
 
 #include <mlpack/prereqs.hpp>
+#include <mlpack/methods/ann/layer/layer.hpp>
 
-#include "../visitor/reset_visitor.hpp"
-#include "../visitor/weight_size_visitor.hpp"
-#include "../visitor/weight_set_visitor.hpp"
 #include "init_rules_traits.hpp"
 
-#include <mlpack/methods/ann/layer/layer_types.hpp>
-
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * This class is used to initialize the network with the given initialization
  * rule.
  */
-template<typename InitializationRuleType, typename... CustomLayers>
+template<typename InitializationRuleType>
 class NetworkInitialization
 {
  public:
@@ -54,28 +49,29 @@ class NetworkInitialization
    * @param parameterOffset Offset for network paramater, default 0.
    */
   template <typename eT>
-  void Initialize(const std::vector<LayerTypes<CustomLayers...> >& network,
-                  arma::Mat<eT>& parameter, size_t parameterOffset = 0)
+  void Initialize(const std::vector<Layer<arma::Mat<eT>>*>& network,
+                  arma::Mat<eT>& parameters,
+                  size_t parameterOffset = 0)
   {
-    // Determine the number of parameter/weights of the given network.
-    if (parameter.is_empty())
+    // Determine the total number of parameters/weights of the given network.
+    if (parameters.is_empty())
     {
       size_t weights = 0;
       for (size_t i = 0; i < network.size(); ++i)
-        weights += boost::apply_visitor(weightSizeVisitor, network[i]);
-      parameter.set_size(weights, 1);
+        weights += network[i]->WeightSize();
+
+      parameters.set_size(weights, 1);
     }
 
     // Initialize the network layer by layer or the complete network.
-    if (ann::InitTraits<InitializationRuleType>::UseLayer)
+    if (InitTraits<InitializationRuleType>::UseLayer)
     {
       for (size_t i = 0, offset = parameterOffset; i < network.size(); ++i)
       {
         // Initialize the layer with the specified parameter/weight
         // initialization rule.
-        const size_t weight = boost::apply_visitor(weightSizeVisitor,
-            network[i]);
-        arma::Mat<eT> tmp = arma::mat(parameter.memptr() + offset,
+        const size_t weight = network[i]->WeightSize();
+        arma::Mat<eT> tmp = arma::mat(parameters.memptr() + offset,
             weight, 1, false, false);
         initializeRule.Initialize(tmp, tmp.n_elem, 1);
 
@@ -85,19 +81,7 @@ class NetworkInitialization
     }
     else
     {
-      initializeRule.Initialize(parameter, parameter.n_elem, 1);
-    }
-
-    // Note: We can't merge the for loop into the for loop above because
-    // WeightSetVisitor also sets the parameter/weights of the inner modules.
-    // Inner Modules are held by the parent module e.g. the concat module can
-    // hold various other modules.
-    for (size_t i = 0, offset = parameterOffset; i < network.size(); ++i)
-    {
-      offset += boost::apply_visitor(WeightSetVisitor(parameter, offset),
-          network[i]);
-
-      boost::apply_visitor(resetVisitor, network[i]);
+      initializeRule.Initialize(parameters, parameters.n_elem, 1);
     }
   }
 
@@ -105,15 +89,8 @@ class NetworkInitialization
   //! Instantiated InitializationRule object for initializing the network
   //! parameter.
   InitializationRuleType initializeRule;
-
-  //! Locally-stored reset visitor.
-  ResetVisitor resetVisitor;
-
-  //! Locally-stored weight size visitor.
-  WeightSizeVisitor weightSizeVisitor;
 }; // class NetworkInitialization
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

@@ -15,12 +15,6 @@
 // In case it hasn't already been included.
 #include "save.hpp"
 #include "extension.hpp"
-#include "detect_file_type.hpp"
-
-#include <boost/serialization/serialization.hpp>
-#include <boost/archive/xml_oarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
 
 namespace mlpack {
 namespace data {
@@ -29,7 +23,7 @@ template<typename eT>
 bool Save(const std::string& filename,
           const arma::Col<eT>& vec,
           const bool fatal,
-          arma::file_type inputSaveType)
+          FileType inputSaveType)
 {
   // Don't transpose: one observation per line (for CSVs at least).
   return Save(filename, vec, fatal, false, inputSaveType);
@@ -39,7 +33,7 @@ template<typename eT>
 bool Save(const std::string& filename,
           const arma::Row<eT>& rowvec,
           const bool fatal,
-          arma::file_type inputSaveType)
+          FileType inputSaveType)
 {
   return Save(filename, rowvec, fatal, true, inputSaveType);
 }
@@ -49,18 +43,18 @@ bool Save(const std::string& filename,
           const arma::Mat<eT>& matrix,
           const bool fatal,
           bool transpose,
-          arma::file_type inputSaveType)
+          FileType inputSaveType)
 {
   Timer::Start("saving_data");
 
-  arma::file_type saveType = inputSaveType;
+  FileType saveType = inputSaveType;
   std::string stringType = "";
 
-  if (inputSaveType == arma::auto_detect)
+  if (inputSaveType == FileType::AutoDetect)
   {
     // Detect the file type using only the extension.
     saveType = DetectFromExtension(filename);
-    if (saveType == arma::file_type_unknown)
+    if (saveType == FileType::FileTypeUnknown)
     {
       if (fatal)
         Log::Fatal << "Could not detect type of file '" << filename << "' for "
@@ -106,11 +100,11 @@ bool Save(const std::string& filename,
 
 #ifdef ARMA_USE_HDF5
     // We can't save with streams for HDF5.
-    const bool success = (saveType == arma::hdf5_binary) ?
-        tmp.quiet_save(filename, saveType) :
-        tmp.quiet_save(stream, saveType);
+    const bool success = (saveType == FileType::HDF5Binary) ?
+        tmp.quiet_save(filename, ToArmaFileType(saveType)) :
+        tmp.quiet_save(stream, ToArmaFileType(saveType));
 #else
-    const bool success = tmp.quiet_save(stream, saveType);
+    const bool success = tmp.quiet_save(stream, ToArmaFileType(saveType));
 #endif
     if (!success)
     {
@@ -127,11 +121,11 @@ bool Save(const std::string& filename,
   {
 #ifdef ARMA_USE_HDF5
     // We can't save with streams for HDF5.
-    const bool success = (saveType == arma::hdf5_binary) ?
-        matrix.quiet_save(filename, saveType) :
-        matrix.quiet_save(stream, saveType);
+    const bool success = (saveType == FileType::HDF5Binary) ?
+        matrix.quiet_save(filename, ToArmaFileType(saveType)) :
+        matrix.quiet_save(stream, ToArmaFileType(saveType));
 #else
-    const bool success = matrix.quiet_save(stream, saveType);
+    const bool success = matrix.quiet_save(stream, ToArmaFileType(saveType));
 #endif
     if (!success)
     {
@@ -196,23 +190,23 @@ bool Save(const std::string& filename,
   }
 
   bool unknownType = false;
-  arma::file_type saveType;
+  FileType saveType;
   std::string stringType;
 
   if (extension == "txt" || extension == "tsv")
   {
-    saveType = arma::coord_ascii;
+    saveType = FileType::CoordASCII;
     stringType = "raw ASCII formatted data";
   }
   else if (extension == "bin")
   {
-    saveType = arma::arma_binary;
+    saveType = FileType::ArmaBinary;
     stringType = "Armadillo binary formatted data";
   }
   else
   {
     unknownType = true;
-    saveType = arma::raw_binary; // Won't be used; prevent a warning.
+    saveType = FileType::RawBinary; // Won't be used; prevent a warning.
     stringType = "";
   }
 
@@ -242,7 +236,7 @@ bool Save(const std::string& filename,
     tmp = trans(matrix);
   }
 
-  const bool success = tmp.quiet_save(stream, saveType);
+  const bool success = tmp.quiet_save(stream, ToArmaFileType(saveType));
   if (!success)
   {
     Timer::Stop("saving_data");
@@ -276,16 +270,16 @@ bool Save(const std::string& filename,
       f = format::xml;
     else if (extension == "bin")
       f = format::binary;
-    else if (extension == "txt")
-      f = format::text;
+    else if (extension == "json")
+      f = format::json;
     else
     {
       if (fatal)
         Log::Fatal << "Unable to detect type of '" << filename << "'; incorrect"
-            << " extension? (allowed: xml/bin/txt)" << std::endl;
+            << " extension? (allowed: xml/bin/json)" << std::endl;
       else
         Log::Warn << "Unable to detect type of '" << filename << "'; save "
-            << "failed.  Incorrect extension? (allowed: xml/bin/txt)"
+            << "failed.  Incorrect extension? (allowed: xml/bin/json)"
             << std::endl;
 
       return false;
@@ -319,23 +313,23 @@ bool Save(const std::string& filename,
   {
     if (f == format::xml)
     {
-      boost::archive::xml_oarchive ar(ofs);
-      ar << boost::serialization::make_nvp(name.c_str(), t);
+      cereal::XMLOutputArchive ar(ofs);
+      ar(cereal::make_nvp(name.c_str(), t));
     }
-    else if (f == format::text)
+    else if (f == format::json)
     {
-      boost::archive::text_oarchive ar(ofs);
-      ar << boost::serialization::make_nvp(name.c_str(), t);
+      cereal::JSONOutputArchive ar(ofs);
+      ar(cereal::make_nvp(name.c_str(), t));
     }
     else if (f == format::binary)
     {
-      boost::archive::binary_oarchive ar(ofs);
-      ar << boost::serialization::make_nvp(name.c_str(), t);
+      cereal::BinaryOutputArchive ar(ofs);
+      ar(cereal::make_nvp(name.c_str(), t));
     }
 
     return true;
   }
-  catch (boost::archive::archive_exception& e)
+  catch (cereal::Exception& e)
   {
     if (fatal)
       Log::Fatal << e.what() << std::endl;
@@ -344,63 +338,6 @@ bool Save(const std::string& filename,
 
     return false;
   }
-}
-
-/**
- * Save the given image to the given filename.
- *
- * @param filename Filename to save to.
- * @param matrix Matrix containing image to be saved.
- * @param info Information about the image (width/height/channels/etc.).
- * @param fatal Whether an exception should be thrown on save failure.
- */
-template<typename eT>
-bool Save(const std::string& filename,
-          arma::Mat<eT>& matrix,
-          ImageInfo& info,
-          const bool fatal)
-{
-  arma::Mat<unsigned char> tmpMatrix =
-      arma::conv_to<arma::Mat<unsigned char>>::from(matrix);
-
-  // Call out to .cpp implementation.
-  return SaveImage(filename, tmpMatrix, info, fatal);
-}
-
-// Image saving API for multiple files.
-template<typename eT>
-bool Save(const std::vector<std::string>& files,
-          arma::Mat<eT>& matrix,
-          ImageInfo& info,
-          const bool fatal)
-{
-  if (files.size() == 0)
-  {
-    if (fatal)
-    {
-      Log::Fatal << "Save(): vector of image files is empty; nothing to save."
-          << std::endl;
-    }
-    else
-    {
-      Log::Warn << "Save(): vector of image files is empty; nothing to save."
-          << std::endl;
-    }
-
-    return false;
-  }
-
-  arma::Mat<unsigned char> img;
-  bool status = true;
-
-  for (size_t i = 0; i < files.size() ; ++i)
-  {
-    arma::Mat<eT> colImg(matrix.colptr(i), matrix.n_rows, 1,
-        false, true);
-    status &= Save(files[i], colImg, info, fatal);
-  }
-
-  return status;
 }
 
 } // namespace data

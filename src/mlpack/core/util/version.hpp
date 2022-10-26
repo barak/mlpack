@@ -16,9 +16,9 @@
 
 // The version of mlpack.  If this is a git repository, this will be a version
 // with higher number than the most recent release.
-#define MLPACK_VERSION_MAJOR 3
-#define MLPACK_VERSION_MINOR 4
-#define MLPACK_VERSION_PATCH 2
+#define MLPACK_VERSION_MAJOR 4
+#define MLPACK_VERSION_MINOR 0
+#define MLPACK_VERSION_PATCH 0
 
 // The name of the version (for use by --version).
 namespace mlpack {
@@ -28,9 +28,12 @@ namespace util {
  * This will return either "mlpack x.y.z" or "mlpack master-XXXXXXX" depending on
  * whether or not this is a stable version of mlpack or a git repository.
  */
-std::string GetVersion();
+inline std::string GetVersion();
 
 } // namespace util
 } // namespace mlpack
+
+// Include implementation.
+#include "version_impl.hpp"
 
 #endif

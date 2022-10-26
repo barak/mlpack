@@ -14,11 +14,9 @@
 #ifndef MLPACK_METHODS_HMM_HMM_HPP
 #define MLPACK_METHODS_HMM_HMM_HPP
 
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/dists/discrete_distribution.hpp>
+#include <mlpack/core.hpp>
 
 namespace mlpack {
-namespace hmm /** Hidden Markov Models. */ {
 
 /**
  * A class that represents a Hidden Markov Model with an arbitrary type of
@@ -50,7 +48,7 @@ namespace hmm /** Hidden Markov Models. */ {
  * };
  * @endcode
  *
- * See the mlpack::distribution::DiscreteDistribution class for an example.  One
+ * See the DiscreteDistribution class for an example.  One
  * would use the DiscreteDistribution class when the observations are
  * non-negative integers.  Other distributions could be Gaussians, a mixture of
  * Gaussians (GMM), or any other probability distribution implementing the
@@ -81,7 +79,7 @@ namespace hmm /** Hidden Markov Models. */ {
  *
  * @tparam Distribution Type of emission distribution for this HMM.
  */
-template<typename Distribution = distribution::DiscreteDistribution>
+template<typename Distribution = DiscreteDistribution>
 class HMM
 {
  public:
@@ -291,6 +289,79 @@ class HMM
   double LogLikelihood(const arma::mat& dataSeq) const;
 
   /**
+   * Compute the log of the scaling factor of the given emission probability
+   * at time t. To calculate the log-likelihood for the whole sequence,
+   * accumulate log scale over the entire sequence
+   * This is meant for incremental or streaming computation of the
+   * log-likelihood of a sequence. For the first data point, provide an empty
+   * forwardLogProb vector.
+   *
+   * @param emissionLogProb emission probability at time t.
+   * @param forwardLogProb Vector in which forward probabilities will be saved.
+   *     Passing forwardLogProb as an empty vector indicates the start of the
+   *     sequence (i.e. time t=0).
+   * @return Log scale factor of the given sequence of emission at time t.
+   */
+  double EmissionLogScaleFactor(const arma::vec& emissionLogProb,
+                                arma::vec& forwardLogProb) const;
+
+  /**
+   * Compute the log-likelihood of the given emission probability up to time t,
+   * storing the result in logLikelihood.
+   * This is meant for incremental or streaming computation of the
+   * log-likelihood of a sequence. For the first data point, provide an empty
+   * forwardLogProb vector.
+   *
+   * @param emissionLogProb emission probability at time t.
+   * @param logLikelihood Log-likelihood of the given sequence of emission
+   *     probability up to time t-1.  This will be overwritten with the
+   *     log-likelihood of the given emission probability up to time t.
+   * @param forwardLogProb Vector in which forward probabilities will be saved.
+   *     Passing forwardLogProb as an empty vector indicates the start of the
+   *     sequence (i.e. time t=0).
+   * @return Log-likelihood of the given sequence of emission up to time t.
+   */
+  double EmissionLogLikelihood(const arma::vec& emissionLogProb,
+                               double &logLikelihood,
+                               arma::vec& forwardLogProb) const;
+
+  /**
+   * Compute the log of the scaling factor of the given data at time t.
+   * To calculate the log-likelihood for the whole sequence, accumulate the
+   * log scale factor (the return value of this function) over the entire
+   * sequence.
+   * This is meant for incremental or streaming computation of the
+   * log-likelihood of a sequence. For the first data point, provide an empty
+   * forwardLogProb vector.
+   *
+   * @param data observation at time t.
+   * @param forwardLogProb Vector in which forward probabilities will be saved.
+   *     Passing forwardLogProb as an empty vector indicates the start of the
+   *     sequence (i.e. time t=0).
+   * @return Log scale factor of the given sequence of data up at time t.
+   */
+  double LogScaleFactor(const arma::vec &data,
+                        arma::vec& forwardLogProb) const;
+
+  /**
+   * Compute the log-likelihood of the given data up to time t, storing the
+   * result in logLikelihood.
+   * This is meant for incremental or streaming computation of the
+   * log-likelihood of a sequence. For the first data point, provide an empty
+   * forwardLogProb vector.
+   *
+   * @param data observation at time t.
+   * @param logLikelihood Log-likelihood of the given sequence of data
+   *     up to time t-1.
+   * @param forwardLogProb Vector in which forward probabilities will be saved.
+   *     Passing forwardLogProb as an empty vector indicates the start of the
+   *     sequence (i.e. time t=0).
+   * @return Log-likelihood of the given sequence of data up to time t.
+   */
+  double LogLikelihood(const arma::vec &data,
+                       double &logLikelihood,
+                       arma::vec& forwardLogProb) const;
+  /**
    * HMM filtering. Computes the k-step-ahead expected emission at each time
    * conditioned only on prior observations. That is
    * E{ Y[t+k] | Y[0], ..., Y[t] }.
@@ -357,18 +428,37 @@ class HMM
    * Load the object.
    */
   template<typename Archive>
-  void load(Archive& ar, const unsigned int version);
+  void load(Archive& ar, const uint32_t version);
 
   /**
    * Save the object.
    */
   template<typename Archive>
-  void save(Archive& ar, const unsigned int version) const;
-
-  BOOST_SERIALIZATION_SPLIT_MEMBER();
-
+  void save(Archive& ar, const uint32_t version) const;
 
  protected:
+  /**
+   * Given emission probabilities, computes forward probabilities at time t=0.
+   *
+   * @param emissionLogProb Emission probability at time t=0.
+   * @param logScales Vector in which the log of scaling factors will be saved.
+   * @return Forward probabilities
+   */
+  arma::vec ForwardAtT0(const arma::vec& emissionLogProb,
+                        double& logScales) const;
+
+  /**
+   * Given emission probabilities, computes forward probabilities for time t>0.
+   *
+   * @param emissionLogProb Emission probability at time t>0.
+   * @param logScales Vector in which the log of scaling factors will be saved.
+   * @param prevForwardLogProb Previous forward probabilities.
+   * @return Forward probabilities
+   */
+  arma::vec ForwardAtTn(const arma::vec& emissionLogProb,
+                        double& logScales,
+                        const arma::vec& prevForwardLogProb) const;
+
   // Helper functions.
   /**
    * The Forward algorithm (part of the Forward-Backward algorithm).  Computes
@@ -377,12 +467,13 @@ class HMM
    * states and columns equal to the number of observations.
    *
    * @param dataSeq Data sequence to compute probabilities for.
-   * @param logScales Vector in which scaling factors will be saved.
+   * @param logScales Vector in which the log of scaling factors will be saved.
    * @param forwardLogProb Matrix in which forward probabilities will be saved.
    */
   void Forward(const arma::mat& dataSeq,
                arma::vec& logScales,
-               arma::mat& forwardLogProb) const;
+               arma::mat& forwardLogProb,
+               arma::mat& logProbs) const;
 
   /**
    * The Backward algorithm (part of the Forward-Backward algorithm).  Computes
@@ -392,12 +483,13 @@ class HMM
    * columns equal to the number of observations.
    *
    * @param dataSeq Data sequence to compute probabilities for.
-   * @param logScales Vector of scaling factors.
+   * @param logScales Vector of log of scaling factors.
    * @param backwardLogProb Matrix in which backward probabilities will be saved.
    */
   void Backward(const arma::mat& dataSeq,
                 const arma::vec& logScales,
-                arma::mat& backwardLogProb) const;
+                arma::mat& backwardLogProb,
+                arma::mat& logProbs) const;
 
   //! Set of emission probability distributions; one for each state.
   std::vector<Distribution> emission;
@@ -447,7 +539,6 @@ class HMM
   mutable bool recalculateTransition;
 };
 
-} // namespace hmm
 } // namespace mlpack
 
 // Include implementation.

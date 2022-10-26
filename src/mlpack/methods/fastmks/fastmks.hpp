@@ -13,14 +13,11 @@
 #ifndef MLPACK_METHODS_FASTMKS_FASTMKS_HPP
 #define MLPACK_METHODS_FASTMKS_FASTMKS_HPP
 
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/metrics/ip_metric.hpp>
+#include <mlpack/core.hpp>
+
 #include "fastmks_stat.hpp"
-#include <mlpack/core/tree/cover_tree.hpp>
-#include <queue>
 
 namespace mlpack {
-namespace fastmks /** Fast max-kernel search. */ {
 
 /**
  * An implementation of fast exact max-kernel search.  Given a query dataset and
@@ -58,13 +55,13 @@ template<
     typename MatType = arma::mat,
     template<typename TreeMetricType,
              typename TreeStatType,
-             typename TreeMatType> class TreeType = tree::StandardCoverTree
+             typename TreeMatType> class TreeType = StandardCoverTree
 >
 class FastMKS
 {
  public:
   //! Convenience typedef.
-  typedef TreeType<metric::IPMetric<KernelType>, FastMKSStat, MatType> Tree;
+  typedef TreeType<IPMetric<KernelType>, FastMKSStat, MatType> Tree;
 
   /**
    * Create the FastMKS object with an empty reference set and default kernel.
@@ -162,6 +159,11 @@ class FastMKS
    * Assign this model to be a copy of the given model.
    */
   FastMKS& operator=(const FastMKS& other);
+
+  /**
+   * Move assignment operator.
+   */
+  FastMKS& operator=(FastMKS&& other);
 
   //! Destructor for the FastMKS object.
   ~FastMKS();
@@ -283,9 +285,9 @@ class FastMKS
               arma::mat& products);
 
   //! Get the inner-product metric induced by the given kernel.
-  const metric::IPMetric<KernelType>& Metric() const { return metric; }
+  const IPMetric<KernelType>& Metric() const { return metric; }
   //! Modify the inner-product metric induced by the given kernel.
-  metric::IPMetric<KernelType>& Metric() { return metric; }
+  IPMetric<KernelType>& Metric() { return metric; }
 
   //! Get whether or not single-tree search is used.
   bool SingleMode() const { return singleMode; }
@@ -299,7 +301,7 @@ class FastMKS
 
   //! Serialize the model.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
   //! The reference dataset.  We never own this; only the tree or a higher level
@@ -318,7 +320,7 @@ class FastMKS
   bool naive;
 
   //! The instantiated inner-product metric induced by the given kernel.
-  metric::IPMetric<KernelType> metric;
+  IPMetric<KernelType> metric;
 
   //! Candidate represents a possible candidate point (value, index).
   typedef std::pair<double, size_t> Candidate;
@@ -336,7 +338,6 @@ class FastMKS
       CandidateCmp> CandidateList;
 };
 
-} // namespace fastmks
 } // namespace mlpack
 
 // Include implementation.

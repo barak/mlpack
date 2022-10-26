@@ -10,17 +10,12 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/core/kernels/gaussian_kernel.hpp>
-#include <mlpack/methods/kernel_pca/kernel_rules/nystroem_method.hpp>
-#include <mlpack/methods/kernel_pca/kernel_pca.hpp>
+#include <mlpack/methods/kernel_pca.hpp>
 
 #include "catch.hpp"
 #include "test_catch_tools.hpp"
 
 using namespace mlpack;
-using namespace mlpack::math;
-using namespace mlpack::kpca;
-using namespace mlpack::kernel;
 using namespace std;
 using namespace arma;
 

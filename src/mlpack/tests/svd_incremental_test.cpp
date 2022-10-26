@@ -11,20 +11,12 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/amf/amf.hpp>
-#include <mlpack/methods/amf/update_rules/svd_incomplete_incremental_learning.hpp>
-#include <mlpack/methods/amf/update_rules/svd_complete_incremental_learning.hpp>
-#include <mlpack/methods/amf/init_rules/random_init.hpp>
-#include <mlpack/methods/amf/termination_policies/incomplete_incremental_termination.hpp>
-#include <mlpack/methods/amf/termination_policies/complete_incremental_termination.hpp>
-#include <mlpack/methods/amf/termination_policies/simple_tolerance_termination.hpp>
-#include <mlpack/methods/amf/termination_policies/validation_rmse_termination.hpp>
+#include <mlpack/methods/amf.hpp>
 
 #include "catch.hpp"
 
 using namespace std;
 using namespace mlpack;
-using namespace mlpack::amf;
 using namespace arma;
 
 /**
@@ -39,8 +31,9 @@ TEST_CASE("SVDIncompleteIncrementalConvergenceTest", "[SVDIncrementalTest]")
   IncompleteIncrementalTermination<SimpleToleranceTermination<sp_mat> > iit;
 
   AMF<IncompleteIncrementalTermination<SimpleToleranceTermination<sp_mat> >,
-      RandomInitialization,
-      SVDIncompleteIncrementalLearning> amf(iit, RandomInitialization(), svd);
+      RandomAMFInitialization,
+      SVDIncompleteIncrementalLearning> amf(
+      iit, RandomAMFInitialization(), svd);
 
   mat m1, m2;
   amf.Apply(data, 2, m1, m2);
@@ -61,9 +54,9 @@ TEST_CASE("SVDCompleteIncrementalConvergenceTest", "[SVDIncrementalTest]")
   CompleteIncrementalTermination<SimpleToleranceTermination<sp_mat> > iit;
 
   AMF<CompleteIncrementalTermination<SimpleToleranceTermination<sp_mat> >,
-      RandomInitialization,
+      RandomAMFInitialization,
       SVDCompleteIncrementalLearning<sp_mat> > amf(iit,
-                                                   RandomInitialization(),
+                                                   RandomAMFInitialization(),
                                                    svd);
   mat m1, m2;
   amf.Apply(data, 2, m1, m2);
@@ -98,7 +91,8 @@ class SpecificRandomInitialization
 TEST_CASE("SVDIncompleteIncrementalRegularizationTest", "[SVDIncrementalTest]")
 {
   mat dataset;
-  data::Load("GroupLensSmall.csv", dataset);
+  if (!data::Load("GroupLensSmall.csv", dataset))
+    FAIL("Cannot load dataset GroupLensSmall.csv");
 
   // Generate list of locations for batch insert constructor for sparse
   // matrices.

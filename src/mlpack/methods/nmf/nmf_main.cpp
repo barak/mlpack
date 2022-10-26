@@ -9,26 +9,21 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/util/io.hpp>
+#include <mlpack/core.hpp>
+
+#undef BINDING_NAME
+#define BINDING_NAME nmf
+
 #include <mlpack/core/util/mlpack_main.hpp>
 
 #include <mlpack/methods/amf/amf.hpp>
-#include <mlpack/methods/amf/init_rules/random_init.hpp>
-#include <mlpack/methods/amf/init_rules/given_init.hpp>
-#include <mlpack/methods/amf/init_rules/merge_init.hpp>
-#include <mlpack/methods/amf/update_rules/nmf_mult_dist.hpp>
-#include <mlpack/methods/amf/update_rules/nmf_mult_div.hpp>
-#include <mlpack/methods/amf/update_rules/nmf_als.hpp>
-#include <mlpack/methods/amf/termination_policies/simple_residue_termination.hpp>
 
 using namespace mlpack;
-using namespace mlpack::amf;
 using namespace mlpack::util;
 using namespace std;
 
 // Program Name.
-BINDING_NAME("Non-negative Matrix Factorization");
+BINDING_USER_NAME("Non-negative Matrix Factorization");
 
 // Short description.
 BINDING_SHORT_DESC(
@@ -76,14 +71,14 @@ BINDING_EXAMPLE(
 // See also...
 BINDING_SEE_ALSO("@cf", "#cf");
 BINDING_SEE_ALSO("Alternating matrix factorization tutorial",
-        "@doxygen/amftutorial.html");
+    "@doc/tutorials/amf.md");
 BINDING_SEE_ALSO("Non-negative matrix factorization on Wikipedia",
-        "https://en.wikipedia.org/wiki/Non-negative_matrix_factorization");
+    "https://en.wikipedia.org/wiki/Non-negative_matrix_factorization");
 BINDING_SEE_ALSO("Algorithms for non-negative matrix factorization (pdf)",
-        "http://papers.nips.cc/paper/1861-algorithms-for-non-negative-matrix-"
-        "factorization.pdf");
-BINDING_SEE_ALSO("mlpack::amf::AMF C++ class documentation",
-        "@doxygen/classmlpack_1_1amf_1_1AMF.html");
+    "http://papers.nips.cc/paper/1861-algorithms-for-non-negative-matrix-"
+    "factorization.pdf");
+BINDING_SEE_ALSO("AMF C++ class documentation",
+    "@src/mlpack/methods/amf/amf.hpp");
 
 // Parameters for program.
 PARAM_MATRIX_IN_REQ("input", "Input dataset to perform NMF on.", "i");
@@ -103,7 +98,10 @@ PARAM_STRING_IN("update_rules", "Update rules for each iteration; ( multdist | "
 PARAM_MATRIX_IN("initial_w", "Initial W matrix.", "p");
 PARAM_MATRIX_IN("initial_h", "Initial H matrix.", "q");
 
-void LoadInitialWH(const bool bindingTransposed, arma::mat& w, arma::mat& h)
+void LoadInitialWH(util::Params& params,
+                   const bool bindingTransposed,
+                   arma::mat& w,
+                   arma::mat& h)
 {
   // Note that these datasets will typically be transposed on load, since we are
   // likely receiving it from a row-major language, but we get it in a
@@ -113,47 +111,51 @@ void LoadInitialWH(const bool bindingTransposed, arma::mat& w, arma::mat& h)
   // from amf.Apply() as H, and vice versa.
   if (bindingTransposed)
   {
-    w = IO::GetParam<arma::mat>("initial_h");
-    h = IO::GetParam<arma::mat>("initial_w");
+    w = params.Get<arma::mat>("initial_h");
+    h = params.Get<arma::mat>("initial_w");
   }
   else
   {
-    h = IO::GetParam<arma::mat>("initial_h");
-    w = IO::GetParam<arma::mat>("initial_w");
+    h = params.Get<arma::mat>("initial_h");
+    w = params.Get<arma::mat>("initial_w");
   }
 }
 
-void SaveWH(const bool bindingTransposed, arma::mat&& w, arma::mat&& h)
+void SaveWH(util::Params& params,
+            const bool bindingTransposed,
+            arma::mat&& w,
+            arma::mat&& h)
 {
   // The same transposition applies when saving.
   if (bindingTransposed)
   {
-    IO::GetParam<arma::mat>("w") = std::move(h);
-    IO::GetParam<arma::mat>("h") = std::move(w);
+    params.Get<arma::mat>("w") = std::move(h);
+    params.Get<arma::mat>("h") = std::move(w);
   }
   else
   {
-    IO::GetParam<arma::mat>("h") = std::move(h);
-    IO::GetParam<arma::mat>("w") = std::move(w);
+    params.Get<arma::mat>("h") = std::move(h);
+    params.Get<arma::mat>("w") = std::move(w);
   }
 }
 
 template<typename UpdateRuleType>
-void ApplyFactorization(const arma::mat& V,
+void ApplyFactorization(util::Params& params,
+                        const arma::mat& V,
                         const size_t r,
                         arma::mat& W,
                         arma::mat& H)
 {
-  const size_t maxIterations = IO::GetParam<int>("max_iterations");
-  const double minResidue = IO::GetParam<double>("min_residue");
+  const size_t maxIterations = params.Get<int>("max_iterations");
+  const double minResidue = params.Get<double>("min_residue");
 
   SimpleResidueTermination srt(minResidue, maxIterations);
 
   // Load input dataset.  We know if the data is transposed based on the
   // BINDING_MATRIX_TRANSPOSED macro, which will be 'true' or 'false'.
   arma::mat initialW, initialH;
-  LoadInitialWH(BINDING_MATRIX_TRANSPOSED, initialW, initialH);
-  if (IO::HasParam("initial_w") && IO::HasParam("initial_h"))
+  LoadInitialWH(params, BINDING_MATRIX_TRANSPOSED, initialW, initialH);
+  if (params.Has("initial_w") && params.Has("initial_h"))
   {
     // Initialize W and H with given matrices
     GivenInitialization ginit = GivenInitialization(initialW, initialH);
@@ -162,31 +164,31 @@ void ApplyFactorization(const arma::mat& V,
         UpdateRuleType> amf(srt, ginit);
     amf.Apply(V, r, W, H);
   }
-  else if (IO::HasParam("initial_w"))
+  else if (params.Has("initial_w"))
   {
-    // Merge GivenInitialization and RandomInitialization rules
+    // Merge GivenInitialization and RandomAMFInitialization rules
     // to initialize W with the given matrix, and H with random noise
     GivenInitialization ginit = GivenInitialization(initialW);
-    RandomInitialization rinit = RandomInitialization();
-    MergeInitialization<GivenInitialization, RandomInitialization> minit =
-        MergeInitialization<GivenInitialization, RandomInitialization>
+    RandomAMFInitialization rinit = RandomAMFInitialization();
+    MergeInitialization<GivenInitialization, RandomAMFInitialization> minit =
+        MergeInitialization<GivenInitialization, RandomAMFInitialization>
         (ginit, rinit);
     AMF<SimpleResidueTermination,
-        MergeInitialization<GivenInitialization, RandomInitialization>,
+        MergeInitialization<GivenInitialization, RandomAMFInitialization>,
         UpdateRuleType> amf(srt, minit);
     amf.Apply(V, r, W, H);
   }
-  else if (IO::HasParam("initial_h"))
+  else if (params.Has("initial_h"))
   {
-    // Merge GivenInitialization and RandomInitialization rules
+    // Merge GivenInitialization and RandomAMFInitialization rules
     // to initialize H with the given matrix, and W with random noise
     GivenInitialization ginit = GivenInitialization(initialH, false);
-    RandomInitialization rinit = RandomInitialization();
-    MergeInitialization<RandomInitialization, GivenInitialization> minit =
-        MergeInitialization<RandomInitialization, GivenInitialization>
+    RandomAMFInitialization rinit = RandomAMFInitialization();
+    MergeInitialization<RandomAMFInitialization, GivenInitialization> minit =
+        MergeInitialization<RandomAMFInitialization, GivenInitialization>
         (rinit, ginit);
     AMF<SimpleResidueTermination,
-        MergeInitialization<RandomInitialization, GivenInitialization>,
+        MergeInitialization<RandomAMFInitialization, GivenInitialization>,
         UpdateRuleType> amf(srt, minit);
     amf.Apply(V, r, W, H);
   }
@@ -194,35 +196,36 @@ void ApplyFactorization(const arma::mat& V,
   {
     // Use random initialization
     AMF<SimpleResidueTermination,
-        RandomInitialization,
+        RandomAMFInitialization,
         UpdateRuleType> amf(srt);
     amf.Apply(V, r, W, H);
   }
 }
 
-static void mlpackMain()
+void BINDING_FUNCTION(util::Params& params, util::Timers& /* timers */)
 {
   // Initialize random seed.
-  if (IO::GetParam<int>("seed") != 0)
-    math::RandomSeed((size_t) IO::GetParam<int>("seed"));
+  if (params.Get<int>("seed") != 0)
+    RandomSeed((size_t) params.Get<int>("seed"));
   else
-    math::RandomSeed((size_t) std::time(NULL));
+    RandomSeed((size_t) std::time(NULL));
 
   // Gather parameters.
-  const size_t r = IO::GetParam<int>("rank");
-  const string updateRules = IO::GetParam<string>("update_rules");
+  const size_t r = params.Get<int>("rank");
+  const string updateRules = params.Get<string>("update_rules");
 
   // Validate parameters.
-  RequireParamValue<int>("rank", [](int x) { return x > 0; }, true,
+  RequireParamValue<int>(params, "rank", [](int x) { return x > 0; }, true,
       "the rank of the factorization must be greater than 0");
-  RequireParamInSet<string>("update_rules", { "multdist", "multdiv", "als" },
-      true, "unknown update rules");
-  RequireParamValue<int>("max_iterations", [](int x) { return x >= 0; },
+  RequireParamInSet<string>(params, "update_rules", { "multdist", "multdiv",
+      "als" }, true, "unknown update rules");
+  RequireParamValue<int>(params, "max_iterations", [](int x) { return x >= 0; },
       true, "max_iterations must be non-negative");
 
-  RequireAtLeastOnePassed({ "h", "w" }, false, "no output will be saved");
+  RequireAtLeastOnePassed(params, { "h", "w" }, false,
+      "no output will be saved");
 
-  arma::mat V = std::move(IO::GetParam<arma::mat>("input"));
+  arma::mat V = std::move(params.Get<arma::mat>("input"));
 
   arma::mat W;
   arma::mat H;
@@ -232,22 +235,22 @@ static void mlpackMain()
   {
     Log::Info << "Performing NMF with multiplicative distance-based update "
         << "rules." << std::endl;
-    ApplyFactorization<NMFMultiplicativeDistanceUpdate>(V, r, W, H);
+    ApplyFactorization<NMFMultiplicativeDistanceUpdate>(params, V, r, W, H);
   }
   else if (updateRules == "multdiv")
   {
     Log::Info << "Performing NMF with multiplicative divergence-based update "
         << "rules." << std::endl;
-    ApplyFactorization<NMFMultiplicativeDivergenceUpdate>(V, r, W, H);
+    ApplyFactorization<NMFMultiplicativeDivergenceUpdate>(params, V, r, W, H);
   }
   else if (updateRules == "als")
   {
     Log::Info << "Performing NMF with alternating least squared update rules."
         << std::endl;
-    ApplyFactorization<NMFALSUpdate>(V, r, W, H);
+    ApplyFactorization<NMFALSUpdate>(params, V, r, W, H);
   }
 
   // Save results.  Remember from our discussion in the comments earlier that we
   // may need to switch the names of the outputs.
-  SaveWH(BINDING_MATRIX_TRANSPOSED, std::move(W), std::move(H));
+  SaveWH(params, BINDING_MATRIX_TRANSPOSED, std::move(W), std::move(H));
 }

@@ -20,7 +20,6 @@
 #include <mlpack/methods/amf/termination_policies/simple_residue_termination.hpp>
 
 namespace mlpack {
-namespace cf {
 
 /**
  * Implementation of the NMF policy to act as a wrapper when accessing
@@ -64,19 +63,19 @@ class NMFPolicy
   {
     if (mit)
     {
-      amf::MaxIterationTermination iter(maxIterations);
+      MaxIterationTermination iter(maxIterations);
 
       // Do singular value decomposition using the NMF algorithm.
-      amf::AMF<amf::MaxIterationTermination, amf::RandomInitialization,
-          amf::NMFALSUpdate> nmf(iter);
+      AMF<MaxIterationTermination, RandomAMFInitialization, NMFALSUpdate>
+          nmf(iter);
       nmf.Apply(cleanedData, rank, w, h);
     }
     else
     {
-      amf::SimpleResidueTermination srt(minResidue, maxIterations);
+      SimpleResidueTermination srt(minResidue, maxIterations);
 
       // Do singular value decomposition using the NMF algorithm.
-      amf::NMFALSFactorizer nmf(srt);
+      NMFALSFactorizer nmf(srt);
       nmf.Apply(cleanedData, rank, w, h);
     }
   }
@@ -152,10 +151,10 @@ class NMFPolicy
    * Serialization.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(w);
-    ar & BOOST_SERIALIZATION_NVP(h);
+    ar(CEREAL_NVP(w));
+    ar(CEREAL_NVP(h));
   }
 
  private:
@@ -165,7 +164,6 @@ class NMFPolicy
   arma::mat h;
 };
 
-} // namespace cf
 } // namespace mlpack
 
 #endif

@@ -14,8 +14,7 @@
 
 // In case it hasn't been included yet.
 #include "load_arff.hpp"
-
-#include <boost/algorithm/string/trim.hpp>
+#include "string_algorithms.hpp"
 #include "is_naninf.hpp"
 
 namespace mlpack {
@@ -47,7 +46,7 @@ void LoadARFF(const std::string& filename,
   {
     // Read the next line, then strip whitespace from either side.
     std::getline(ifs, line, '\n');
-    boost::trim(line);
+    Trim(line);
     ++headerLines;
 
     // Is the first character a comment, or is the line empty?
@@ -58,11 +57,8 @@ void LoadARFF(const std::string& filename,
     // @data.
     if (line[0] == '@')
     {
-      typedef boost::tokenizer<boost::escaped_list_separator<char>> Tokenizer;
-      std::string separators = " \t%"; // Split on comments too.
-      boost::escaped_list_separator<char> sep("\\", separators, "\"'");
-      Tokenizer tok(line, sep);
-      Tokenizer::iterator it = tok.begin();
+      std::vector<std::string> tok = Tokenize(line, ' ', '"');
+      std::vector<std::string>::iterator it = tok.begin();
 
       // Get the annotation we are looking at.
       std::string annotation(*it);
@@ -103,21 +99,20 @@ void LoadARFF(const std::string& filename,
           // `origDimType` string here instead (which has not had ::tolower used
           // on it).
           types.push_back(true);
-          boost::trim_if(origDimType,
+          TrimIf(origDimType,
               [](char c)
               {
-                  return c == '{' || c == '}' || c == ' ' || c == '\t';
+                return c == '{' || c == '}' || c == ' ' || c == '\t';
               });
 
-          boost::escaped_list_separator<char> sep("\\", ",", "\"'");
-          Tokenizer dimTok(origDimType, sep);
-          Tokenizer::iterator it = dimTok.begin();
+          std::vector<std::string> dimTok = Tokenize(origDimType, ',', '"');
+          std::vector<std::string>::iterator it = dimTok.begin();
           std::vector<std::string> categories;
 
           while (it != dimTok.end())
           {
             std::string category = (*it);
-            boost::trim(category);
+            Trim(category);
             categories.push_back(category);
 
             ++it;
@@ -199,7 +194,7 @@ void LoadARFF(const std::string& filename,
   while (ifs.good())
   {
     std::getline(ifs, line, '\n');
-    boost::trim(line);
+    Trim(line);
     // Each line of the @data section must be a CSV (except sparse data, which
     // we will handle later).  So now we can tokenize the
     // CSV and parse it.  The '?' representing a missing value is not allowed,
@@ -212,13 +207,11 @@ void LoadARFF(const std::string& filename,
       throw std::runtime_error("cannot yet parse sparse ARFF data");
 
     // Tokenize the line.
-    typedef boost::tokenizer<boost::escaped_list_separator<char>> Tokenizer;
-    boost::escaped_list_separator<char> sep("\\", ",", "\"");
-    Tokenizer tok(line, sep);
+    std::vector<std::string> tok = Tokenize(line, ',', '"');
 
     size_t col = 0;
     std::stringstream token;
-    for (Tokenizer::iterator it = tok.begin(); it != tok.end(); ++it)
+    for (std::vector<std::string>::iterator it = tok.begin(); it != tok.end(); ++it)
     {
       // Check that we are not too many columns in.
       if (col >= matrix.n_rows)
@@ -233,7 +226,7 @@ void LoadARFF(const std::string& filename,
       {
         // Strip spaces before mapping.
         std::string token = *it;
-        boost::trim(token);
+        Trim(token);
         const size_t currentNumMappings = info.NumMappings(col);
         const eT result = info.template MapString<eT>(token, col);
 
@@ -273,7 +266,7 @@ void LoadARFF(const std::string& filename,
             // error, otherwise we issue a general error.
             std::stringstream error;
             std::string tokenStr = token.str();
-            boost::trim(tokenStr);
+            Trim(tokenStr);
             if (tokenStr == "?")
               error << "Missing values ('?') not supported, ";
             else

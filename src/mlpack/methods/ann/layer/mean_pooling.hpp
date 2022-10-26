@@ -2,6 +2,7 @@
  * @file methods/ann/layer/mean_pooling.hpp
  * @author Marcus Edel
  * @author Nilay Jain
+ * @author Shubham Agrawal
  *
  * Definition of the MeanPooling layer class.
  *
@@ -14,27 +15,22 @@
 #define MLPACK_METHODS_ANN_LAYER_MEAN_POOLING_HPP
 
 #include <mlpack/prereqs.hpp>
+#include "layer.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * Implementation of the MeanPooling.
  *
- * @tparam InputDataType Type of the input data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam OutputDataType Type of the output data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
+ * @tparam MatType Matrix representation to accept as input and use for
+ *         computation.
  */
-template <
-    typename InputDataType = arma::mat,
-    typename OutputDataType = arma::mat
->
-class MeanPooling
+template <typename MatType = arma::mat>
+class MeanPoolingType : public Layer<MatType>
 {
  public:
-  //! Create the MeanPooling object.
-  MeanPooling();
+  //! Create the MeanPoolingType object.
+  MeanPoolingType();
 
   /**
    * Create the MeanPooling object using the specified number of units.
@@ -43,13 +39,29 @@ class MeanPooling
    * @param kernelHeight Height of the pooling window.
    * @param strideWidth Width of the stride operation.
    * @param strideHeight Width of the stride operation.
-   * @param floor Set to true to use floor method.
+   * @param floor If true, then a pooling operation that would oly part of the
+   *              input will be skipped.
    */
-  MeanPooling(const size_t kernelWidth,
-              const size_t kernelHeight,
-              const size_t strideWidth = 1,
-              const size_t strideHeight = 1,
-              const bool floor = true);
+  MeanPoolingType(const size_t kernelWidth,
+                  const size_t kernelHeight,
+                  const size_t strideWidth = 1,
+                  const size_t strideHeight = 1,
+                  const bool floor = true);
+
+  // Virtual destructor.
+  virtual ~MeanPoolingType() { }
+
+  //! Copy the given MeanPoolingType.
+  MeanPoolingType(const MeanPoolingType& other);
+  //! Take ownership of the given MeanPoolingType.
+  MeanPoolingType(MeanPoolingType&& other);
+  //! Copy the given MeanPoolingType.
+  MeanPoolingType& operator=(const MeanPoolingType& other);
+  //! Take ownership of the given MeanPoolingType.
+  MeanPoolingType& operator=(MeanPoolingType&& other);
+
+  //! Clone the MeanPoolingType object. This handles polymorphism correctly.
+  MeanPoolingType* Clone() const { return new MeanPoolingType(*this); }
 
   /**
    * Ordinary feed forward pass of a neural network, evaluating the function
@@ -58,8 +70,7 @@ class MeanPooling
    * @param input Input data used for evaluating the specified function.
    * @param output Resulting output activation.
    */
-  template<typename eT>
-  void Forward(const arma::Mat<eT>& input, arma::Mat<eT>& output);
+  void Forward(const MatType& input, MatType& output);
 
   /**
    * Ordinary feed backward pass of a neural network, using 3rd-order tensors as
@@ -70,64 +81,27 @@ class MeanPooling
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
-  template<typename eT>
-  void Backward(const arma::Mat<eT>& /* input */,
-                const arma::Mat<eT>& gy,
-                arma::Mat<eT>& g);
-
-  //! Get the output parameter.
-  OutputDataType const& OutputParameter() const { return outputParameter; }
-  //! Modify the output parameter.
-  OutputDataType& OutputParameter() { return outputParameter; }
-
-  //! Get the delta.
-  OutputDataType const& Delta() const { return delta; }
-  //! Modify the delta.
-  OutputDataType& Delta() { return delta; }
-
-  //! Get the intput width.
-  size_t const& InputWidth() const { return inputWidth; }
-  //! Modify the input width.
-  size_t& InputWidth() { return inputWidth; }
-
-  //! Get the input height.
-  size_t const& InputHeight() const { return inputHeight; }
-  //! Modify the input height.
-  size_t& InputHeight() { return inputHeight; }
-
-  //! Get the output width.
-  size_t const& OutputWidth() const { return outputWidth; }
-  //! Modify the output width.
-  size_t& OutputWidth() { return outputWidth; }
-
-  //! Get the output height.
-  size_t const& OutputHeight() const { return outputHeight; }
-  //! Modify the output height.
-  size_t& OutputHeight() { return outputHeight; }
-
-  //! Get the input size.
-  size_t InputSize() const { return inSize; }
-
-  //! Get the output size.
-  size_t OutputSize() const { return outSize; }
+  void Backward(const MatType& input,
+                const MatType& gy,
+                MatType& g);
 
   //! Get the kernel width.
-  size_t KernelWidth() const { return kernelWidth; }
+  size_t const& KernelWidth() const { return kernelWidth; }
   //! Modify the kernel width.
   size_t& KernelWidth() { return kernelWidth; }
 
   //! Get the kernel height.
-  size_t KernelHeight() const { return kernelHeight; }
+  size_t const& KernelHeight() const { return kernelHeight; }
   //! Modify the kernel height.
   size_t& KernelHeight() { return kernelHeight; }
 
   //! Get the stride width.
-  size_t StrideWidth() const { return strideWidth; }
+  size_t const& StrideWidth() const { return strideWidth; }
   //! Modify the stride width.
   size_t& StrideWidth() { return strideWidth; }
 
   //! Get the stride height.
-  size_t StrideHeight() const { return strideHeight; }
+  size_t const& StrideHeight() const { return strideHeight; }
   //! Modify the stride height.
   size_t& StrideHeight() { return strideHeight; }
 
@@ -136,41 +110,25 @@ class MeanPooling
   //! Modify the value of the rounding operation
   bool& Floor() { return floor; }
 
-  //! Get the value of the deterministic parameter.
-  bool Deterministic() const { return deterministic; }
-  //! Modify the value of the deterministic parameter.
-  bool& Deterministic() { return deterministic; }
+  //! Compute the size of the output given `InputDimensions()`.
+  void ComputeOutputDimensions();
 
   /**
    * Serialize the layer.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
   /**
-   * Apply pooling to the input and store the results.
+   * Apply pooling to all slices of the input and store the results.
    *
    * @param input The input to be apply the pooling rule.
    * @param output The pooled result.
    */
-  template<typename eT>
-  void Pooling(const arma::Mat<eT>& input, arma::Mat<eT>& output)
-  {
-    for (size_t j = 0, colidx = 0; j < output.n_cols;
-         ++j, colidx += strideHeight)
-    {
-      for (size_t i = 0, rowidx = 0; i < output.n_rows;
-           ++i, rowidx += strideWidth)
-      {
-        arma::mat subInput = input(
-            arma::span(rowidx, rowidx + kernelWidth - 1 - offset),
-            arma::span(colidx, colidx + kernelHeight - 1 - offset));
-
-        output(i, j) = arma::mean(arma::mean(subInput));
-      }
-    }
-  }
+  void PoolingOperation(
+      const arma::Cube<typename MatType::elem_type>& input,
+      arma::Cube<typename MatType::elem_type>& output);
 
   /**
    * Apply unpooling to the input and store the results.
@@ -178,29 +136,17 @@ class MeanPooling
    * @param input The input to be apply the unpooling rule.
    * @param output The pooled result.
    */
-  template<typename eT>
-  void Unpooling(const arma::Mat<eT>& input,
-                 const arma::Mat<eT>& error,
-                 arma::Mat<eT>& output)
+  void Unpooling(const MatType& error, MatType& output);
+
+  /**
+   * Return the average value of the receptive block.
+   *
+   * @param input Input used to perform the pooling operation.  Could be an
+   *     Armadillo subview.
+   */
+  typename MatType::elem_type Pooling(const MatType& input)
   {
-    const size_t rStep = input.n_rows / error.n_rows - offset;
-    const size_t cStep = input.n_cols / error.n_cols - offset;
-
-    arma::Mat<eT> unpooledError;
-    for (size_t j = 0; j < input.n_cols - cStep; j += cStep)
-    {
-      for (size_t i = 0; i < input.n_rows - rStep; i += rStep)
-      {
-        const arma::Mat<eT>& inputArea = input(arma::span(i, i + rStep - 1),
-            arma::span(j, j + cStep - 1));
-
-        unpooledError = arma::Mat<eT>(inputArea.n_rows, inputArea.n_cols);
-        unpooledError.fill(error(i / rStep, j / cStep) / inputArea.n_elem);
-
-        output(arma::span(i, i + rStep - 1 - offset),
-            arma::span(j, j + cStep - 1 - offset)) += unpooledError;
-      }
-    }
+    return arma::mean(arma::vectorise(input));
   }
 
   //! Locally-stored width of the pooling window.
@@ -218,57 +164,13 @@ class MeanPooling
   //! Rounding operation used.
   bool floor;
 
-  //! Locally-stored number of input channels.
-  size_t inSize;
+  //! Locally-stored number channels.
+  size_t channels;
+}; // class MeanPoolingType
 
-  //! Locally-stored number of output channels.
-  size_t outSize;
+// Standard MeanPooling layer.
+typedef MeanPoolingType<arma::mat> MeanPooling;
 
-  //! Locally-stored input width.
-  size_t inputWidth;
-
-  //! Locally-stored input height.
-  size_t inputHeight;
-
-  //! Locally-stored output width.
-  size_t outputWidth;
-
-  //! Locally-stored output height.
-  size_t outputHeight;
-
-  //! Locally-stored reset parameter used to initialize the module once.
-  bool reset;
-
-  //! If true use maximum a posteriori during the forward pass.
-  bool deterministic;
-
-  //! Locally-stored stored rounding offset.
-  size_t offset;
-
-  //! Locally-stored number of input units.
-  size_t batchSize;
-
-  //! Locally-stored output parameter.
-  arma::cube outputTemp;
-
-  //! Locally-stored transformed input parameter.
-  arma::cube inputTemp;
-
-  //! Locally-stored transformed output parameter.
-  arma::cube gTemp;
-
-  //! Locally-stored delta object.
-  OutputDataType delta;
-
-  //! Locally-stored gradient object.
-  OutputDataType gradient;
-
-  //! Locally-stored output parameter object.
-  OutputDataType outputParameter;
-}; // class MeanPooling
-
-
-} // namespace ann
 } // namespace mlpack
 
 // Include implementation.

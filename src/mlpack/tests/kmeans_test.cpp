@@ -8,28 +8,12 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-
-#include <mlpack/methods/kmeans/kmeans.hpp>
-#include <mlpack/methods/kmeans/allow_empty_clusters.hpp>
-#include <mlpack/methods/kmeans/refined_start.hpp>
-#include <mlpack/methods/kmeans/elkan_kmeans.hpp>
-#include <mlpack/methods/kmeans/hamerly_kmeans.hpp>
-#include <mlpack/methods/kmeans/pelleg_moore_kmeans.hpp>
-#include <mlpack/methods/kmeans/dual_tree_kmeans.hpp>
-#include <mlpack/methods/kmeans/sample_initialization.hpp>
-#include <mlpack/methods/kmeans/random_partition.hpp>
-
-#include <mlpack/core/tree/cover_tree/cover_tree.hpp>
-#include <mlpack/methods/neighbor_search/neighbor_search.hpp>
+#include <mlpack/methods/kmeans.hpp>
+#include <mlpack/methods/neighbor_search.hpp>
 
 #include "catch.hpp"
-#include <mlpack/methods/kmeans/kill_empty_clusters.hpp>
 
 using namespace mlpack;
-using namespace mlpack::kmeans;
-using namespace mlpack::metric;
-using namespace mlpack::tree;
-using namespace mlpack::neighbor;
 
 // Generate dataset; written transposed because it's easier to read.
 arma::mat kMeansData("  0.0   0.0;" // Class 1.
@@ -119,7 +103,7 @@ TEST_CASE("AllowEmptyClusterTest", "[KMeansTest]")
   arma::Col<size_t> countsOld = counts;
 
   // Make sure the method doesn't modify any points.
-  metric::LMetric<2, true> metric;
+  LMetric<2, true> metric;
 
   AllowEmptyClusters::EmptyCluster(kMeansData, 2, centroids, centroids, counts,
       metric, 0);
@@ -152,7 +136,7 @@ TEST_CASE("KillEmptyClusterTest", "[KMeansTest]")
   arma::Col<size_t> countsOld = counts;
 
   // Make sure the method modify the specified point.
-  metric::LMetric<2, true> metric;
+  LMetric<2, true> metric;
 
   KillEmptyClusters::EmptyCluster(kMeansData, 2, centroids, centroids, counts,
       metric, 0);
@@ -189,7 +173,7 @@ TEST_CASE("MaxVarianceNewClusterTest", "[KMeansTest]")
 
   arma::Col<size_t> counts("3 2 0");
 
-  metric::LMetric<2, true> metric;
+  LMetric<2, true> metric;
 
   // This should only change one point.
   MaxVarianceNewCluster mvnc;
@@ -475,7 +459,7 @@ TEST_CASE("RefinedStartTest", "[KMeansTest]")
   // Calculate sum of distances from centroid means.
   double distortion = 0;
   for (size_t i = 0; i < 3000; ++i)
-    distortion += metric::EuclideanDistance::Evaluate(data.col(i),
+    distortion += EuclideanDistance::Evaluate(data.col(i),
         resultingCentroids.col(assignments[i]));
 
   // Using the refined start, the distance for this dataset is usually around
@@ -484,6 +468,72 @@ TEST_CASE("RefinedStartTest", "[KMeansTest]")
   // random initial starts give distortion around 22000.  So we'll require that
   // our distortion is less than 14000.
   REQUIRE(distortion < 14000.0);
+}
+
+/**
+ * Test that the k-means++ initialization strategy returns decent initial
+ * cluster estimates.
+ */
+TEST_CASE("KMeansPlusPlusTest", "[KMeansTest]")
+{
+  // Our dataset will be five Gaussians of largely varying numbers of points and
+  // we expect that the refined starting policy should return good guesses at
+  // what these Gaussians are.
+  arma::mat data(3, 3000);
+  data.randn();
+
+  // First Gaussian: 10000 points, centered at (0, 0, 0).
+  // Second Gaussian: 2000 points, centered at (5, 0, -2).
+  // Third Gaussian: 5000 points, centered at (-2, -2, -2).
+  // Fourth Gaussian: 1000 points, centered at (-6, 8, 8).
+  // Fifth Gaussian: 12000 points, centered at (1, 6, 1).
+  arma::mat centroids(" 0  5 -2 -6  1;"
+                      " 0  0 -2  8  6;"
+                      " 0 -2 -2  8  1");
+
+  for (size_t i = 1000; i < 1200; ++i)
+    data.col(i) += centroids.col(1);
+  for (size_t i = 1200; i < 1700; ++i)
+    data.col(i) += centroids.col(2);
+  for (size_t i = 1700; i < 1800; ++i)
+    data.col(i) += centroids.col(3);
+  for (size_t i = 1800; i < 3000; ++i)
+    data.col(i) += centroids.col(4);
+
+  KMeansPlusPlusInitialization k;
+  arma::mat resultingCentroids;
+  k.Cluster(data, 5, resultingCentroids);
+
+  // Calculate resulting assignments.
+  arma::Row<size_t> assignments(data.n_cols);
+  for (size_t i = 0; i < data.n_cols; ++i)
+  {
+    double bestDist = DBL_MAX;
+    for (size_t j = 0; j < 5; ++j)
+    {
+      const double dist = EuclideanDistance::Evaluate(data.col(i),
+          resultingCentroids.col(j));
+      if (dist < bestDist)
+      {
+        bestDist = dist;
+        assignments[i] = j;
+      }
+    }
+  }
+
+  // Calculate sum of distances from centroid means.
+  double distortion = 0;
+  for (size_t i = 0; i < 3000; ++i)
+    distortion += EuclideanDistance::Evaluate(data.col(i),
+        resultingCentroids.col(assignments[i]));
+
+  // Using k-means++, the distance for this dataset is usually around
+  // 10000.  Regular k-means is between 10000 and 30000 (I think the 10000
+  // figure is a corner case which actually does not give good clusters), and
+  // random initial starts give distortion around 22000.  So we'll require that
+  // our distortion is less than 14500.  (It seems like there is a lot of noise
+  // in the result.)
+  REQUIRE(distortion < 14500.0);
 }
 
 #ifdef ARMA_HAS_SPMAT
@@ -509,8 +559,8 @@ TEST_CASE("SparseKMeansTest", "[KMeansTest]")
 
   arma::Row<size_t> assignments;
 
-  KMeans<metric::EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
-         NaiveKMeans, arma::sp_mat> kmeans; // Default options.
+  KMeans<EuclideanDistance, RandomPartition, MaxVarianceNewCluster, NaiveKMeans,
+         arma::sp_mat> kmeans; // Default options.
 
   kmeans.Cluster(data, 2, assignments);
 
@@ -553,8 +603,8 @@ TEST_CASE("ElkanTest", "[KMeansTest]")
     arma::Row<size_t> assignments;
     km.Cluster(dataset, k, assignments, naiveCentroids, false, true);
 
-    KMeans<metric::EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
-         ElkanKMeans> elkan;
+    KMeans<EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
+        ElkanKMeans> elkan;
     arma::Row<size_t> elkanAssignments;
     arma::mat elkanCentroids(centroids);
     elkan.Cluster(dataset, k, elkanAssignments, elkanCentroids, false, true);
@@ -587,7 +637,7 @@ TEST_CASE("HamerlyTest", "[KMeansTest]")
     arma::Row<size_t> assignments;
     km.Cluster(dataset, k, assignments, naiveCentroids, false, true);
 
-    KMeans<metric::EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
+    KMeans<EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
         HamerlyKMeans> hamerly;
     arma::Row<size_t> hamerlyAssignments;
     arma::mat hamerlyCentroids(centroids);
@@ -622,7 +672,7 @@ TEST_CASE("PellegMooreTest", "[KMeansTest]")
     arma::Row<size_t> assignments;
     km.Cluster(dataset, k, assignments, naiveCentroids, false, true);
 
-    KMeans<metric::EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
+    KMeans<EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
         PellegMooreKMeans> pellegMoore;
     arma::Row<size_t> pmAssignments;
     arma::mat pmCentroids(centroids);
@@ -654,7 +704,7 @@ TEST_CASE("DTNNTest", "[KMeansTest]")
     arma::Row<size_t> assignments;
     km.Cluster(dataset, k, assignments, naiveCentroids, false, true);
 
-    KMeans<metric::EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
+    KMeans<EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
         DefaultDualTreeKMeans> dtnn;
     arma::Row<size_t> dtnnAssignments;
     arma::mat dtnnCentroids(centroids);
@@ -686,7 +736,7 @@ TEST_CASE("DTNNCoverTreeTest", "[KMeansTest]")
     arma::Row<size_t> assignments;
     km.Cluster(dataset, k, assignments, naiveCentroids, false, true);
 
-    KMeans<metric::EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
+    KMeans<EuclideanDistance, RandomPartition, MaxVarianceNewCluster,
         CoverTreeDualTreeKMeans> dtnn;
     arma::Row<size_t> dtnnAssignments;
     arma::mat dtnnCentroids(centroids);
@@ -724,7 +774,7 @@ TEST_CASE("SampleInitializationTest", "[KMeansTest]")
     size_t j;
     for (j = 0; j < dataset.n_cols; ++j)
     {
-      const double distance = metric::EuclideanDistance::Evaluate(
+      const double distance = EuclideanDistance::Evaluate(
           centroids.col(i), dataset.col(j));
       if (distance < 1e-10)
         break;

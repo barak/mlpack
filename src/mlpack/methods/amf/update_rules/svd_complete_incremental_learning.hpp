@@ -14,10 +14,7 @@
 
 #include <mlpack/prereqs.hpp>
 
-namespace mlpack
-{
-namespace amf
-{
+namespace mlpack {
 
 /**
  * This class computes SVD using complete incremental batch learning, as
@@ -56,7 +53,7 @@ class SVDCompleteIncrementalLearning
   SVDCompleteIncrementalLearning(double u = 0.0001,
                                  double kw = 0,
                                  double kh = 0)
-            : u(u), kw(kw), kh(kh)
+            : u(u), kw(kw), kh(kh), currentUserIndex(0), currentItemIndex(0)
   {
     // Nothing to do.
   }
@@ -172,7 +169,7 @@ class SVDCompleteIncrementalLearning<arma::sp_mat>
   SVDCompleteIncrementalLearning(double u = 0.01,
                                  double kw = 0,
                                  double kh = 0)
-            : u(u), kw(kw), kh(kh), it(NULL)
+            : u(u), kw(kw), kh(kh), n(0), m(0), it(NULL), isStart(false)
     {}
 
   ~SVDCompleteIncrementalLearning()
@@ -266,7 +263,6 @@ class SVDCompleteIncrementalLearning<arma::sp_mat>
   bool isStart;
 }; // class SVDCompleteIncrementalLearning
 
-} // namespace amf
 } // namespace mlpack
 
 #endif

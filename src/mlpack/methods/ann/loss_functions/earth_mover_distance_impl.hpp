@@ -16,44 +16,48 @@
 #include "earth_mover_distance.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-EarthMoverDistance<InputDataType, OutputDataType>::EarthMoverDistance()
+template<typename MatType>
+EarthMoverDistanceType<MatType>::EarthMoverDistanceType(const bool reduction) :
+    reduction(reduction)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type
-EarthMoverDistance<InputDataType, OutputDataType>::Forward(
-    const InputType& input,
-    const TargetType& target)
+template<typename MatType>
+typename MatType::elem_type EarthMoverDistanceType<MatType>::Forward(
+    const MatType& prediction,
+    const MatType& target)
 {
-  return -arma::accu(target % input);
+  typename MatType::elem_type lossSum = -arma::accu(target % prediction);
+
+  if (reduction)
+    return lossSum;
+
+  return lossSum / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void EarthMoverDistance<InputDataType, OutputDataType>::Backward(
-    const InputType& /* input */,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType>
+void EarthMoverDistanceType<MatType>::Backward(
+    const MatType& /* prediction */,
+    const MatType& target,
+    MatType& loss)
 {
-  output = -target;
+  loss = -target;
+
+  if (!reduction)
+    loss = loss / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void EarthMoverDistance<InputDataType, OutputDataType>::serialize(
-    Archive& /* ar */,
-    const unsigned int /* version */)
+void EarthMoverDistanceType<MatType>::serialize(
+    Archive& ar,
+    const uint32_t /* version */)
 {
-  /* Nothing to do here */
+  ar(CEREAL_NVP(reduction));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

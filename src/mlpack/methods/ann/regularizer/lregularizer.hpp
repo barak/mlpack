@@ -16,7 +16,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace ann {
 
 /**
  * The L_p regularizer for arbitrary integer p.
@@ -44,9 +43,9 @@ class LRegularizer
   template<typename MatType>
   void Evaluate(const MatType& weight, MatType& gradient);
 
-  //! Serialize the regularizer (nothing to do).
+  //! Serialize the regularizer.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
   //! The power of the regularizer.
   static const int Power = TPower;
@@ -66,7 +65,6 @@ typedef LRegularizer<1> L1Regularizer;
  */
 typedef LRegularizer<2> L2Regularizer;
 
-} // namespace ann
 } // namespace mlpack
 
 // Include implementation.

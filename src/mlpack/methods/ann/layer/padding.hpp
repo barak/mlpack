@@ -13,25 +13,19 @@
 #define MLPACK_METHODS_ANN_LAYER_PADDING_HPP
 
 #include <mlpack/prereqs.hpp>
-#include <mlpack/methods/ann/layer/layer_traits.hpp>
+#include "layer.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
- * Implementation of the Padding module class. The Padding module applies a bias term
- * to the incoming data.
+ * Implementation of the Padding module class. The Padding module applies
+ * (zero-valued) padding on the input data.
  *
- * @tparam InputDataType Type of the input data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam OutputDataType Type of the output data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
+ * @tparam MatType Matrix representation to accept as input and use for
+ *    computation.
  */
-template <
-    typename InputDataType = arma::mat,
-    typename OutputDataType = arma::mat
->
-class Padding
+template<typename MatType = arma::mat>
+class PaddingType : public Layer<MatType>
 {
  public:
   /**
@@ -42,10 +36,25 @@ class Padding
    * @param padHTop Top padding height of the input.
    * @param padHBottom Bottom padding height of the input.
    */
-  Padding(const size_t padWLeft = 0,
-          const size_t padWRight = 0,
-          const size_t padHTop = 0,
-          const size_t padHBottom = 0);
+  PaddingType(const size_t padWLeft = 0,
+              const size_t padWRight = 0,
+              const size_t padHTop = 0,
+              const size_t padHBottom = 0);
+
+  //! Clone the PaddingType object. This handles polymorphism correctly.
+  PaddingType* Clone() const { return new PaddingType(*this); }
+
+  //! Virtual destructor.
+  virtual ~PaddingType() { }
+
+  //! Copy the given PaddingType.
+  PaddingType(const PaddingType& other);
+  //! Take ownership of the given PaddingType.
+  PaddingType(PaddingType&& other);
+  //! Copy the given PaddingType.
+  PaddingType& operator=(const PaddingType& other);
+  //! Take ownership of the given PaddingType.
+  PaddingType& operator=(PaddingType&& other);
 
   /**
    * Ordinary feed forward pass of a neural network, evaluating the function
@@ -54,8 +63,7 @@ class Padding
    * @param input Input data used for evaluating the specified function.
    * @param output Resulting output activation.
    */
-  template<typename eT>
-  void Forward(const arma::Mat<eT>& input, arma::Mat<eT>& output);
+  void Forward(const MatType& input, MatType& output);
 
   /**
    * Ordinary feed backward pass of a neural network, calculating the function
@@ -66,20 +74,9 @@ class Padding
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
-  template<typename eT>
-  void Backward(const arma::Mat<eT>& /* input */,
-                const arma::Mat<eT>& gy,
-                arma::Mat<eT>& g);
-
-  //! Get the output parameter.
-  OutputDataType const& OutputParameter() const { return outputParameter; }
-  //! Modify the output parameter.
-  OutputDataType& OutputParameter() { return outputParameter; }
-
-  //! Get the delta.
-  OutputDataType const& Delta() const { return delta; }
-  //! Modify the delta.
-  OutputDataType& Delta() { return delta; }
+  void Backward(const MatType& /* input */,
+                const MatType& gy,
+                MatType& g);
 
   //! Get the left padding width.
   size_t PadWLeft() const { return padWLeft; }
@@ -101,11 +98,14 @@ class Padding
   //! Modify the bottom padding width.
   size_t& PadHBottom() { return padHBottom; }
 
+  //! Compute the output dimensions of the layer using `InputDimensions()`.
+  void ComputeOutputDimensions();
+
   /**
    * Serialize the layer.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
   //! Locally-stored left padding width.
@@ -120,17 +120,13 @@ class Padding
   //! Locally-stored bottom padding height.
   size_t padHBottom;
 
-  //! Locally-stored number of rows and columns of input.
-  size_t nRows, nCols;
+  //! Cached number of input maps.
+  size_t totalInMaps;
+}; // class PaddingType
 
-  //! Locally-stored delta object.
-  OutputDataType delta;
+// Standard Padding layer.
+typedef PaddingType<arma::mat> Padding;
 
-  //! Locally-stored output parameter object.
-  OutputDataType outputParameter;
-}; // class Padding
-
-} // namespace ann
 } // namespace mlpack
 
 // Include implementation.

@@ -30,10 +30,9 @@
 #ifndef MLPACK_METHODS_APPROX_KFN_DRUSILLA_SELECT_HPP
 #define MLPACK_METHODS_APPROX_KFN_DRUSILLA_SELECT_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 
 namespace mlpack {
-namespace neighbor {
 
 template<typename MatType = arma::mat>
 class DrusillaSelect
@@ -97,7 +96,7 @@ class DrusillaSelect
    * Serialize the model.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
   //! Access the candidate set.
   const MatType& CandidateSet() const { return candidateSet; }
@@ -121,7 +120,6 @@ class DrusillaSelect
   size_t m;
 };
 
-} // namespace neighbor
 } // namespace mlpack
 
 // Include implementation.

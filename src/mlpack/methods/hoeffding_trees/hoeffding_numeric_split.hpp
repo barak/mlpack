@@ -18,7 +18,6 @@
 #include "numeric_split_info.hpp"
 
 namespace mlpack {
-namespace tree {
 
 /**
  * The HoeffdingNumericSplit class implements the numeric feature splitting
@@ -121,7 +120,7 @@ class HoeffdingNumericSplit
 
   //! Serialize the object.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
   //! Before binning, this holds the points we have seen so far.
@@ -147,7 +146,6 @@ template<typename FitnessFunction>
 using HoeffdingDoubleNumericSplit = HoeffdingNumericSplit<FitnessFunction,
     double>;
 
-} // namespace tree
 } // namespace mlpack
 
 // Include implementation.

@@ -17,7 +17,6 @@
 #include <stack>
 
 namespace mlpack {
-namespace tree {
 
 //! Construct the tree.
 template<typename MetricType, typename StatisticType, typename MatType>
@@ -485,11 +484,11 @@ template<typename MetricType, typename StatisticType, typename MatType>
 template<typename Archive>
 Octree<MetricType, StatisticType, MatType>::Octree(
     Archive& ar,
-    const typename std::enable_if_t<Archive::is_loading::value>*) :
+    const typename std::enable_if_t<cereal::is_loading<Archive>()>*) :
     Octree() // Create an empty tree.
 {
   // De-serialize the tree into this object.
-  ar >> BOOST_SERIALIZATION_NVP(*this);
+  ar(CEREAL_NVP(*this));
 }
 
 template<typename MetricType, typename StatisticType, typename MatType>
@@ -667,7 +666,7 @@ Octree<MetricType, StatisticType, MatType>::MaxDistance(const Octree& other)
 }
 
 template<typename MetricType, typename StatisticType, typename MatType>
-math::RangeType<typename Octree<MetricType, StatisticType, MatType>::ElemType>
+RangeType<typename Octree<MetricType, StatisticType, MatType>::ElemType>
 Octree<MetricType, StatisticType, MatType>::RangeDistance(const Octree& other)
     const
 {
@@ -697,7 +696,7 @@ Octree<MetricType, StatisticType, MatType>::MaxDistance(
 
 template<typename MetricType, typename StatisticType, typename MatType>
 template<typename VecType>
-math::RangeType<typename Octree<MetricType, StatisticType, MatType>::ElemType>
+RangeType<typename Octree<MetricType, StatisticType, MatType>::ElemType>
 Octree<MetricType, StatisticType, MatType>::RangeDistance(
     const VecType& point,
     typename std::enable_if_t<IsVector<VecType>::value>*) const
@@ -710,10 +709,10 @@ template<typename MetricType, typename StatisticType, typename MatType>
 template<typename Archive>
 void Octree<MetricType, StatisticType, MatType>::serialize(
     Archive& ar,
-    const unsigned int /* version */)
+    const uint32_t /* version */)
 {
   // If we're loading and we have children, they need to be deleted.
-  if (Archive::is_loading::value)
+  if (cereal::is_loading<Archive>())
   {
     for (size_t i = 0; i < children.size(); ++i)
       delete children[i];
@@ -725,21 +724,48 @@ void Octree<MetricType, StatisticType, MatType>::serialize(
     parent = NULL;
   }
 
-  ar & BOOST_SERIALIZATION_NVP(begin);
-  ar & BOOST_SERIALIZATION_NVP(count);
-  ar & BOOST_SERIALIZATION_NVP(bound);
-  ar & BOOST_SERIALIZATION_NVP(stat);
-  ar & BOOST_SERIALIZATION_NVP(parentDistance);
-  ar & BOOST_SERIALIZATION_NVP(furthestDescendantDistance);
-  ar & BOOST_SERIALIZATION_NVP(metric);
-  ar & BOOST_SERIALIZATION_NVP(dataset);
+  bool hasParent = (parent != NULL);
 
-  ar & BOOST_SERIALIZATION_NVP(children);
+  ar(CEREAL_NVP(begin));
+  ar(CEREAL_NVP(count));
+  ar(CEREAL_NVP(bound));
+  ar(CEREAL_NVP(stat));
+  ar(CEREAL_NVP(parentDistance));
+  ar(CEREAL_NVP(furthestDescendantDistance));
+  ar(CEREAL_NVP(metric));
+  ar(CEREAL_NVP(hasParent));
+  if (!hasParent)
+  {
+    MatType*& datasetTemp = const_cast<MatType*&>(dataset);
+    ar(CEREAL_POINTER(datasetTemp));
+  }
 
-  if (Archive::is_loading::value)
+  ar(CEREAL_VECTOR_POINTER(children));
+
+  if (cereal::is_loading<Archive>())
   {
     for (size_t i = 0; i < children.size(); ++i)
       children[i]->parent = this;
+  }
+
+  // We have to correct the dataset pointers in all of the children.
+  if (!hasParent)
+  {
+    std::stack<Octree*> stack;
+    for (size_t i = 0; i < children.size(); ++i)
+    {
+      stack.push(children[i]);
+    }
+    while (!stack.empty())
+    {
+      Octree* node = stack.top();
+      stack.pop();
+      node->dataset = dataset;
+      for (size_t i = 0; i < node->children.size(); ++i)
+      {
+        stack.push(node->children[i]);
+      }
+    }
   }
 }
 
@@ -781,7 +807,7 @@ void Octree<MetricType, StatisticType, MatType>::SplitNode(
     // all points belonging to children of index 2^(d - 1) and above will be on
     // the right side.
     typename SplitType::SplitInfo s(d, center);
-    const size_t firstRight = split::PerformSplit<MatType, SplitType>(*dataset,
+    const size_t firstRight = PerformSplit<MatType, SplitType>(*dataset,
         childBegin, childCount, s);
 
     // We can set the first index of the right child.  The first index of the
@@ -883,7 +909,7 @@ void Octree<MetricType, StatisticType, MatType>::SplitNode(
     // all points belonging to children of index 2^(d - 1) and above will be on
     // the right side.
     typename SplitType::SplitInfo s(d, center);
-    const size_t firstRight = split::PerformSplit<MatType, SplitType>(*dataset,
+    const size_t firstRight = PerformSplit<MatType, SplitType>(*dataset,
         childBegin, childCount, s, oldFromNew);
 
     // We can set the first index of the right child.  The first index of the
@@ -946,7 +972,6 @@ void Octree<MetricType, StatisticType, MatType>::SplitNode(
   }
 }
 
-} // namespace tree
 } // namespace mlpack
 
 #endif

@@ -15,11 +15,13 @@
 #ifndef MLPACK_METHODS_NYSTROEM_METHOD_NYSTROEM_METHOD_HPP
 #define MLPACK_METHODS_NYSTROEM_METHOD_NYSTROEM_METHOD_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
+
 #include "kmeans_selection.hpp"
+#include "ordered_selection.hpp"
+#include "random_selection.hpp"
 
 namespace mlpack {
-namespace kernel {
 
 template<
   typename KernelType,
@@ -77,7 +79,6 @@ class NystroemMethod
   const size_t rank;
 };
 
-} // namespace kernel
 } // namespace mlpack
 
 // Include implementation.

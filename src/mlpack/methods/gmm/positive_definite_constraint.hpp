@@ -15,7 +15,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace gmm {
 
 /**
  * Given a covariance matrix, force the matrix to be positive definite.  Also
@@ -97,10 +96,9 @@ class PositiveDefiniteConstraint
 
   //! Serialize the constraint (which stores nothing, so, nothing to do).
   template<typename Archive>
-  static void serialize(Archive& /* ar */, const unsigned int /* version */) { }
+  static void serialize(Archive& /* ar */, const uint32_t /* version */) { }
 };
 
-} // namespace gmm
 } // namespace mlpack
 
 #endif

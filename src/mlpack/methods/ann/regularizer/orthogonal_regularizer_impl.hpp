@@ -16,9 +16,8 @@
 #include "orthogonal_regularizer.hpp"
 
 namespace mlpack {
-namespace ann {
 
-OrthogonalRegularizer::OrthogonalRegularizer(double factor) :
+inline OrthogonalRegularizer::OrthogonalRegularizer(double factor) :
     factor(factor)
 {
   // Nothing to do here.
@@ -55,12 +54,11 @@ void OrthogonalRegularizer::Evaluate(const MatType& weight, MatType& gradient)
 
 template<typename Archive>
 void OrthogonalRegularizer::serialize(
-    Archive& ar, const unsigned int /* version */)
+    Archive& ar, const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(factor);
+  ar(CEREAL_NVP(factor));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

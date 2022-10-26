@@ -16,7 +16,6 @@
 #include "projection_vector.hpp"
 
 namespace mlpack {
-namespace tree {
 
 /**
  * HyperplaneBase defines a splitting hyperplane based on a projection vector
@@ -74,7 +73,7 @@ class HyperplaneBase
     if (splitVal == DBL_MAX)
       return 0;
     return projVect.Project(point) - splitVal;
-  };
+  }
 
   /**
    * Determine if the given point is to the left of the hyperplane, this means
@@ -87,7 +86,7 @@ class HyperplaneBase
             typename std::enable_if_t<IsVector<VecType>::value>* = 0) const
   {
     return Project(point) <= 0;
-  };
+  }
 
   /**
    * Determine if the given point is to the right of the hyperplane, this means
@@ -100,7 +99,7 @@ class HyperplaneBase
             typename std::enable_if_t<IsVector<VecType>::value>* = 0) const
   {
     return Project(point) > 0;
-  };
+  }
 
   /**
    * Determine if the given bound is to the left of the hyperplane.
@@ -130,27 +129,26 @@ class HyperplaneBase
    * Serialization.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(projVect);
-    ar & BOOST_SERIALIZATION_NVP(splitVal);
-  };
+    ar(CEREAL_NVP(projVect));
+    ar(CEREAL_NVP(splitVal));
+  }
 };
 
 /**
  * AxisOrthogonalHyperplane represents a hyperplane orthogonal to an axis.
  */
 template<typename MetricType>
-using AxisOrthogonalHyperplane = HyperplaneBase<bound::HRectBound<MetricType>,
+using AxisOrthogonalHyperplane = HyperplaneBase<HRectBound<MetricType>,
     AxisParallelProjVector>;
 
 /**
  * Hyperplane represents a general hyperplane (not necessarily axis-orthogonal).
  */
 template<typename MetricType>
-using Hyperplane = HyperplaneBase<bound::BallBound<MetricType>, ProjVector>;
+using Hyperplane = HyperplaneBase<BallBound<MetricType>, ProjVector>;
 
-} // namespace tree
 } // namespace mlpack
 
 #endif

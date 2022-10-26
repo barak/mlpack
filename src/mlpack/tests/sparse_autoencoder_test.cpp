@@ -10,13 +10,12 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/sparse_autoencoder/sparse_autoencoder.hpp>
+#include <mlpack/methods/sparse_autoencoder.hpp>
 
 #include "catch.hpp"
 #include "test_catch_tools.hpp"
 
 using namespace mlpack;
-using namespace mlpack::nn;
 
 TEST_CASE("SparseAutoencoderFunctionEvaluate", "[SparseAutoencoderTest]")
 {

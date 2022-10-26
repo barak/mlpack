@@ -2,54 +2,27 @@
   * @file cf_test.cpp
   * @author Wenhao Huang
   *
-  * Test mlpackMain() of cf_main.cpp
+  * Test RUN_BINDING() of cf_main.cpp
   *
   * mlpack is free software; you may redistribute it and/or modify it under the
   * terms of the 3-clause BSD license.  You should have received a copy of the
   * 3-clause BSD license along with mlpack.  If not, see
   * http://www.opensource.org/licenses/BSD-3-Clause for more information.
   */
-#include <string>
-
 #define BINDING_TYPE BINDING_TYPE_TEST
-
-static const std::string testName = "CollaborativeFiltering";
 
 #include <mlpack/core.hpp>
 #include <mlpack/methods/cf/cf_main.cpp>
 #include <mlpack/core/util/mlpack_main.hpp>
 #include <mlpack/core/math/random.hpp>
-#include "test_helper.hpp"
+#include "main_test_fixture.hpp"
 
 #include "../catch.hpp"
 
 using namespace mlpack;
 using namespace arma;
 
-
-struct CFTestFixture
-{
- public:
-  CFTestFixture()
-  {
-    // Cache in the options for this program.
-    IO::RestoreSettings(testName);
-  }
-
-  ~CFTestFixture()
-  {
-    // Clear the settings.
-    bindings::tests::CleanMemory();
-    IO::ClearSettings();
-  }
-};
-
-static void ResetSettings()
-{
-  bindings::tests::CleanMemory();
-  IO::ClearSettings();
-  IO::RestoreSettings(testName);
-}
+BINDING_TEST_FIXTURE(CFTestFixture);
 
 /**
  * Ensure the rank is non-negative.
@@ -64,9 +37,7 @@ TEST_CASE_METHOD(CFTestFixture, "CFRankBoundTest",
   SetInputParam("rank", int(-1));
   SetInputParam("training", std::move(dataset));
 
-  Log::Fatal.ignoreInput = true;
-  REQUIRE_THROWS_AS(mlpackMain(), std::runtime_error);
-  Log::Fatal.ignoreInput = false;
+  REQUIRE_THROWS_AS(RUN_BINDING(), std::runtime_error);
 }
 
 /**
@@ -82,9 +53,7 @@ TEST_CASE_METHOD(CFTestFixture, "CFMinResidueBoundTest",
   SetInputParam("min_residue", double(-1));
   SetInputParam("training", std::move(dataset));
 
-  Log::Fatal.ignoreInput = true;
-  REQUIRE_THROWS_AS(mlpackMain(), std::runtime_error);
-  Log::Fatal.ignoreInput = false;
+  REQUIRE_THROWS_AS(RUN_BINDING(), std::runtime_error);
 }
 
 /**
@@ -100,9 +69,7 @@ TEST_CASE_METHOD(CFTestFixture, "CFMaxIterationsBoundTest",
   SetInputParam("max_iterations", int(-1));
   SetInputParam("training", std::move(dataset));
 
-  Log::Fatal.ignoreInput = true;
-  REQUIRE_THROWS_AS(mlpackMain(), std::runtime_error);
-  Log::Fatal.ignoreInput = false;
+  REQUIRE_THROWS_AS(RUN_BINDING(), std::runtime_error);
 }
 
 /**
@@ -120,16 +87,12 @@ TEST_CASE_METHOD(CFTestFixture, "CFRecommendationsBoundTest",
   SetInputParam("training", std::move(dataset));
   SetInputParam("max_iterations", int(5));
 
-  Log::Fatal.ignoreInput = true;
-  REQUIRE_THROWS_AS(mlpackMain(), std::runtime_error);
-  Log::Fatal.ignoreInput = false;
+  REQUIRE_THROWS_AS(RUN_BINDING(), std::runtime_error);
 
   // recommendations should not be negative.
   SetInputParam("recommendations", int(-1));
 
-  Log::Fatal.ignoreInput = true;
-  REQUIRE_THROWS_AS(mlpackMain(), std::runtime_error);
-  Log::Fatal.ignoreInput = false;
+  REQUIRE_THROWS_AS(RUN_BINDING(), std::runtime_error);
 }
 
 /**
@@ -146,23 +109,17 @@ TEST_CASE_METHOD(CFTestFixture, "CFNeighborhoodBoundTest",
   SetInputParam("neighborhood", int(0));
   SetInputParam("training", std::move(dataset));
 
-  Log::Fatal.ignoreInput = true;
-  REQUIRE_THROWS_AS(mlpackMain(), std::runtime_error);
-  Log::Fatal.ignoreInput = false;
+  REQUIRE_THROWS_AS(RUN_BINDING(), std::runtime_error);
 
   // neighborhood should not be negative.
   SetInputParam("neighborhood", int(-1));
 
-  Log::Fatal.ignoreInput = true;
-  REQUIRE_THROWS_AS(mlpackMain(), std::runtime_error);
-  Log::Fatal.ignoreInput = false;
+  REQUIRE_THROWS_AS(RUN_BINDING(), std::runtime_error);
 
   // neighborhood should not be larger than the number of users.
   SetInputParam("neighborhood", int(userNum + 1));
 
-  Log::Fatal.ignoreInput = true;
-  REQUIRE_THROWS_AS(mlpackMain(), std::runtime_error);
-  Log::Fatal.ignoreInput = false;
+  REQUIRE_THROWS_AS(RUN_BINDING(), std::runtime_error);
 }
 
 /**
@@ -180,9 +137,7 @@ TEST_CASE_METHOD(CFTestFixture, "CFAlgorithmBoundTest",
   SetInputParam("algorithm", std::string("invalid_algorithm"));
   SetInputParam("training", std::move(dataset));
 
-  Log::Fatal.ignoreInput = true;
-  REQUIRE_THROWS_AS(mlpackMain(), std::runtime_error);
-  Log::Fatal.ignoreInput = false;
+  REQUIRE_THROWS_AS(RUN_BINDING(), std::runtime_error);
 }
 
 /**
@@ -205,27 +160,24 @@ TEST_CASE_METHOD(CFTestFixture, "CFModelReuseTest",
     SetInputParam("max_iterations", int(10));
     SetInputParam("algorithm", algorithm);
 
-    mlpackMain();
+    RUN_BINDING();
 
-    // Reset passed parameters.
-    IO::GetSingleton().Parameters()["training"].wasPassed = false;
-    IO::GetSingleton().Parameters()["max_iterations"].wasPassed = false;
-    IO::GetSingleton().Parameters()["algorithm"].wasPassed = false;
+    CFModel* m = params.Get<CFModel*>("output_model");
+    ResetSettings();
 
     // Reuse the model to get recommendations.
-    int recommendations = 3;
-    const int querySize = 7;
+    size_t recommendations = 3;
+    const size_t querySize = 7;
     Mat<size_t> query =
         arma::linspace<Mat<size_t>>(0, querySize - 1, querySize);
 
     SetInputParam("query", std::move(query));
-    SetInputParam("recommendations", recommendations);
-    SetInputParam("input_model",
-        std::move(IO::GetParam<CFModel*>("output_model")));
+    SetInputParam("recommendations", int(recommendations));
+    SetInputParam("input_model", m);
 
-    mlpackMain();
+    RUN_BINDING();
 
-    const Mat<size_t>& output = IO::GetParam<Mat<size_t>>("output");
+    const Mat<size_t>& output = params.Get<Mat<size_t>>("output");
 
     REQUIRE(output.n_rows == recommendations);
     REQUIRE(output.n_cols == querySize);
@@ -246,9 +198,9 @@ TEST_CASE_METHOD(CFTestFixture, "CFAllUserRecommendationsTest",
   SetInputParam("max_iterations", int(10));
   SetInputParam("all_user_recommendations", true);
 
-  mlpackMain();
+  RUN_BINDING();
 
-  const Mat<size_t>& output = IO::GetParam<Mat<size_t>>("output");
+  const Mat<size_t>& output = params.Get<Mat<size_t>>("output");
 
   REQUIRE(output.n_cols == userNum);
 }
@@ -261,18 +213,21 @@ TEST_CASE_METHOD(CFTestFixture, "CFRankTest",
 {
   mat dataset;
   data::Load("GroupLensSmall.csv", dataset);
-  int rank = 7;
+  size_t rank = 7;
 
   SetInputParam("training", std::move(dataset));
-  SetInputParam("rank", rank);
+  SetInputParam("rank", int(rank));
   SetInputParam("max_iterations", int(10));
   SetInputParam("algorithm", std::string("NMF"));
 
-  mlpackMain();
+  RUN_BINDING();
 
-  const CFModel* outputModel = IO::GetParam<CFModel*>("output_model");
+  const CFModel* outputModel = params.Get<CFModel*>("output_model");
+  CFType<NMFPolicy, NoNormalization>& cf =
+      dynamic_cast<CFWrapper<NMFPolicy,
+                   NoNormalization>&>(*(outputModel->CF())).CF();
 
-  REQUIRE(outputModel->template CFPtr<NMFPolicy>()->Rank() == rank);
+  REQUIRE(cf.Rank() == rank);
 }
 
 /**
@@ -292,13 +247,16 @@ TEST_CASE_METHOD(CFTestFixture, "CFMinResidueTest",
   SetInputParam("max_iterations", int(1e4));
 
   // The execution of CF algorithm depends on initial random seed.
-  mlpack::math::FixedRandomSeed();
-  mlpackMain();
+  FixedRandomSeed();
+  RUN_BINDING();
 
-  outputModel =  IO::GetParam<CFModel*>("output_model");
+  outputModel = params.Get<CFModel*>("output_model");
   // By default the main program use NMFPolicy.
-  const mat w1 = outputModel->template CFPtr<NMFPolicy>()->Decomposition().W();
-  const mat h1 = outputModel->template CFPtr<NMFPolicy>()->Decomposition().H();
+  CFType<NMFPolicy, NoNormalization>& cf =
+      dynamic_cast<CFWrapper<NMFPolicy,
+                   NoNormalization>&>(*(outputModel->CF())).CF();
+  const mat w1 = cf.Decomposition().W();
+  const mat h1 = cf.Decomposition().H();
 
   ResetSettings();
 
@@ -309,20 +267,23 @@ TEST_CASE_METHOD(CFTestFixture, "CFMinResidueTest",
   SetInputParam("max_iterations", int(1e4));
 
   // The execution of CF algorithm depends on initial random seed.
-  mlpack::math::FixedRandomSeed();
-  mlpackMain();
+  FixedRandomSeed();
+  RUN_BINDING();
 
-  outputModel = IO::GetParam<CFModel*>("output_model");
+  outputModel = params.Get<CFModel*>("output_model");
   // By default the main program use NMFPolicy.
-  const mat w2 = outputModel->template CFPtr<NMFPolicy>()->Decomposition().W();
-  const mat h2 = outputModel->template CFPtr<NMFPolicy>()->Decomposition().H();
+  CFType<NMFPolicy, NoNormalization>& cf2 =
+      dynamic_cast<CFWrapper<NMFPolicy,
+                   NoNormalization>&>(*(outputModel->CF())).CF();
+  const mat w2 = cf2.Decomposition().W();
+  const mat h2 = cf2.Decomposition().H();
 
   // The resulting matrices should be different.
   REQUIRE((arma::norm(w1 - w2) > 1e-5 || arma::norm(h1 - h2) > 1e-5));
 }
 
 /**
- * Test that itertaion_only_termination is used.
+ * Test that iteration_only_termination is used.
  */
 TEST_CASE_METHOD(CFTestFixture, "CFIterationOnlyTerminationTest",
                 "[CFMainTest][BindingTests]")
@@ -338,13 +299,16 @@ TEST_CASE_METHOD(CFTestFixture, "CFIterationOnlyTerminationTest",
   SetInputParam("min_residue", double(1e9));
 
   // The execution of CF algorithm depends on initial random seed.
-  mlpack::math::FixedRandomSeed();
-  mlpackMain();
+  FixedRandomSeed();
+  RUN_BINDING();
 
-  outputModel =  IO::GetParam<CFModel*>("output_model");
+  outputModel = params.Get<CFModel*>("output_model");
   // By default, the main program use NMFPolicy.
-  const mat w1 = outputModel->template CFPtr<NMFPolicy>()->Decomposition().W();
-  const mat h1 = outputModel->template CFPtr<NMFPolicy>()->Decomposition().H();
+  CFType<NMFPolicy, NoNormalization>& cf =
+      dynamic_cast<CFWrapper<NMFPolicy,
+                   NoNormalization>&>(*(outputModel->CF())).CF();
+  const mat w1 = cf.Decomposition().W();
+  const mat h1 = cf.Decomposition().H();
 
   ResetSettings();
 
@@ -354,13 +318,16 @@ TEST_CASE_METHOD(CFTestFixture, "CFIterationOnlyTerminationTest",
   SetInputParam("min_residue", double(1e9));
 
   // The execution of CF algorithm depends on initial random seed.
-  mlpack::math::FixedRandomSeed();
-  mlpackMain();
+  FixedRandomSeed();
+  RUN_BINDING();
 
-  outputModel = IO::GetParam<CFModel*>("output_model");
+  outputModel = params.Get<CFModel*>("output_model");
   // By default, the main program use NMFPolicy.
-  const mat w2 = outputModel->template CFPtr<NMFPolicy>()->Decomposition().W();
-  const mat h2 = outputModel->template CFPtr<NMFPolicy>()->Decomposition().H();
+  CFType<NMFPolicy, NoNormalization>& cf2 =
+      dynamic_cast<CFWrapper<NMFPolicy,
+                   NoNormalization>&>(*(outputModel->CF())).CF();
+  const mat w2 = cf2.Decomposition().W();
+  const mat h2 = cf2.Decomposition().H();
 
   // The resulting matrices should be different.
   REQUIRE((arma::norm(w1 - w2) > 1e-5 || arma::norm(h1 - h2) > 1e-5));
@@ -382,13 +349,16 @@ TEST_CASE_METHOD(CFTestFixture, "CFMaxIterationsTest",
   SetInputParam("iteration_only_termination", true);
 
   // The execution of CF algorithm depends on initial random seed.
-  mlpack::math::FixedRandomSeed();
-  mlpackMain();
+  FixedRandomSeed();
+  RUN_BINDING();
 
-  outputModel =  IO::GetParam<CFModel*>("output_model");
+  outputModel =  params.Get<CFModel*>("output_model");
   // By default, the main program use NMFPolicy.
-  const mat w1 = outputModel->template CFPtr<NMFPolicy>()->Decomposition().W();
-  const mat h1 = outputModel->template CFPtr<NMFPolicy>()->Decomposition().H();
+  CFType<NMFPolicy, NoNormalization>& cf =
+      dynamic_cast<CFWrapper<NMFPolicy,
+                   NoNormalization>&>(*(outputModel->CF())).CF();
+  const mat w1 = cf.Decomposition().W();
+  const mat h1 = cf.Decomposition().H();
 
   ResetSettings();
 
@@ -398,13 +368,16 @@ TEST_CASE_METHOD(CFTestFixture, "CFMaxIterationsTest",
   SetInputParam("iteration_only_termination", true);
 
   // The execution of CF algorithm depends on initial random seed.
-  mlpack::math::FixedRandomSeed();
-  mlpackMain();
+  FixedRandomSeed();
+  RUN_BINDING();
 
-  outputModel = IO::GetParam<CFModel*>("output_model");
+  outputModel = params.Get<CFModel*>("output_model");
   // By default the main program use NMFPolicy.
-  const mat w2 = outputModel->template CFPtr<NMFPolicy>()->Decomposition().W();
-  const mat h2 = outputModel->template CFPtr<NMFPolicy>()->Decomposition().H();
+  CFType<NMFPolicy, NoNormalization>& cf2 =
+      dynamic_cast<CFWrapper<NMFPolicy,
+                   NoNormalization>&>(*(outputModel->CF())).CF();
+  const mat w2 = cf2.Decomposition().W();
+  const mat h2 = cf2.Decomposition().H();
 
   // The resulting matrices should be different.
   REQUIRE((arma::norm(w1 - w2) > 1e-5 || arma::norm(h1 - h2) > 1e-5));
@@ -428,10 +401,10 @@ TEST_CASE_METHOD(CFTestFixture, "CFNeighborhoodTest",
   SetInputParam("query", query);
 
   // The execution of CF algorithm depends on initial random seed.
-  mlpack::math::FixedRandomSeed();
-  mlpackMain();
+  FixedRandomSeed();
+  RUN_BINDING();
 
-  const arma::Mat<size_t> output1 = IO::GetParam<arma::Mat<size_t>>("output");
+  const arma::Mat<size_t> output1 = params.Get<arma::Mat<size_t>>("output");
 
   ResetSettings();
 
@@ -442,10 +415,10 @@ TEST_CASE_METHOD(CFTestFixture, "CFNeighborhoodTest",
   SetInputParam("query", std::move(query));
 
   // The execution of CF algorithm depends on initial random seed.
-  mlpack::math::FixedRandomSeed();
-  mlpackMain();
+  FixedRandomSeed();
+  RUN_BINDING();
 
-  const arma::Mat<size_t> output2 = IO::GetParam<arma::Mat<size_t>>("output");
+  const arma::Mat<size_t> output2 = params.Get<arma::Mat<size_t>>("output");
 
   // The resulting matrices should be different.
   REQUIRE(arma::any(arma::vectorise(output1 != output2)));
@@ -469,9 +442,7 @@ TEST_CASE_METHOD(CFTestFixture, "CFInterpolationAlgorithmBoundTest",
   SetInputParam("training", std::move(dataset));
   SetInputParam("query", query);
 
-  Log::Fatal.ignoreInput = true;
-  REQUIRE_THROWS_AS(mlpackMain(), std::runtime_error);
-  Log::Fatal.ignoreInput = false;
+  REQUIRE_THROWS_AS(RUN_BINDING(), std::runtime_error);
 }
 
 /**
@@ -496,42 +467,39 @@ TEST_CASE_METHOD(CFTestFixture, "CFInterpolationTest",
   SetInputParam("interpolation", std::string("average"));
   SetInputParam("recommendations", 5);
 
-  mlpackMain();
+  RUN_BINDING();
 
-  const arma::Mat<size_t> output1 = IO::GetParam<arma::Mat<size_t>>("output");
+  const arma::Mat<size_t> output1 = params.Get<arma::Mat<size_t>>("output");
 
   REQUIRE(output1.n_rows == 5);
   REQUIRE(output1.n_cols == 7);
 
-  // Reset passed parameters.
-  IO::GetSingleton().Parameters()["training"].wasPassed = false;
-  IO::GetSingleton().Parameters()["max_iterations"].wasPassed = false;
-  IO::GetSingleton().Parameters()["algorithm"].wasPassed = false;
+  CFModel* m = params.Get<CFModel*>("output_model");
+  ResetSettings();
 
   // Using regression interpolation algorithm.
-  SetInputParam("input_model",
-      std::move(IO::GetParam<CFModel*>("output_model")));
+  SetInputParam("input_model", m);
   SetInputParam("query", query);
   SetInputParam("interpolation", std::string("regression"));
   SetInputParam("recommendations", 5);
 
-  mlpackMain();
+  RUN_BINDING();
 
-  const arma::Mat<size_t> output2 = IO::GetParam<arma::Mat<size_t>>("output");
+  const arma::Mat<size_t> output2 = params.Get<arma::Mat<size_t>>("output");
 
   REQUIRE(output2.n_rows == 5);
   REQUIRE(output2.n_cols == 7);
 
   // Using similarity interpolation algorithm.
   SetInputParam("input_model",
-      std::move(IO::GetParam<CFModel*>("output_model")));
+      std::move(params.Get<CFModel*>("output_model")));
   SetInputParam("query", query);
   SetInputParam("interpolation", std::string("similarity"));
   SetInputParam("recommendations", 5);
 
-  mlpackMain();
+  RUN_BINDING();
 
-  const arma::Mat<size_t> output3 = IO::GetParam<arma::Mat<size_t>>("output");
+  const arma::Mat<size_t> output3 = params.Get<arma::Mat<size_t>>("output");
 
   REQUIRE(output3.n_rows == 5);
   REQUIRE(output3.n_cols == 7);
@@ -559,9 +527,7 @@ TEST_CASE_METHOD(CFTestFixture, "CFNeighborSearchAlgorithmBoundTest",
   SetInputParam("training", std::move(dataset));
   SetInputParam("query", query);
 
-  Log::Fatal.ignoreInput = true;
-  REQUIRE_THROWS_AS(mlpackMain(), std::runtime_error);
-  Log::Fatal.ignoreInput = false;
+  REQUIRE_THROWS_AS(RUN_BINDING(), std::runtime_error);
 }
 
 /**
@@ -586,42 +552,39 @@ TEST_CASE_METHOD(CFTestFixture, "CFNeighborSearchTest",
   SetInputParam("neighbor_search", std::string("euclidean"));
   SetInputParam("recommendations", 5);
 
-  mlpackMain();
+  RUN_BINDING();
 
-  const arma::Mat<size_t> output1 = IO::GetParam<arma::Mat<size_t>>("output");
+  const arma::Mat<size_t> output1 = params.Get<arma::Mat<size_t>>("output");
 
   REQUIRE(output1.n_rows == 5);
   REQUIRE(output1.n_cols == 7);
 
-  // Reset passed parameters.
-  IO::GetSingleton().Parameters()["training"].wasPassed = false;
-  IO::GetSingleton().Parameters()["max_iterations"].wasPassed = false;
-  IO::GetSingleton().Parameters()["algorithm"].wasPassed = false;
+  CFModel* m = params.Get<CFModel*>("output_model");
+  ResetSettings();
 
   // Using cosine neighbor search algorithm.
-  SetInputParam("input_model",
-      std::move(IO::GetParam<CFModel*>("output_model")));
+  SetInputParam("input_model", m);
   SetInputParam("query", query);
   SetInputParam("neighbor_search", std::string("cosine"));
   SetInputParam("recommendations", 5);
 
-  mlpackMain();
+  RUN_BINDING();
 
-  const arma::Mat<size_t> output2 = IO::GetParam<arma::Mat<size_t>>("output");
+  const arma::Mat<size_t> output2 = params.Get<arma::Mat<size_t>>("output");
 
   REQUIRE(output2.n_rows == 5);
   REQUIRE(output2.n_cols == 7);
 
   // Using pearson neighbor search algorithm.
   SetInputParam("input_model",
-      std::move(IO::GetParam<CFModel*>("output_model")));
+      std::move(params.Get<CFModel*>("output_model")));
   SetInputParam("query", query);
   SetInputParam("neighbor_search", std::string("pearson"));
   SetInputParam("recommendations", 5);
 
-  mlpackMain();
+  RUN_BINDING();
 
-  const arma::Mat<size_t> output3 = IO::GetParam<arma::Mat<size_t>>("output");
+  const arma::Mat<size_t> output3 = params.Get<arma::Mat<size_t>>("output");
 
   REQUIRE(output3.n_rows == 5);
   REQUIRE(output3.n_cols == 7);
@@ -652,9 +615,7 @@ TEST_CASE_METHOD(CFTestFixture, "CFNormalizationBoundTest",
   SetInputParam("training", std::move(dataset));
   SetInputParam("query", query);
 
-  Log::Fatal.ignoreInput = true;
-  REQUIRE_THROWS_AS(mlpackMain(), std::runtime_error);
-  Log::Fatal.ignoreInput = false;
+  REQUIRE_THROWS_AS(RUN_BINDING(), std::runtime_error);
 }
 
 /**
@@ -681,9 +642,9 @@ TEST_CASE_METHOD(CFTestFixture, "CFNormalizationTest",
   SetInputParam("normalization", std::string("none"));
   SetInputParam("recommendations", 5);
 
-  mlpackMain();
+  RUN_BINDING();
 
-  const arma::Mat<size_t> output1 = IO::GetParam<arma::Mat<size_t>>("output");
+  const arma::Mat<size_t> output1 = params.Get<arma::Mat<size_t>>("output");
 
   REQUIRE(output1.n_rows == 5);
   REQUIRE(output1.n_cols == 7);
@@ -700,9 +661,9 @@ TEST_CASE_METHOD(CFTestFixture, "CFNormalizationTest",
   SetInputParam("normalization", std::string("item_mean"));
   SetInputParam("recommendations", 5);
 
-  mlpackMain();
+  RUN_BINDING();
 
-  const arma::Mat<size_t> output2 = IO::GetParam<arma::Mat<size_t>>("output");
+  const arma::Mat<size_t> output2 = params.Get<arma::Mat<size_t>>("output");
 
   REQUIRE(output2.n_rows == 5);
   REQUIRE(output2.n_cols == 7);
@@ -719,9 +680,9 @@ TEST_CASE_METHOD(CFTestFixture, "CFNormalizationTest",
   SetInputParam("normalization", std::string("z_score"));
   SetInputParam("recommendations", 5);
 
-  mlpackMain();
+  RUN_BINDING();
 
-  const arma::Mat<size_t> output3 = IO::GetParam<arma::Mat<size_t>>("output");
+  const arma::Mat<size_t> output3 = params.Get<arma::Mat<size_t>>("output");
 
   REQUIRE(output3.n_rows == 5);
   REQUIRE(output3.n_cols == 7);

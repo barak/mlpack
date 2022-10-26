@@ -13,16 +13,14 @@
 #ifndef MLPACK_METHODS_RL_SAC_HPP
 #define MLPACK_METHODS_RL_SAC_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
+#include <ensmallen.hpp>
+#include <mlpack/methods/ann/ann.hpp>
 
-#include "replay/random_replay.hpp"
-#include <mlpack/methods/ann/activation_functions/tanh_function.hpp>
-#include <mlpack/methods/ann/loss_functions/mean_squared_error.hpp>
-#include <mlpack/methods/ann/visitor/parameters_visitor.hpp>
+#include "replay/replay.hpp"
 #include "training_config.hpp"
 
 namespace mlpack {
-namespace rl {
 
 /**
  * Implementation of Soft Actor-Critic, a model-free off-policy actor-critic
@@ -189,10 +187,9 @@ class SAC
   bool deterministic;
 
   //! Locally-stored loss function.
-  mlpack::ann::MeanSquaredError<> lossFunction;
+  MeanSquaredError lossFunction;
 };
 
-} // namespace rl
 } // namespace mlpack
 
 // Include implementation

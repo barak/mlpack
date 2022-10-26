@@ -12,13 +12,11 @@
 #ifndef MLPACK_METHODS_SOFTMAX_REGRESSION_SOFTMAX_REGRESSION_HPP
 #define MLPACK_METHODS_SOFTMAX_REGRESSION_SOFTMAX_REGRESSION_HPP
 
-#include <mlpack/prereqs.hpp>
-#include <ensmallen.hpp>
+#include <mlpack/core.hpp>
 
 #include "softmax_regression_function.hpp"
 
 namespace mlpack {
-namespace regression {
 
 /**
  * Softmax Regression is a classifier which can be used for classification when
@@ -232,12 +230,12 @@ class SoftmaxRegression
    * Serialize the SoftmaxRegression model.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(parameters);
-    ar & BOOST_SERIALIZATION_NVP(numClasses);
-    ar & BOOST_SERIALIZATION_NVP(lambda);
-    ar & BOOST_SERIALIZATION_NVP(fitIntercept);
+    ar(CEREAL_NVP(parameters));
+    ar(CEREAL_NVP(numClasses));
+    ar(CEREAL_NVP(lambda));
+    ar(CEREAL_NVP(fitIntercept));
   }
 
  private:
@@ -251,7 +249,6 @@ class SoftmaxRegression
   bool fitIntercept;
 };
 
-} // namespace regression
 } // namespace mlpack
 
 // Include implementation.

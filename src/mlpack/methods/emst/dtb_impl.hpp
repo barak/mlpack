@@ -15,29 +15,6 @@
 #include "dtb_rules.hpp"
 
 namespace mlpack {
-namespace emst {
-
-//! Call the tree constructor that does mapping.
-template<typename TreeType, typename MatType>
-TreeType* BuildTree(
-    MatType&& dataset,
-    std::vector<size_t>& oldFromNew,
-    const typename std::enable_if<
-        tree::TreeTraits<TreeType>::RearrangesDataset>::type* = 0)
-{
-  return new TreeType(std::forward<MatType>(dataset), oldFromNew);
-}
-
-//! Call the tree constructor that does not do mapping.
-template<typename TreeType, typename MatType>
-TreeType* BuildTree(
-    MatType&& dataset,
-    const std::vector<size_t>& /* oldFromNew */,
-    const typename std::enable_if<
-        !tree::TreeTraits<TreeType>::RearrangesDataset>::type* = 0)
-{
-  return new TreeType(std::forward<MatType>(dataset));
-}
 
 /**
  * Takes in a reference to the data set.  Copies the data, builds the tree,
@@ -119,8 +96,6 @@ template<
 void DualTreeBoruvka<MetricType, MatType, TreeType>::ComputeMST(
     arma::mat& results)
 {
-  Timer::Start("emst/mst_computation");
-
   totalDist = 0; // Reset distance.
 
   typedef DTBRules<MetricType, Tree> RuleType;
@@ -153,8 +128,6 @@ void DualTreeBoruvka<MetricType, MatType, TreeType>::ComputeMST(
           << std::endl;
     }
   }
-
-  Timer::Stop("emst/mst_computation");
 
   EmitResults(results);
 
@@ -230,7 +203,7 @@ void DualTreeBoruvka<MetricType, MatType, TreeType>::EmitResults(
   results.set_size(3, edges.size());
 
   // Need to unpermute the point labels.
-  if (!naive && ownTree && tree::TreeTraits<Tree>::RearrangesDataset)
+  if (!naive && ownTree && TreeTraits<Tree>::RearrangesDataset)
   {
     for (size_t i = 0; i < (data.n_cols - 1); ++i)
     {
@@ -325,7 +298,6 @@ void DualTreeBoruvka<MetricType, MatType, TreeType>::Cleanup()
     CleanupHelper(tree);
 }
 
-} // namespace emst
 } // namespace mlpack
 
 #endif

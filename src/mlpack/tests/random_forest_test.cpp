@@ -10,16 +10,14 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/random_forest/random_forest.hpp>
-#include <mlpack/methods/decision_tree/random_dimension_select.hpp>
+#include <mlpack/methods/random_forest.hpp>
 
-#include "serialization_catch.hpp"
+#include "serialization.hpp"
 #include "test_catch_tools.hpp"
 #include "catch.hpp"
 #include "mock_categorical_data.hpp"
 
 using namespace mlpack;
-using namespace mlpack::tree;
 
 /**
  * Make sure bootstrap sampling produces numbers in the dataset.
@@ -122,9 +120,11 @@ TEST_CASE("UnweightedNumericLearningTest", "[RandomForestTest]")
 {
   // Load the vc2 dataset.
   arma::mat dataset;
-  data::Load("vc2.csv", dataset);
+  if (!data::Load("vc2.csv", dataset))
+    FAIL("Cannot load dataset vc2.csv");
   arma::Row<size_t> labels;
-  data::Load("vc2_labels.txt", labels);
+  if (!data::Load("vc2_labels.txt", labels))
+    FAIL("Cannot load dataset vc2.csv");
 
   // Build a random forest and a decision tree.
   RandomForest<> rf(dataset, labels, 3, 20 /* 20 trees */, 1, 1e-7);
@@ -132,9 +132,11 @@ TEST_CASE("UnweightedNumericLearningTest", "[RandomForestTest]")
 
   // Get performance statistics on test data.
   arma::mat testDataset;
-  data::Load("vc2_test.csv", testDataset);
+  if (!data::Load("vc2_test.csv", testDataset))
+    FAIL("Cannot load dataset vc2_test.csv");
   arma::Row<size_t> testLabels;
-  data::Load("vc2_test_labels.txt", testLabels);
+  if (!data::Load("vc2_test_labels.txt", testLabels))
+    FAIL("Cannot load dataset vc2_test_labels.txt");
 
   arma::Row<size_t> rfPredictions;
   arma::Row<size_t> dtPredictions;
@@ -158,14 +160,16 @@ TEST_CASE("WeightedNumericLearningTest", "[RandomForestTest]")
 {
   arma::mat dataset;
   arma::Row<size_t> labels;
-  data::Load("vc2.csv", dataset);
-  data::Load("vc2_labels.txt", labels);
+  if (!data::Load("vc2.csv", dataset))
+    FAIL("Cannot load dataset vc2.csv");
+  if (!data::Load("vc2_labels.txt", labels))
+    FAIL("Cannot load dataset vc2_labels.txt");
 
   // Add some noise.
   arma::mat noise(dataset.n_rows, 1000, arma::fill::randu);
   arma::Row<size_t> noiseLabels(1000);
   for (size_t i = 0; i < noiseLabels.n_elem; ++i)
-    noiseLabels[i] = math::RandInt(3); // Random label.
+    noiseLabels[i] = RandInt(3); // Random label.
 
   // Concatenate data matrices.
   arma::mat data = arma::join_rows(dataset, noise);
@@ -174,9 +178,9 @@ TEST_CASE("WeightedNumericLearningTest", "[RandomForestTest]")
   // Now set weights.
   arma::rowvec weights(dataset.n_cols + 1000);
   for (size_t i = 0; i < dataset.n_cols; ++i)
-    weights[i] = math::Random(0.9, 1.0);
+    weights[i] = Random(0.9, 1.0);
   for (size_t i = dataset.n_cols; i < dataset.n_cols + 1000; ++i)
-    weights[i] = math::Random(0.0, 0.01); // Low weights for false points.
+    weights[i] = Random(0.0, 0.01); // Low weights for false points.
 
   // Train decision tree and random forest.
   RandomForest<> rf(dataset, labels, 3, weights, 20, 1);
@@ -184,9 +188,11 @@ TEST_CASE("WeightedNumericLearningTest", "[RandomForestTest]")
 
   // Get performance statistics on test data.
   arma::mat testDataset;
-  data::Load("vc2_test.csv", testDataset);
+  if (!data::Load("vc2_test.csv", testDataset))
+    FAIL("Cannot load dataset vc2_test.csv");
   arma::Row<size_t> testLabels;
-  data::Load("vc2_test_labels.txt", testLabels);
+  if (!data::Load("vc2_test_labels.txt", testLabels))
+    FAIL("Cannot load dataset vc2_test_labels.txt");
 
   arma::Row<size_t> rfPredictions;
   arma::Row<size_t> dtPredictions;
@@ -260,19 +266,19 @@ TEST_CASE("WeightedCategoricalLearningTest", "[RandomForestTest]")
   arma::Row<size_t> randomLabels(2000);
   for (size_t i = 0; i < 2000; ++i)
   {
-    randomNoise(0, i) = math::Random();
-    randomNoise(1, i) = math::Random();
-    randomNoise(2, i) = math::RandInt(4);
-    randomNoise(3, i) = math::RandInt(2);
-    randomLabels[i] = math::RandInt(5);
+    randomNoise(0, i) = Random();
+    randomNoise(1, i) = Random();
+    randomNoise(2, i) = RandInt(4);
+    randomNoise(3, i) = RandInt(2);
+    randomLabels[i] = RandInt(5);
   }
 
   // Generate weights.
   arma::rowvec weights(4000);
   for (size_t i = 0; i < 2000; ++i)
-    weights[i] = math::Random(0.9, 1.0);
+    weights[i] = Random(0.9, 1.0);
   for (size_t i = 2000; i < 4000; ++i)
-    weights[i] = math::Random(0.0, 0.001);
+    weights[i] = Random(0.0, 0.001);
 
   arma::mat fullData = arma::join_rows(trainingData, randomNoise);
   arma::Row<size_t> fullLabels = arma::join_rows(trainingLabels, randomLabels);
@@ -304,9 +310,11 @@ TEST_CASE("LeafSizeDatasetTest", "[RandomForestTest]")
 {
   // Load the vc2 dataset.
   arma::mat dataset;
-  data::Load("vc2.csv", dataset);
+  if (!data::Load("vc2.csv", dataset))
+    FAIL("Cannot load dataset vc2.csv");
   arma::Row<size_t> labels;
-  data::Load("vc2_labels.txt", labels);
+  if (!data::Load("vc2_labels.txt", labels))
+    FAIL("Cannot load dataset vc2.csv");
 
   // Build a random forest with a leaf size equal to the number of points in the
   // dataset.
@@ -338,9 +346,11 @@ TEST_CASE("RandomForestSerializationTest", "[RandomForestTest]")
 {
   // Load the vc2 dataset.
   arma::mat dataset;
-  data::Load("vc2.csv", dataset);
+  if (!data::Load("vc2.csv", dataset))
+    FAIL("Cannot load dataset vc2.csv");
   arma::Row<size_t> labels;
-  data::Load("vc2_labels.txt", labels);
+  if (!data::Load("vc2_labels.txt", labels))
+    FAIL("Cannot load dataset vc2.csv");
 
   RandomForest<> rf(dataset, labels, 3, 10 /* 10 trees */, 1);
 
@@ -348,21 +358,21 @@ TEST_CASE("RandomForestSerializationTest", "[RandomForestTest]")
   arma::mat beforeProbabilities;
   rf.Classify(dataset, beforePredictions, beforeProbabilities);
 
-  RandomForest<> xmlForest, textForest, binaryForest;
+  RandomForest<> xmlForest, jsonForest, binaryForest;
   binaryForest.Train(dataset, labels, 3, 3, 5, 1);
-  SerializeObjectAll(rf, xmlForest, textForest, binaryForest);
+  SerializeObjectAll(rf, xmlForest, jsonForest, binaryForest);
 
   // Now check that we get the same results serializing other things.
-  arma::Row<size_t> xmlPredictions, textPredictions, binaryPredictions;
-  arma::mat xmlProbabilities, textProbabilities, binaryProbabilities;
+  arma::Row<size_t> xmlPredictions, jsonPredictions, binaryPredictions;
+  arma::mat xmlProbabilities, jsonProbabilities, binaryProbabilities;
 
   xmlForest.Classify(dataset, xmlPredictions, xmlProbabilities);
-  textForest.Classify(dataset, textPredictions, textProbabilities);
+  jsonForest.Classify(dataset, jsonPredictions, jsonProbabilities);
   binaryForest.Classify(dataset, binaryPredictions, binaryProbabilities);
 
-  CheckMatrices(beforePredictions, xmlPredictions, textPredictions,
+  CheckMatrices(beforePredictions, xmlPredictions, jsonPredictions,
       binaryPredictions);
-  CheckMatrices(beforeProbabilities, xmlProbabilities, textProbabilities,
+  CheckMatrices(beforeProbabilities, xmlProbabilities, jsonProbabilities,
       binaryProbabilities);
 }
 
@@ -374,14 +384,16 @@ TEST_CASE("RandomForestNumericTrainReturnEntropy", "[RandomForestTest]")
 {
   arma::mat dataset;
   arma::Row<size_t> labels;
-  data::Load("vc2.csv", dataset);
-  data::Load("vc2_labels.txt", labels);
+  if (!data::Load("vc2.csv", dataset))
+    FAIL("Cannot load dataset vc2.csv");
+  if (!data::Load("vc2_labels.txt", labels))
+    FAIL("Cannot load dataset vc2_labels.txt");
 
   // Add some noise.
   arma::mat noise(dataset.n_rows, 1000, arma::fill::randu);
   arma::Row<size_t> noiseLabels(1000);
   for (size_t i = 0; i < noiseLabels.n_elem; ++i)
-    noiseLabels[i] = math::RandInt(3); // Random label.
+    noiseLabels[i] = RandInt(3); // Random label.
 
   // Concatenate data matrices.
   arma::mat data = arma::join_rows(dataset, noise);
@@ -390,9 +402,9 @@ TEST_CASE("RandomForestNumericTrainReturnEntropy", "[RandomForestTest]")
   // Now set weights.
   arma::rowvec weights(dataset.n_cols + 1000);
   for (size_t i = 0; i < dataset.n_cols; ++i)
-    weights[i] = math::Random(0.9, 1.0);
+    weights[i] = Random(0.9, 1.0);
   for (size_t i = dataset.n_cols; i < dataset.n_cols + 1000; ++i)
-    weights[i] = math::Random(0.0, 0.01); // Low weights for false points.
+    weights[i] = Random(0.0, 0.01); // Low weights for false points.
 
   // Test random forest on unweighted numeric dataset.
   RandomForest<GiniGain, RandomDimensionSelect> rf;
@@ -423,19 +435,19 @@ TEST_CASE("RandomForestCategoricalTrainReturnEntropy", "[RandomForestTest]")
   arma::Row<size_t> randomLabels(2000);
   for (size_t i = 0; i < 2000; ++i)
   {
-    randomNoise(0, i) = math::Random();
-    randomNoise(1, i) = math::Random();
-    randomNoise(2, i) = math::RandInt(4);
-    randomNoise(3, i) = math::RandInt(2);
-    randomLabels[i] = math::RandInt(5);
+    randomNoise(0, i) = Random();
+    randomNoise(1, i) = Random();
+    randomNoise(2, i) = RandInt(4);
+    randomNoise(3, i) = RandInt(2);
+    randomLabels[i] = RandInt(5);
   }
 
   // Generate weights.
   arma::rowvec weights(6000);
   for (size_t i = 0; i < 4000; ++i)
-    weights[i] = math::Random(0.9, 1.0);
+    weights[i] = Random(0.9, 1.0);
   for (size_t i = 4000; i < 6000; ++i)
-    weights[i] = math::Random(0.0, 0.001);
+    weights[i] = Random(0.0, 0.001);
 
   arma::mat fullData = arma::join_rows(d, randomNoise);
   arma::Row<size_t> fullLabels = arma::join_rows(l, randomLabels);
@@ -443,14 +455,14 @@ TEST_CASE("RandomForestCategoricalTrainReturnEntropy", "[RandomForestTest]")
   // Test random forest on unweighted categorical dataset.
   RandomForest<> rf;
   double entropy = rf.Train(fullData, di, fullLabels, 5, 15 /* 15 trees */, 1,
-      1e-7, 0, MultipleRandomDimensionSelect(3));
+      1e-7, 0, false, MultipleRandomDimensionSelect(3));
 
   REQUIRE(std::isfinite(entropy) == true);
 
   // Test random forest on weighted categorical dataset.
   RandomForest<> wrf;
   entropy = wrf.Train(fullData, di, fullLabels, 5, weights, 15 /* 15 trees */,
-      1, 1e-7, 0, MultipleRandomDimensionSelect(3));
+      1, 1e-7, 0, false, MultipleRandomDimensionSelect(3));
 
   REQUIRE(std::isfinite(entropy) == true);
 }
@@ -483,4 +495,115 @@ TEST_CASE("DifferentTreesTest", "[RandomForestTest]")
   }
 
   REQUIRE(success == true);
+}
+
+/**
+ * Test that RandomForest::Train() when passed warmStart = True trains on top
+ * of exixting forest and adds the newly trained trees to the previously
+ * exixting forest.
+ */
+TEST_CASE("WarmStartTreesTest", "[RandomForestTest]")
+{
+  arma::mat trainingData;
+  arma::Row<size_t> trainingLabels;
+  data::DatasetInfo di;
+  MockCategoricalData(trainingData, trainingLabels, di);
+
+  // Train a random forest.
+  RandomForest<> rf(trainingData, di, trainingLabels, 5, 25 /* 25 trees */, 1,
+      1e-7, 0, MultipleRandomDimensionSelect(4));
+
+  REQUIRE(rf.NumTrees() == 25);
+
+  rf.Train(trainingData, di, trainingLabels, 5, 20 /* 20 trees */, 1, 1e-7, 0,
+      true /* warmStart */, MultipleRandomDimensionSelect(4));
+
+  REQUIRE(rf.NumTrees() == 25 + 20);
+}
+
+/**
+ * Test that RandomForest::Train() when passed warmStart = True does not drop
+ * prediction quality on train data. Note that prediction quality may drop due
+ * to overfitting in some cases.
+ */
+TEST_CASE("WarmStartTreesPredictionsQualityTest", "[RandomForestTest]")
+{
+  arma::mat trainingData;
+  arma::Row<size_t> trainingLabels;
+  data::DatasetInfo di;
+  MockCategoricalData(trainingData, trainingLabels, di);
+
+  // Train a random forest.
+  RandomForest<> rf(trainingData, di, trainingLabels, 5, 3 /* 3 trees */, 1,
+      1e-7, 0, MultipleRandomDimensionSelect(4));
+
+  // Get performance statistics on train data.
+  arma::Row<size_t> oldPredictions;
+  rf.Classify(trainingData, oldPredictions);
+
+  // Calculate the number of correct points.
+  size_t oldCorrect = arma::accu(oldPredictions == trainingLabels);
+
+  rf.Train(trainingData, di, trainingLabels, 5, 20 /* 20 trees */, 1, 1e-7, 0,
+      true /* warmStart */, MultipleRandomDimensionSelect(4));
+
+  // Get performance statistics on train data.
+  arma::Row<size_t> newPredictions;
+  rf.Classify(trainingData, newPredictions);
+
+  // Calculate the number of correct points.
+  size_t newCorrect = arma::accu(newPredictions == trainingLabels);
+
+  REQUIRE(newCorrect >= oldCorrect);
+}
+
+/**
+ * Ensure that the Extra Trees algorithm gives decent accuracy.
+ */
+TEST_CASE("ExtraTreesAccuracyTest", "[RandomForestTest]")
+{
+  // Load the iris dataset.
+  arma::mat dataset;
+  if (!data::Load("iris_train.csv", dataset))
+    FAIL("Cannot load dataset iris_train.csv");
+  arma::Row<size_t> labels;
+  if (!data::Load("iris_train_labels.csv", labels))
+    FAIL("Cannot load dataset iris_train_labels.csv");
+
+  // Add some noise.
+  arma::mat noise(dataset.n_rows, 1000, arma::fill::randu);
+  arma::Row<size_t> noiseLabels(1000);
+  for (size_t i = 0; i < noiseLabels.n_elem; ++i)
+    noiseLabels[i] = RandInt(3); // Random label.
+
+  // Concatenate data matrices.
+  arma::mat data = arma::join_rows(dataset, noise);
+  arma::Row<size_t> fullLabels = arma::join_rows(labels, noiseLabels);
+
+  // Now set weights.
+  arma::rowvec weights(dataset.n_cols + 1000);
+  for (size_t i = 0; i < dataset.n_cols; ++i)
+    weights[i] = Random(0.9, 1.0);
+  for (size_t i = dataset.n_cols; i < dataset.n_cols + 1000; ++i)
+    weights[i] = Random(0.0, 0.01); // Low weights for false points.
+
+  // Train extra tree.
+  ExtraTrees<> et(data, fullLabels, 3, weights, 20, 1);
+
+  // Get performance statistics on test data.
+  arma::mat testDataset;
+  if (!data::Load("iris_test.csv", testDataset))
+    FAIL("Cannot load dataset iris_test.csv");
+  arma::Row<size_t> testLabels;
+  if (!data::Load("iris_test_labels.csv", testLabels))
+    FAIL("Cannot load dataset iris_test_labels.csv");
+
+  arma::Row<size_t> predictions;
+  et.Classify(testDataset, predictions);
+
+  // Calculate the prediction accuracy.
+  double accuracy = arma::accu(predictions == testLabels);
+  accuracy /= predictions.n_elem;
+
+  REQUIRE(accuracy >= 0.91);
 }

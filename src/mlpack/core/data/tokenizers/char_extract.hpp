@@ -36,7 +36,7 @@ class CharExtract
    *
    * @param str String view to retrieve the next token from.
    */
-  int operator()(boost::string_view& str) const
+  int operator()(MLPACK_STRING_VIEW& str) const
   {
     if (str.empty())
       return EOF;

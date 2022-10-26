@@ -16,7 +16,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace range {
 
 /**
  * Statistic class for RangeSearch, to be set to the StatisticType of the tree
@@ -46,9 +45,9 @@ class RangeSearchStat
 
   //! Serialize the statistic.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(lastDistance);
+    ar(CEREAL_NVP(lastDistance));
   }
 
  private:
@@ -56,7 +55,6 @@ class RangeSearchStat
   double lastDistance;
 };
 
-} // namespace range
 } // namespace mlpack
 
 #endif

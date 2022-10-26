@@ -2,7 +2,7 @@
  * @file methods/ann/loss_functions/negative_log_likelihood.hpp
  * @author Marcus Edel
  *
- * Definition of the NegativeLogLikelihood class.
+ * Definition of the NegativeLogLikelihoodType class.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -15,41 +15,41 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * Implementation of the negative log likelihood layer. The negative log
- * likelihood layer expectes that the input contains log-probabilities for each
- * class. The layer also expects a class index, in the range between 1 and the
+ * likelihood layer expects that the input contains log-probabilities for each
+ * class. The layer also expects a class index in the range [0, numClasses - 1]
  * number of classes, as target when calling the Forward function.
  *
- * @tparam InputDataType Type of the input data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam OutputDataType Type of the output data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
+ * @tparam MatType Matrix representation to accept as input and use for
+ *    computation.
  */
-template <
-    typename InputDataType = arma::mat,
-    typename OutputDataType = arma::mat
->
-class NegativeLogLikelihood
+template<typename MatType = arma::mat>
+class NegativeLogLikelihoodType
 {
  public:
   /**
-   * Create the NegativeLogLikelihoodLayer object.
+   * Create the NegativeLogLikelihoodTypeLayer object.
+   *
+   * @param reduction Specifies the reduction to apply to the output. If false,
+   *                  'mean' reduction is used, where sum of the output will be
+   *                  divided by the number of elements in the output. If true,
+   *                  'sum' reduction is used and the output will be summed. It
+   *                  is set to true by default.
    */
-  NegativeLogLikelihood();
+  NegativeLogLikelihoodType(const bool reduction = true);
 
   /**
    * Computes the Negative log likelihood.
    *
-   * @param input Input data used for evaluating the specified function.
+   * @param iprediction Predictions used for evaluating the specified loss
+   *     function.
    * @param target The target vector, that contains the class index in the range
    *        between 1 and the number of classes.
    */
-  template<typename InputType, typename TargetType>
-  typename InputType::elem_type Forward(const InputType& input,
-                                        const TargetType& target);
+  double Forward(const MatType& prediction,
+                 const MatType& target);
 
   /**
    * Ordinary feed backward pass of a neural network. The negative log
@@ -57,49 +57,36 @@ class NegativeLogLikelihood
    * each class. The layer also expects a class index, in the range between 1
    * and the number of classes, as target when calling the Forward function.
    *
-   * @param input The propagated input activation.
+   * @param prediction Predictions used for evaluating the specified loss
+   *     function.
    * @param target The target vector, that contains the class index in the range
    *        between 1 and the number of classes.
-   * @param output The calculated error.
+   * @param loss The calculated error.
    */
-  template<typename InputType, typename TargetType, typename OutputType>
-  void Backward(const InputType& input,
-                const TargetType& target,
-                OutputType& output);
+  void Backward(const MatType& prediction,
+                const MatType& target,
+                MatType& loss);
 
-  //! Get the input parameter.
-  InputDataType& InputParameter() const { return inputParameter; }
-  //! Modify the input parameter.
-  InputDataType& InputParameter() { return inputParameter; }
-
-  //! Get the output parameter.
-  OutputDataType& OutputParameter() const { return outputParameter; }
-  //! Modify the output parameter.
-  OutputDataType& OutputParameter() { return outputParameter; }
-
-  //! Get the delta.
-  OutputDataType& Delta() const { return delta; }
-  //! Modify the delta.
-  OutputDataType& Delta() { return delta; }
+  //! Get the reduction type, represented as boolean
+  //! (false 'mean' reduction, true 'sum' reduction).
+  bool Reduction() const { return reduction; }
+  //! Modify the type of reduction used.
+  bool& Reduction() { return reduction; }
 
   /**
    * Serialize the layer
    */
   template<typename Archive>
-  void serialize(Archive& /* ar */, const unsigned int /* version */);
+  void serialize(Archive& /* ar */, const uint32_t /* version */);
 
  private:
-  //! Locally-stored delta object.
-  OutputDataType delta;
+  //! Boolean value that tells if reduction is 'sum' or 'mean'.
+  bool reduction;
+}; // class NegativeLogLikelihoodType
 
-  //! Locally-stored input parameter object.
-  InputDataType inputParameter;
+// Default typedef for typical `arma::mat` usage.
+typedef NegativeLogLikelihoodType<arma::mat> NegativeLogLikelihood;
 
-  //! Locally-stored output parameter object.
-  OutputDataType outputParameter;
-}; // class NegativeLogLikelihood
-
-} // namespace ann
 } // namespace mlpack
 
 // Include implementation.

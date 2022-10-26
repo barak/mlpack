@@ -18,7 +18,6 @@
 #include <mlpack/methods/randomized_svd/randomized_svd.hpp>
 
 namespace mlpack {
-namespace cf {
 
 /**
  * Implementation of the Randomized SVD policy to act as a wrapper when
@@ -80,7 +79,7 @@ class RandomizedSVDPolicy
     arma::vec sigma;
 
     // Do singular value decomposition using the randomized SVD algorithm.
-    svd::RandomizedSVD rsvd(iteratedPower, maxIterations);
+    RandomizedSVD rsvd(iteratedPower, maxIterations);
     rsvd.Apply(cleanedData, w, sigma, h, rank);
 
     // Sigma matrix is multiplied to w.
@@ -171,10 +170,10 @@ class RandomizedSVDPolicy
    * Serialization.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(w);
-    ar & BOOST_SERIALIZATION_NVP(h);
+    ar(CEREAL_NVP(w));
+    ar(CEREAL_NVP(h));
   }
 
  private:
@@ -188,7 +187,6 @@ class RandomizedSVDPolicy
   arma::mat h;
 };
 
-} // namespace cf
 } // namespace mlpack
 
 #endif

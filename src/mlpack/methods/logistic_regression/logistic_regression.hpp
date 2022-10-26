@@ -14,13 +14,11 @@
 #ifndef MLPACK_METHODS_LOGISTIC_REGRESSION_LOGISTIC_REGRESSION_HPP
 #define MLPACK_METHODS_LOGISTIC_REGRESSION_LOGISTIC_REGRESSION_HPP
 
-#include <mlpack/prereqs.hpp>
-#include <ensmallen.hpp>
+#include <mlpack/core.hpp>
 
 #include "logistic_regression_function.hpp"
 
 namespace mlpack {
-namespace regression {
 
 /**
  * The LogisticRegression class implements an L2-regularized logistic regression
@@ -31,7 +29,7 @@ namespace regression {
  *
  * LogisticRegression can be used for general classification tasks, but the
  * class is restricted to support only two classes.  For multiclass logistic
- * regression, see mlpack::regression::SoftmaxRegression.
+ * regression, see SoftmaxRegression.
  *
  * @tparam MatType Type of data matrix.
  */
@@ -239,7 +237,7 @@ class LogisticRegression
 
   //! Serialize the model.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
   //! Vector of trained parameters (size: dimensionality plus one).
@@ -248,7 +246,6 @@ class LogisticRegression
   double lambda;
 };
 
-} // namespace regression
 } // namespace mlpack
 
 // Include implementation.

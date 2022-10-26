@@ -15,7 +15,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace tree {
 
 class CategoricalSplitInfo
 {
@@ -32,10 +31,9 @@ class CategoricalSplitInfo
 
   //! Serialize the object.  (Nothing needs to be saved.)
   template<typename Archive>
-  void serialize(Archive& /* ar */, const unsigned int /* version */) { }
+  void serialize(Archive& /* ar */, const uint32_t /* version */) { }
 };
 
-} // namespace tree
 } // namespace mlpack
 
 #endif

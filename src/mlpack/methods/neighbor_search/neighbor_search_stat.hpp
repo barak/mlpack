@@ -16,7 +16,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace neighbor {
 
 /**
  * Extra data for each node in the tree.  For neighbor searches, each node only
@@ -92,16 +91,15 @@ class NeighborSearchStat
 
   //! Serialize the statistic to/from an archive.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(firstBound);
-    ar & BOOST_SERIALIZATION_NVP(secondBound);
-    ar & BOOST_SERIALIZATION_NVP(auxBound);
-    ar & BOOST_SERIALIZATION_NVP(lastDistance);
+    ar(CEREAL_NVP(firstBound));
+    ar(CEREAL_NVP(secondBound));
+    ar(CEREAL_NVP(auxBound));
+    ar(CEREAL_NVP(lastDistance));
   }
 };
 
-} // namespace neighbor
 } // namespace mlpack
 
 #endif

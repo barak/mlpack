@@ -19,23 +19,23 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
- * @tparam InputDataType Type of the input data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam OutputDataType Type of the output data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
+ * The Soft Margin Loss function.
+ *
+ * It is a criterion that optimizes a two-class classification logistic loss,
+ * between input x and target y, both having the same shape, with the target
+ * containing only the values 1 or -1.
+ *
+ * @tparam MatType Matrix representation to accept as input and use for
+ *    computation.
  */
-template <
-    typename InputDataType = arma::mat,
-    typename OutputDataType = arma::mat
->
-class SoftMarginLoss
+template<typename MatType = arma::mat>
+class SoftMarginLossType
 {
  public:
   /**
-   * Create the SoftMarginLoss object.
+   * Create the SoftMarginLossType object.
    *
    * @param reduction Specifies the reduction to apply to the output. If false,
    *                  'mean' reduction is used, where sum of the output will be
@@ -43,36 +43,32 @@ class SoftMarginLoss
    *                  true, 'sum' reduction is used and the output will be
    *                  summed. It is set to true by default.
    */
-  SoftMarginLoss(const bool reduction = true);
+  SoftMarginLossType(const bool reduction = true);
 
   /**
    * Computes the Soft Margin Loss function.
    *
-   * @param input Input data used for evaluating the specified function.
+   * @param prediction Predictions used for evaluating the specified loss
+   *     function.
    * @param target The target vector with same shape as input.
    */
-  template<typename InputType, typename TargetType>
-  typename InputType::elem_type Forward(const InputType& input,
-                                        const TargetType& target);
+  typename MatType::elem_type Forward(const MatType& prediction,
+                                      const MatType& target);
 
   /**
    * Ordinary feed backward pass of a neural network.
    *
-   * @param input The propagated input activation.
+   * @param prediction Predictions used for evaluating the specified loss
+   *     function.
    * @param target The target vector.
-   * @param output The calculated error.
+   * @param loss The calculated error.
    */
-  template<typename InputType, typename TargetType, typename OutputType>
-  void Backward(const InputType& input,
-                const TargetType& target,
-                OutputType& output);
+  void Backward(const MatType& prediction,
+                const MatType& target,
+                MatType& loss);
 
-  //! Get the output parameter.
-  OutputDataType& OutputParameter() const { return outputParameter; }
-  //! Modify the output parameter.
-  OutputDataType& OutputParameter() { return outputParameter; }
-
-  //! Get the type of reduction used.
+  //! Get the reduction type, represented as boolean
+  //! (false 'mean' reduction, true 'sum' reduction).
   bool Reduction() const { return reduction; }
   //! Modify the type of reduction used.
   bool& Reduction() { return reduction; }
@@ -81,17 +77,16 @@ class SoftMarginLoss
    * Serialize the layer.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t version);
 
  private:
-  //! Locally-stored output parameter object.
-  OutputDataType outputParameter;
-
-  //! The boolean value that tells if reduction is sum or mean.
+  //! Boolean value that tells if reduction is 'sum' or 'mean'.
   bool reduction;
-}; // class SoftMarginLoss
+}; // class SoftMarginLossType
 
-} // namespace ann
+// Default typedef for typical `arma::mat` usage.
+typedef SoftMarginLossType<arma::mat> SoftMarginLoss;
+
 } // namespace mlpack
 
 // include implementation.

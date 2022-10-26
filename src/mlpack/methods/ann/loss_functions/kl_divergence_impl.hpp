@@ -17,59 +17,49 @@
 #include "kl_divergence.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-KLDivergence<InputDataType, OutputDataType>::KLDivergence(const bool takeMean) :
-    takeMean(takeMean)
+template<typename MatType>
+KLDivergenceType<MatType>::KLDivergenceType(const bool reduction) :
+    reduction(reduction)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type
-KLDivergence<InputDataType, OutputDataType>::Forward(const InputType& input,
-                                                     const TargetType& target)
+template<typename MatType>
+typename MatType::elem_type KLDivergenceType<MatType>::Forward(
+    const MatType& prediction,
+    const MatType& target)
 {
-  if (takeMean)
-  {
-    return arma::as_scalar(arma::mean(
-        arma::mean(input % (arma::log(input) - arma::log(target)))));
-  }
-  else
-  {
-    return arma::accu(input % (arma::log(input) - arma::log(target)));
-  }
+  MatType loss = target % (arma::log(target) - prediction);
+  typename MatType::elem_type lossSum = arma::accu(loss);
+
+  if (reduction)
+    return lossSum;
+
+  return lossSum / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void KLDivergence<InputDataType, OutputDataType>::Backward(
-    const InputType& input,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType>
+void KLDivergenceType<MatType>::Backward(
+    const MatType& /* prediction */,
+    const MatType& target,
+    MatType& loss)
 {
-  if (takeMean)
-  {
-    output = arma::mean(arma::mean(arma::log(input) - arma::log(target) + 1));
-  }
-  else
-  {
-    output = arma::accu(arma::log(input) - arma::log(target) + 1);
-  }
+  loss = -target;
+
+  if (!reduction)
+    loss = loss / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void KLDivergence<InputDataType, OutputDataType>::serialize(
+void KLDivergenceType<MatType>::serialize(
     Archive& ar,
-    const unsigned int /* version */)
+    const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(takeMean);
+  ar(CEREAL_NVP(reduction));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

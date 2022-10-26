@@ -25,8 +25,9 @@
 
 #include <mlpack/prereqs.hpp>
 
+#include "layer.hpp"
+
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * The CELU activation function, defined by
@@ -46,18 +47,16 @@ namespace ann /** Artificial Neural Network. */ {
  * \right.
  * @f}
  *
- * In the deterministic mode, there is no computation of the derivative.
+ * When not in training mode, there is no computation of the derivative.
  *
- * @tparam InputDataType Type of the input data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam OutputDataType Type of the output data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
+ * @tparam InputType The type of the layer's inputs. The layer automatically
+ *     cast inputs to this type (Default: arma::mat).
+ * @tparam OutputType The type of the computation which also causes the output
+ *     to also be in this type. The type also allows the computation and weight
+ *     type to differ from the input type (Default: arma::mat).
  */
-template <
-    typename InputDataType = arma::mat,
-    typename OutputDataType = arma::mat
->
-class CELU
+template<typename MatType = arma::mat>
+class CELUType : public Layer<MatType>
 {
  public:
   /**
@@ -67,7 +66,26 @@ class CELU
    *
    * @param alpha Scale parameter for the negative factor (default = 1.0).
    */
-  CELU(const double alpha = 1.0);
+  CELUType(const double alpha = 1.0);
+
+  //! Clone the CELUType object. This handles polymorphism correctly.
+  CELUType* Clone() const { return new CELUType(*this); }
+
+
+  // Virtual destructor
+  virtual ~CELUType(){};
+
+  //Copy constructor
+  CELUType(const CELUType& other);
+
+  //Move Constructor
+  CELUType(CELUType&& other);
+
+  //Copy assignment operator
+  CELUType& operator=(const CELUType& other);
+
+  //Move assignement operator
+  CELUType& operator=(CELUType&& other);
 
   /**
    * Ordinary feed forward pass of a neural network, evaluating the function
@@ -76,8 +94,7 @@ class CELU
    * @param input Input data used for evaluating the specified function.
    * @param output Resulting output activation.
    */
-  template<typename InputType, typename OutputType>
-  void Forward(const InputType& input, OutputType& output);
+  void Forward(const MatType& input, MatType& output);
 
   /**
    * Ordinary feed backward pass of a neural network, calculating the function
@@ -88,53 +105,30 @@ class CELU
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
-  template<typename DataType>
-  void Backward(const DataType& input, const DataType& gy, DataType& g);
-
-  //! Get the output parameter.
-  OutputDataType const& OutputParameter() const { return outputParameter; }
-  //! Modify the output parameter.
-  OutputDataType& OutputParameter() { return outputParameter; }
-
-  //! Get the delta.
-  OutputDataType const& Delta() const { return delta; }
-  //! Modify the delta.
-  OutputDataType& Delta() { return delta; }
+  void Backward(const MatType& input, const MatType& gy, MatType& g);
 
   //! Get the non zero gradient.
   double const& Alpha() const { return alpha; }
   //! Modify the non zero gradient.
   double& Alpha() { return alpha; }
 
-  //! Get the value of deterministic parameter.
-  bool Deterministic() const { return deterministic; }
-  //! Modify the value of deterministic parameter.
-  bool& Deterministic() { return deterministic; }
-
-  /**
-   * Serialize the layer.
-   */
+  //! Serialize the layer.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
-  //! Locally-stored delta object.
-  OutputDataType delta;
-
-  //! Locally-stored output parameter object.
-  OutputDataType outputParameter;
-
   //! Locally stored first derivative of the activation function.
-  arma::mat derivative;
+  MatType derivative;
 
   //! CELU Hyperparameter (alpha > 0).
   double alpha;
+}; // class CELUType
 
-  //! If true the derivative computation is disabled, see notes above.
-  bool deterministic;
-}; // class CELU
+// Convenience typedefs.
 
-} // namespace ann
+// Standard CELU layer.
+typedef CELUType<arma::mat> CELU;
+
 } // namespace mlpack
 
 // Include implementation.

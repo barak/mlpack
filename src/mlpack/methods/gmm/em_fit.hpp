@@ -15,8 +15,7 @@
 #define MLPACK_METHODS_GMM_EM_FIT_HPP
 
 #include <mlpack/prereqs.hpp>
-#include <mlpack/core/dists/gaussian_distribution.hpp>
-#include <mlpack/core/dists/diagonal_gaussian_distribution.hpp>
+#include <mlpack/core/dists/dists.hpp>
 
 // Default clustering mechanism.
 #include <mlpack/methods/kmeans/kmeans.hpp>
@@ -24,7 +23,6 @@
 #include "positive_definite_constraint.hpp"
 
 namespace mlpack {
-namespace gmm {
 
 /**
  * This class contains methods which can fit a GMM to observations using the EM
@@ -39,9 +37,9 @@ namespace gmm {
  * This method should create 'clusters' clusters, and return the assignment of
  * each point to a cluster.
  */
-template<typename InitialClusteringType = kmeans::KMeans<>,
+template<typename InitialClusteringType = KMeans<>,
          typename CovarianceConstraintPolicy = PositiveDefiniteConstraint,
-         typename Distribution = distribution::GaussianDistribution>
+         typename Distribution = GaussianDistribution>
 class EMFit
 {
  public:
@@ -129,7 +127,7 @@ class EMFit
 
   //! Serialize the fitter.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int version);
+  void serialize(Archive& ar, const uint32_t version);
 
  private:
   /**
@@ -164,7 +162,7 @@ class EMFit
 
   /**
    * Use the Armadillo gmm_diag clusterer to train a GMM with diagonal
-   * covariance.  If InitialClusteringType == kmeans::KMeans<>, this will use
+   * covariance.  If InitialClusteringType == KMeans<>, this will use
    * Armadillo's initialization also.
    *
    * @param observations Data to train on.
@@ -188,7 +186,6 @@ class EMFit
   CovarianceConstraintPolicy constraint;
 };
 
-} // namespace gmm
 } // namespace mlpack
 
 // Include implementation.

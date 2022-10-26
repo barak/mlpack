@@ -10,16 +10,12 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/dbscan/dbscan.hpp>
-#include <mlpack/methods/dbscan/random_point_selection.hpp>
+#include <mlpack/methods/dbscan.hpp>
 
 #include "test_catch_tools.hpp"
 #include "catch.hpp"
 
 using namespace mlpack;
-using namespace mlpack::range;
-using namespace mlpack::dbscan;
-using namespace mlpack::distribution;
 
 TEST_CASE("OneClusterTest", "[DBSCANTest]")
 {

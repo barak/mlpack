@@ -15,9 +15,9 @@
 #include "hmm.hpp"
 #include <mlpack/methods/gmm/gmm.hpp>
 #include <mlpack/methods/gmm/diagonal_gmm.hpp>
+#include <mlpack/core/util/params.hpp>
 
 namespace mlpack {
-namespace hmm {
 
 enum HMMType : char
 {
@@ -36,13 +36,13 @@ class HMMModel
   //! The type of the HMM.
   HMMType type;
   //! Not used if type is not DiscreteHMM.
-  HMM<distribution::DiscreteDistribution>* discreteHMM;
+  HMM<DiscreteDistribution>* discreteHMM;
   //! Not used if type is not GaussianHMM.
-  HMM<distribution::GaussianDistribution>* gaussianHMM;
+  HMM<GaussianDistribution>* gaussianHMM;
   //! Not used if type is not GaussianMixtureModelHMM.
-  HMM<gmm::GMM>* gmmHMM;
+  HMM<GMM>* gmmHMM;
   //! Not used if type is not DiagonalGaussianMixtureModelHMM.
-  HMM<gmm::DiagonalGMM>* diagGMMHMM;
+  HMM<DiagonalGMM>* diagGMMHMM;
 
  public:
   //! Construct a model of the given type.
@@ -54,13 +54,13 @@ class HMMModel
       diagGMMHMM(NULL)
   {
     if (type == HMMType::DiscreteHMM)
-      discreteHMM = new HMM<distribution::DiscreteDistribution>();
+      discreteHMM = new HMM<DiscreteDistribution>();
     else if (type == HMMType::GaussianHMM)
-      gaussianHMM = new HMM<distribution::GaussianDistribution>();
+      gaussianHMM = new HMM<GaussianDistribution>();
     else if (type == HMMType::GaussianMixtureModelHMM)
-      gmmHMM = new HMM<gmm::GMM>();
+      gmmHMM = new HMM<GMM>();
     else if (type == HMMType::DiagonalGaussianMixtureModelHMM)
-      diagGMMHMM = new HMM<gmm::DiagonalGMM>();
+      diagGMMHMM = new HMM<DiagonalGMM>();
   }
 
   //! Copy another model.
@@ -73,14 +73,14 @@ class HMMModel
   {
     if (type == HMMType::DiscreteHMM)
       discreteHMM =
-          new HMM<distribution::DiscreteDistribution>(*other.discreteHMM);
+          new HMM<DiscreteDistribution>(*other.discreteHMM);
     else if (type == HMMType::GaussianHMM)
       gaussianHMM =
-          new HMM<distribution::GaussianDistribution>(*other.gaussianHMM);
+          new HMM<GaussianDistribution>(*other.gaussianHMM);
     else if (type == HMMType::GaussianMixtureModelHMM)
-      gmmHMM = new HMM<gmm::GMM>(*other.gmmHMM);
+      gmmHMM = new HMM<GMM>(*other.gmmHMM);
     else if (type == HMMType::DiagonalGaussianMixtureModelHMM)
-      diagGMMHMM = new HMM<gmm::DiagonalGMM>(*other.diagGMMHMM);
+      diagGMMHMM = new HMM<DiagonalGMM>(*other.diagGMMHMM);
   }
 
   //! Take ownership of another model.
@@ -92,7 +92,7 @@ class HMMModel
       diagGMMHMM(other.diagGMMHMM)
   {
     other.type = HMMType::DiscreteHMM;
-    other.discreteHMM = new HMM<distribution::DiscreteDistribution>();
+    other.discreteHMM = new HMM<DiscreteDistribution>();
     other.gaussianHMM = NULL;
     other.gmmHMM = NULL;
     other.diagGMMHMM = NULL;
@@ -117,15 +117,35 @@ class HMMModel
     type = other.type;
     if (type == HMMType::DiscreteHMM)
       discreteHMM =
-          new HMM<distribution::DiscreteDistribution>(*other.discreteHMM);
+          new HMM<DiscreteDistribution>(*other.discreteHMM);
     else if (type == HMMType::GaussianHMM)
       gaussianHMM =
-          new HMM<distribution::GaussianDistribution>(*other.gaussianHMM);
+          new HMM<GaussianDistribution>(*other.gaussianHMM);
     else if (type == HMMType::GaussianMixtureModelHMM)
-      gmmHMM = new HMM<gmm::GMM>(*other.gmmHMM);
+      gmmHMM = new HMM<GMM>(*other.gmmHMM);
     else if (type == HMMType::DiagonalGaussianMixtureModelHMM)
-      diagGMMHMM = new HMM<gmm::DiagonalGMM>(*other.diagGMMHMM);
+      diagGMMHMM = new HMM<DiagonalGMM>(*other.diagGMMHMM);
 
+    return *this;
+  }
+
+  //! Move assignment operator.
+  HMMModel& operator=(HMMModel&& other)
+  {
+    if (this != &other)
+    {
+      type = other.type;
+      discreteHMM = other.discreteHMM;
+      gaussianHMM = other.gaussianHMM;
+      gmmHMM = other.gmmHMM;
+      diagGMMHMM = other.diagGMMHMM;
+
+      other.type = HMMType::DiscreteHMM;
+      other.discreteHMM = new HMM<DiscreteDistribution>();
+      other.gaussianHMM = nullptr;
+      other.gmmHMM = nullptr;
+      other.diagGMMHMM = nullptr;
+    }
     return *this;
   }
 
@@ -144,26 +164,26 @@ class HMMModel
    */
   template<typename ActionType,
            typename ExtraInfoType>
-  void PerformAction(ExtraInfoType* x)
+  void PerformAction(util::Params& params, ExtraInfoType* x)
   {
     if (type == HMMType::DiscreteHMM)
-      ActionType::Apply(*discreteHMM, x);
+      ActionType::Apply(params, *discreteHMM, x);
     else if (type == HMMType::GaussianHMM)
-      ActionType::Apply(*gaussianHMM, x);
+      ActionType::Apply(params, *gaussianHMM, x);
     else if (type == HMMType::GaussianMixtureModelHMM)
-      ActionType::Apply(*gmmHMM, x);
+      ActionType::Apply(params, *gmmHMM, x);
     else if (type == HMMType::DiagonalGaussianMixtureModelHMM)
-      ActionType::Apply(*diagGMMHMM, x);
+      ActionType::Apply(params, *diagGMMHMM, x);
   }
 
   //! Serialize the model.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int version)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(type);
+    ar(CEREAL_NVP(type));
 
     // If necessary, clean memory.
-    if (Archive::is_loading::value)
+    if (cereal::is_loading<Archive>())
     {
       delete discreteHMM;
       delete gaussianHMM;
@@ -177,18 +197,13 @@ class HMMModel
     }
 
     if (type == HMMType::DiscreteHMM)
-      ar & BOOST_SERIALIZATION_NVP(discreteHMM);
+      ar(CEREAL_POINTER(discreteHMM));
     else if (type == HMMType::GaussianHMM)
-      ar & BOOST_SERIALIZATION_NVP(gaussianHMM);
+      ar(CEREAL_POINTER(gaussianHMM));
     else if (type == HMMType::GaussianMixtureModelHMM)
-      ar & BOOST_SERIALIZATION_NVP(gmmHMM);
-
-    // Backward compatibility: new versions of HMM has a Diagonal GMM type.
-    if (version > 0)
-    {
-      if (type == HMMType::DiagonalGaussianMixtureModelHMM)
-        ar & BOOST_SERIALIZATION_NVP(diagGMMHMM);
-    }
+      ar(CEREAL_POINTER(gmmHMM));
+    else if (type == HMMType::DiagonalGaussianMixtureModelHMM)
+      ar(CEREAL_POINTER(diagGMMHMM));
   }
 
   // Accessor method for type of HMM
@@ -213,16 +228,12 @@ class HMMModel
    * (by calling the Type() accessor) and then perform subsequent actions, to
    * avoid null pointer dereferences.
    */
-  HMM<distribution::DiscreteDistribution>* DiscreteHMM() { return discreteHMM; }
-  HMM<distribution::GaussianDistribution>* GaussianHMM() { return gaussianHMM; }
-  HMM<gmm::GMM>* GMMHMM() { return gmmHMM; }
-  HMM<gmm::DiagonalGMM>* DiagGMMHMM() { return diagGMMHMM; }
+  HMM<DiscreteDistribution>* DiscreteHMM() { return discreteHMM; }
+  HMM<GaussianDistribution>* GaussianHMM() { return gaussianHMM; }
+  HMM<GMM>* GMMHMM() { return gmmHMM; }
+  HMM<DiagonalGMM>* DiagGMMHMM() { return diagGMMHMM; }
 };
 
-} // namespace hmm
 } // namespace mlpack
-
-//! Set the serialization version of the HMMModel class.
-BOOST_CLASS_VERSION(mlpack::hmm::HMMModel, 1);
 
 #endif

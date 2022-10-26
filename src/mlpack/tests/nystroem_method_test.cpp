@@ -11,16 +11,11 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
+#include <mlpack/methods/nystroem_method.hpp>
 
 #include "catch.hpp"
 
-#include <mlpack/methods/nystroem_method/ordered_selection.hpp>
-#include <mlpack/methods/nystroem_method/random_selection.hpp>
-#include <mlpack/methods/nystroem_method/kmeans_selection.hpp>
-#include <mlpack/methods/nystroem_method/nystroem_method.hpp>
-
 using namespace mlpack;
-using namespace mlpack::kernel;
 
 /**
  * Make sure that if the rank is the same and we do a full-rank approximation,
@@ -87,7 +82,6 @@ TEST_CASE("Rank10Test", "[NystroemMethodTest]")
   dataMod += 1e-5 * arma::randu<arma::mat>(dataMod.n_rows, dataMod.n_cols);
 
   // Calculate the true kernel matrix.
-  LinearKernel lk;
   arma::mat kernel = dataMod.t() * dataMod;
 
   size_t successes = 0;
@@ -146,7 +140,8 @@ TEST_CASE("GermanTest", "[NystroemMethodTest]")
 {
   // Load the dataset.
   arma::mat dataset;
-  data::Load("german.csv", dataset, true);
+  if (!data::Load("german.csv", dataset))
+    FAIL("Cannot load dataset german.csv");
 
   // These are our tolerance bounds.
   double results[5] = { 32.0, 20.0, 15.0, 12.0, 9.0 };

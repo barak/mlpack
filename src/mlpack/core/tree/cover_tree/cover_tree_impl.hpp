@@ -19,7 +19,6 @@
 #include <string>
 
 namespace mlpack {
-namespace tree {
 
 // Build the statistics, bottom-up.
 template<typename TreeType, typename StatisticType>
@@ -716,7 +715,7 @@ operator=(CoverTree&& other)
   return *this;
 }
 
-// Construct from a boost::serialization archive.
+// Construct from a cereal archive.
 template<
     typename MetricType,
     typename StatisticType,
@@ -726,11 +725,11 @@ template<
 template<typename Archive>
 CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::CoverTree(
     Archive& ar,
-    const typename std::enable_if_t<Archive::is_loading::value>*) :
+    const typename std::enable_if_t<cereal::is_loading<Archive>()>*) :
     CoverTree() // Create an empty CoverTree.
 {
   // Now, serialize to our empty tree.
-  ar >> boost::serialization::make_nvp("this", *this);
+  ar(cereal::make_nvp("this", *this));
 }
 
 
@@ -1047,7 +1046,7 @@ template<
     typename MatType,
     typename RootPointPolicy
 >
-math::RangeType<typename
+RangeType<typename
     CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::ElemType>
 CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::
     RangeDistance(const CoverTree& other) const
@@ -1055,7 +1054,7 @@ CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::
   const ElemType distance = metric->Evaluate(dataset->col(point),
       other.Dataset().col(other.Point()));
 
-  math::RangeType<ElemType> result;
+  RangeType<ElemType> result;
   result.Lo() = std::max(distance - furthestDescendantDistance -
       other.FurthestDescendantDistance(), 0.0);
   result.Hi() = distance + furthestDescendantDistance +
@@ -1072,13 +1071,13 @@ template<
     typename MatType,
     typename RootPointPolicy
 >
-math::RangeType<typename
+RangeType<typename
     CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::ElemType>
 CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::
     RangeDistance(const CoverTree& other,
                   const ElemType distance) const
 {
-  math::RangeType<ElemType> result;
+  RangeType<ElemType> result;
   result.Lo() = std::max(distance - furthestDescendantDistance -
       other.FurthestDescendantDistance(), 0.0);
   result.Hi() = distance + furthestDescendantDistance +
@@ -1094,14 +1093,14 @@ template<
     typename MatType,
     typename RootPointPolicy
 >
-math::RangeType<typename
+RangeType<typename
     CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::ElemType>
 CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::
     RangeDistance(const arma::vec& other) const
 {
   const ElemType distance = metric->Evaluate(dataset->col(point), other);
 
-  return math::RangeType<ElemType>(
+  return RangeType<ElemType>(
       std::max(distance - furthestDescendantDistance, 0.0),
       distance + furthestDescendantDistance);
 }
@@ -1114,13 +1113,13 @@ template<
     typename MatType,
     typename RootPointPolicy
 >
-math::RangeType<typename
+RangeType<typename
     CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::ElemType>
 CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::
     RangeDistance(const arma::vec& /* other */,
                   const ElemType distance) const
 {
-  return math::RangeType<ElemType>(
+  return RangeType<ElemType>(
       std::max(distance - furthestDescendantDistance, 0.0),
       distance + furthestDescendantDistance);
 }
@@ -1691,7 +1690,7 @@ inline void CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::
 }
 
 /**
- * Default constructor, only for use with boost::serialization.
+ * Default constructor, only for use with cereal.
  */
 template<
     typename MetricType,
@@ -1717,7 +1716,7 @@ CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::CoverTree() :
 }
 
 /**
- * Serialize to/from a boost::serialization archive.
+ * Serialize to/from a cereal archive.
  */
 template<
     typename MetricType,
@@ -1728,11 +1727,11 @@ template<
 template<typename Archive>
 void CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::serialize(
     Archive& ar,
-    const unsigned int /* version */)
+    const uint32_t /* version */)
 {
   // If we're loading, and we have children, they need to be deleted.  We may
   // also need to delete the local metric and dataset.
-  if (Archive::is_loading::value)
+  if (cereal::is_loading<Archive>())
   {
     for (size_t i = 0; i < children.size(); ++i)
       delete children[i];
@@ -1745,29 +1744,31 @@ void CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::serialize(
     parent = NULL;
   }
 
-  ar & BOOST_SERIALIZATION_NVP(dataset);
-  ar & BOOST_SERIALIZATION_NVP(point);
-  ar & BOOST_SERIALIZATION_NVP(scale);
-  ar & BOOST_SERIALIZATION_NVP(base);
-  ar & BOOST_SERIALIZATION_NVP(stat);
-  ar & BOOST_SERIALIZATION_NVP(numDescendants);
-
   bool hasParent = (parent != NULL);
-  ar & BOOST_SERIALIZATION_NVP(hasParent);
-  ar & BOOST_SERIALIZATION_NVP(parentDistance);
-  ar & BOOST_SERIALIZATION_NVP(furthestDescendantDistance);
-  ar & BOOST_SERIALIZATION_NVP(metric);
+  ar(CEREAL_NVP(hasParent));
+  MatType*& datasetTemp = const_cast<MatType*&>(dataset);
+  if (!hasParent)
+    ar(CEREAL_POINTER(datasetTemp));
 
-  if (Archive::is_loading::value && !hasParent)
+  ar(CEREAL_NVP(point));
+  ar(CEREAL_NVP(scale));
+  ar(CEREAL_NVP(base));
+  ar(CEREAL_NVP(stat));
+  ar(CEREAL_NVP(numDescendants));
+  ar(CEREAL_NVP(parentDistance));
+  ar(CEREAL_NVP(furthestDescendantDistance));
+  ar(CEREAL_POINTER(metric));
+
+  if (cereal::is_loading<Archive>() && !hasParent)
   {
     localMetric = true;
     localDataset = true;
   }
 
   // Lastly, serialize the children.
-  ar & BOOST_SERIALIZATION_NVP(children);
+  ar(CEREAL_VECTOR_POINTER(children));
 
-  if (Archive::is_loading::value && parent == NULL)
+  if (cereal::is_loading<Archive>())
   {
     // Look through each child individually.
     for (size_t i = 0; i < children.size(); ++i)
@@ -1777,9 +1778,27 @@ void CoverTree<MetricType, StatisticType, MatType, RootPointPolicy>::serialize(
       children[i]->Parent() = this;
     }
   }
+
+  if (!hasParent)
+  {
+    std::stack<CoverTree*> stack;
+    for (size_t i = 0; i < children.size(); ++i)
+    {
+      stack.push(children[i]);
+    }
+    while (!stack.empty())
+    {
+      CoverTree* node = stack.top();
+      stack.pop();
+      node->dataset = dataset;
+      for (size_t i = 0; i < node->children.size(); ++i)
+      {
+        stack.push(node->children[i]);
+      }
+    }
+  }
 }
 
-} // namespace tree
 } // namespace mlpack
 
 #endif

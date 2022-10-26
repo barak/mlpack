@@ -2,7 +2,7 @@
  * @file methods/ann/loss_functions/negative_log_likelihood_impl.hpp
  * @author Marcus Edel
  *
- * Implementation of the NegativeLogLikelihood class.
+ * Implementation of the NegativeLogLikelihoodType class.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -16,63 +16,62 @@
 #include "negative_log_likelihood.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-NegativeLogLikelihood<InputDataType, OutputDataType>::NegativeLogLikelihood()
+template<typename MatType>
+NegativeLogLikelihoodType<MatType>::NegativeLogLikelihoodType(
+    const bool reduction) : reduction(reduction)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type
-NegativeLogLikelihood<InputDataType, OutputDataType>::Forward(
-    const InputType& input,
-    const TargetType& target)
+template<typename MatType>
+double NegativeLogLikelihoodType<MatType>::Forward(
+    const MatType& prediction,
+    const MatType& target)
 {
-  typedef typename InputType::elem_type ElemType;
-  ElemType output = 0;
-  for (size_t i = 0; i < input.n_cols; ++i)
+  typedef typename MatType::elem_type ElemType;
+  ElemType lossSum = 0;
+  for (size_t i = 0; i < prediction.n_cols; ++i)
   {
-    size_t currentTarget = target(i) - 1;
-    Log::Assert(currentTarget < input.n_rows,
+    Log::Assert(target(i) >= 0 && target(i) < prediction.n_rows,
         "Target class out of range.");
 
-    output -= input(currentTarget, i);
+    lossSum -= prediction(target(i), i);
   }
 
-  return output;
+  if (reduction)
+    return lossSum;
+
+  return lossSum / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void NegativeLogLikelihood<InputDataType, OutputDataType>::Backward(
-      const InputType& input,
-      const TargetType& target,
-      OutputType& output)
+template<typename MatType>
+void NegativeLogLikelihoodType<MatType>::Backward(
+      const MatType& prediction,
+      const MatType& target,
+      MatType& loss)
 {
-  output = arma::zeros<OutputType>(input.n_rows, input.n_cols);
-  for (size_t i = 0; i < input.n_cols; ++i)
+  loss = arma::zeros<MatType>(prediction.n_rows, prediction.n_cols);
+  for (size_t i = 0; i < prediction.n_cols; ++i)
   {
-    size_t currentTarget = target(i) - 1;
-    Log::Assert(currentTarget < input.n_rows,
+    Log::Assert(target(i) >= 0 && target(i) < prediction.n_rows,
         "Target class out of range.");
 
-    output(currentTarget, i) = -1;
+    loss(target(i), i) = -1;
   }
+
+  if (!reduction)
+    loss = loss / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void NegativeLogLikelihood<InputDataType, OutputDataType>::serialize(
-    Archive& /* ar */,
-    const unsigned int /* version */)
+void NegativeLogLikelihoodType<MatType>::serialize(
+    Archive& ar, const uint32_t /* version */)
 {
-  // Nothing to do here.
+  ar(CEREAL_NVP(reduction));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

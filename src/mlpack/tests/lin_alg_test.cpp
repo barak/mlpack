@@ -12,14 +12,12 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/core/math/lin_alg.hpp>
 
 #include "catch.hpp"
 #include "test_catch_tools.hpp"
 
 using namespace arma;
 using namespace mlpack;
-using namespace mlpack::math;
 
 /**
  * Test for linalg__private::Center().  There are no edge cases here, so we'll
@@ -91,11 +89,12 @@ TEST_CASE("TestOrthogonalize", "[LinAlgTest]")
   // Generate a random matrix; then, orthogonalize it and test if it's
   // orthogonal.
   mat tmp, orth;
-  data::Load("fake.csv", tmp);
+  if (!data::Load("fake.csv", tmp))
+    FAIL("Cannot load dataset fake.csv");
   Orthogonalize(tmp, orth);
 
   // test orthogonality
-  mat test = mlpack::math::ColumnCovariance(orth);
+  mat test = ColumnCovariance(orth);
   double ival = test(0, 0);
   for (size_t row = 0; row < test.n_rows; row++)
   {
@@ -190,7 +189,6 @@ TEST_CASE("TestSvecSmat", "[LinAlgTest]")
   for (size_t i = 0; i < 3; ++i)
     for (size_t j = 0; j < 3; ++j)
       REQUIRE(X(i, j) == Approx(Xtest(i, j)).epsilon(1e-9));
-
 }
 
 TEST_CASE("TestSparseSvec", "[LinAlgTest]")

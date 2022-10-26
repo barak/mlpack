@@ -14,12 +14,15 @@
 #ifndef MLPACK_CORE_DATA_SAVE_HPP
 #define MLPACK_CORE_DATA_SAVE_HPP
 
+#include <mlpack/prereqs.hpp>
 #include <mlpack/core/util/log.hpp>
 #include <mlpack/core/arma_extend/arma_extend.hpp> // Includes Armadillo.
 #include <string>
 
 #include "format.hpp"
 #include "image_info.hpp"
+#include "detect_file_type.hpp"
+#include "save_image.hpp"
 
 namespace mlpack {
 namespace data /** Functions to load and save matrices. */ {
@@ -64,7 +67,7 @@ bool Save(const std::string& filename,
           const arma::Mat<eT>& matrix,
           const bool fatal = false,
           bool transpose = true,
-          arma::file_type inputSaveType = arma::auto_detect);
+          FileType inputSaveType = FileType::AutoDetect);
 
 /**
  * Saves a sparse matrix to file, guessing the filetype from the
@@ -103,14 +106,14 @@ bool Save(const std::string& filename,
  * used and the filetype cannot be determined, and error will be given.
  *
  * The supported types of files are the same as what is supported by the
- * boost::serialization library:
+ * cereal library:
  *
- *  - text, denoted by .txt
+ *  - json, denoted by .json
  *  - xml, denoted by .xml
  *  - binary, denoted by .bin
  *
  * The format parameter can take any of the values in the 'format' enum:
- * 'format::autodetect', 'format::text', 'format::xml', and 'format::binary'.
+ * 'format::autodetect', 'format::json', 'format::xml', and 'format::binary'.
  * The autodetect functionality operates on the file extension (so, "file.txt"
  * would be autodetected as text).
  *
@@ -128,44 +131,6 @@ bool Save(const std::string& filename,
           T& t,
           const bool fatal = false,
           format f = format::autodetect);
-
-/**
- * Save the image file from the given matrix.
- *
- * @param filename Name of the image file.
- * @param matrix Matrix to save the image from.
- * @param info An object of ImageInfo class.
- * @param fatal If an error should be reported as fatal (default false).
- * @return Boolean value indicating success or failure of load.
- */
-template<typename eT>
-bool Save(const std::string& filename,
-          arma::Mat<eT>& matrix,
-          ImageInfo& info,
-          const bool fatal = false);
-
-/**
- * Save the image file from the given matrix.
- *
- * @param files A vector consisting of filenames.
- * @param matrix Matrix to save the image from.
- * @param info An object of ImageInfo class.
- * @param fatal If an error should be reported as fatal (default false).
- * @return Boolean value indicating success or failure of load.
- */
-template<typename eT>
-bool Save(const std::vector<std::string>& files,
-          arma::Mat<eT>& matrix,
-          ImageInfo& info,
-          const bool fatal = false);
-
-/**
- * Helper function to save files.  Implementation in save_image.cpp.
- */
-bool SaveImage(const std::string& filename,
-               arma::Mat<unsigned char>& image,
-               ImageInfo& info,
-               const bool fatal = false);
 
 } // namespace data
 } // namespace mlpack

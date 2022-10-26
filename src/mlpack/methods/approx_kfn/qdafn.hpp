@@ -24,11 +24,9 @@
 #ifndef MLPACK_METHODS_APPROX_KFN_QDAFN_HPP
 #define MLPACK_METHODS_APPROX_KFN_QDAFN_HPP
 
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/dists/gaussian_distribution.hpp>
+#include <mlpack/core.hpp>
 
 namespace mlpack {
-namespace neighbor {
 
 template<typename MatType = arma::mat>
 class QDAFN
@@ -81,7 +79,7 @@ class QDAFN
 
   //! Serialize the model.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
   //! Get the number of projections.
   size_t NumProjections() const { return candidateSet.size(); }
@@ -110,7 +108,6 @@ class QDAFN
   std::vector<MatType> candidateSet;
 };
 
-} // namespace neighbor
 } // namespace mlpack
 
 // Include implementation.

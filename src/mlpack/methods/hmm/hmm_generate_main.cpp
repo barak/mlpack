@@ -11,27 +11,25 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/util/io.hpp>
+#include <mlpack/core.hpp>
+
+#undef BINDING_NAME
+#define BINDING_NAME hmm_generate
+
 #include <mlpack/core/util/mlpack_main.hpp>
 
 #include "hmm.hpp"
 #include "hmm_model.hpp"
 
 #include <mlpack/methods/gmm/gmm.hpp>
-#include <mlpack/methods/gmm/diagonal_gmm.hpp>
 
 using namespace mlpack;
-using namespace mlpack::hmm;
-using namespace mlpack::distribution;
 using namespace mlpack::util;
-using namespace mlpack::gmm;
-using namespace mlpack::math;
 using namespace arma;
 using namespace std;
 
 // Program Name.
-BINDING_NAME("Hidden Markov Model (HMM) Sequence Generator");
+BINDING_USER_NAME("Hidden Markov Model (HMM) Sequence Generator");
 
 // Short description.
 BINDING_SHORT_DESC(
@@ -67,9 +65,8 @@ BINDING_SEE_ALSO("@hmm_train", "#hmm_train");
 BINDING_SEE_ALSO("@hmm_loglik", "#hmm_loglik");
 BINDING_SEE_ALSO("@hmm_viterbi", "#hmm_viterbi");
 BINDING_SEE_ALSO("Hidden Mixture Models on Wikipedia",
-        "https://en.wikipedia.org/wiki/Hidden_Markov_model");
-BINDING_SEE_ALSO("mlpack::hmm::HMM class documentation",
-        "@doxygen/classmlpack_1_1hmm_1_1HMM.html");
+    "https://en.wikipedia.org/wiki/Hidden_Markov_model");
+BINDING_SEE_ALSO("HMM class documentation", "@src/mlpack/methods/hmm/hmm.hpp");
 
 PARAM_MODEL_IN_REQ(HMMModel, "model", "Trained HMM to generate sequences with.",
     "m");
@@ -85,19 +82,19 @@ PARAM_INT_IN("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
 struct Generate
 {
   template<typename HMMType>
-  static void Apply(HMMType& hmm, void* /* extraInfo */)
+  static void Apply(util::Params& params, HMMType& hmm, void* /* extraInfo */)
   {
     mat observations;
     Row<size_t> sequence;
 
-    RequireParamValue<int>("start_state", [](int x) { return x >= 0; }, true,
-        "Invalid start state");
-    RequireParamValue<int>("length", [](int x) { return x >= 0; }, true,
+    RequireParamValue<int>(params, "start_state", [](int x) { return x >= 0; },
+        true, "Invalid start state");
+    RequireParamValue<int>(params, "length", [](int x) { return x >= 0; }, true,
         "Length must be >= 0");
 
     // Load the parameters.
-    const size_t startState = (size_t) IO::GetParam<int>("start_state");
-    const size_t length = (size_t) IO::GetParam<int>("length");
+    const size_t startState = (size_t) params.Get<int>("start_state");
+    const size_t length = (size_t) params.Get<int>("length");
 
     Log::Info << "Generating sequence of length " << length << "..." << endl;
     if (startState >= hmm.Transition().n_rows)
@@ -110,28 +107,28 @@ struct Generate
     hmm.Generate(length, observations, sequence, startState);
 
     // Now save the output.
-    if (IO::HasParam("output"))
-      IO::GetParam<mat>("output") = std::move(observations);
+    if (params.Has("output"))
+      params.Get<mat>("output") = std::move(observations);
 
     // Do we want to save the hidden sequence?
-    if (IO::HasParam("state"))
-      IO::GetParam<Mat<size_t>>("state") = std::move(sequence);
+    if (params.Has("state"))
+      params.Get<Mat<size_t>>("state") = std::move(sequence);
   }
 };
 
-static void mlpackMain()
+void BINDING_FUNCTION(util::Params& params, util::Timers& /* timers */)
 {
-  RequireAtLeastOnePassed({ "output", "state" }, false, "no output will be "
-      "saved");
+  RequireAtLeastOnePassed(params, { "output", "state" }, false,
+      "no output will be saved");
 
   // Set random seed.
-  if (IO::GetParam<int>("seed") != 0)
-    RandomSeed((size_t) IO::GetParam<int>("seed"));
+  if (params.Get<int>("seed") != 0)
+    RandomSeed((size_t) params.Get<int>("seed"));
   else
     RandomSeed((size_t) time(NULL));
 
   // Load model, and perform the generation.
   HMMModel* hmm;
-  hmm = std::move(IO::GetParam<HMMModel*>("model"));
-  hmm->PerformAction<Generate, void>(NULL); // No extra data required.
+  hmm = std::move(params.Get<HMMModel*>("model"));
+  hmm->PerformAction<Generate, void>(params, NULL); // No extra data required.
 }

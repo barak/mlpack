@@ -9,15 +9,13 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-
-#include <mlpack/methods/lars/lars.hpp>
-#include <mlpack/core/data/load.hpp>
+#include <mlpack/core.hpp>
+#include <mlpack/methods/lars.hpp>
 
 #include "catch.hpp"
 #include "test_catch_tools.hpp"
 
 using namespace mlpack;
-using namespace mlpack::regression;
 
 void GenerateProblem(
     arma::mat& X, arma::rowvec& y, size_t nPoints, size_t nDims)
@@ -111,8 +109,10 @@ TEST_CASE("CholeskySingularityTest", "[LARSTest]")
   arma::mat X;
   arma::mat Y;
 
-  data::Load("lars_dependent_x.csv", X);
-  data::Load("lars_dependent_y.csv", Y);
+  if (!data::Load("lars_dependent_x.csv", X))
+    FAIL("Cannot load dataset lars_dependent_x.csv");
+  if (!data::Load("lars_dependent_y.csv", Y))
+    FAIL("Cannot load dataset lars_dependent_y.csv");
 
   arma::rowvec y = Y.row(0);
 
@@ -135,8 +135,10 @@ TEST_CASE("NoCholeskySingularityTest", "[LARSTest]")
   arma::mat X;
   arma::mat Y;
 
-  data::Load("lars_dependent_x.csv", X);
-  data::Load("lars_dependent_y.csv", Y);
+  if (!data::Load("lars_dependent_x.csv", X))
+    FAIL("Cannot load dataset lars_dependent_x.csv");
+  if (!data::Load("lars_dependent_y.csv", Y))
+    FAIL("Cannot load dataset lars_dependent_y.csv");
 
   arma::rowvec y = Y.row(0);
 
@@ -227,7 +229,7 @@ TEST_CASE("PredictRowMajorTest", "[LARSTest]")
 /**
  * Make sure that if we train twice, there is no issue.
  */
-TEST_CASE("RetrainTest", "[LARSTest]")
+TEST_CASE("LARSRetrainTest", "[LARSTest]")
 {
   arma::mat origX;
   arma::rowvec origY;
@@ -357,8 +359,10 @@ TEST_CASE("LARSTrainReturnCorrelation", "[LARSTest]")
   arma::mat X;
   arma::mat Y;
 
-  data::Load("lars_dependent_x.csv", X);
-  data::Load("lars_dependent_y.csv", Y);
+  if (!data::Load("lars_dependent_x.csv", X))
+    FAIL("Cannot load dataset lars_dependent_x.csv");
+  if (!data::Load("lars_dependent_y.csv", Y))
+    FAIL("Cannot load dataset lars_dependent_y.csv");
 
   arma::rowvec y = Y.row(0);
 
@@ -403,8 +407,10 @@ TEST_CASE("LARSTestComputeError", "[LARSTest]")
   arma::mat X;
   arma::mat Y;
 
-  data::Load("lars_dependent_x.csv", X);
-  data::Load("lars_dependent_y.csv", Y);
+  if (!data::Load("lars_dependent_x.csv", X))
+    FAIL("Cannot load dataset lars_dependent_x.csv");
+  if (!data::Load("lars_dependent_y.csv", Y))
+    FAIL("Cannot load dataset lars_dependent_y.csv");
 
   arma::rowvec y = Y.row(0);
 
@@ -427,15 +433,17 @@ TEST_CASE("LARSCopyConstructorTest", "[LARSTest]")
   arma::rowvec targets;
 
   // Load training input and predictions for testing.
-  data::Load("lars_dependent_x.csv", features);
-  data::Load("lars_dependent_y.csv", Y);
+  if (!data::Load("lars_dependent_x.csv", features))
+    FAIL("Cannot load dataset lars_dependent_x.csv");
+  if (!data::Load("lars_dependent_y.csv", Y))
+    FAIL("Cannot load dataset lars_dependent_y.csv");
   targets = Y.row(0);
 
   // Check if the copy is accessible even after deleting the pointer to the
   // object.
-  mlpack::regression::LARS* glm1 = new mlpack::regression::LARS(false, .1, .1);
+  LARS* glm1 = new LARS(false, .1, .1);
   arma::rowvec predictions, predictionsFromCopiedModel;
-  std::vector<mlpack::regression::LARS> models;
+  std::vector<LARS> models;
   glm1->Train(features, targets);
   glm1->Predict(features, predictions);
   models.emplace_back(*glm1); // Call the copy constructor.
@@ -447,13 +455,13 @@ TEST_CASE("LARSCopyConstructorTest", "[LARSTest]")
   REQUIRE_NOTHROW(models[0].Train(features, targets));
 
   // Check if we can train the copied model.
-  mlpack::regression::LARS glm2(false, 0.1, 0.1);
+  LARS glm2(false, 0.1, 0.1);
   models.emplace_back(glm2); // Call the copy constructor.
   REQUIRE_NOTHROW(glm2.Train(features, targets));
   REQUIRE_NOTHROW(models[1].Train(features, targets));
 
   // Create a copy using assignment operator.
-  mlpack::regression::LARS glm3 = glm2;
+  LARS glm3 = glm2;
   models[1].Predict(features, predictions);
   glm3.Predict(features, predictionsFromCopiedModel);
   // The output of both models should be the same.

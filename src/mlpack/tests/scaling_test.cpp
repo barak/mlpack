@@ -9,12 +9,6 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/core/data/scaler_methods/pca_whitening.hpp>
-#include <mlpack/core/data/scaler_methods/zca_whitening.hpp>
-#include <mlpack/core/data/scaler_methods/min_max_scaler.hpp>
-#include <mlpack/core/data/scaler_methods/max_abs_scaler.hpp>
-#include <mlpack/core/data/scaler_methods/standard_scaler.hpp>
-#include <mlpack/core/data/scaler_methods/mean_normalization.hpp>
 
 #include "test_catch_tools.hpp"
 #include "catch.hpp"
@@ -144,7 +138,7 @@ TEST_CASE("PCAWhiteningTest", "[ScalingTest]")
   arma::mat output;
   scale.Fit(dataset);
   scale.Transform(dataset, output);
-  arma::vec diagonals = (mlpack::math::ColumnCovariance(output)).diag();
+  arma::vec diagonals = (ColumnCovariance(output)).diag();
   // Checking covarience is close to 1.0
   double ccovsum = 0.0;
   for (size_t i = 0; i < diagonals.n_elem; ++i)
@@ -163,7 +157,7 @@ TEST_CASE("ZCAWhiteningTest", "[ScalingTest]")
   arma::mat output;
   scale.Fit(dataset);
   scale.Transform(dataset, output);
-  arma::vec diagonals = (mlpack::math::ColumnCovariance(output)).diag();
+  arma::vec diagonals = (ColumnCovariance(output)).diag();
   // Check that the covariance is close to 1.0.
   double ccovsum = 0.0;
   for (size_t i = 0; i < diagonals.n_elem; ++i)

@@ -14,7 +14,6 @@
 #define MLPACK_METHODS_FASTMKS_IP_METRIC_HPP
 
 namespace mlpack {
-namespace metric {
 
 /**
  * The inner product metric, IPMetric, takes a given Mercer kernel (KernelType),
@@ -66,7 +65,7 @@ class IPMetric
 
   //! Serialize the metric.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int version);
+  void serialize(Archive& ar, const uint32_t version);
 
  private:
   //! The kernel we are using.
@@ -75,7 +74,6 @@ class IPMetric
   bool kernelOwner;
 };
 
-} // namespace metric
 } // namespace mlpack
 
 // Include implementation.

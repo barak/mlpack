@@ -17,43 +17,110 @@
 #include "concatenate.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-Concatenate<InputDataType, OutputDataType>::Concatenate()
+template<typename MatType>
+ConcatenateType<MatType>::
+ConcatenateType(const MatType& concat) :
+    Layer<MatType>(),
+    concat(concat)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename eT>
-void Concatenate<InputDataType, OutputDataType>::Forward(
-    const arma::Mat<eT>& input, arma::Mat<eT>& output)
+template<typename MatType>
+ConcatenateType<MatType>::
+ConcatenateType(const ConcatenateType& other) :
+    Layer<MatType>(other),
+    concat(other.concat)
 {
-  if (concat.is_empty())
-    Log::Warn << "The concat matrix has not been provided." << std::endl;
+  // Nothing to do.
+}
 
-  if (input.n_cols != concat.n_cols)
+template<typename MatType>
+ConcatenateType<MatType>::
+ConcatenateType(ConcatenateType&& other) :
+    Layer<MatType>(std::move(other)),
+    concat(other.concat)
+{
+  // Nothing to do.
+}
+
+template<typename MatType>
+ConcatenateType<MatType>&
+ConcatenateType<MatType>::operator=(const ConcatenateType& other)
+{
+  if (&other != this)
   {
-    Log::Fatal << "The number of columns of the concat matrix should be equal "
-        << "to the number of columns of input matrix." << std::endl;
+    Layer<MatType>::operator=(other);
+    concat = other.concat;
   }
 
-  inRows = input.n_rows;
-  output = arma::join_cols(input, concat);
+  return *this;
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename eT>
-void Concatenate<InputDataType, OutputDataType>::Backward(
-    const arma::Mat<eT>& /* input */,
-    const arma::Mat<eT>& gy,
-    arma::Mat<eT>& g)
+template<typename MatType>
+ConcatenateType<MatType>&
+ConcatenateType<MatType>::operator=(ConcatenateType&& other)
 {
-  g = gy.submat(0, 0, inRows - 1, concat.n_cols - 1);
+  if (&other != this)
+  {
+    Layer<MatType>::operator=(std::move(other));
+    concat = std::move(other.concat);
+  }
+
+  return *this;
 }
 
-} // namespace ann
+template<typename MatType>
+void ConcatenateType<MatType>::Forward(const MatType& input, MatType& output)
+{
+  if (concat.is_empty())
+  {
+    Log::Warn << "Concatenate::Forward(): the concat matrix is empty or was "
+        << "not provided." << std::endl;
+  }
+
+  output.submat(0, 0, input.n_rows - 1, input.n_cols - 1) = input;
+  output.submat(input.n_rows, 0, output.n_rows - 1, input.n_cols - 1) =
+      arma::repmat(arma::vectorise(concat), 1, input.n_cols);
+}
+
+template<typename MatType>
+void ConcatenateType<MatType>::Backward(
+    const MatType& /* input */,
+    const MatType& gy,
+    MatType& g)
+{
+  // Pass back the non-concatenated part.
+  g = gy.submat(0, 0, gy.n_rows - 1 - concat.n_elem, gy.n_cols - 1);
+}
+
+template<typename MatType>
+void ConcatenateType<MatType>::ComputeOutputDimensions()
+{
+  // This flattens the input.
+  size_t inSize = this->inputDimensions[0];
+  for (size_t i = 1; i < this->inputDimensions.size(); ++i)
+      inSize *= this->inputDimensions[i];
+
+  this->outputDimensions = std::vector<size_t>(this->inputDimensions.size(),
+      1);
+  this->outputDimensions[0] = inSize + concat.n_elem;
+}
+
+/**
+ * Serialize the layer.
+ */
+template<typename MatType>
+template<typename Archive>
+void ConcatenateType<MatType>::serialize(
+  Archive& ar, const uint32_t /* version */)
+{
+  ar(cereal::base_class<Layer<MatType>>(this));
+
+  ar(CEREAL_NVP(concat));
+}
+
 } // namespace mlpack
 
 #endif

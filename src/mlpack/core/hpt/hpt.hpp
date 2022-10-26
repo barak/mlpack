@@ -14,10 +14,10 @@
 
 #include <mlpack/core/cv/meta_info_extractor.hpp>
 #include <mlpack/core/hpt/deduce_hp_types.hpp>
+#include <mlpack/core/hpt/cv_function.hpp>
 #include <ensmallen.hpp>
 
 namespace mlpack {
-namespace hpt {
 
 /**
  * The class HyperParameterTuner for the given MLAlgorithm utilizes the provided
@@ -88,10 +88,9 @@ template<typename MLAlgorithm,
          typename OptimizerType = ens::GridSearch,
          typename MatType = arma::mat,
          typename PredictionsType =
-             typename cv::MetaInfoExtractor<MLAlgorithm,
-                 MatType>::PredictionsType,
+             typename MetaInfoExtractor<MLAlgorithm, MatType>::PredictionsType,
          typename WeightsType =
-             typename cv::MetaInfoExtractor<MLAlgorithm, MatType,
+             typename MetaInfoExtractor<MLAlgorithm, MatType,
                  PredictionsType>::WeightsType>
 class HyperParameterTuner
 {
@@ -158,7 +157,7 @@ class HyperParameterTuner
    *   The set of values should be an STL-compatible container (it should
    *   provide begin() and end() methods returning iterators).
    * 2. A starting value (when using any other optimizer than GridSearch).
-   * 3. A value fixed by using the function mlpack::hpt::Fixed. In this case the
+   * 3. A value fixed by using the function `Fixed`. In this case the
    *   hyper-parameter will not be optimized.
    *
    * All arguments should be passed in the same order as if the corresponding
@@ -347,7 +346,6 @@ class HyperParameterTuner
   inline TupleType VectorToTuple(const arma::vec& vector, const Args&... args);
 };
 
-} // namespace hpt
 } // namespace mlpack
 
 // Include implementation

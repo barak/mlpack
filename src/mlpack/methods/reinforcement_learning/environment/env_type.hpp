@@ -15,20 +15,15 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace rl {
 
 /**
  * To use the dummy environment, one may start by specifying the state and
- * action dimensions.
- * Eg:
- * @code
- *  DiscreteActionEnv::State::dimension = 4;
- *  DiscreteActionEnv::Action::size = 2;
- * @endcode
- * 
+ * action dimensions as template parameters.
+ *
  * Now the DiscreteActionEnv class can be used as an EnvironmentType in RL
  * methods just as any other mlpack's implementation of gym environments.
  */
+template<size_t Dimension, size_t Size, size_t RewardSize = 0>
 class DiscreteActionEnv
 {
  public:
@@ -59,7 +54,7 @@ class DiscreteActionEnv
     const arma::colvec& Encode() const { return data; }
 
     //! Dimension of the encoded state.
-    static size_t dimension;
+    static constexpr size_t dimension = Dimension;
 
    private:
     //! Locally-stored state data.
@@ -75,7 +70,7 @@ class DiscreteActionEnv
     // To store the action.
     size_t action = 0;
     // Track the size of the action space.
-    static size_t size;
+    static constexpr size_t size = Size;
   };
 
   /**
@@ -104,22 +99,19 @@ class DiscreteActionEnv
    * @return It's of no use but so lets keep it false.
    */
   bool IsTerminal(const State& /* state */) const { return false; }
+
+  //! Dimensionality of the reward vector. Number of rewards.
+  static constexpr size_t rewardSize = RewardSize;
 };
-size_t DiscreteActionEnv::State::dimension = 0;
-size_t DiscreteActionEnv::Action::size = 0;
 
 /**
  * To use the dummy environment, one may start by specifying the state and
- * action dimensions.
- * Eg:
- * @code
- *  ContinuousActionEnv::State::dimension = 3;
- *  ContinuousActionEnv::Action::size = 1;
- * @endcode
- * 
+ * action dimensions as template parameters.
+ *
  * Now the ContinuousActionEnv class can be used as an EnvironmentType in RL
  * methods just as any other mlpack's implementation of gym environments.
  */
+template<size_t Dimension, size_t Size, size_t RewardSize = 0>
 class ContinuousActionEnv
 {
  public:
@@ -150,7 +142,7 @@ class ContinuousActionEnv
     const arma::colvec& Encode() const { return data; }
 
     //! Dimension of the encoded state.
-    static size_t dimension;
+    static constexpr size_t dimension = Dimension;
 
    private:
     //! Locally-stored state data.
@@ -165,12 +157,12 @@ class ContinuousActionEnv
    public:
     std::vector<double> action;
     // Storing degree of freedom.
-    static size_t size;
+    static constexpr size_t size = Size;
 
     /**
      * Construct an action instance.
      */
-    Action() : action(ContinuousActionEnv::Action::size)
+    Action() : action(Size)
     { /* Nothing to do here */ }
   };
 
@@ -200,11 +192,11 @@ class ContinuousActionEnv
    * @return It's of no use but so lets keep it false.
    */
   bool IsTerminal(const State& /* state */) const { return false; }
-};
-size_t ContinuousActionEnv::State::dimension = 0;
-size_t ContinuousActionEnv::Action::size = 0;
 
-} // namespace rl
+  //! Dimensionality of the reward vector. Number of rewards.
+  static constexpr size_t rewardSize = RewardSize;
+};
+
 } // namespace mlpack
 
 #endif

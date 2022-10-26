@@ -10,17 +10,12 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/core/tree/octree.hpp>
 
 #include "catch.hpp"
 #include "test_catch_tools.hpp"
-#include "serialization_catch.hpp"
+#include "serialization.hpp"
 
 using namespace mlpack;
-using namespace mlpack::math;
-using namespace mlpack::tree;
-using namespace mlpack::metric;
-using namespace mlpack::bound;
 
 /**
  * Build a quad-tree (2-d octree) on 4 points, and guarantee four points are
@@ -192,7 +187,7 @@ void CheckFurthestDistances(TreeType& node)
   for (size_t i = 0; i < node.NumPoints(); ++i)
   {
     // Handle floating-point inaccuracies.
-    REQUIRE(metric::EuclideanDistance::Evaluate(
+    REQUIRE(EuclideanDistance::Evaluate(
         node.Dataset().col(node.Point(i)), center) <=
         node.FurthestPointDistance() * (1 + 1e-5));
   }
@@ -201,7 +196,7 @@ void CheckFurthestDistances(TreeType& node)
   for (size_t i = 0; i < node.NumDescendants(); ++i)
   {
     // Handle floating-point inaccuracies.
-    REQUIRE(metric::EuclideanDistance::Evaluate(
+    REQUIRE(EuclideanDistance::Evaluate(
         node.Dataset().col(node.Descendant(i)),
         center) <= node.FurthestDescendantDistance() * (1 + 1e-5));
   }
@@ -334,15 +329,15 @@ TEST_CASE("OctreeSerializationTest", "[OctreeTest]")
 
   Octree<>* xmlTree;
   Octree<>* binaryTree;
-  Octree<>* textTree;
+  Octree<>* jsonTree;
 
-  SerializePointerObjectAll(&t, xmlTree, binaryTree, textTree);
+  SerializePointerObjectAll(&t, xmlTree, binaryTree, jsonTree);
 
   CheckSameNode(t, *xmlTree);
   CheckSameNode(t, *binaryTree);
-  CheckSameNode(t, *textTree);
+  CheckSameNode(t, *jsonTree);
 
   delete xmlTree;
   delete binaryTree;
-  delete textTree;
+  delete jsonTree;
 }

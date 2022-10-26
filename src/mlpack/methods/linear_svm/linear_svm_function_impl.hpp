@@ -21,7 +21,6 @@
 #include "linear_svm_function.hpp"
 
 namespace mlpack {
-namespace svm {
 
 template <typename MatType>
 LinearSVMFunction<MatType>::LinearSVMFunction(
@@ -31,7 +30,7 @@ LinearSVMFunction<MatType>::LinearSVMFunction(
     const double lambda,
     const double delta,
     const bool fitIntercept) :
-    dataset(math::MakeAlias(const_cast<MatType&>(dataset), false)),
+    dataset(MakeAlias(const_cast<MatType&>(dataset), false)),
     numClasses(numClasses),
     lambda(lambda),
     delta(delta),
@@ -115,8 +114,8 @@ void LinearSVMFunction<MatType>::Shuffle()
       dataset.n_cols - 1, dataset.n_cols));
 
   // Re-sort data.
-  arma::mat newData = dataset.cols(ordering);
-  math::ClearAlias(dataset);
+  MatType newData = dataset.cols(ordering);
+  ClearAlias(dataset);
   dataset = std::move(newData);
 
   // Assemble data for batch constructor.  We need reverse orderings though...
@@ -498,7 +497,6 @@ size_t LinearSVMFunction<MatType>::NumFunctions() const
   return dataset.n_cols;
 }
 
-} // namespace svm
 } // namespace mlpack
 
 

@@ -9,16 +9,11 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/neighbor_search/neighbor_search.hpp>
-#include <mlpack/core/tree/cover_tree.hpp>
+#include <mlpack/methods/neighbor_search.hpp>
 #include "test_catch_tools.hpp"
 #include "catch.hpp"
 
 using namespace mlpack;
-using namespace mlpack::neighbor;
-using namespace mlpack::tree;
-using namespace mlpack::metric;
-using namespace mlpack::bound;
 
 /**
  * Test the dual-tree furthest-neighbors method with different values for
@@ -166,7 +161,8 @@ TEST_CASE("AKFNSingleCoverTreeTest", "[AKFNTest]")
 TEST_CASE("AKFNDualCoverTreeTest", "[AKFNTest]")
 {
   arma::mat dataset;
-  data::Load("test_data_3_1000.csv", dataset);
+  if (!data::Load("test_data_3_1000.csv", dataset))
+    FAIL("Cannot load test dataset test_data_3_1000.csv!");
 
   KFN exact(dataset);
   arma::Mat<size_t> neighborsExact;
@@ -223,7 +219,8 @@ TEST_CASE("AKFNSingleBallTreeTest", "[AKFNTest]")
 TEST_CASE("AKFNDualBallTreeTest", "[AKFNTest]")
 {
   arma::mat dataset;
-  data::Load("test_data_3_1000.csv", dataset);
+  if (!data::Load("test_data_3_1000.csv", dataset))
+    FAIL("Cannot load test dataset test_data_3_1000.csv!");
 
   KFN exact(dataset);
   arma::Mat<size_t> neighborsExact;
@@ -239,4 +236,3 @@ TEST_CASE("AKFNDualBallTreeTest", "[AKFNTest]")
   for (size_t i = 0; i < neighborsBallTree.n_elem; ++i)
     REQUIRE_RELATIVE_ERR(distancesBallTree(i), distancesExact(i), 0.05);
 }
-

@@ -13,11 +13,10 @@
 #ifndef MLPACK_METHODS_DET_DT_UTILS_HPP
 #define MLPACK_METHODS_DET_DT_UTILS_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 #include "dtree.hpp"
 
 namespace mlpack {
-namespace det {
 
 /**
  * Print the membership of leaves of a density estimation tree given the labels
@@ -69,7 +68,8 @@ DTree<MatType, TagType>* Trainer(MatType& dataset,
                                  const size_t maxLeafSize = 10,
                                  const size_t minLeafSize = 5,
                                  const std::string unprunedTreeOutput = "",
-                                 const bool skipPruning = false);
+                                 const bool skipPruning = false,
+                                 util::Timers& timers = IO::GetTimers());
 
 /**
  * This class is responsible for caching the path to each node of the tree. Its
@@ -142,7 +142,6 @@ class PathCacher
   inline std::string   BuildString();
 };
 
-} // namespace det
 } // namespace mlpack
 
 #include "dt_utils_impl.hpp"

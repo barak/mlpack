@@ -17,7 +17,6 @@
 #include "border_modes.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * Computes the two-dimensional convolution. This class allows specification of
@@ -35,7 +34,7 @@ template<typename BorderMode = FullConvolution>
 class NaiveConvolution
 {
  public:
-  /*
+  /**
    * Perform a convolution (valid mode).
    *
    * @param input Input used to perform the convolution.
@@ -45,6 +44,8 @@ class NaiveConvolution
    * @param dH Stride of filter application in the y direction.
    * @param dilationW The dilation factor in x direction.
    * @param dilationH The dilation factor in y direction.
+   * @param appending If true, it will not initialize the output. Instead,
+   *                  it will append the results to the output.
    */
   template<typename eT, typename Border = BorderMode>
   static typename std::enable_if<
@@ -55,11 +56,21 @@ class NaiveConvolution
               const size_t dW = 1,
               const size_t dH = 1,
               const size_t dilationW = 1,
-              const size_t dilationH = 1)
+              const size_t dilationH = 1,
+              const bool appending = false)
   {
-    output = arma::zeros<arma::Mat<eT> >(
-        (input.n_rows - (filter.n_rows - 1) * dilationW - 1) / dW + 1,
-        (input.n_cols - (filter.n_cols - 1) * dilationH -  1) / dH + 1);
+    // Compute the output size.  The filterRows and filterCols computation must
+    // take into account the fact that dilation only adds rows or columns
+    // *between* filter elements.  So, e.g., a dilation of 2 on a kernel size of
+    // 3x3 means an effective kernel size of 5x5, *not* 6x6.
+    if (!appending)
+    {
+      const size_t filterRows = filter.n_rows * dilationH - (dilationH - 1);
+      const size_t filterCols = filter.n_cols * dilationW - (dilationW - 1);
+      const size_t outputRows = (input.n_rows - filterRows + dH) / dH;
+      const size_t outputCols = (input.n_cols - filterCols + dW) / dW;
+      output.zeros(outputRows, outputCols);
+    }
 
     // It seems to be about 3.5 times faster to use pointers instead of
     // filter(ki, kj) * input(leftInput + ki, topInput + kj) and output(i, j).
@@ -81,7 +92,7 @@ class NaiveConvolution
     }
   }
 
-  /*
+  /**
    * Perform a convolution (full mode).
    *
    * @param input Input used to perform the convolution.
@@ -91,6 +102,8 @@ class NaiveConvolution
    * @param dH Stride of filter application in the y direction.
    * @param dilationW The dilation factor in x direction.
    * @param dilationH The dilation factor in y direction.
+   * @param appending If true, it will not initialize the output. Instead,
+   *                  it will append the results to the output.
    */
   template<typename eT, typename Border = BorderMode>
   static typename std::enable_if<
@@ -101,42 +114,28 @@ class NaiveConvolution
               const size_t dW = 1,
               const size_t dH = 1,
               const size_t dilationW = 1,
-              const size_t dilationH = 1)
+              const size_t dilationH = 1,
+              const bool appending = false)
   {
-    size_t outputRows = (input.n_rows - 1) * dW + 2 * (filter.n_rows - 1)
-        * dilationW + 1;
-    size_t outputCols = (input.n_cols - 1) * dH + 2 * (filter.n_cols - 1)
-        * dilationH + 1;
-
-    for (size_t i = 0; i < dW; ++i)
-    {
-      if (((((i + outputRows - 2 * (filter.n_rows - 1) * dilationW - 1) % dW)
-          + dW) % dW) == i){
-        outputRows += i;
-        break;
-      }
-    }
-    for (size_t i = 0; i < dH; ++i)
-    {
-      if (((((i + outputCols - 2 * (filter.n_cols - 1) * dilationH - 1) % dH)
-          + dH) % dH) == i){
-        outputCols += i;
-        break;
-      }
-    }
+    // First, compute the necessary padding for the full convolution.  It is
+    // possible that this might be an overestimate.  Note that these variables
+    // only hold the padding on one side of the input.
+    const size_t filterRows = filter.n_rows * dilationH - (dilationH - 1);
+    const size_t filterCols = filter.n_cols * dilationW - (dilationW - 1);
+    const size_t paddingRows = filterRows - 1;
+    const size_t paddingCols = filterCols - 1;
 
     // Pad filter and input to the working output shape.
-    arma::Mat<eT> inputPadded = arma::zeros<arma::Mat<eT> >(outputRows,
-        outputCols);
-    inputPadded.submat((filter.n_rows - 1) * dilationW, (filter.n_cols - 1)
-        * dilationH, (filter.n_rows - 1) * dilationW + input.n_rows - 1,
-        (filter.n_cols - 1) * dilationH + input.n_cols - 1) = input;
+    arma::Mat<eT> inputPadded(input.n_rows + 2 * paddingRows,
+        input.n_cols + 2 * paddingCols, arma::fill::zeros);
+    inputPadded.submat(paddingRows, paddingCols, paddingRows + input.n_rows - 1,
+        paddingCols + input.n_cols - 1) = input;
 
     NaiveConvolution<ValidConvolution>::Convolution(inputPadded, filter,
-        output, 1, 1, dilationW, dilationH);
+        output, dW, dH, dilationW, dilationH, appending);
   }
 
-  /*
+  /**
    * Perform a convolution using 3rd order tensors.
    *
    * @param input Input used to perform the convolution.
@@ -146,6 +145,8 @@ class NaiveConvolution
    * @param dH Stride of filter application in the y direction.
    * @param dilationW The dilation factor in x direction.
    * @param dilationH The dilation factor in y direction.
+   * @param appending If true, it will not initialize the output. Instead,
+   *                  it will append the results to the output.
    */
   template<typename eT>
   static void Convolution(const arma::Cube<eT>& input,
@@ -154,24 +155,26 @@ class NaiveConvolution
                           const size_t dW = 1,
                           const size_t dH = 1,
                           const size_t dilationW = 1,
-                          const size_t dilationH = 1)
+                          const size_t dilationH = 1,
+                          const bool appending = false)
   {
     arma::Mat<eT> convOutput;
     NaiveConvolution<BorderMode>::Convolution(input.slice(0), filter.slice(0),
-        convOutput, dW, dH, dilationW, dilationH);
+        convOutput, dW, dH, dilationW, dilationH, appending);
 
-    output = arma::Cube<eT>(convOutput.n_rows, convOutput.n_cols,
-        input.n_slices);
+    if (!appending)
+      output = arma::Cube<eT>(convOutput.n_rows, convOutput.n_cols,
+          input.n_slices);
     output.slice(0) = convOutput;
 
     for (size_t i = 1; i < input.n_slices; ++i)
     {
       NaiveConvolution<BorderMode>::Convolution(input.slice(i), filter.slice(i),
-          output.slice(i), dW, dH, dilationW, dilationH);
+          output.slice(i), dW, dH, dilationW, dilationH, appending);
     }
   }
 
-  /*
+  /**
    * Perform a convolution using dense matrix as input and a 3rd order tensors
    * as filter and output.
    *
@@ -182,6 +185,8 @@ class NaiveConvolution
    * @param dH Stride of filter application in the y direction.
    * @param dilationW The dilation factor in x direction.
    * @param dilationH The dilation factor in y direction.
+   * @param appending If true, it will not initialize the output. Instead,
+   *                  it will append the results to the output.
    */
   template<typename eT>
   static void Convolution(const arma::Mat<eT>& input,
@@ -190,24 +195,26 @@ class NaiveConvolution
                           const size_t dW = 1,
                           const size_t dH = 1,
                           const size_t dilationW = 1,
-                          const size_t dilationH = 1)
+                          const size_t dilationH = 1,
+                          const bool appending = false)
   {
     arma::Mat<eT> convOutput;
     NaiveConvolution<BorderMode>::Convolution(input, filter.slice(0),
-        convOutput, dW, dH, dilationW, dilationH);
+        convOutput, dW, dH, dilationW, dilationH, appending);
 
-    output = arma::Cube<eT>(convOutput.n_rows, convOutput.n_cols,
-        filter.n_slices);
+    if (!appending)
+      output = arma::Cube<eT>(convOutput.n_rows, convOutput.n_cols,
+          filter.n_slices);
     output.slice(0) = convOutput;
 
     for (size_t i = 1; i < filter.n_slices; ++i)
     {
       NaiveConvolution<BorderMode>::Convolution(input, filter.slice(i),
-          output.slice(i), dW, dH, dilationW, dilationH);
+          output.slice(i), dW, dH, dilationW, dilationH, appending);
     }
   }
 
-  /*
+  /**
    * Perform a convolution using a 3rd order tensors as input and output and a
    * dense matrix as filter.
    *
@@ -217,7 +224,9 @@ class NaiveConvolution
    * @param dW Stride of filter application in the x direction.
    * @param dH Stride of filter application in the y direction.
    * @param dilationW The dilation factor in x direction.
-   * @param dilationH The dilation factor in y direction.
+   * @param dilationH The dilation factor in y direction.x
+   * @param appending If true, it will not initialize the output. Instead,
+   *                  it will append the results to the output.
    */
   template<typename eT>
   static void Convolution(const arma::Cube<eT>& input,
@@ -226,25 +235,26 @@ class NaiveConvolution
                           const size_t dW = 1,
                           const size_t dH = 1,
                           const size_t dilationW = 1,
-                          const size_t dilationH = 1)
+                          const size_t dilationH = 1,
+                          const bool appending = false)
   {
     arma::Mat<eT> convOutput;
     NaiveConvolution<BorderMode>::Convolution(input.slice(0), filter,
-        convOutput, dW, dH, dilationW, dilationH);
+        convOutput, dW, dH, dilationW, dilationH, appending);
 
-    output = arma::Cube<eT>(convOutput.n_rows, convOutput.n_cols,
-        input.n_slices);
+    if (!appending)
+      output = arma::Cube<eT>(convOutput.n_rows, convOutput.n_cols,
+          input.n_slices);
     output.slice(0) = convOutput;
 
     for (size_t i = 1; i < input.n_slices; ++i)
     {
       NaiveConvolution<BorderMode>::Convolution(input.slice(i), filter,
-          output.slice(i), dW, dH, dilationW, dilationH);
+          output.slice(i), dW, dH, dilationW, dilationH, appending);
     }
   }
 };  // class NaiveConvolution
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

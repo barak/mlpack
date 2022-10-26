@@ -16,7 +16,6 @@
 #include "sparse_autoencoder.hpp"
 
 namespace mlpack {
-namespace nn {
 
 template<typename OptimizerType>
 SparseAutoencoder::SparseAutoencoder(const arma::mat& data,
@@ -38,9 +37,7 @@ SparseAutoencoder::SparseAutoencoder(const arma::mat& data,
   parameters = encoderFunction.GetInitialPoint();
 
   // Train the model.
-  Timer::Start("sparse_autoencoder_optimization");
   const double out = optimizer.Optimize(encoderFunction, parameters);
-  Timer::Stop("sparse_autoencoder_optimization");
 
   Log::Info << "SparseAutoencoder::SparseAutoencoder(): final objective of "
       << "trained model is " << out << "." << std::endl;
@@ -67,16 +64,24 @@ SparseAutoencoder::SparseAutoencoder(const arma::mat& data,
   parameters = encoderFunction.GetInitialPoint();
 
   // Train the model.
-  Timer::Start("sparse_autoencoder_optimization");
   const double out = optimizer.Optimize(encoderFunction, parameters,
       callbacks...);
-  Timer::Stop("sparse_autoencoder_optimization");
 
   Log::Info << "SparseAutoencoder::SparseAutoencoder(): final objective of "
       << "trained model is " << out << "." << std::endl;
 }
 
-} // namespace nn
+inline void SparseAutoencoder::GetNewFeatures(arma::mat& data,
+                                              arma::mat& features)
+{
+  const size_t l1 = hiddenSize;
+  const size_t l2 = visibleSize;
+
+  Sigmoid(parameters.submat(0, 0, l1 - 1, l2 - 1) * data +
+      arma::repmat(parameters.submat(0, l2, l1 - 1, l2), 1, data.n_cols),
+      features);
+}
+
 } // namespace mlpack
 
 #endif

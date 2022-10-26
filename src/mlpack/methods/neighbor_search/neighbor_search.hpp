@@ -13,26 +13,24 @@
 #ifndef MLPACK_METHODS_NEIGHBOR_SEARCH_NEIGHBOR_SEARCH_HPP
 #define MLPACK_METHODS_NEIGHBOR_SEARCH_NEIGHBOR_SEARCH_HPP
 
-#include <mlpack/prereqs.hpp>
-#include <vector>
-#include <string>
-
-#include <mlpack/core/tree/binary_space_tree.hpp>
-#include <mlpack/core/tree/rectangle_tree.hpp>
-#include <mlpack/core/tree/binary_space_tree/binary_space_tree.hpp>
+#include <mlpack/core.hpp>
 
 #include "neighbor_search_stat.hpp"
 #include "sort_policies/nearest_neighbor_sort.hpp"
+#include "sort_policies/furthest_neighbor_sort.hpp"
 #include "neighbor_search_rules.hpp"
+#include "unmap.hpp"
 
 namespace mlpack {
-// Neighbor-search routines. These include all-nearest-neighbors and
-// all-furthest-neighbors searches.
-namespace neighbor  {
 
 // Forward declaration.
-template<typename SortPolicy>
-class TrainVisitor;
+template<typename SortPolicy,
+         template<typename TreeMetricType,
+                  typename TreeStatType,
+                  typename TreeMatType> class TreeType,
+         template<typename RuleType> class DualTreeTraversalType,
+         template<typename RuleType> class SingleTreeTraversalType>
+class LeafSizeNSWrapper;
 
 //! NeighborSearchMode represents the different neighbor search modes available.
 enum NeighborSearchMode
@@ -54,8 +52,7 @@ enum NeighborSearchMode
  *
  * The template parameters SortPolicy and Metric define the sort function used
  * and the metric (distance function) used.  More information on those classes
- * can be found in the NearestNeighborSort class and the kernel::ExampleKernel
- * class.
+ * can be found in the NearestNeighborSort class and the ExampleKernel class.
  *
  * @tparam SortPolicy The sort policy for distances; see NearestNeighborSort.
  * @tparam MetricType The metric to use for computation.
@@ -67,11 +64,11 @@ enum NeighborSearchMode
  *     (defaults to the tree's default traverser).
  */
 template<typename SortPolicy = NearestNeighborSort,
-         typename MetricType = mlpack::metric::EuclideanDistance,
+         typename MetricType = EuclideanDistance,
          typename MatType = arma::mat,
          template<typename TreeMetricType,
                   typename TreeStatType,
-                  typename TreeMatType> class TreeType = tree::KDTree,
+                  typename TreeMatType> class TreeType = KDTree,
          template<typename RuleType> class DualTreeTraversalType =
              TreeType<MetricType,
                       NeighborSearchStat<SortPolicy>,
@@ -331,7 +328,7 @@ class NeighborSearch
 
   //! Serialize the NeighborSearch model.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t version);
 
  private:
   //! Permutations of reference points during tree building.
@@ -359,11 +356,10 @@ class NeighborSearch
   bool treeNeedsReset;
 
   //! The NSModel class should have access to internal members.
-  template<typename SortPol>
-  friend class TrainVisitor;
+  friend class LeafSizeNSWrapper<SortPolicy, TreeType, DualTreeTraversalType,
+      SingleTreeTraversalType>;
 }; // class NeighborSearch
 
-} // namespace neighbor
 } // namespace mlpack
 
 // Include implementation.

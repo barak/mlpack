@@ -13,7 +13,6 @@
 #define MLPACK_METHODS_AMF_COMPLETE_INCREMENTAL_TERMINATION_HPP
 
 namespace mlpack {
-namespace amf {
 
 /**
  * This class acts as a wrapper for basic termination policies to be used by
@@ -36,7 +35,8 @@ class CompleteIncrementalTermination
    */
   CompleteIncrementalTermination(
       TerminationPolicy tPolicy = TerminationPolicy()) :
-      tPolicy(tPolicy) { }
+      tPolicy(tPolicy), incrementalIndex(0), iteration(0)
+  { /* Nothing to do here. */ }
 
   /**
    * Initializes the termination policy before stating the factorization.
@@ -115,8 +115,6 @@ class CompleteIncrementalTermination
   size_t iteration;
 }; // class CompleteIncrementalTermination
 
-} // namespace amf
 } // namespace mlpack
 
 #endif // MLPACK_METHODS_AMF_COMPLETE_INCREMENTAL_TERMINATION_HPP
-

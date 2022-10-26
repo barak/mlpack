@@ -16,66 +16,68 @@
 #include "huber_loss.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-HuberLoss<InputDataType, OutputDataType>::HuberLoss(
-  const double delta,
-  const bool mean):
-  delta(delta),
-  mean(mean)
+template<typename MatType>
+HuberLossType<MatType>::HuberLossType(
+    const double delta,
+    const bool reduction):
+    delta(delta),
+    reduction(reduction)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type
-HuberLoss<InputDataType, OutputDataType>::Forward(const InputType& input,
-                                                  const TargetType& target)
+template<typename MatType>
+typename MatType::elem_type HuberLossType<MatType>::Forward(
+    const MatType& prediction,
+    const MatType& target)
 {
-  typedef typename InputType::elem_type ElemType;
-  ElemType loss = 0;
-  for (size_t i = 0; i < input.n_elem; ++i)
+  typedef typename MatType::elem_type ElemType;
+  ElemType lossSum = 0;
+  for (size_t i = 0; i < prediction.n_elem; ++i)
   {
-      const ElemType absError = std::abs(target[i] - input[i]);
-      loss += absError > delta
-          ? delta * (absError - 0.5 * delta) : 0.5 * std::pow(absError, 2);
+    const ElemType absError = std::abs(target[i] - prediction[i]);
+    lossSum += absError > delta ?
+        delta * (absError - 0.5 * delta) : 0.5 * std::pow(absError, 2);
   }
-  return mean ? loss / input.n_elem : loss;
+
+  if (reduction)
+    return lossSum;
+
+  return lossSum / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void HuberLoss<InputDataType, OutputDataType>::Backward(
-    const InputType& input,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType>
+void HuberLossType<MatType>::Backward(
+    const MatType& prediction,
+    const MatType& target,
+    MatType& loss)
 {
-  typedef typename InputType::elem_type ElemType;
+  typedef typename MatType::elem_type ElemType;
 
-  output.set_size(size(input));
-  for (size_t i = 0; i < output.n_elem; ++i)
+  loss.set_size(size(prediction));
+  for (size_t i = 0; i < loss.n_elem; ++i)
   {
-    const ElemType absError = std::abs(target[i] - input[i]);
-    output[i] = absError > delta
-        ? - delta * (target[i] - input[i]) / absError : input[i] - target[i];
-    if (mean)
-      output[i] /= output.n_elem;
+    const ElemType absError = std::abs(target[i] - prediction[i]);
+    loss[i] = absError > delta ?
+        -delta * (target[i] - prediction[i]) / absError :
+        prediction[i] - target[i];
   }
+
+  if (!reduction)
+    loss = loss / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void HuberLoss<InputDataType, OutputDataType>::serialize(
+void HuberLossType<MatType>::serialize(
     Archive& ar,
-    const unsigned int /* version */)
+    const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(delta);
-  ar & BOOST_SERIALIZATION_NVP(mean);
+  ar(CEREAL_NVP(delta));
+  ar(CEREAL_NVP(reduction));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

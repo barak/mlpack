@@ -15,85 +15,84 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * Margin ranking loss measures the loss given inputs and a label vector with
  * values of 1 or -1. If the label is 1 then the first input should be ranked
  * higher than the second input at a distance larger than a margin, and vice-
  * versa if the label is -1.
- * 
- * @tparam InputDataType Type of the input data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam OutputDataType Type of the output data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
+ *
+ * @tparam MatType Matrix representation to accept as input and use for
+ *    computation.
  */
-template <
-    typename InputDataType = arma::mat,
-    typename OutputDataType = arma::mat
->
-class MarginRankingLoss
+template<typename MatType = arma::mat>
+class MarginRankingLossType
 {
  public:
   /**
-   * Create the MarginRankingLoss object with Hyperparameter margin.
+   * Create the MarginRankingLossType object with Hyperparameter margin.
    * Hyperparameter margin defines a minimum distance between correctly ranked
    * samples.
+   *
+   * @param margin defines a minimum distance between correctly ranked samples.
+   * @param reduction Specifies the reduction to apply to the output. If false,
+   *                  'mean' reduction is used, where sum of the output will be
+   *                  divided by the number of elements in the output. If true,
+   *                  'sum' reduction is used and the output will be summed. It
+   *                  is set to true by default.
    */
-  MarginRankingLoss(const double margin = 1.0);
+  MarginRankingLossType(const double margin = 1.0, const bool reduction = true);
 
   /**
    * Computes the Margin Ranking Loss function.
    * 
-   * @param input Concatenation of the two inputs for evaluating the specified
-   * function.
+   * @param prediction Predictions used for evaluating the specified loss
+   *     function.
    * @param target The label vector which contains values of -1 or 1.
    */
-  template<typename InputType, typename TargetType>
-  typename InputType::elem_type Forward(const InputType& input,
-                                        const TargetType& target);
+  typename MatType::elem_type Forward(const MatType& prediction,
+                                      const MatType& target);
 
   /**
    * Ordinary feed backward pass of a neural network.
    *
-   * @param input The propagated concatenated input activation.
+   * @param prediction Predictions used for evaluating the specified loss
+   *     function.
    * @param target The label vector which contains -1 or 1 values.
-   * @param output The calculated error.
+   * @param loss The calculated error.
    */
-  template <
-    typename InputType,
-    typename TargetType,
-    typename OutputType
-  >
-  void Backward(const InputType& input,
-                const TargetType& target,
-                OutputType& output);
-
-  //! Get the output parameter.
-  OutputDataType& OutputParameter() const { return outputParameter; }
-  //! Modify the output parameter.
-  OutputDataType& OutputParameter() { return outputParameter; }
+  void Backward(const MatType& prediction,
+                const MatType& target,
+                MatType& loss);
 
   //! Get the margin parameter.
   double Margin() const { return margin; }
   //! Modify the margin parameter.
   double& Margin() { return margin; }
 
+  //! Get the reduction type, represented as boolean
+  //! (false 'mean' reduction, true 'sum' reduction).
+  bool Reduction() const { return reduction; }
+  //! Modify the type of reduction used.
+  bool& Reduction() { return reduction; }
+
   /**
    * Serialize the layer.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
-  //! Locally-stored output parameter object.
-  OutputDataType outputParameter;
-
   //! The margin value used in calculating Margin Ranking Loss.
   double margin;
-}; // class MarginRankingLoss
 
-} // namespace ann
+  //! Boolean value that tells if reduction is 'sum' or 'mean'.
+  bool reduction;
+}; // class MarginRankingLossType
+
+// Default typedef for typical `arma::mat` usage.
+typedef MarginRankingLossType<arma::mat> MarginRankingLoss;
+
 } // namespace mlpack
 
 // include implementation.

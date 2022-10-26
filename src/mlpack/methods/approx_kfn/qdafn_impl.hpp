@@ -19,7 +19,6 @@
 #include <mlpack/methods/neighbor_search/sort_policies/furthest_neighbor_sort.hpp>
 
 namespace mlpack {
-namespace neighbor {
 
 // Non-training constructor.
 template<typename MatType>
@@ -61,7 +60,7 @@ void QDAFN<MatType>::Train(const MatType& referenceSet,
   // Build tables.  This is done by drawing random points from a Gaussian
   // distribution as the vectors we project onto.  The Gaussian should have zero
   // mean and unit variance.
-  mlpack::distribution::GaussianDistribution gd(referenceSet.n_rows);
+  GaussianDistribution gd(referenceSet.n_rows);
   lines.set_size(referenceSet.n_rows, l);
   for (size_t i = 0; i < l; ++i)
     lines.col(i) = gd.Random();
@@ -136,8 +135,8 @@ void QDAFN<MatType>::Search(const MatType& querySet,
       const size_t tableIndex = tableLocations[p.second];
 
       // Calculate distance from query point.
-      const double dist = mlpack::metric::EuclideanDistance::Evaluate(
-          querySet.col(q), candidateSet[p.second].col(tableIndex));
+      const double dist = EuclideanDistance::Evaluate( querySet.col(q),
+          candidateSet[p.second].col(tableIndex));
 
       resultsQueue.push(std::make_pair(dist, sIndices(tableIndex, p.second)));
 
@@ -181,20 +180,19 @@ void QDAFN<MatType>::Search(const MatType& querySet,
 
 template<typename MatType>
 template<typename Archive>
-void QDAFN<MatType>::serialize(Archive& ar, const unsigned int /* version */)
+void QDAFN<MatType>::serialize(Archive& ar, const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(l);
-  ar & BOOST_SERIALIZATION_NVP(m);
-  ar & BOOST_SERIALIZATION_NVP(lines);
-  ar & BOOST_SERIALIZATION_NVP(projections);
-  ar & BOOST_SERIALIZATION_NVP(sIndices);
-  ar & BOOST_SERIALIZATION_NVP(sValues);
-  if (Archive::is_loading::value)
+  ar(CEREAL_NVP(l));
+  ar(CEREAL_NVP(m));
+  ar(CEREAL_NVP(lines));
+  ar(CEREAL_NVP(projections));
+  ar(CEREAL_NVP(sIndices));
+  ar(CEREAL_NVP(sValues));
+  if (cereal::is_loading<Archive>())
     candidateSet.clear();
-  ar & BOOST_SERIALIZATION_NVP(candidateSet);
+  ar(CEREAL_NVP(candidateSet));
 }
 
-} // namespace neighbor
 } // namespace mlpack
 
 #endif

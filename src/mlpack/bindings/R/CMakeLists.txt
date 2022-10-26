@@ -1,6 +1,6 @@
 macro (not_found_return message)
   message(STATUS "${message}")
-  macro (add_r_binding name)
+  macro (add_r_binding directory name)
     # Do nothing.
   endmacro ()
 
@@ -22,7 +22,6 @@ if (BUILD_R_BINDINGS)
   # If mlpack upgrade the version of dependencies, then we also have to update the version here.
   set(RcppArmadillo_Version "0.${ARMADILLO_VERSION}")
   set(RcppEnsmallen_Version "0.${ENSMALLEN_VERSION}")
-  set(BH_Version "${BOOST_VERSION}")
 
   # Import find_r_module.
   include(${CMAKE_SOURCE_DIR}/CMake/FindRModule.cmake)
@@ -46,26 +45,26 @@ if (BUILD_R_BINDINGS)
   if (NOT R_RCPPENSMALLEN)
     set(R_NOT_FOUND_MSG "${R_NOT_FOUND_MSG}\n    - RcppEnsmallen")
   endif ()
-  find_r_module(BH "${BH_Version}")
-  if (NOT R_BH)
-    set(R_NOT_FOUND_MSG "${R_NOT_FOUND_MSG}\n    - BH")
-  endif ()
   find_r_module(testthat)
   if (NOT R_TESTTHAT)
     set(R_NOT_FOUND_MSG "${R_NOT_FOUND_MSG}\n    - testthat")
+  endif ()
+  find_r_module(pkgbuild) # Required for roxygen2 with src/ directories.
+  if (NOT R_PKGBUILD)
+    set(R_NOT_FOUND_MSG "${R_NOT_FOUND_MSG}\n    - pkgbuild")
   endif ()
 
   ## We need to check here if R and other dependencies is even available, as
   ## it is require to build R-bindings.
   if (FORCE_BUILD_R_BINDINGS)
     if (NOT R_FOUND OR NOT R_RCPP OR NOT R_RCPPARMADILLO OR NOT R_RCPPENSMALLEN
-        OR NOT R_BH OR NOT R_ROXYGEN2 OR NOT R_TESTTHAT)
+        OR NOT R_ROXYGEN2 OR NOT R_TESTTHAT OR NOT R_PKGBUILD)
       unset(BUILD_R_BINDINGS CACHE)
       message(FATAL_ERROR "Could not Build R Bindings, Following modules are not available:${R_NOT_FOUND_MSG}")
     endif()
   else ()
     if (NOT R_FOUND OR NOT R_RCPP OR NOT R_RCPPARMADILLO OR NOT R_RCPPENSMALLEN
-        OR NOT R_BH OR NOT R_ROXYGEN2 OR NOT R_TESTTHAT)
+        OR NOT R_ROXYGEN2 OR NOT R_TESTTHAT OR NOT R_PKGBUILD)
       unset(BUILD_R_BINDINGS CACHE)
       not_found_return("Not building R bindings, Following modules are not available:${R_NOT_FOUND_MSG}")
     endif()
@@ -87,6 +86,93 @@ if (BUILD_R_BINDINGS)
 
   string(TIMESTAMP PACKAGE_DATE "%Y-%m-%d")
 
+  # We need to generate an Authors@R list using every single contributor in
+  # COPYRIGHT.txt.  That takes a little bit of processing.
+  file(READ "${CMAKE_SOURCE_DIR}/COPYRIGHT.txt" COPYRIGHT_TXT_CONTENTS)
+  string(REGEX MATCHALL "  Copyright [0-9-]*, ([^\n]*)\n" CONTRIBUTORS_LIST
+      "${COPYRIGHT_TXT_CONTENTS}")
+
+  # These are the authors meant to be listed as 'authors' and not
+  # 'contributors'.  If you contributed specifically to the R bindings, you
+  # should probably be listed here, so if you're not, open a PR to fix it! :)
+  set(SPECIAL_AUTHORS "Yashwant Singh Parihar" "Ryan Curtin" "Dirk Eddelbuettel"
+      "James Balamuta")
+
+  string(CONCAT AUTHORS_R "c(\n"
+      "    person(\"Yashwant\", \"Singh Parihar\", "
+              "email = \"yashwantsingh.sngh@gmail.com\", "
+              "role = c(\"aut\", \"ctb\", \"cph\")),\n"
+      "    person(\"Ryan\", \"Curtin\", email = \"ryan@ratml.org\", "
+              "role = c(\"aut\", \"ctb\", \"cph\", \"cre\")),\n"
+      "    person(\"Dirk\", \"Eddelbuettel\", email = \"edd@debian.org\", "
+              "role = c(\"aut\", \"ctb\", \"cph\")),\n"
+      "    person(\"James\", \"Balamuta\", "
+              "email = \"james.balamuta@gmail.com\", "
+              "role = c(\"aut\", \"ctb\", \"cph\")),")
+  foreach (CONTRIBUTOR_LINE ${CONTRIBUTORS_LIST})
+    # Strip 'Copyright XXXX-YYYY, '.
+    string(REGEX REPLACE "^  Copyright [0-9-]*, (.*)\n$" "\\1"
+        CONTRIBUTOR_FILTERED "${CONTRIBUTOR_LINE}")
+
+    # Extract the email if it exists.
+    string(REGEX MATCH "^[^<]*<(.*)>.*$" HAS_EMAIL "${CONTRIBUTOR_FILTERED}")
+
+    # The first name is just the first space-delimited word.  (That may not
+    # always be right, but we have no way to know what is a first name and last
+    # name and therefore must assume.)
+    string(REGEX REPLACE "^([^ ]*) .*$" "\\1" CONTRIBUTOR_FIRST_NAME
+        "${CONTRIBUTOR_FILTERED}")
+
+    # Extracting the last name is just the rest of the tokens, but the regex is
+    # different depending on whether we managed to get an email.
+    if (HAS_EMAIL)
+      string(REGEX REPLACE "^[^<]*<(.*)>.*$" "\\1" CONTRIBUTOR_EMAIL
+          "${CONTRIBUTOR_FILTERED}")
+      string(REGEX MATCH "^[^ ]* (.*) <.*$" CONTRIBUTOR_LAST_NAME
+          "${CONTRIBUTOR_FILTERED}")
+      if (NOT CONTRIBUTOR_LAST_NAME)
+        set (CONTRIBUTOR_LAST_NAME "")
+      else ()
+        string(REGEX REPLACE "^[^ ]* (.*) <.*$" "\\1" CONTRIBUTOR_LAST_NAME
+            "${CONTRIBUTOR_FILTERED}")
+      endif ()
+
+      # Skip anyone already listed as an author.
+      if ("${CONTRIBUTOR_FIRST_NAME} ${CONTRIBUTOR_LAST_NAME}" IN_LIST
+          SPECIAL_AUTHORS)
+        continue()
+      endif ()
+
+      string(CONCAT AUTHORS_R "${AUTHORS_R}\n    "
+          "person(\"${CONTRIBUTOR_FIRST_NAME}\", \"${CONTRIBUTOR_LAST_NAME}\", "
+          "email = \"${CONTRIBUTOR_EMAIL}\", role = c(\"ctb\", \"cph\")),")
+
+    else ()
+      # No email is available.  So just get the last name.
+      string(REGEX MATCH "^[^ ]* (.*)$" CONTRIBUTOR_LAST_NAME
+          "${CONTRIBUTOR_FILTERED}")
+      if (NOT CONTRIBUTOR_LAST_NAME)
+        set (CONTRIBUTOR_LAST_NAME "")
+      else ()
+        string(REGEX REPLACE "^[^ ]* (.*)$" "\\1" CONTRIBUTOR_LAST_NAME
+            "${CONTRIBUTOR_FILTERED}")
+      endif ()
+
+      # Skip anyone already listed as an author.
+      if ("${CONTRIBUTOR_FIRST_NAME} ${CONTRIBUTOR_LAST_NAME}" IN_LIST
+          SPECIAL_AUTHORS)
+        continue()
+      endif ()
+
+      string(CONCAT AUTHORS_R "${AUTHORS_R}\n    "
+          "person(\"${CONTRIBUTOR_FIRST_NAME}\", \"${CONTRIBUTOR_LAST_NAME}\", "
+          "role = c(\"ctb\", \"cph\")),")
+    endif ()
+  endforeach ()
+  # We also have to remove the final comma...
+  string(REGEX REPLACE ",$" "" AUTHORS_R_OUT "${AUTHORS_R}")
+  set(AUTHORS_R "${AUTHORS_R_OUT})")
+
   configure_file(${CMAKE_SOURCE_DIR}/src/mlpack/bindings/R/mlpack/DESCRIPTION.in
                  ${CMAKE_CURRENT_BINARY_DIR}/mlpack/DESCRIPTION
                  @ONLY)
@@ -96,33 +182,6 @@ if (BUILD_R_BINDINGS)
       "${CMAKE_CURRENT_BINARY_DIR}/mlpack/NAMESPACE"
       "# Generated by roxygen2: do not edit by hand"
       "\n\n")
-
-  # These are all the files we need to compile R bindings for mlpack that are
-  # not a part of mlpack itself.
-  # Soon may be mlpack use cereal package for serialization.
-  # Then we can remove these boost files.
-  set(BOOST_SOURCES
-    "${CMAKE_SOURCE_DIR}/src/mlpack/core/boost_backport/unordered_map.hpp"
-    "${CMAKE_SOURCE_DIR}/src/mlpack/core/boost_backport/unordered_collections_load_imp.hpp"
-    "${CMAKE_SOURCE_DIR}/src/mlpack/core/boost_backport/unordered_collections_save_imp.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/archive_exception.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/basic_archive.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/basic_oarchive.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/basic_oserializer.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/basic_iarchive.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/basic_iserializer.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/basic_pointer_iserializer.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/basic_pointer_oserializer.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/basic_text_oprimitive.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/basic_serializer_map.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/binary_iarchive.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/binary_oarchive.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/extended_type_info_typeid.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/extended_type_info.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/utf8_codecvt_facet.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/void_cast.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/boost/serialization/variant.hpp"
-  )
 
   set(CPP_SOURCES
    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/src/r_util.cpp"
@@ -148,6 +207,7 @@ if (BUILD_R_BINDINGS)
     "${CMAKE_CURRENT_SOURCE_DIR}/print_input_processing.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/print_output_processing.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/print_serialize_util.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/mlpack_main.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/R_option.hpp"
   )
 
@@ -163,9 +223,11 @@ if (BUILD_R_BINDINGS)
     "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/tests/testthat.R"
   )
 
-  set(LICENSE_SOURCES
-    "${CMAKE_SOURCE_DIR}/LICENSE.txt"
-  )
+  # Configure the license file.
+  string(TIMESTAMP LICENSE_YEAR "%Y")
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mlpack/LICENSE.in"
+                 "${CMAKE_CURRENT_BINARY_DIR}/mlpack/LICENSE")
+
   add_custom_target(r_copy ALL)
 
   # First we have to create all the required directories for copy.
@@ -174,8 +236,6 @@ if (BUILD_R_BINDINGS)
           ${CMAKE_CURRENT_BINARY_DIR}/mlpack/R/
       COMMAND ${CMAKE_COMMAND} -E make_directory
           ${CMAKE_CURRENT_BINARY_DIR}/mlpack/tests/testthat
-      COMMAND ${CMAKE_COMMAND} -E make_directory
-          ${CMAKE_CURRENT_BINARY_DIR}/mlpack/src/boost/serialization/
       COMMAND ${CMAKE_COMMAND} -E make_directory
           ${CMAKE_CURRENT_BINARY_DIR}/mlpack/src/mlpack/bindings/R/tests
    )
@@ -188,29 +248,23 @@ if (BUILD_R_BINDINGS)
   endif()
 
   # Copy all necessary files for building package.
-  foreach(boost_file ${BOOST_SOURCES})
-  add_custom_command(TARGET r_copy PRE_BUILD
-      COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
-          ${boost_file}
-          ${CMAKE_CURRENT_BINARY_DIR}/mlpack/src/boost/serialization/)
-  endforeach()
   foreach(cpp_file ${CPP_SOURCES})
-  add_custom_command(TARGET r_copy PRE_BUILD
-      COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
-          ${cpp_file}
-          ${CMAKE_CURRENT_BINARY_DIR}/mlpack/src/)
+    add_custom_command(TARGET r_copy PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
+            ${cpp_file}
+            ${CMAKE_CURRENT_BINARY_DIR}/mlpack/src/)
   endforeach()
   foreach(r_file ${R_SOURCES})
-  add_custom_command(TARGET r_copy PRE_BUILD
-      COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
-          ${r_file}
-          ${CMAKE_CURRENT_BINARY_DIR}/mlpack/R/)
+    add_custom_command(TARGET r_copy PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
+            ${r_file}
+            ${CMAKE_CURRENT_BINARY_DIR}/mlpack/R/)
   endforeach()
   foreach(bindings_file ${BINDINGS_SOURCES})
-  add_custom_command(TARGET r_copy PRE_BUILD
-      COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
-          ${bindings_file}
-          ${CMAKE_CURRENT_BINARY_DIR}/mlpack/src/mlpack/bindings/R)
+    add_custom_command(TARGET r_copy PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
+            ${bindings_file}
+            ${CMAKE_CURRENT_BINARY_DIR}/mlpack/src/mlpack/bindings/R)
   endforeach()
   add_custom_command(TARGET r_copy PRE_BUILD
       COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
@@ -220,14 +274,6 @@ if (BUILD_R_BINDINGS)
       COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
           ${R_TESTS_SOURCES}
           ${CMAKE_CURRENT_BINARY_DIR}/mlpack/tests)
-  add_custom_command(TARGET r_copy PRE_BUILD
-      COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different
-          ${LICENSE_SOURCES}
-          ${CMAKE_CURRENT_BINARY_DIR}/mlpack)
-  add_custom_command(TARGET r_copy PRE_BUILD
-      COMMAND ${CMAKE_COMMAND} ARGS -E rename
-          "${CMAKE_CURRENT_BINARY_DIR}/mlpack/LICENSE.txt"
-          "${CMAKE_CURRENT_BINARY_DIR}/mlpack/LICENSE")
   # This file will take care of multiple definition of functions in .cpp files.
   add_custom_command(TARGET r_copy PRE_BUILD
       COMMAND ${CMAKE_COMMAND} ARGS -E touch
@@ -235,6 +281,11 @@ if (BUILD_R_BINDINGS)
 
   file(COPY
        "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/cleanup"
+       DESTINATION
+       "${CMAKE_CURRENT_BINARY_DIR}/mlpack/")
+
+  file(COPY
+       "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/configure"
        DESTINATION
        "${CMAKE_CURRENT_BINARY_DIR}/mlpack/")
 
@@ -264,8 +315,8 @@ if (BUILD_R_BINDINGS)
   # Installation script for the packagae.
   install(CODE
       "execute_process(
-         COMMAND R CMD INSTALL mlpack_${PACKAGE_VERSION}.tar.gz
-         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}"
+         COMMAND ${R_EXECUTABLE} CMD INSTALL mlpack_${PACKAGE_VERSION}.tar.gz
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})"
   )
 
   add_dependencies(R r_build)
@@ -280,11 +331,12 @@ define_property(GLOBAL PROPERTY R_MODELS
 # Initialize list of models.
 set_property(GLOBAL PROPERTY R_MODELS "")
 
-macro (add_r_binding name)
+macro (add_r_binding directory name)
 if (BUILD_R_BINDINGS)
 
   # Append content to the list of models.
-  set_property(GLOBAL APPEND PROPERTY R_MODELS ${CMAKE_CURRENT_SOURCE_DIR}/${name}_main.cpp)
+  set_property(GLOBAL APPEND PROPERTY R_MODELS
+      ${CMAKE_CURRENT_SOURCE_DIR}/${directory}/${name}_main.cpp)
 
   # 1. Generate ${name}.cpp.
   add_custom_command(OUTPUT
@@ -292,7 +344,7 @@ if (BUILD_R_BINDINGS)
       COMMAND ${CMAKE_COMMAND}
           -DMODEL_FILE=${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/model.txt
           -DPROGRAM_NAME=${name}
-          -DPROGRAM_MAIN_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${name}_main.cpp
+          -DPROGRAM_MAIN_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${directory}/${name}_main.cpp
           -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
           -DR_CPP_IN=${CMAKE_SOURCE_DIR}/src/mlpack/bindings/R/r_method.cpp.in
           -DR_CPP_OUT=${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/src/${name}.cpp
@@ -306,10 +358,10 @@ if (BUILD_R_BINDINGS)
           -DNAME=${name}
           -DGENERATE_CPP_IN=${CMAKE_SOURCE_DIR}/src/mlpack/bindings/R/generate_R.cpp.in
           -DGENERATE_CPP_OUT=${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/build/generate_r_${name}.cpp
-          -DPROGRAM_MAIN_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${name}_main.cpp
-          -P ${CMAKE_SOURCE_DIR}/CMake/ConfigureGenerate.cmake
+          -DPROGRAM_MAIN_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${directory}/${name}_main.cpp
+          -P ${CMAKE_SOURCE_DIR}/CMake/ConfigureFile.cmake
       DEPENDS ${CMAKE_SOURCE_DIR}/src/mlpack/bindings/R/generate_R.cpp.in
-              ${CMAKE_SOURCE_DIR}/CMake/ConfigureGenerate.cmake
+              ${CMAKE_SOURCE_DIR}/CMake/ConfigureFile.cmake
               ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/src/${name}.cpp)
 
   add_executable(generate_r_${name}
@@ -322,7 +374,7 @@ if (BUILD_R_BINDINGS)
       ${CMAKE_SOURCE_DIR}/src/mlpack/bindings/R/print_input_processing.hpp
       ${CMAKE_SOURCE_DIR}/src/mlpack/bindings/R/print_serialize_util.hpp
       ${CMAKE_SOURCE_DIR}/src/mlpack/bindings/R/print_output_processing.hpp)
-   target_link_libraries(generate_r_${name} mlpack ${MLPACK_LIBRARIES})
+   target_link_libraries(generate_r_${name} ${MLPACK_LIBRARIES})
    set_target_properties(generate_r_${name} PROPERTIES
       COMPILE_FLAGS "-DBINDING_TYPE=BINDING_TYPE_R"
       RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/build/bin/")
@@ -344,6 +396,16 @@ macro (post_r_setup)
   file(GLOB_RECURSE R_SRC_CPP_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" *.cpp)
   set(R_SRC_FILES ${R_SRC_HPP_FILES} ${R_SRC_CPP_FILES})
 
+  # In case of R_Bindings we are copying all of these header to
+  # <package>/src/cereal/ because the currently-packaged version
+  # of Rcereal throws warnings on CRAN.
+  # Collect all header files in the cereal folder.
+  file(GLOB_RECURSE RCEREAL_SRC_H_FILES RELATIVE "${CEREAL_INCLUDE_DIR}"
+       "${CEREAL_INCLUDE_DIR}/cereal/*.h")
+  file(GLOB_RECURSE RCEREAL_SRC_HPP_FILES RELATIVE "${CEREAL_INCLUDE_DIR}"
+       "${CEREAL_INCLUDE_DIR}/cereal/*.hpp")
+  set(RCEREAL_SRC_FILES ${RCEREAL_SRC_HPP_FILES} ${RCEREAL_SRC_H_FILES})
+
   # First we have to create that directory though.
   execute_process(
     COMMAND ${CMAKE_COMMAND} -E
@@ -352,7 +414,7 @@ macro (post_r_setup)
 
   # Then copy each of the header and source files over to that directory.
   set(MLPACK_SOURCES
-    "${CMAKE_BINARY_DIR}/src/mlpack/mlpack_export.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/base.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/prereqs.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/core.hpp"
   )
@@ -368,7 +430,7 @@ macro (post_r_setup)
   foreach(r_src_file ${R_SRC_FILES})
     if ("${r_src_file}" MATCHES "methods/" OR
         "${r_src_file}" MATCHES "core/" OR
-        "${r_src_file}" MATCHES "bindings/util" )
+        "${r_src_file}" MATCHES "bindings/util")
       execute_process(
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
           ${CMAKE_CURRENT_SOURCE_DIR}/${r_src_file}
@@ -377,14 +439,31 @@ macro (post_r_setup)
 
       # Collect path of all source files and append to ${R_SRC}.
       if ("${r_src_file}" MATCHES ".cpp" AND
-          NOT "${r_src_file}" MATCHES "main.cpp" AND
-          # Note: this implementation of MVU does not work.  See #189.
-          NOT "${r_src_file}" MATCHES "mvu")
+          NOT "${r_src_file}" MATCHES "main.cpp")
         string(APPEND R_SRC "#include <mlpack/${r_src_file}>\n")
       endif()
 
     endif()
   endforeach()
+
+  # Copy cereal headers for R-bindings.
+  foreach(rcereal_src_file ${RCEREAL_SRC_FILES})
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CEREAL_INCLUDE_DIR}/${rcereal_src_file}
+        ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/src/${rcereal_src_file}
+    )
+  endforeach()
+
+  # Resolve gcc Warnings.
+  file(READ ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/src/cereal/external/base64.hpp CEREAL_BASE64)
+  string(REGEX REPLACE
+      "\n#ifdef __GNUC__\n#pragma GCC diagnostic push\n#pragma GCC diagnostic ignored \"-Wconversion\"\n#endif\n"
+      "" CEREAL_BASE64 "${CEREAL_BASE64}")
+  string(REGEX REPLACE
+      "#ifdef __GNUC__\n#pragma GCC diagnostic pop\n#endif"
+      "" CEREAL_BASE64 "${CEREAL_BASE64}")
+  file(WRITE ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/src/cereal/external/base64.hpp "${CEREAL_BASE64}")
 
   # Then configure 'mlpack.h.in' using ${R_SRC}.
   configure_file(

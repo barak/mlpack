@@ -17,45 +17,74 @@
 #include "softmax.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-Softmax<InputDataType, OutputDataType>::Softmax()
+template<typename MatType>
+SoftmaxType<MatType>::SoftmaxType() :
+    Layer<MatType>()
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename OutputType>
-void Softmax<InputDataType, OutputDataType>::Forward(
-    const InputType& input,
-    OutputType& output)
+template<typename MatType>
+SoftmaxType<MatType>::SoftmaxType(const SoftmaxType& other) :
+    Layer<MatType>(other)
 {
-  InputType softmaxInput = arma::exp(input.each_row() -
+  // Nothing to do here.
+}
+
+template<typename MatType>
+SoftmaxType<MatType>::SoftmaxType(SoftmaxType&& other) :
+    Layer<MatType>(std::move(other))
+{
+  // Nothing to do here.
+}
+
+template<typename MatType>
+SoftmaxType<MatType>&
+SoftmaxType<MatType>::operator=(const SoftmaxType& other)
+{
+  if (this != &other)
+    Layer<MatType>::operator=(other);
+
+  return *this;
+}
+
+template<typename MatType>
+SoftmaxType<MatType>&
+SoftmaxType<MatType>::operator=(SoftmaxType&& other)
+{
+  if (this != &other)
+    Layer<MatType>::operator=(std::move(other));
+
+  return *this;
+}
+
+template<typename MatType>
+void SoftmaxType<MatType>::Forward(const MatType& input, MatType& output)
+{
+  MatType softmaxInput = arma::exp(input.each_row() -
       arma::max(input, 0));
   output = softmaxInput.each_row() / sum(softmaxInput, 0);
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename eT>
-void Softmax<InputDataType, OutputDataType>::Backward(
-    const arma::Mat<eT>& input,
-    const arma::Mat<eT>& gy,
-    arma::Mat<eT>& g)
+template<typename MatType>
+void SoftmaxType<MatType>::Backward(
+    const MatType& input,
+    const MatType& gy,
+    MatType& g)
 {
   g = input % (gy - arma::repmat(arma::sum(gy % input), input.n_rows, 1));
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void Softmax<InputDataType, OutputDataType>::serialize(
-    Archive& /* ar */,
-    const unsigned int /* version */)
+void SoftmaxType<MatType>::serialize(
+    Archive& ar,
+    const uint32_t /* version */)
 {
-  // Nothing to do here.
+  ar(cereal::base_class<Layer<MatType>>(this));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

@@ -47,15 +47,11 @@
 #ifndef MLPACK_METHODS_NEIGHBOR_SEARCH_LSH_SEARCH_HPP
 #define MLPACK_METHODS_NEIGHBOR_SEARCH_LSH_SEARCH_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 
-#include <mlpack/core/metrics/lmetric.hpp>
 #include <mlpack/methods/neighbor_search/sort_policies/nearest_neighbor_sort.hpp>
 
-#include <queue>
-
 namespace mlpack {
-namespace neighbor {
 
 /**
  * The LSHSearch class; this class builds a hash on the reference set and uses
@@ -265,10 +261,10 @@ class LSHSearch
    * Serialize the LSH model.
    *
    * @param ar Archive to serialize to.
-   * @param version Version number.
+   * @param version serialize class version to provide backward compatibility
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int version);
+  void serialize(Archive& ar, const uint32_t version);
 
   //! Return the number of distance evaluations performed.
   size_t DistanceEvaluations() const { return distanceEvaluations; }
@@ -481,12 +477,7 @@ class LSHSearch
       CandidateList;
 }; // class LSHSearch
 
-} // namespace neighbor
 } // namespace mlpack
-
-//! Set the serialization version of the LSHSearch class.
-BOOST_TEMPLATE_CLASS_VERSION(template<typename SortPolicy>,
-    mlpack::neighbor::LSHSearch<SortPolicy>, 1);
 
 // Include implementation.
 #include "lsh_search_impl.hpp"

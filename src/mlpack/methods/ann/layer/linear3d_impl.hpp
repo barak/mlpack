@@ -16,62 +16,95 @@
 #include "linear3d.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType,
-    typename RegularizerType>
-Linear3D<InputDataType, OutputDataType, RegularizerType>::Linear3D() :
-    inSize(0),
+template<typename MatType, typename RegularizerType>
+Linear3DType<MatType, RegularizerType>::Linear3DType() :
+    Layer<MatType>(),
     outSize(0)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType,
-    typename RegularizerType>
-Linear3D<InputDataType, OutputDataType, RegularizerType>::Linear3D(
-    const size_t inSize,
+template<typename MatType, typename RegularizerType>
+Linear3DType<MatType, RegularizerType>::Linear3DType(
     const size_t outSize,
     RegularizerType regularizer) :
-    inSize(inSize),
+    Layer<MatType>(),
     outSize(outSize),
     regularizer(regularizer)
+{ }
+
+template<typename MatType, typename RegularizerType>
+Linear3DType<MatType, RegularizerType>::Linear3DType(
+    const Linear3DType& other) :
+    Layer<MatType>(other),
+    outSize(other.outSize),
+    regularizer(other.regularizer)
 {
-  weights.set_size(outSize * inSize + outSize, 1);
+  // Nothing to do.
 }
 
-template<typename InputDataType, typename OutputDataType,
-    typename RegularizerType>
-void Linear3D<InputDataType, OutputDataType, RegularizerType>::Reset()
+template<typename MatType, typename RegularizerType>
+Linear3DType<MatType, RegularizerType>::Linear3DType(
+    Linear3DType&& other) :
+    Layer<MatType>(std::move(other)),
+    outSize(std::move(other.outSize)),
+    regularizer(std::move(other.regularizer))
 {
-  typedef typename arma::Mat<typename OutputDataType::elem_type> MatType;
-
-  weight = MatType(weights.memptr(), outSize, inSize, false, false);
-  bias = MatType(weights.memptr() + weight.n_elem, outSize, 1, false, false);
+  // Nothing to do.
 }
 
-template<typename InputDataType, typename OutputDataType,
-    typename RegularizerType>
-template<typename eT>
-void Linear3D<InputDataType, OutputDataType, RegularizerType>::Forward(
-    const arma::Mat<eT>& input, arma::Mat<eT>& output)
+template<typename MatType, typename RegularizerType>
+Linear3DType<MatType, RegularizerType>&
+Linear3DType<MatType, RegularizerType>::operator=(
+    const Linear3DType& other)
 {
-  typedef typename arma::Mat<eT> MatType;
-  typedef typename arma::Cube<eT> CubeType;
-
-  if (input.n_rows % inSize != 0)
+  if (&other != this)
   {
-    Log::Fatal << "Number of features in the input must be divisible by inSize."
-               << std::endl;
+    Layer<MatType>::operator=(other);
+    outSize = other.outSize;
+    regularizer = other.regularizer;
   }
 
-  const size_t nPoints = input.n_rows / inSize;
+  return *this;
+}
+
+template<typename MatType, typename RegularizerType>
+Linear3DType<MatType, RegularizerType>&
+Linear3DType<MatType, RegularizerType>::operator=(
+    Linear3DType&& other)
+{
+  if (&other != this)
+  {
+    Layer<MatType>::operator=(std::move(other));
+    outSize = std::move(other.outSize);
+    regularizer = std::move(other.regularizer);
+  }
+
+  return *this;
+}
+
+template<typename MatType, typename RegularizerType>
+void Linear3DType<MatType, RegularizerType>::SetWeights(
+    typename MatType::elem_type* weightsPtr)
+{
+  MakeAlias(weights, weightsPtr, outSize * this->inputDimensions[0] + outSize,
+      1);
+  MakeAlias(weight, weightsPtr, outSize, this->inputDimensions[0]);
+  MakeAlias(bias, weightsPtr + weight.n_elem, outSize, 1);
+}
+
+template<typename MatType, typename RegularizerType>
+void Linear3DType<MatType, RegularizerType>::Forward(
+    const MatType& input, MatType& output)
+{
+  typedef typename arma::Cube<typename MatType::elem_type> CubeType;
+
+  const size_t nPoints = input.n_rows / this->inputDimensions[0];
   const size_t batchSize = input.n_cols;
 
-  output.set_size(outSize * nPoints, batchSize);
-
-  const CubeType inputTemp(const_cast<MatType&>(input).memptr(), inSize,
-      nPoints, batchSize, false, false);
+  const CubeType inputTemp(const_cast<MatType&>(input).memptr(),
+      this->inputDimensions[0], nPoints, batchSize, false, false);
 
   for (size_t i = 0; i < batchSize; ++i)
   {
@@ -83,16 +116,13 @@ void Linear3D<InputDataType, OutputDataType, RegularizerType>::Forward(
   }
 }
 
-template<typename InputDataType, typename OutputDataType,
-    typename RegularizerType>
-template<typename eT>
-void Linear3D<InputDataType, OutputDataType, RegularizerType>::Backward(
-    const arma::Mat<eT>& /* input */,
-    const arma::Mat<eT>& gy,
-    arma::Mat<eT>& g)
+template<typename MatType, typename RegularizerType>
+void Linear3DType<MatType, RegularizerType>::Backward(
+    const MatType& /* input */,
+    const MatType& gy,
+    MatType& g)
 {
-  typedef typename arma::Mat<eT> MatType;
-  typedef typename arma::Cube<eT> CubeType;
+  typedef typename arma::Cube<typename MatType::elem_type> CubeType;
 
   if (gy.n_rows % outSize != 0)
   {
@@ -106,8 +136,6 @@ void Linear3D<InputDataType, OutputDataType, RegularizerType>::Backward(
   const CubeType gyTemp(const_cast<MatType&>(gy).memptr(), outSize,
       nPoints, batchSize, false, false);
 
-  g.set_size(inSize * nPoints, batchSize);
-
   for (size_t i = 0; i < gyTemp.n_slices; ++i)
   {
     // Shape of weight : (outSize, inSize).
@@ -116,37 +144,32 @@ void Linear3D<InputDataType, OutputDataType, RegularizerType>::Backward(
   }
 }
 
-template<typename InputDataType, typename OutputDataType,
-    typename RegularizerType>
-template<typename eT>
-void Linear3D<InputDataType, OutputDataType, RegularizerType>::Gradient(
-    const arma::Mat<eT>& input,
-    const arma::Mat<eT>& error,
-    arma::Mat<eT>& gradient)
+template<typename MatType, typename RegularizerType>
+void Linear3DType<MatType, RegularizerType>::Gradient(
+    const MatType& input,
+    const MatType& error,
+    MatType& gradient)
 {
-  typedef typename arma::Mat<eT> MatType;
-  typedef typename arma::Cube<eT> CubeType;
+  typedef typename arma::Cube<typename MatType::elem_type> CubeType;
 
   if (error.n_rows % outSize != 0)
     Log::Fatal << "Propagated error matrix has invalid dimension!" << std::endl;
 
-  const size_t nPoints = input.n_rows / inSize;
+  const size_t nPoints = input.n_rows / this->inputDimensions[0];
   const size_t batchSize = input.n_cols;
 
-  const CubeType inputTemp(const_cast<MatType&>(input).memptr(), inSize,
-      nPoints, batchSize, false, false);
+  const CubeType inputTemp(const_cast<MatType&>(input).memptr(),
+      this->inputDimensions[0], nPoints, batchSize, false, false);
   const CubeType errorTemp(const_cast<MatType&>(error).memptr(), outSize,
       nPoints, batchSize, false, false);
 
-  CubeType dW(outSize, inSize, batchSize);
+  CubeType dW(outSize, this->inputDimensions[0], batchSize);
   for (size_t i = 0; i < batchSize; ++i)
   {
     // Shape of errorTemp : (outSize, nPoints, batchSize).
     // Shape of inputTemp : (inSize, nPoints, batchSize).
     dW.slice(i) = errorTemp.slice(i) * inputTemp.slice(i).t();
   }
-
-  gradient.set_size(arma::size(weights));
 
   gradient.submat(0, 0, weight.n_elem - 1, 0)
       = arma::vectorise(arma::sum(dW, 2));
@@ -157,22 +180,29 @@ void Linear3D<InputDataType, OutputDataType, RegularizerType>::Gradient(
   regularizer.Evaluate(weights, gradient);
 }
 
-template<typename InputDataType, typename OutputDataType,
-    typename RegularizerType>
-template<typename Archive>
-void Linear3D<InputDataType, OutputDataType, RegularizerType>::serialize(
-    Archive& ar, const unsigned int /* version */)
+template<typename MatType, typename RegularizerType>
+void Linear3DType<
+    MatType, RegularizerType
+>::ComputeOutputDimensions()
 {
-  ar & BOOST_SERIALIZATION_NVP(inSize);
-  ar & BOOST_SERIALIZATION_NVP(outSize);
-
-  // This is inefficient, but we have to allocate this memory so that
-  // WeightSetVisitor gets the right size.
-  if (Archive::is_loading::value)
-    weights.set_size(outSize * inSize + outSize, 1);
+  // The Linear3D layer shares weights for each row of the input, and
+  // duplicates it across the columns.  Thus, we only change the number of
+  // rows.
+  this->outputDimensions = this->inputDimensions;
+  this->outputDimensions[0] = outSize;
 }
 
-} // namespace ann
+template<typename MatType, typename RegularizerType>
+template<typename Archive>
+void Linear3DType<MatType, RegularizerType>::serialize(
+    Archive& ar, const uint32_t /* version */)
+{
+  ar(cereal::base_class<Layer<MatType>>(this));
+
+  ar(CEREAL_NVP(outSize));
+  ar(CEREAL_NVP(regularizer));
+}
+
 } // namespace mlpack
 
 #endif

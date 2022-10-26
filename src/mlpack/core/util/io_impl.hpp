@@ -2,7 +2,7 @@
  * @file core/util/io_impl.hpp
  * @author Matthew Amidon
  *
- * Implementation of templated functions of the IO class.
+ * Implementation of the IO module for parsing parameters.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -12,137 +12,203 @@
 #ifndef MLPACK_CORE_UTIL_IO_IMPL_HPP
 #define MLPACK_CORE_UTIL_IO_IMPL_HPP
 
-// In case it has not already been included.
 #include "io.hpp"
-#include "prefixedoutstream.hpp"
+#include "log.hpp"
+#include "hyphenate_string.hpp"
 
 namespace mlpack {
 
-/**
- * @brief Returns the value of the specified parameter.
- *   If the parameter is unspecified, an undefined but
- *   more or less valid value is returned.
- *
- * @tparam T The type of the parameter.
- * @param identifier The full name of the parameter.
- *
- * @return The value of the parameter.  Use IO::CheckValue to determine if it's
- *     valid.
- */
-template<typename T>
-T& IO::GetParam(const std::string& identifier)
+/* Constructors, Destructors, Copy */
+/* Make the constructor private, to preclude unauthorized instances */
+inline IO::IO()
 {
-  // Only use the alias if the parameter does not exist as given.
-  std::string key =
-      (GetSingleton().parameters.count(identifier) == 0 &&
-       identifier.length() == 1 && GetSingleton().aliases.count(identifier[0]))
-      ? GetSingleton().aliases[identifier[0]] : identifier;
+  return;
+}
 
-  if (GetSingleton().parameters.count(key) == 0)
-    Log::Fatal << "Parameter --" << key << " does not exist in this program!"
-        << std::endl;
+// Private copy constructor; don't want copies floating around.
+inline IO::IO(const IO& /* other */)
+{
+  return;
+}
 
-  util::ParamData& d = GetSingleton().parameters[key];
+// Private copy operator; don't want copies floating around.
+inline IO& IO::operator=(const IO& /* other */) { return *this; }
 
-  // Make sure the types are correct.
-  if (TYPENAME(T) != d.tname)
-    Log::Fatal << "Attempted to access parameter --" << key << " as type "
-        << TYPENAME(T) << ", but its true type is " << d.tname << "!"
-        << std::endl;
+inline void IO::AddParameter(const std::string& bindingName,
+                             util::ParamData&& data)
+{
+  // Temporarily define color code escape sequences.
+  #ifndef _WIN32
+    #define BASH_RED "\033[0;31m"
+    #define BASH_CLEAR "\033[0m"
+  #else
+    #define BASH_RED ""
+    #define BASH_CLEAR ""
+  #endif
 
-  // Do we have a special mapped function?
-  if (IO::GetSingleton().functionMap[d.tname].count("GetParam") != 0)
+  // Temporary outstream object for detecting duplicate identifiers.
+  util::PrefixedOutStream outstr(MLPACK_CERR_STREAM,
+        BASH_RED "[FATAL] " BASH_CLEAR, false, true /* fatal */);
+
+  #undef BASH_RED
+  #undef BASH_CLEAR
+
+  // Define identifier and alias maps.
+  std::map<std::string, util::ParamData>& bindingParams =
+      GetSingleton().parameters[bindingName];
+  std::map<char, std::string>& bindingAliases =
+      GetSingleton().aliases[bindingName];
+
+  // If found in current map, print fatal error and terminate the program, but
+  // only if the parameter is not a global parameter.
+  if (bindingParams.count(data.name) && bindingName != "")
   {
-    T* output = NULL;
-    IO::GetSingleton().functionMap[d.tname]["GetParam"](d, NULL,
-        (void*) &output);
-    return *output;
+    outstr << "Parameter '" << data.name << "' ('" << data.alias << "') "
+           << "is defined multiple times with the same identifiers."
+           << std::endl;
   }
-  else
+  else if (bindingParams.count(data.name) && bindingName == "")
   {
-    return *boost::any_cast<T>(&d.value);
+    // It already exists; no need to add it again.
+    return;
   }
+
+  // Check for duplicate aliases.
+  if (data.alias != '\0' && bindingAliases.count(data.alias))
+  {
+    outstr << "Parameter '" << data.name << " ('" << data.alias << "') "
+           << "is defined multiple times with the same alias." << std::endl;
+  }
+
+  // Add the alias, if necessary.
+  std::lock_guard<std::mutex> lock(GetSingleton().mapMutex);
+  if (data.alias != '\0')
+    bindingAliases[data.alias] = data.name;
+
+  bindingParams[data.name] = std::move(data);
 }
 
 /**
- * Cast the given parameter of the given type to a short, printable std::string,
- * for use in status messages.  Ideally the message returned here should be only
- * a handful of characters, and certainly no longer than one line.
+ * Add a function to the function map.
  *
- * @param identifier The name of the parameter in question.
+ * @param type Type that this function should be called for.
+ * @param name Name of the function.
+ * @param func Function to call.
  */
-template<typename T>
-std::string IO::GetPrintableParam(const std::string& identifier)
+inline void IO::AddFunction(const std::string& type,
+                            const std::string& name,
+                            void (*func)(util::ParamData&, const void*, void*))
 {
-  // Only use the alias if the parameter does not exist as given.
-  std::string key = ((GetSingleton().parameters.count(identifier) == 0) &&
-      (identifier.length() == 1) &&
-      (GetSingleton().aliases.count(identifier[0]) > 0)) ?
-      GetSingleton().aliases[identifier[0]] : identifier;
-
-  if (GetSingleton().parameters.count(key) == 0)
-    Log::Fatal << "Parameter --" << key << " does not exist in this program!"
-        << std::endl;
-
-  util::ParamData& d = GetSingleton().parameters[key];
-
-  // Make sure the types are correct.
-  if (TYPENAME(T) != d.tname)
-    Log::Fatal << "Attempted to access parameter --" << key << " as type "
-        << TYPENAME(T) << ", but its true type is " << d.tname << "!"
-        << std::endl;
-
-  // Do we have a special mapped function?
-  if (IO::GetSingleton().functionMap[d.tname].count("GetPrintableParam") != 0)
-  {
-    std::string output;
-    IO::GetSingleton().functionMap[d.tname]["GetPrintableParam"](d, NULL,
-        (void*) &output);
-    return output;
-  }
-  else
-  {
-    std::ostringstream oss;
-    oss << "no GetPrintableParam function handler registered for type "
-        << d.cppType;
-    throw std::runtime_error(oss.str());
-  }
+  std::lock_guard<std::mutex> lock(GetSingleton().mapMutex);
+  GetSingleton().functionMap[type][name] = func;
 }
 
-template<typename T>
-T& IO::GetRawParam(const std::string& identifier)
+/**
+ * Add a user-friendly name for a binding.
+ *
+ * @param bindingName Name of the binding to add the user-friendly name for.
+ * @param name User-friendly name.
+ */
+inline void IO::AddBindingName(const std::string& bindingName,
+                               const std::string& name)
 {
-  // Only use the alias if the parameter does not exist as given.
-  std::string key =
-      (GetSingleton().parameters.count(identifier) == 0 &&
-       identifier.length() == 1 && GetSingleton().aliases.count(identifier[0]))
-      ? GetSingleton().aliases[identifier[0]] : identifier;
+  std::lock_guard<std::mutex> lock(GetSingleton().mapMutex);
+  GetSingleton().docs[bindingName].name = name;
+}
 
-  if (GetSingleton().parameters.count(key) == 0)
-    Log::Fatal << "Parameter --" << key << " does not exist in this program!"
-        << std::endl;
+/**
+ * Add a short description for a binding.
+ *
+ * @param bindingName Name of the binding to add the description for.
+ * @param shortDescription Description to use.
+ */
+inline void IO::AddShortDescription(const std::string& bindingName,
+                                    const std::string& shortDescription)
+{
+  std::lock_guard<std::mutex> lock(GetSingleton().docMutex);
+  GetSingleton().docs[bindingName].shortDescription = shortDescription;
+}
 
-  util::ParamData& d = GetSingleton().parameters[key];
+/**
+ * Add a long description for a binding.
+ *
+ * @param bindingName Name of the binding to add the description for.
+ * @param longDescription Function that returns the long description.
+ */
+inline void IO::AddLongDescription(
+    const std::string& bindingName,
+    const std::function<std::string()>& longDescription)
+{
+  std::lock_guard<std::mutex> lock(GetSingleton().docMutex);
+  GetSingleton().docs[bindingName].longDescription = longDescription;
+}
 
-  // Make sure the types are correct.
-  if (TYPENAME(T) != d.tname)
-    Log::Fatal << "Attempted to access parameter --" << key << " as type "
-        << TYPENAME(T) << ", but its true type is " << d.tname << "!"
-        << std::endl;
+/**
+ * Add an example for a binding.
+ *
+ * @param bindingName Name of the binding to add the example for.
+ * @param example Function that returns the example.
+ */
+inline void IO::AddExample(const std::string& bindingName,
+                           const std::function<std::string()>& example)
+{
+  std::lock_guard<std::mutex> lock(GetSingleton().docMutex);
+  GetSingleton().docs[bindingName].example.push_back(std::move(example));
+}
 
-  // Do we have a special mapped function?
-  if (IO::GetSingleton().functionMap[d.tname].count("GetRawParam") != 0)
-  {
-    T* output = NULL;
-    IO::GetSingleton().functionMap[d.tname]["GetRawParam"](d, NULL,
-        (void*) &output);
-    return *output;
-  }
-  else
-  {
-    // Use the regular GetParam().
-    return GetParam<T>(identifier);
-  }
+/**
+ * Add a SeeAlso for a binding.
+ *
+ * @param bindingName Name of the binding to add the example for.
+ * @param description Description of the SeeAlso.
+ * @param link Link of the SeeAlso.
+ */
+inline void IO::AddSeeAlso(const std::string& bindingName,
+                           const std::string& description,
+                           const std::string& link)
+{
+  std::lock_guard<std::mutex> lock(GetSingleton().docMutex);
+  GetSingleton().docs[bindingName].seeAlso.push_back(
+      std::make_pair(description, link));
+}
+
+// Returns the sole instance of this class.
+inline IO& IO::GetSingleton()
+{
+  static IO singleton;
+  return singleton;
+}
+
+// Returns the sole instance of the timers.
+inline util::Timers& IO::GetTimers()
+{
+  return GetSingleton().timer;
+}
+
+/**
+ * Return a new Params object initialized with all the parameters of the
+ * binding `bindingName`.  This is intended to be called at the beginning of
+ * the run of a binding.
+ */
+inline util::Params IO::Parameters(const std::string& bindingName)
+{
+  // We don't need a mutex here, because we are only randomly accessing elements
+  // of the maps.
+  std::map<char, std::string> resultAliases =
+      GetSingleton().aliases[bindingName];
+  // Merge in any persistent parameters (e.g. parameters in the "" binding map).
+  std::map<char, std::string> persistentAliases = GetSingleton().aliases[""];
+  resultAliases.insert(persistentAliases.begin(), persistentAliases.end());
+
+  std::map<std::string, util::ParamData> resultParams =
+      GetSingleton().parameters[bindingName];
+  // Merge in any persistent parameters (e.g. parameters in the "" binding map).
+  std::map<std::string, util::ParamData> persistentParams =
+      GetSingleton().parameters[""];
+  resultParams.insert(persistentParams.begin(), persistentParams.end());
+
+  return util::Params(resultAliases, resultParams, GetSingleton().functionMap,
+      bindingName, GetSingleton().docs[bindingName]);
 }
 
 } // namespace mlpack

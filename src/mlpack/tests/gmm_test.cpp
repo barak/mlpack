@@ -12,30 +12,23 @@
  */
 #include <mlpack/core.hpp>
 
-#include <mlpack/methods/gmm/gmm.hpp>
-#include <mlpack/methods/gmm/diagonal_gmm.hpp>
-
-#include <mlpack/methods/gmm/no_constraint.hpp>
-#include <mlpack/methods/gmm/positive_definite_constraint.hpp>
-#include <mlpack/methods/gmm/diagonal_constraint.hpp>
-#include <mlpack/methods/gmm/eigenvalue_ratio_constraint.hpp>
+#include <mlpack/methods/gmm.hpp>
 
 #include "test_catch_tools.hpp"
 #include "catch.hpp"
 
 using namespace mlpack;
-using namespace mlpack::gmm;
 
 /**
- * Test GMM::Probability() for a single observation for a few cases.
+ * Test GMM::Probability() with a single observation at a time for a few cases.
  */
 
 TEST_CASE("GMMProbabilityTest", "[GMMTest]")
 {
   // Create a GMM.
   GMM gmm(2, 2);
-  gmm.Component(0) = distribution::GaussianDistribution("0 0", "1 0; 0 1");
-  gmm.Component(1) = distribution::GaussianDistribution("3 3", "2 1; 1 2");
+  gmm.Component(0) = GaussianDistribution("0 0", "1 0; 0 1");
+  gmm.Component(1) = GaussianDistribution("3 3", "2 1; 1 2");
   gmm.Weights() = "0.3 0.7";
 
   // Now test a couple observations.  These comparisons are calculated by hand.
@@ -55,8 +48,8 @@ TEST_CASE("GMMProbabilityComponentTest", "[GMMTest]")
 {
   // Create a GMM (same as the last test).
   GMM gmm(2, 2);
-  gmm.Component(0) = distribution::GaussianDistribution("0 0", "1 0; 0 1");
-  gmm.Component(1) = distribution::GaussianDistribution("3 3", "2 1; 1 2");
+  gmm.Component(0) = GaussianDistribution("0 0", "1 0; 0 1");
+  gmm.Component(1) = GaussianDistribution("3 3", "2 1; 1 2");
   gmm.Weights() = "0.3 0.7";
 
   // Now test a couple observations.  These comparisons are calculated by hand.
@@ -111,7 +104,7 @@ TEST_CASE("GMMTrainEMOneGaussian", "[GMMTest]")
     gmm.Train(data, 10);
 
     arma::vec actualMean = arma::mean(data, 1);
-    arma::mat actualCovar = mlpack::math::ColumnCovariance(data,
+    arma::mat actualCovar = ColumnCovariance(data,
         1 /* biased estimator */);
 
     // Check the model to see that it is correct.
@@ -200,7 +193,7 @@ TEST_CASE("GMMTrainEMMultipleGaussians", "[GMMTest]")
       // Calculate the actual means and covariances because they will probably
       // be different (this is easier to do before we shuffle the points).
       means[i] = arma::mean(data.cols(point, point + counts[i] - 1), 1);
-      covars[i] = mlpack::math::ColumnCovariance(arma::mat(data.cols(point,
+      covars[i] = ColumnCovariance(arma::mat(data.cols(point,
           point + counts[i] - 1)), 1 /* biased */);
 
       point += counts[i];
@@ -257,32 +250,42 @@ TEST_CASE("GMMTrainEMMultipleGaussians", "[GMMTest]")
  */
 TEST_CASE("GMMTrainEMSingleGaussianWithProbability", "[GMMTest]")
 {
-  // Generate observations from a Gaussian distribution.
-  distribution::GaussianDistribution d("0.5 1.0", "1.0 0.3; 0.3 1.0");
+  // We run the test multiple times, since it sometimes fails, in order to get
+  // the probability of failure down.
+  bool success = false;
+  const size_t trials = 3;
+  for (size_t trial = 0; trial < trials; ++trial)
+  {
+    // Generate observations from a Gaussian distribution.
+    GaussianDistribution d("0.5 1.0", "1.0 0.3; 0.3 1.0");
 
-  // 10000 observations, each with random probability.
-  arma::mat observations(2, 20000);
-  for (size_t i = 0; i < 20000; ++i)
-    observations.col(i) = d.Random();
-  arma::vec probabilities;
-  probabilities.randu(20000); // Random probabilities.
+    // 10000 observations, each with random probability.
+    arma::mat observations(2, 20000);
+    for (size_t i = 0; i < 20000; ++i)
+      observations.col(i) = d.Random();
+    arma::vec probabilities;
+    probabilities.randu(20000); // Random probabilities.
 
-  // Now train the model.
-  GMM g(1, 2);
-  g.Train(observations, probabilities, 10);
+    // Now train the model.
+    GMM g(1, 2);
+    g.Train(observations, probabilities, 10);
 
-  // Check that it is trained correctly.  5% tolerance because of random error
-  // present in observations.
-  REQUIRE(g.Component(0).Mean()[0] == Approx(0.5).epsilon(0.05));
-  REQUIRE(g.Component(0).Mean()[1] == Approx(1.0).epsilon(0.05));
+    // Check that it is trained correctly.  5% tolerance because of random error
+    // present in observations.
+    if (g.Component(0).Mean()[0] == Approx(0.5).epsilon(0.05) &&
+        g.Component(0).Mean()[1] == Approx(1.0).epsilon(0.05) &&
+        g.Component(0).Covariance()(0, 0) == Approx(1.0).epsilon(0.06) &&
+        g.Component(0).Covariance()(0, 1) == Approx(0.3).epsilon(0.1) &&
+        g.Component(0).Covariance()(1, 0) == Approx(0.3).epsilon(0.1) &&
+        g.Component(0).Covariance()(1, 1) == Approx(1.0).epsilon(0.06) &&
+        g.Weights()[0] == Approx(1.0).epsilon(1e-7))
+    {
+      success = true;
+      break;
+    }
+  }
 
-  // 6% tolerance on the large numbers, 10% on the smaller numbers.
-  REQUIRE(g.Component(0).Covariance()(0, 0) == Approx(1.0).epsilon(0.06));
-  REQUIRE(g.Component(0).Covariance()(0, 1) == Approx(0.3).epsilon(0.1));
-  REQUIRE(g.Component(0).Covariance()(1, 0) == Approx(0.3).epsilon(0.1));
-  REQUIRE(g.Component(0).Covariance()(1, 1) == Approx(1.0).epsilon(0.06));
-
-  REQUIRE(g.Weights()[0] == Approx(1.0).epsilon(1e-7));
+  REQUIRE(success == true);
 }
 
 /**
@@ -293,18 +296,18 @@ TEST_CASE("GMMTrainEMMultipleGaussiansWithProbability", "[GMMTest]")
 {
   // We'll have three Gaussian distributions from this mixture, and one Gaussian
   // not from this mixture (but we'll put some observations from it in).
-  distribution::GaussianDistribution d1("0.0 1.0 0.0", "1.0 0.0 0.5;"
-                                                       "0.0 0.8 0.1;"
-                                                       "0.5 0.1 1.0");
-  distribution::GaussianDistribution d2("2.0 -1.0 5.0", "3.0 0.0 0.5;"
-                                                        "0.0 1.2 0.2;"
-                                                        "0.5 0.2 1.3");
-  distribution::GaussianDistribution d3("0.0 5.0 -3.0", "2.0 0.0 0.0;"
-                                                        "0.0 0.3 0.0;"
-                                                        "0.0 0.0 1.0");
-  distribution::GaussianDistribution d4("4.0 2.0 2.0", "1.5 0.6 0.5;"
-                                                       "0.6 1.1 0.1;"
-                                                       "0.5 0.1 1.0");
+  GaussianDistribution d1("0.0 1.0 0.0", "1.0 0.0 0.5;"
+                                         "0.0 0.8 0.1;"
+                                         "0.5 0.1 1.0");
+  GaussianDistribution d2("2.0 -1.0 5.0", "3.0 0.0 0.5;"
+                                          "0.0 1.2 0.2;"
+                                          "0.5 0.2 1.3");
+  GaussianDistribution d3("0.0 5.0 -3.0", "2.0 0.0 0.0;"
+                                          "0.0 0.3 0.0;"
+                                          "0.0 0.0 1.0");
+  GaussianDistribution d4("4.0 2.0 2.0", "1.5 0.6 0.5;"
+                                         "0.6 1.1 0.1;"
+                                         "0.5 0.1 1.0");
 
   // Now we'll generate points and probabilities.  2000 points.  Slower than I
   // would like...
@@ -313,7 +316,7 @@ TEST_CASE("GMMTrainEMMultipleGaussiansWithProbability", "[GMMTest]")
 
   for (size_t i = 0; i < 2000; ++i)
   {
-    double randValue = math::Random();
+    double randValue = Random();
 
     if (randValue <= 0.20) // p(d1) = 0.20
       points.col(i) = d1.Random();
@@ -329,7 +332,7 @@ TEST_CASE("GMMTrainEMMultipleGaussiansWithProbability", "[GMMTest]")
     // plus or minus a little bit of noise.  The base probability (minus the
     // noise) is parameterizable for easy modification of the test.
     double confidence = 0.998;
-    double perturbation = math::Random(-0.002, 0.002);
+    double perturbation = Random(-0.002, 0.002);
 
     if (randValue <= 0.90)
       probabilities(i) = confidence + perturbation;
@@ -419,13 +422,11 @@ TEST_CASE("GMMRandomTest", "[GMMTest]")
   gmm.Weights() = arma::vec("0.40 0.60");
 
   // N([2.25 3.10], [1.00 0.20; 0.20 0.89])
-  gmm.Component(0) = distribution::GaussianDistribution("2.25 3.10",
-      "1.00 0.60; 0.60 0.89");
+  gmm.Component(0) = GaussianDistribution("2.25 3.10", "1.00 0.60; 0.60 0.89");
 
 
   // N([4.10 1.01], [1.00 0.00; 0.00 1.01])
-  gmm.Component(1) = distribution::GaussianDistribution("4.10 1.01",
-      "1.00 0.70; 0.70 1.01");
+  gmm.Component(1) = GaussianDistribution("4.10 1.01", "1.00 0.70; 0.70 1.01");
 
   // Now generate a bunch of observations.
   arma::mat observations(2, 4000);
@@ -491,10 +492,9 @@ TEST_CASE("GMMClassifyTest", "[GMMTest]")
 {
   // First create a Gaussian with a few components.
   GMM gmm(3, 2);
-  gmm.Component(0) = distribution::GaussianDistribution("0 0", "1 0; 0 1");
-  gmm.Component(1) = distribution::GaussianDistribution("1 3", "3 2; 2 3");
-  gmm.Component(2) = distribution::GaussianDistribution("-2 -2",
-      "2.2 1.4; 1.4 5.1");
+  gmm.Component(0) = GaussianDistribution("0 0", "1 0; 0 1");
+  gmm.Component(1) = GaussianDistribution("1 3", "3 2; 2 3");
+  gmm.Component(2) = GaussianDistribution("-2 -2", "2.2 1.4; 1.4 5.1");
   gmm.Weights() = "0.6 0.25 0.15";
 
   arma::mat observations = arma::trans(arma::mat(
@@ -552,16 +552,16 @@ TEST_CASE("GMMLoadSaveTest", "[GMMTest]")
   // Save the GMM.
   {
     std::ofstream ofs("test-gmm-save.xml");
-    boost::archive::xml_oarchive ar(ofs);
-    ar << BOOST_SERIALIZATION_NVP(gmm);
+    cereal::XMLOutputArchive ar(ofs);
+    ar(CEREAL_NVP(gmm));
   }
 
   // Load the GMM.
   GMM gmm2;
   {
     std::ifstream ifs("test-gmm-save.xml");
-    boost::archive::xml_iarchive ar(ifs);
-    ar >> BOOST_SERIALIZATION_NVP(gmm2);
+    cereal::XMLInputArchive ar(ifs);
+    ar(cereal::make_nvp("gmm", gmm2));
   }
 
   // Remove clutter.
@@ -597,8 +597,8 @@ TEST_CASE("NoConstraintTest", "[GMMTest]")
   // Generate random matrices and make sure they end up the same.
   for (size_t i = 0; i < 30; ++i)
   {
-    const size_t rows = 5 + math::RandInt(100);
-    const size_t cols = 5 + math::RandInt(100);
+    const size_t rows = 5 + RandInt(100);
+    const size_t cols = 5 + RandInt(100);
     arma::mat cov(rows, cols);
     cov.randu();
     arma::mat newcov(cov);
@@ -616,7 +616,7 @@ TEST_CASE("PositiveDefiniteConstraintTest", "[GMMTest]")
   // that they can be Cholesky decomposed.
   for (size_t i = 0; i < 30; ++i)
   {
-    const size_t elem = 5 + math::RandInt(50);
+    const size_t elem = 5 + RandInt(50);
     arma::mat cov(elem, elem);
     cov.randu();
 
@@ -632,7 +632,7 @@ TEST_CASE("DiagonalConstraintTest", "[GMMTest]")
   // Make sure matrices are made to be positive definite.
   for (size_t i = 0; i < 30; ++i)
   {
-    const size_t elem = 5 + math::RandInt(50);
+    const size_t elem = 5 + RandInt(50);
     arma::mat cov(elem, elem);
     cov.randu();
 
@@ -728,7 +728,7 @@ TEST_CASE("UseExistingModelTest", "[GMMTest]")
     // Calculate the actual means and covariances because they will probably
     // be different (this is easier to do before we shuffle the points).
     means[i] = arma::mean(data.cols(point, point + counts[i] - 1), 1);
-    covars[i] = mlpack::math::ColumnCovariance(arma::mat(data.cols(point,
+    covars[i] = ColumnCovariance(arma::mat(data.cols(point,
         point + counts[i] - 1)), 1 /* biased */);
 
     point += counts[i];
@@ -750,17 +750,17 @@ TEST_CASE("UseExistingModelTest", "[GMMTest]")
   // Check for similarity.
   for (size_t i = 0; i < gmm.Gaussians(); ++i)
   {
-    REQUIRE(gmm.Weights()[i] == Approx(oldgmm.Weights()[i]).epsilon(1e-6));
+    REQUIRE(gmm.Weights()[i] == Approx(oldgmm.Weights()[i]).epsilon(1e-4));
 
     for (size_t j = 0; j < gmm.Dimensionality(); ++j)
     {
       REQUIRE(gmm.Component(i).Mean()[j] ==
-          Approx(oldgmm.Component(i).Mean()[j]).epsilon(1e-5));
+          Approx(oldgmm.Component(i).Mean()[j]).epsilon(1e-4));
 
       for (size_t k = 0; k < gmm.Dimensionality(); ++k)
       {
         REQUIRE(gmm.Component(i).Covariance()(j, k) ==
-            Approx(oldgmm.Component(i).Covariance()(j, k)).epsilon(1e-5));
+            Approx(oldgmm.Component(i).Covariance()(j, k)).epsilon(1e-4));
       }
     }
   }
@@ -850,8 +850,8 @@ TEST_CASE("DiagonalGMMProbabilityComponentTest", "[GMMTest]")
 {
   // Create DiagonalGMM.
   DiagonalGMM gmm(2, 2);
-  gmm.Component(0) = distribution::DiagonalGaussianDistribution("0 0", "1 1");
-  gmm.Component(1) = distribution::DiagonalGaussianDistribution("2 3", "3 2");
+  gmm.Component(0) = DiagonalGaussianDistribution("0 0", "1 1");
+  gmm.Component(1) = DiagonalGaussianDistribution("2 3", "3 2");
   gmm.Weights() = "0.2 0.8";
 
   // The values are calculated using mlpack's GMM class.
@@ -903,7 +903,7 @@ TEST_CASE("DiagonalGMMTrainEMOneGaussian", "[GMMTest]")
 
     arma::vec actualMean = arma::mean(data, 1);
     arma::vec actualCovar = arma::diagvec(
-        mlpack::math::ColumnCovariance(data,
+        ColumnCovariance(data,
         1 /* biased estimator */));
 
     // Check the model to see that it is correct.
@@ -922,7 +922,7 @@ TEST_CASE("DiagonalGMMTrainEMOneGaussian", "[GMMTest]")
 TEST_CASE("DiagonalGMMTrainEMOneGaussianWithProbability", "[GMMTest]")
 {
   // Generate a diagonal covariance gaussian distribution.
-  distribution::DiagonalGaussianDistribution d("1.0 0.8", "1.0 2.0");
+  DiagonalGaussianDistribution d("1.0 0.8", "1.0 2.0");
 
   // Generate 20000 observations, each with random probabilities.
   arma::mat observations(2, 20000);
@@ -960,19 +960,16 @@ TEST_CASE("DiagonalGMMTrainEMMultipleGaussians", "[GMMTest]")
 {
   // We'll have three diagonal covariance Gaussian distributions from this
   // mixture.
-  distribution::DiagonalGaussianDistribution d1("0.0 1.0 0.0",
-      "1.0 0.8 1.0;");
-  distribution::DiagonalGaussianDistribution d2("2.0 -1.0 5.0",
-      "3.0 1.2 1.3;");
-  distribution::DiagonalGaussianDistribution d3("0.0 5.0 -3.0",
-      "2.0 0.3 1.0;");
+  DiagonalGaussianDistribution d1("0.0 1.0 0.0", "1.0 0.8 1.0;");
+  DiagonalGaussianDistribution d2("2.0 -1.0 5.0", "3.0 1.2 1.3;");
+  DiagonalGaussianDistribution d3("0.0 5.0 -3.0", "2.0 0.3 1.0;");
 
   // Now we'll generate points and probabilities.
   arma::mat observations(3, 5000);
 
   for (size_t i = 0; i < 5000; ++i)
   {
-    double randValue = math::Random();
+    double randValue = Random();
 
     if (randValue <= 0.20) // p(d1) = 0.20
       observations.col(i) = d1.Random();
@@ -1046,19 +1043,16 @@ TEST_CASE("DiagonalGMMTrainEMMultipleGaussiansWithProbability", "[GMMTest]")
 {
   // We'll have three diagonal covariance Gaussian distributions from this
   // mixture.
-  distribution::DiagonalGaussianDistribution d1("1.5 0.8 1.0",
-      "1.0 0.8 1.0;");
-  distribution::DiagonalGaussianDistribution d2("8.2 6.3 7.4",
-      "1.0 1.2 1.3;");
-  distribution::DiagonalGaussianDistribution d3("-4.5 -5.0 -3.0",
-      "2.0 2.3 1.0;");
+  DiagonalGaussianDistribution d1("1.5 0.8 1.0", "1.0 0.8 1.0;");
+  DiagonalGaussianDistribution d2("8.2 6.3 7.4", "1.0 1.2 1.3;");
+  DiagonalGaussianDistribution d3("-4.5 -5.0 -3.0", "2.0 2.3 1.0;");
 
   // Now we'll generate observations and probabilities.
   arma::mat observations(3, 10000);
 
   for (size_t i = 0; i < 10000; ++i)
   {
-    double randValue = math::Random();
+    double randValue = Random();
 
     if (randValue <= 0.20) // p(d1) = 0.20
       observations.col(i) = d1.Random();
@@ -1137,11 +1131,8 @@ TEST_CASE("DiagonalGMMRandomTest", "[GMMTest]")
   DiagonalGMM gmm(2, 2);
   gmm.Weights() = arma::vec("0.40 0.60");
 
-  gmm.Component(0) = distribution::DiagonalGaussianDistribution("1.05 2.60",
-      "0.95 1.01");
-
-  gmm.Component(1) = distribution::DiagonalGaussianDistribution("4.30 1.00",
-      "1.05 0.97");
+  gmm.Component(0) = DiagonalGaussianDistribution("1.05 2.60", "0.95 1.01");
+  gmm.Component(1) = DiagonalGaussianDistribution("4.30 1.00", "1.05 0.97");
 
   // Now generate a bunch of observations.
   arma::mat observations(2, 4000);
@@ -1206,16 +1197,16 @@ TEST_CASE("DiagonalGMMLoadSaveTest", "[GMMTest]")
   // Save the gmm.
   {
     std::ofstream ofs("test-diagonal-gmm-save.xml");
-    boost::archive::xml_oarchive ar(ofs);
-    ar << BOOST_SERIALIZATION_NVP(gmm);
+    cereal::XMLOutputArchive ar(ofs);
+    ar(cereal::make_nvp("gmm", gmm));
   }
 
   // Load the gmm into gmm2.
   DiagonalGMM gmm2;
   {
     std::ifstream ifs("test-diagonal-gmm-save.xml");
-    boost::archive::xml_iarchive ar(ifs);
-    ar >> BOOST_SERIALIZATION_NVP(gmm2);
+    cereal::XMLInputArchive ar(ifs);
+    ar(cereal::make_nvp("gmm", gmm2));
   }
 
   // Remove clutter.

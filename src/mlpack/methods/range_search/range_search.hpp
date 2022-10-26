@@ -19,10 +19,12 @@
 #include "range_search_stat.hpp"
 
 namespace mlpack {
-namespace range /** Range-search routines. */ {
 
 //! Forward declaration.
-class TrainVisitor;
+template<template<typename TreeMetricType,
+                  typename TreeStatType,
+                  typename TreeMatType> class TreeType>
+class LeafSizeRSWrapper;
 
 /**
  * The RangeSearch class is a template class for performing range searches.  It
@@ -34,11 +36,11 @@ class TrainVisitor;
  * @tparam MatType Type of data to use.
  * @tparam TreeType Type of tree to use; must satisfy the TreeType policy API.
  */
-template<typename MetricType = metric::EuclideanDistance,
+template<typename MetricType = EuclideanDistance,
          typename MatType = arma::mat,
          template<typename TreeMetricType,
                   typename TreeStatType,
-                  typename TreeMatType> class TreeType = tree::KDTree>
+                  typename TreeMatType> class TreeType = KDTree>
 class RangeSearch
 {
  public:
@@ -122,12 +124,18 @@ class RangeSearch
   RangeSearch(RangeSearch&& other);
 
   /**
-   * Copy the given RangeSearch model.
-   * Use std::move to pass in the model if the old copy is no longer needed.
-   *
+   * Deep copy the given RangeSearch model.
+   * 
    * @param other RangeSearch model to copy.
    */
-  RangeSearch& operator=(RangeSearch other);
+  RangeSearch& operator=(const RangeSearch& other);
+
+  /**
+   * Move the given RangeSearch model.
+   *
+   * @param other RangeSearch model to move.
+   */
+  RangeSearch& operator=(RangeSearch&& other);
 
   /**
    * Destroy the RangeSearch object.  If trees were created, they will be
@@ -181,7 +189,7 @@ class RangeSearch
    *      point which fell into the given range, for each query point.
    */
   void Search(const MatType& querySet,
-              const math::Range& range,
+              const Range& range,
               std::vector<std::vector<size_t>>& neighbors,
               std::vector<std::vector<double>>& distances);
 
@@ -222,7 +230,7 @@ class RangeSearch
    *      point which fell into the given range, for each query point.
    */
   void Search(Tree* queryTree,
-              const math::Range& range,
+              const Range& range,
               std::vector<std::vector<size_t>>& neighbors,
               std::vector<std::vector<double>>& distances);
 
@@ -255,7 +263,7 @@ class RangeSearch
    * @param distances Object which will hold the list of distances for each
    *      point which fell into the given range, for each query point.
    */
-  void Search(const math::Range& range,
+  void Search(const Range& range,
               std::vector<std::vector<size_t>>& neighbors,
               std::vector<std::vector<double>>& distances);
 
@@ -276,7 +284,7 @@ class RangeSearch
 
   //! Serialize the model.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int version);
+  void serialize(Archive& ar, const uint32_t version);
 
   //! Return the reference set.
   const MatType& ReferenceSet() const { return *referenceSet; }
@@ -310,10 +318,9 @@ class RangeSearch
   size_t scores;
 
   //! For access to mappings when building models.
-  friend class TrainVisitor;
+  friend class LeafSizeRSWrapper<TreeType>;
 };
 
-} // namespace range
 } // namespace mlpack
 
 // Include implementation.

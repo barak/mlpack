@@ -21,7 +21,6 @@
 #include "pca.hpp"
 
 namespace mlpack {
-namespace pca {
 
 template<typename DecompositionPolicy>
 PCA<DecompositionPolicy>::PCA(
@@ -44,19 +43,15 @@ void PCA<DecompositionPolicy>::Apply(const arma::mat& data,
                                      arma::vec& eigVal,
                                      arma::mat& eigvec)
 {
-  Timer::Start("pca");
-
   // Center the data into a temporary matrix.
   arma::mat centeredData;
-  math::Center(data, centeredData);
+  Center(data, centeredData);
 
   // Scale the data if the user ask for.
   ScaleData(centeredData);
 
   decomposition.Apply(data, centeredData, transformedData, eigVal, eigvec,
       data.n_rows);
-
-  Timer::Stop("pca");
 }
 
 /**
@@ -72,6 +67,21 @@ void PCA<DecompositionPolicy>::Apply(const arma::mat& data,
                                      arma::vec& eigVal)
 {
   arma::mat eigvec;
+  Apply(data, transformedData, eigVal, eigvec);
+}
+
+/**
+ * Apply Principal Component Analysis to the provided data set.
+ *
+ * @param data - Data matrix.
+ * @param transformedData Data with PCA applied.
+ */
+template<typename DecompositionPolicy>
+void PCA<DecompositionPolicy>::Apply(const arma::mat& data,
+                                     arma::mat& transformedData)
+{
+  arma::mat eigvec;
+  arma::vec eigVal;
   Apply(data, transformedData, eigVal, eigvec);
 }
 
@@ -102,11 +112,9 @@ double PCA<DecompositionPolicy>::Apply(arma::mat& data,
   arma::mat eigvec;
   arma::vec eigVal;
 
-  Timer::Start("pca");
-
   // Center the data into a temporary matrix.
   arma::mat centeredData;
-  math::Center(data, centeredData);
+  Center(data, centeredData);
 
   // Scale the data if the user ask for.
   ScaleData(centeredData);
@@ -120,8 +128,6 @@ double PCA<DecompositionPolicy>::Apply(arma::mat& data,
   // The svd method returns only non-zero eigenvalues so we have to calculate
   // the right dimension before calculating the amount of variance retained.
   double eigDim = std::min(newDimension - 1, (size_t) eigVal.n_elem - 1);
-
-  Timer::Stop("pca");
 
   // Calculate the total amount of variance retained.
   return (sum(eigVal.subvec(0, eigDim)) / sum(eigVal));
@@ -171,7 +177,6 @@ double PCA<DecompositionPolicy>::Apply(arma::mat& data,
   return varSum;
 }
 
-} // namespace pca
 } // namespace mlpack
 
 #endif

@@ -13,7 +13,7 @@
 #ifndef MLPACK_METHODS_SPARSE_CODING_SPARSE_CODING_HPP
 #define MLPACK_METHODS_SPARSE_CODING_SPARSE_CODING_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 #include <mlpack/methods/lars/lars.hpp>
 
 // Include our three simple dictionary initializers.
@@ -22,7 +22,6 @@
 #include "random_initializer.hpp"
 
 namespace mlpack {
-namespace sparse_coding {
 
 /**
  * An implementation of Sparse Coding with Dictionary Learning that achieves
@@ -256,7 +255,7 @@ class SparseCoding
 
   //! Serialize the sparse coding model.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
   //! Number of atoms.
@@ -278,7 +277,6 @@ class SparseCoding
   double newtonTolerance;
 };
 
-} // namespace sparse_coding
 } // namespace mlpack
 
 // Include implementation.

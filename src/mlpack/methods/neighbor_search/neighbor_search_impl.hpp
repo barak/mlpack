@@ -19,31 +19,6 @@
 #include <mlpack/core/tree/spill_tree/is_spill_tree.hpp>
 
 namespace mlpack {
-namespace neighbor {
-
-//! Call the tree constructor that does mapping.
-template<typename TreeType, typename MatType>
-TreeType* BuildTree(
-    MatType&& dataset,
-    std::vector<size_t>& oldFromNew,
-    typename std::enable_if_t<
-        tree::TreeTraits<TreeType>::RearrangesDataset, TreeType
-    >* = 0)
-{
-  return new TreeType(std::forward<MatType>(dataset), oldFromNew);
-}
-
-//! Call the tree constructor that does not do mapping.
-template<typename TreeType, typename MatType>
-TreeType* BuildTree(
-    MatType&& dataset,
-    const std::vector<size_t>& /* oldFromNew */,
-    const typename std::enable_if_t<
-        !tree::TreeTraits<TreeType>::RearrangesDataset, TreeType
-    >* = 0)
-{
-  return new TreeType(std::forward<MatType>(dataset));
-}
 
 // Construct the object.
 template<typename SortPolicy,
@@ -400,8 +375,6 @@ DualTreeTraversalType, SingleTreeTraversalType>::Search(
     throw std::invalid_argument(ss.str());
   }
 
-  Timer::Start("computing_neighbors");
-
   baseCases = 0;
   scores = 0;
 
@@ -416,7 +389,7 @@ DualTreeTraversalType, SingleTreeTraversalType>::Search(
   arma::mat* distancePtr = &distances;
 
   // Mapping is only necessary if the tree rearranges points.
-  if (tree::TreeTraits<Tree>::RearrangesDataset)
+  if (TreeTraits<Tree>::RearrangesDataset)
   {
     if (searchMode == DUAL_TREE_MODE)
     {
@@ -476,11 +449,7 @@ DualTreeTraversalType, SingleTreeTraversalType>::Search(
     case DUAL_TREE_MODE:
     {
       // Build the query tree.
-      Timer::Stop("computing_neighbors");
-      Timer::Start("tree_building");
       Tree* queryTree = BuildTree<Tree>(querySet, oldFromNewQueries);
-      Timer::Stop("tree_building");
-      Timer::Start("computing_neighbors");
 
       // Create the helper object for the tree traversal.
       RuleType rules(*referenceSet, queryTree->Dataset(), k, metric, epsilon);
@@ -509,7 +478,7 @@ DualTreeTraversalType, SingleTreeTraversalType>::Search(
       RuleType rules(*referenceSet, querySet, k, metric);
 
       // Create the traverser.
-      tree::GreedySingleTreeTraverser<Tree, RuleType> traverser(rules);
+      GreedySingleTreeTraverser<Tree, RuleType> traverser(rules);
 
       // Now have it traverse for each point.
       for (size_t i = 0; i < querySet.n_cols; ++i)
@@ -528,10 +497,8 @@ DualTreeTraversalType, SingleTreeTraversalType>::Search(
     }
   }
 
-  Timer::Stop("computing_neighbors");
-
   // Map points back to original indices, if necessary.
-  if (tree::TreeTraits<Tree>::RearrangesDataset)
+  if (TreeTraits<Tree>::RearrangesDataset)
   {
     if (searchMode == DUAL_TREE_MODE && !oldFromNewReferences.empty())
     {
@@ -619,8 +586,6 @@ DualTreeTraversalType, SingleTreeTraversalType>::Search(
     throw std::invalid_argument("cannot call NeighborSearch::Search() with a "
         "query tree when naive or singleMode are set to true");
 
-  Timer::Start("computing_neighbors");
-
   baseCases = 0;
   scores = 0;
 
@@ -630,8 +595,7 @@ DualTreeTraversalType, SingleTreeTraversalType>::Search(
   // We won't need to map query indices, but will we need to map distances?
   arma::Mat<size_t>* neighborPtr = &neighbors;
 
-  if (!oldFromNewReferences.empty() &&
-      tree::TreeTraits<Tree>::RearrangesDataset)
+  if (!oldFromNewReferences.empty() && TreeTraits<Tree>::RearrangesDataset)
     neighborPtr = new arma::Mat<size_t>;
 
   neighborPtr->set_size(k, querySet.n_cols);
@@ -656,11 +620,8 @@ DualTreeTraversalType, SingleTreeTraversalType>::Search(
   Log::Info << rules.Scores() << " node combinations were scored.\n";
   Log::Info << rules.BaseCases() << " base cases were calculated.\n";
 
-  Timer::Stop("computing_neighbors");
-
   // Do we need to map indices?
-  if (!oldFromNewReferences.empty() &&
-      tree::TreeTraits<Tree>::RearrangesDataset)
+  if (!oldFromNewReferences.empty() && TreeTraits<Tree>::RearrangesDataset)
   {
     // We must map reference indices only.
     neighbors.set_size(k, querySet.n_cols);
@@ -705,16 +666,13 @@ DualTreeTraversalType, SingleTreeTraversalType>::Search(
     throw std::invalid_argument(ss.str());
   }
 
-  Timer::Start("computing_neighbors");
-
   baseCases = 0;
   scores = 0;
 
   arma::Mat<size_t>* neighborPtr = &neighbors;
   arma::mat* distancePtr = &distances;
 
-  if (!oldFromNewReferences.empty() &&
-      tree::TreeTraits<Tree>::RearrangesDataset)
+  if (!oldFromNewReferences.empty() && TreeTraits<Tree>::RearrangesDataset)
   {
     // We will always need to rearrange in this case.
     distancePtr = new arma::mat;
@@ -785,7 +743,7 @@ DualTreeTraversalType, SingleTreeTraversalType>::Search(
       // Create the traverser.
       DualTreeTraversalType<RuleType> traverser(rules);
 
-      if (tree::IsSpillTree<Tree>::value)
+      if (IsSpillTree<Tree>::value)
       {
         // For Dual Tree Search on SpillTree, the queryTree must be built with
         // non overlapping (tau = 0).
@@ -814,7 +772,7 @@ DualTreeTraversalType, SingleTreeTraversalType>::Search(
     case GREEDY_SINGLE_TREE_MODE:
     {
       // Create the traverser.
-      tree::GreedySingleTreeTraverser<Tree, RuleType> traverser(rules);
+      GreedySingleTreeTraverser<Tree, RuleType> traverser(rules);
 
       // Now have it traverse for each point.
       for (size_t i = 0; i < referenceSet->n_cols; ++i)
@@ -833,11 +791,8 @@ DualTreeTraversalType, SingleTreeTraversalType>::Search(
 
   rules.GetResults(*neighborPtr, *distancePtr);
 
-  Timer::Stop("computing_neighbors");
-
   // Do we need to map the reference indices?
-  if (!oldFromNewReferences.empty() &&
-      tree::TreeTraits<Tree>::RearrangesDataset)
+  if (!oldFromNewReferences.empty() && TreeTraits<Tree>::RearrangesDataset)
   {
     neighbors.set_size(k, referenceSet->n_cols);
     distances.set_size(k, referenceSet->n_cols);
@@ -940,28 +895,27 @@ template<typename SortPolicy,
 template<typename Archive>
 void NeighborSearch<SortPolicy, MetricType, MatType, TreeType,
 DualTreeTraversalType, SingleTreeTraversalType>::serialize(
-    Archive& ar,
-    const unsigned int /* version */)
+    Archive& ar, const uint32_t /* version */)
 {
   // Serialize preferences for search.
-  ar & BOOST_SERIALIZATION_NVP(searchMode);
-  ar & BOOST_SERIALIZATION_NVP(treeNeedsReset);
+  ar(CEREAL_NVP(searchMode));
+  ar(CEREAL_NVP(treeNeedsReset));
 
   // If we are doing naive search, we serialize the dataset.  Otherwise we
   // serialize the tree.
   if (searchMode == NAIVE_MODE)
   {
     // Delete the current reference set, if necessary and if we are loading.
-    if (Archive::is_loading::value && referenceSet)
+    if (cereal::is_loading<Archive>() && referenceSet)
     {
       delete referenceSet;
     }
 
-    ar & BOOST_SERIALIZATION_NVP(referenceSet);
-    ar & BOOST_SERIALIZATION_NVP(metric);
+    ar(CEREAL_POINTER(const_cast<MatType*&>(referenceSet)));
+    ar(CEREAL_NVP(metric));
 
     // If we are loading, set the tree to NULL and clean up memory if necessary.
-    if (Archive::is_loading::value)
+    if (cereal::is_loading<Archive>())
     {
       if (referenceTree)
         delete referenceTree;
@@ -973,17 +927,17 @@ DualTreeTraversalType, SingleTreeTraversalType>::serialize(
   else
   {
     // Delete the current reference tree, if necessary and if we are loading.
-    if (Archive::is_loading::value && referenceTree)
+    if (cereal::is_loading<Archive>() && referenceTree)
     {
       delete referenceTree;
     }
 
-    ar & BOOST_SERIALIZATION_NVP(referenceTree);
-    ar & BOOST_SERIALIZATION_NVP(oldFromNewReferences);
+    ar(CEREAL_POINTER(referenceTree));
+    ar(CEREAL_NVP(oldFromNewReferences));
 
     // If we are loading, set the dataset accordingly and clean up memory if
     // necessary.
-    if (Archive::is_loading::value)
+    if (cereal::is_loading<Archive>())
     {
       referenceSet = &referenceTree->Dataset();
       metric = referenceTree->Metric(); // Get the metric from the tree.
@@ -991,14 +945,13 @@ DualTreeTraversalType, SingleTreeTraversalType>::serialize(
   }
 
   // Reset base cases and scores.
-  if (Archive::is_loading::value)
+  if (cereal::is_loading<Archive>())
   {
     baseCases = 0;
     scores = 0;
   }
 }
 
-} // namespace neighbor
 } // namespace mlpack
 
 #endif

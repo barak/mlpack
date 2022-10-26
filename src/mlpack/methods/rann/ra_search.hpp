@@ -25,22 +25,20 @@
 #ifndef MLPACK_METHODS_RANN_RA_SEARCH_HPP
 #define MLPACK_METHODS_RANN_RA_SEARCH_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 
-#include <mlpack/core/tree/binary_space_tree.hpp>
-
-#include <mlpack/core/metrics/lmetric.hpp>
 #include <mlpack/methods/neighbor_search/sort_policies/nearest_neighbor_sort.hpp>
 
 #include "ra_query_stat.hpp"
 #include "ra_util.hpp"
 
 namespace mlpack {
-namespace neighbor {
 
 // Forward declaration.
-template<typename SortPolicy>
-class TrainVisitor;
+template<template<typename TreeMetricType,
+                  typename TreeStatType,
+                  typename TreeMatType> class TreeType>
+class LeafSizeRAWrapper;
 
 /**
  * The RASearch class: This class provides a generic manner to perform
@@ -67,11 +65,11 @@ class TrainVisitor;
  * @tparam TreeType The tree type to use.
  */
 template<typename SortPolicy = NearestNeighborSort,
-         typename MetricType = metric::EuclideanDistance,
+         typename MetricType = EuclideanDistance,
          typename MatType = arma::mat,
          template<typename TreeMetricType,
                   typename TreeStatType,
-                  typename TreeMatType> class TreeType = tree::KDTree>
+                  typename TreeMatType> class TreeType = KDTree>
 class RASearch
 {
  public:
@@ -358,7 +356,7 @@ class RASearch
 
   //! Serialize the object.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
   //! Permutations of reference points during tree building.
@@ -394,11 +392,9 @@ class RASearch
   MetricType metric;
 
   //! For access to mappings when building models.
-  template<typename SortPol>
-  friend class TrainVisitor;
+  friend class LeafSizeRAWrapper<TreeType>;
 }; // class RASearch
 
-} // namespace neighbor
 } // namespace mlpack
 
 // Include implementation.

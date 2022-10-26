@@ -21,7 +21,6 @@
 #include <mlpack/methods/neighbor_search/sort_policies/nearest_neighbor_sort.hpp>
 
 namespace mlpack {
-namespace neighbor {
 
 /**
  * Extra data for each node in the tree.  For neighbor searches, each node only
@@ -62,10 +61,10 @@ class RAQueryStat
 
   //! Serialize the statistic.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(bound);
-    ar & BOOST_SERIALIZATION_NVP(numSamplesMade);
+    ar(CEREAL_NVP(bound));
+    ar(CEREAL_NVP(numSamplesMade));
   }
 
  private:
@@ -75,7 +74,6 @@ class RAQueryStat
   size_t numSamplesMade;
 };
 
-} // namespace neighbor
 } // namespace mlpack
 
 #endif

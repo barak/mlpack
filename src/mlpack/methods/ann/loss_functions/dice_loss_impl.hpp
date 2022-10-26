@@ -16,50 +16,45 @@
 #include "dice_loss.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-DiceLoss<InputDataType, OutputDataType>::DiceLoss(
-    const double smooth) : smooth(smooth)
+template<typename MatType>
+DiceLossType<MatType>::DiceLossType(const double smooth) : smooth(smooth)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type DiceLoss<InputDataType, OutputDataType>::Forward(
-    const InputType& input,
-    const TargetType& target)
+template<typename MatType>
+typename MatType::elem_type DiceLossType<MatType>::Forward(
+    const MatType& prediction,
+    const MatType& target)
 {
-  return 1 - ((2 * arma::accu(target % input) + smooth) /
-    (arma::accu(target % target) + arma::accu(
-    input % input) + smooth));
+  return 1 - ((2 * arma::accu(target % prediction) + smooth) /
+      (arma::accu(target % target) + arma::accu(
+      prediction % prediction) + smooth));
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void DiceLoss<InputDataType, OutputDataType>::Backward(
-    const InputType& input,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType>
+void DiceLossType<MatType>::Backward(
+    const MatType& prediction,
+    const MatType& target,
+    MatType& loss)
 {
-  output = -2 * (target * (arma::accu(input % input) +
-    arma::accu(target % target) + smooth) - input *
-    (2 * arma::accu(target % input) + smooth)) / std::pow(
-    arma::accu(target % target) + arma::accu(input % input)
-    + smooth, 2.0);
+  loss = -2 * (target * (arma::accu(prediction % prediction) +
+      arma::accu(target % target) + smooth) - prediction *
+      (2 * arma::accu(target % prediction) + smooth)) / std::pow(
+      arma::accu(target % target) + arma::accu(prediction % prediction)
+      + smooth, 2.0);
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void DiceLoss<InputDataType, OutputDataType>::serialize(
+void DiceLossType<MatType>::serialize(
     Archive& ar,
-    const unsigned int /* version */)
+    const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(smooth);
+  ar(CEREAL_NVP(smooth));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

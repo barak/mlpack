@@ -9,39 +9,25 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/util/io.hpp>
+#include <mlpack/core.hpp>
+
+#undef BINDING_NAME
+#define BINDING_NAME kernel_pca
+
 #include <mlpack/core/util/mlpack_main.hpp>
-#include <mlpack/core/math/random.hpp>
-#include <mlpack/core/kernels/kernel_traits.hpp>
-#include <mlpack/core/kernels/linear_kernel.hpp>
-#include <mlpack/core/kernels/polynomial_kernel.hpp>
-#include <mlpack/core/kernels/cosine_distance.hpp>
-#include <mlpack/core/kernels/gaussian_kernel.hpp>
-#include <mlpack/core/kernels/epanechnikov_kernel.hpp>
-#include <mlpack/core/kernels/hyperbolic_tangent_kernel.hpp>
-#include <mlpack/core/kernels/laplacian_kernel.hpp>
-#include <mlpack/core/kernels/pspectrum_string_kernel.hpp>
-#include <mlpack/core/kernels/spherical_kernel.hpp>
-#include <mlpack/core/kernels/triangular_kernel.hpp>
 #include <mlpack/methods/hoeffding_trees/hoeffding_tree.hpp>
-#include <mlpack/methods/nystroem_method/ordered_selection.hpp>
-#include <mlpack/methods/nystroem_method/random_selection.hpp>
-#include <mlpack/methods/nystroem_method/kmeans_selection.hpp>
 #include <mlpack/methods/nystroem_method/nystroem_method.hpp>
 #include <mlpack/methods/kernel_pca/kernel_rules/nystroem_method.hpp>
 
 #include "kernel_pca.hpp"
 
 using namespace mlpack;
-using namespace mlpack::kpca;
-using namespace mlpack::kernel;
 using namespace mlpack::util;
 using namespace std;
 using namespace arma;
 
 // Program Name.
-BINDING_NAME("Kernel Principal Components Analysis");
+BINDING_USER_NAME("Kernel Principal Components Analysis");
 
 // Short description.
 BINDING_SHORT_DESC(
@@ -109,11 +95,11 @@ BINDING_EXAMPLE(
 
 // See also...
 BINDING_SEE_ALSO("Kernel principal component analysis on Wikipedia",
-        "https://en.wikipedia.org/wiki/Kernel_principal_component_analysis");
+    "https://en.wikipedia.org/wiki/Kernel_principal_component_analysis");
 BINDING_SEE_ALSO("Kernel Principal Component Analysis (pdf)",
-        "http://pca.narod.ru/scholkopf_kernel.pdf");
-BINDING_SEE_ALSO("mlpack::kpca::KernelPCA class documentation",
-        "@doxygen/classmlpack_1_1kpca_1_1KernelPCA.html");
+    "http://pca.narod.ru/scholkopf_kernel.pdf");
+BINDING_SEE_ALSO("KernelPCA class documentation",
+    "@src/mlpack/methods/kernel_pca/kernel_pca.hpp");
 
 PARAM_MATRIX_IN_REQ("input", "Input dataset to perform KPCA on.", "i");
 PARAM_MATRIX_OUT("output", "Matrix to save modified dataset to.", "o");
@@ -184,18 +170,19 @@ void RunKPCA(arma::mat& dataset,
   }
 }
 
-static void mlpackMain()
+void BINDING_FUNCTION(util::Params& params, util::Timers& /* timers */)
 {
-  RequireAtLeastOnePassed({ "output" }, false, "no output will be saved");
+  RequireAtLeastOnePassed(params, { "output" }, false,
+      "no output will be saved");
 
   // Load input dataset.
-  mat dataset = std::move(IO::GetParam<arma::mat>("input"));
+  mat dataset = std::move(params.Get<arma::mat>("input"));
 
   // Get the new dimensionality, if it is necessary.
   size_t newDim = dataset.n_rows;
-  if (IO::GetParam<int>("new_dimensionality") != 0)
+  if (params.Get<int>("new_dimensionality") != 0)
   {
-    newDim = IO::GetParam<int>("new_dimensionality");
+    newDim = params.Get<int>("new_dimensionality");
 
     if (newDim > dataset.n_rows)
     {
@@ -206,14 +193,14 @@ static void mlpackMain()
   }
 
   // Get the kernel type and make sure it is valid.
-  RequireParamInSet<string>("kernel", { "linear", "gaussian", "polynomial",
-      "hyptan", "laplacian", "epanechnikov", "cosine" }, true,
+  RequireParamInSet<string>(params, "kernel", { "linear", "gaussian",
+      "polynomial", "hyptan", "laplacian", "epanechnikov", "cosine" }, true,
       "unknown kernel type");
-  const string kernelType = IO::GetParam<string>("kernel");
+  const string kernelType = params.Get<string>("kernel");
 
-  const bool centerTransformedData = IO::HasParam("center");
-  const bool nystroem = IO::HasParam("nystroem_method");
-  const string sampling = IO::GetParam<string>("sampling");
+  const bool centerTransformedData = params.Has("center");
+  const bool nystroem = params.Has("nystroem_method");
+  const string sampling = params.Get<string>("sampling");
 
   if (kernelType == "linear")
   {
@@ -223,7 +210,7 @@ static void mlpackMain()
   }
   else if (kernelType == "gaussian")
   {
-    const double bandwidth = IO::GetParam<double>("bandwidth");
+    const double bandwidth = params.Get<double>("bandwidth");
 
     GaussianKernel kernel(bandwidth);
     RunKPCA<GaussianKernel>(dataset, centerTransformedData, nystroem, newDim,
@@ -231,8 +218,8 @@ static void mlpackMain()
   }
   else if (kernelType == "polynomial")
   {
-    const double degree = IO::GetParam<double>("degree");
-    const double offset = IO::GetParam<double>("offset");
+    const double degree = params.Get<double>("degree");
+    const double offset = params.Get<double>("offset");
 
     PolynomialKernel kernel(degree, offset);
     RunKPCA<PolynomialKernel>(dataset, centerTransformedData, nystroem,
@@ -240,8 +227,8 @@ static void mlpackMain()
   }
   else if (kernelType == "hyptan")
   {
-    const double scale = IO::GetParam<double>("kernel_scale");
-    const double offset = IO::GetParam<double>("offset");
+    const double scale = params.Get<double>("kernel_scale");
+    const double offset = params.Get<double>("offset");
 
     HyperbolicTangentKernel kernel(scale, offset);
     RunKPCA<HyperbolicTangentKernel>(dataset, centerTransformedData, nystroem,
@@ -249,7 +236,7 @@ static void mlpackMain()
   }
   else if (kernelType == "laplacian")
   {
-    const double bandwidth = IO::GetParam<double>("bandwidth");
+    const double bandwidth = params.Get<double>("bandwidth");
 
     LaplacianKernel kernel(bandwidth);
     RunKPCA<LaplacianKernel>(dataset, centerTransformedData, nystroem, newDim,
@@ -257,7 +244,7 @@ static void mlpackMain()
   }
   else if (kernelType == "epanechnikov")
   {
-    const double bandwidth = IO::GetParam<double>("bandwidth");
+    const double bandwidth = params.Get<double>("bandwidth");
 
     EpanechnikovKernel kernel(bandwidth);
     RunKPCA<EpanechnikovKernel>(dataset, centerTransformedData, nystroem,
@@ -271,6 +258,6 @@ static void mlpackMain()
   }
 
   // Save the output dataset.
-  if (IO::HasParam("output"))
-    IO::GetParam<arma::mat>("output") = std::move(dataset);
+  if (params.Has("output"))
+    params.Get<arma::mat>("output") = std::move(dataset);
 }

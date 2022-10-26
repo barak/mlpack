@@ -13,10 +13,9 @@
 #ifndef MLPACK_METHODS_LINEAR_REGRESSION_LINEAR_REGRESSION_HPP
 #define MLPACK_METHODS_LINEAR_REGRESSION_LINEAR_REGRESSION_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 
 namespace mlpack {
-namespace regression /** Regression methods. */ {
 
 /**
  * A simple linear regression algorithm using ordinary least squares.
@@ -140,11 +139,11 @@ class LinearRegression
    * Serialize the model.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(parameters);
-    ar & BOOST_SERIALIZATION_NVP(lambda);
-    ar & BOOST_SERIALIZATION_NVP(intercept);
+    ar(CEREAL_NVP(parameters));
+    ar(CEREAL_NVP(lambda));
+    ar(CEREAL_NVP(intercept));
   }
 
  private:
@@ -164,7 +163,9 @@ class LinearRegression
   bool intercept;
 };
 
-} // namespace regression
 } // namespace mlpack
+
+// Include implementation.
+#include "linear_regression_impl.hpp"
 
 #endif // MLPACK_METHODS_LINEAR_REGRESSION_HPP

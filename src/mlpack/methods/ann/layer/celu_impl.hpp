@@ -16,12 +16,11 @@
 #include "celu.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-CELU<InputDataType, OutputDataType>::CELU(const double alpha) :
-    alpha(alpha),
-    deterministic(false)
+template<typename MatType>
+CELUType<MatType>::CELUType(const double alpha) :
+    Layer<MatType>(),
+    alpha(alpha)
 {
   if (alpha == 0)
   {
@@ -30,19 +29,60 @@ CELU<InputDataType, OutputDataType>::CELU(const double alpha) :
   }
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename OutputType>
-void CELU<InputDataType, OutputDataType>::Forward(
-    const InputType& input, OutputType& output)
+template<typename MatType>
+CELUType<MatType>::CELUType(const CELUType& other) :
+    Layer<MatType>(other),
+    alpha(other.alpha)
 {
-  output = arma::ones<OutputDataType>(arma::size(input));
+    // Nothing to do.
+}
+
+template<typename MatType>
+CELUType<MatType>::CELUType(
+    CELUType&& other) :
+    Layer<MatType>(std::move(other)),
+    alpha(std::move(other.alpha))
+{
+    // Nothing to do.
+}
+
+template<typename MatType>
+CELUType<MatType>&
+CELUType<MatType>::operator=(const CELUType& other)
+{
+  if (&other != this)
+  {
+    Layer<MatType>::operator=(other);
+    alpha = other.alpha;
+  }
+
+  return *this;
+}
+
+template<typename MatType>
+CELUType<MatType>&
+CELUType<MatType>::operator=(CELUType&& other)
+{
+    if (&other != this)
+    {
+      Layer<MatType>::operator=(std::move(other));
+      alpha = std::move(other.alpha);
+    }
+
+    return *this;
+}
+
+template<typename MatType>
+void CELUType<MatType>::Forward(
+    const MatType& input, MatType& output)
+{
   for (size_t i = 0; i < input.n_elem; ++i)
   {
     output(i) = (input(i) >= 0) ? input(i) : alpha *
-                (std::exp(input(i) / alpha) - 1);
+        (std::exp(input(i) / alpha) - 1);
   }
 
-  if (!deterministic)
+  if (this->training)
   {
     derivative.set_size(arma::size(input));
     for (size_t i = 0; i < input.n_elem; ++i)
@@ -53,24 +93,26 @@ void CELU<InputDataType, OutputDataType>::Forward(
   }
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename DataType>
-void CELU<InputDataType, OutputDataType>::Backward(
-    const DataType& /* input */, const DataType& gy, DataType& g)
+template<typename MatType>
+void CELUType<MatType>::Backward(
+    const MatType& /* input */, const MatType& gy, MatType& g)
 {
   g = gy % derivative;
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void CELU<InputDataType, OutputDataType>::serialize(
+void CELUType<MatType>::serialize(
     Archive& ar,
-    const unsigned int /* version */)
+    const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(alpha);
+  ar(cereal::base_class<Layer<MatType>>(this));
+
+  ar(CEREAL_NVP(alpha));
+  if (Archive::is_loading::value)
+    derivative.clear();
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

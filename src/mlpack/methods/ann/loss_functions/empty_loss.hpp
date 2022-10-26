@@ -17,52 +17,52 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * The empty loss does nothing, letting the user calculate the loss outside
  * the model.
  *
- * @tparam InputDataType Type of the input data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam OutputDataType Type of the output data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
+ * @tparam MatType Matrix representation to accept as input and use for
+ *    computation.
  */
-template <
-    typename InputDataType = arma::mat,
-    typename OutputDataType = arma::mat
->
-class EmptyLoss
+template<typename MatType = arma::mat>
+class EmptyLossType
 {
  public:
   /**
-   * Create the EmptyLoss object.
+   * Create the EmptyLossType object.
    */
-  EmptyLoss();
+  EmptyLossType();
 
   /**
    * Computes the Empty loss function.
    *
-   * @param input Input data used for evaluating the specified function.
+   * @param prediction Prediction used for evaluating the specified loss
+   *     function.
    * @param target The target vector.
    */
-  template<typename InputType, typename TargetType>
-  double Forward(const InputType& input, const TargetType& target);
+  double Forward(const MatType& input, const MatType& target);
 
   /**
    * Ordinary feed backward pass of a neural network.
    *
-   * @param input The propagated input activation.
+   * @param prediction Prediction used for evaluating the specified loss
+   *     function.
    * @param target The target vector.
-   * @param output The calculated error.
+   * @param loss The calculated error.
    */
-  template<typename InputType, typename TargetType, typename OutputType>
-  void Backward(const InputType& input,
-                const TargetType& target,
-                OutputType& output);
-}; // class EmptyLoss
+  void Backward(const MatType& prediction,
+                const MatType& target,
+                MatType& loss);
 
-} // namespace ann
+  //! Serialize the EmptyLossType.
+  template<typename Archive>
+  void serialize(Archive& ar, const uint32_t /* version */) { }
+}; // class EmptyLossType
+
+// Default typedef for typical `arma::mat` usage.
+typedef EmptyLossType<arma::mat> EmptyLoss;
+
 } // namespace mlpack
 
 // Include implementation.

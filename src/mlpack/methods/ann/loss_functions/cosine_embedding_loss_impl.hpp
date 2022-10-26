@@ -16,76 +16,73 @@
 #include "cosine_embedding_loss.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-CosineEmbeddingLoss<InputDataType, OutputDataType>::CosineEmbeddingLoss(
-    const double margin, const bool similarity, const bool takeMean):
-    margin(margin), similarity(similarity), takeMean(takeMean)
+template<typename MatType>
+CosineEmbeddingLossType<MatType>::CosineEmbeddingLossType(
+    const double margin, const bool similarity, const bool reduction):
+    margin(margin), similarity(similarity), reduction(reduction)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type
-CosineEmbeddingLoss<InputDataType, OutputDataType>::Forward(
-    const InputType& input,
-    const TargetType& target)
+template<typename MatType>
+typename MatType::elem_type CosineEmbeddingLossType<MatType>::Forward(
+    const MatType& prediction,
+    const MatType& target)
 {
-  typedef typename InputType::elem_type ElemType;
+  typedef typename MatType::elem_type ElemType;
 
-  const size_t cols = input.n_cols;
-  const size_t batchSize = input.n_elem / cols;
-  if (arma::size(input) != arma::size(target))
+  const size_t cols = prediction.n_cols;
+  const size_t batchSize = prediction.n_elem / cols;
+  if (arma::size(prediction) != arma::size(target))
     Log::Fatal << "Input Tensors must have same dimensions." << std::endl;
 
-  arma::colvec inputTemp1 = arma::vectorise(input);
-  arma::colvec inputTemp2 = arma::vectorise(target);
-  ElemType loss = 0.0;
+  arma::Col<ElemType> inputTemp1 = arma::vectorise(prediction);
+  arma::Col<ElemType> inputTemp2 = arma::vectorise(target);
+  ElemType lossSum = 0.0;
 
   for (size_t i = 0; i < inputTemp1.n_elem; i += cols)
   {
-    const ElemType cosDist = kernel::CosineDistance::Evaluate(
+    const ElemType cosDist = CosineDistance::Evaluate(
         inputTemp1(arma::span(i, i + cols - 1)), inputTemp2(arma::span(i,
         i + cols - 1)));
     if (similarity)
-      loss += 1 - cosDist;
+      lossSum += 1 - cosDist;
     else
     {
       const ElemType currentLoss = cosDist - margin;
-      loss += currentLoss > 0 ? currentLoss : 0;
+      lossSum += currentLoss > 0 ? currentLoss : 0;
     }
   }
 
-  if (takeMean)
-    loss = (ElemType) loss / batchSize;
+  if (reduction)
+    return lossSum;
 
-  return loss;
+  return (ElemType) lossSum / batchSize;
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void CosineEmbeddingLoss<InputDataType, OutputDataType>::Backward(
-    const InputType& input,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType>
+void CosineEmbeddingLossType<MatType>::Backward(
+    const MatType& prediction,
+    const MatType& target,
+    MatType& loss)
 {
-  typedef typename InputType::elem_type ElemType;
+  typedef typename MatType::elem_type ElemType;
 
-  const size_t cols = input.n_cols;
-  if (arma::size(input) != arma::size(target))
+  const size_t cols = prediction.n_cols;
+  const size_t batchSize = prediction.n_elem / cols;
+  if (arma::size(prediction) != arma::size(target))
     Log::Fatal << "Input Tensors must have same dimensions." << std::endl;
 
-  arma::colvec inputTemp1 = arma::vectorise(input);
-  arma::colvec inputTemp2 = arma::vectorise(target);
-  output.set_size(arma::size(inputTemp1));
+  arma::Col<ElemType> inputTemp1 = arma::vectorise(prediction);
+  arma::Col<ElemType> inputTemp2 = arma::vectorise(target);
+  loss.set_size(arma::size(inputTemp1));
 
-  arma::colvec outputTemp(output.memptr(), inputTemp1.n_elem,
+  arma::Col<ElemType> outputTemp(loss.memptr(), inputTemp1.n_elem,
       false, false);
   for (size_t i = 0; i < inputTemp1.n_elem; i += cols)
   {
-    const ElemType cosDist = kernel::CosineDistance::Evaluate(inputTemp1(
+    const ElemType cosDist = CosineDistance::Evaluate(inputTemp1(
         arma::span(i, i + cols -1)), inputTemp2(arma::span(i, i + cols -1)));
 
     if (cosDist < margin && !similarity)
@@ -99,21 +96,22 @@ void CosineEmbeddingLoss<InputDataType, OutputDataType>::Backward(
           1)))) / std::sqrt(arma::accu(arma::pow(inputTemp1(arma::span(i, i +
           cols - 1)), 2)));
     }
+
+    if (!reduction)
+      outputTemp = outputTemp / batchSize;
   }
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void CosineEmbeddingLoss<InputDataType, OutputDataType>::serialize(
-    Archive&  ar ,
-    const unsigned int /* version */)
+void CosineEmbeddingLossType<MatType>::serialize(
+    Archive& ar, const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(margin);
-  ar & BOOST_SERIALIZATION_NVP(similarity);
-  ar & BOOST_SERIALIZATION_NVP(takeMean);
+  ar(CEREAL_NVP(margin));
+  ar(CEREAL_NVP(similarity));
+  ar(CEREAL_NVP(reduction));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

@@ -19,7 +19,6 @@
 #include <mlpack/core/math/random.hpp>
 
 namespace mlpack {
-namespace distribution /** Probability distributions. */ {
 
 /**
  * A discrete distribution where the only observations are discrete
@@ -238,9 +237,9 @@ class DiscreteDistribution
    * Serialize the distribution.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(probabilities);
+    ar(CEREAL_NVP(probabilities));
   }
 
  private:
@@ -249,7 +248,9 @@ class DiscreteDistribution
   std::vector<arma::vec> probabilities;
 };
 
-} // namespace distribution
 } // namespace mlpack
+
+// Include implementation.
+#include "discrete_distribution_impl.hpp"
 
 #endif

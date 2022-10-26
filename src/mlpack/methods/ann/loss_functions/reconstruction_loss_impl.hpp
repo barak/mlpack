@@ -16,49 +16,51 @@
 #include "reconstruction_loss.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType, typename DistType>
-ReconstructionLoss<
-    InputDataType,
-    OutputDataType,
-    DistType
->::ReconstructionLoss()
+template<typename MatType, typename DistType>
+ReconstructionLossType<MatType, DistType>::ReconstructionLossType(
+    const bool reduction) :
+    reduction(reduction)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType, typename DistType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type
-ReconstructionLoss<InputDataType, OutputDataType, DistType>::Forward(
-    const InputType& input, const TargetType& target)
+template<typename MatType, typename DistType>
+typename MatType::elem_type ReconstructionLossType<MatType, DistType>::Forward(
+    const MatType& prediction, const MatType& target)
 {
-  dist = DistType(input);
-  return -dist.LogProbability(target);
+  dist = DistType(prediction);
+  typename MatType::elem_type lossSum = -dist.LogProbability(target);
+
+  if (reduction)
+    return lossSum;
+
+  return lossSum / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType, typename DistType>
-template<typename InputType, typename TargetType, typename OutputType>
-void ReconstructionLoss<InputDataType, OutputDataType, DistType>::Backward(
-    const InputType& /* input */,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType, typename DistType>
+void ReconstructionLossType<MatType, DistType>::Backward(
+    const MatType& /* prediction */,
+    const MatType& target,
+    MatType& loss)
 {
-  dist.LogProbBackward(target, output);
-  output *= -1;
+  dist.LogProbBackward(target, loss);
+  loss *= -1;
+
+  if (!reduction)
+    loss = loss / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType, typename DistType>
+template<typename MatType, typename DistType>
 template<typename Archive>
-void ReconstructionLoss<InputDataType, OutputDataType, DistType>::serialize(
-    Archive& /* ar */,
-    const unsigned int /* version */)
+void ReconstructionLossType<MatType, DistType>::serialize(
+    Archive& ar,
+    const uint32_t /* version */)
 {
-  // Nothing to do here.
+  ar(CEREAL_NVP(dist));
+  ar(CEREAL_NVP(reduction));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

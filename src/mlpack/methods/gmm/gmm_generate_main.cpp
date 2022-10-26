@@ -9,18 +9,20 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/util/io.hpp>
+#include <mlpack/core.hpp>
+
+#undef BINDING_NAME
+#define BINDING_NAME gmm_generate
+
 #include <mlpack/core/util/mlpack_main.hpp>
 #include "gmm.hpp"
 
 using namespace std;
 using namespace mlpack;
-using namespace mlpack::gmm;
 using namespace mlpack::util;
 
 // Program Name.
-BINDING_NAME("GMM Sample Generator");
+BINDING_USER_NAME("GMM Sample Generator");
 
 // Short description.
 BINDING_SHORT_DESC(
@@ -49,9 +51,8 @@ BINDING_EXAMPLE(
 BINDING_SEE_ALSO("@gmm_train", "#gmm_train");
 BINDING_SEE_ALSO("@gmm_probability", "#gmm_probability");
 BINDING_SEE_ALSO("Gaussian Mixture Models on Wikipedia",
-        "https://en.wikipedia.org/wiki/Mixture_model#Gaussian_mixture_model");
-BINDING_SEE_ALSO("mlpack::gmm::GMM class documentation",
-        "@doxygen/classmlpack_1_1gmm_1_1GMM.html");
+    "https://en.wikipedia.org/wiki/Mixture_model#Gaussian_mixture_model");
+BINDING_SEE_ALSO("GMM class documentation", "@src/mlpack/methods/gmm/gmm.hpp");
 
 PARAM_MODEL_IN_REQ(GMM, "input_model", "Input GMM model to generate samples "
     "from.", "m");
@@ -61,27 +62,28 @@ PARAM_MATRIX_OUT("output", "Matrix to save output samples in.", "o");
 
 PARAM_INT_IN("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
 
-static void mlpackMain()
+void BINDING_FUNCTION(util::Params& params, util::Timers& /* timers */)
 {
   // Parameter sanity checks.
-  RequireAtLeastOnePassed({ "output" }, false, "no results will be saved");
+  RequireAtLeastOnePassed(params, { "output" }, false,
+      "no results will be saved");
 
-  if (IO::GetParam<int>("seed") == 0)
-    mlpack::math::RandomSeed(time(NULL));
+  if (params.Get<int>("seed") == 0)
+    RandomSeed(time(NULL));
   else
-    mlpack::math::RandomSeed((size_t) IO::GetParam<int>("seed"));
+    RandomSeed((size_t) params.Get<int>("seed"));
 
-  RequireParamValue<int>("samples", [](int x) { return x > 0; }, true,
+  RequireParamValue<int>(params, "samples", [](int x) { return x > 0; }, true,
       "number of samples must be greater than 0");
 
-  GMM* gmm = IO::GetParam<GMM*>("input_model");
+  GMM* gmm = params.Get<GMM*>("input_model");
 
-  size_t length = (size_t) IO::GetParam<int>("samples");
+  size_t length = (size_t) params.Get<int>("samples");
   Log::Info << "Generating " << length << " samples..." << endl;
   arma::mat samples(gmm->Dimensionality(), length);
   for (size_t i = 0; i < length; ++i)
     samples.col(i) = gmm->Random();
 
   // Save, if the user asked for it.
-  IO::GetParam<arma::mat>("output") = std::move(samples);
+  params.Get<arma::mat>("output") = std::move(samples);
 }

@@ -13,14 +13,9 @@
 #ifndef MLPACK_METHODS_MEAN_SHIFT_MEAN_SHIFT_HPP
 #define MLPACK_METHODS_MEAN_SHIFT_MEAN_SHIFT_HPP
 
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/kernels/gaussian_kernel.hpp>
-#include <mlpack/core/kernels/kernel_traits.hpp>
-#include <mlpack/core/metrics/lmetric.hpp>
-#include <boost/utility.hpp>
+#include <mlpack/core.hpp>
 
 namespace mlpack {
-namespace meanshift /** Mean shift clustering. */ {
 
 /**
  * This class implements mean shift clustering.  For each point in dataset,
@@ -46,7 +41,7 @@ namespace meanshift /** Mean shift clustering. */ {
  * @tparam MatType The type of matrix the data is stored in.
  */
 template<bool UseKernel = false,
-         typename KernelType = kernel::GaussianKernel,
+         typename KernelType = GaussianKernel,
          typename MatType = arma::mat>
 class MeanShift
 {
@@ -170,7 +165,6 @@ class MeanShift
   KernelType kernel;
 };
 
-} // namespace meanshift
 } // namespace mlpack
 
 // Include implementation.

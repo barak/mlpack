@@ -17,7 +17,6 @@
 #include <mlpack/core/tree/spill_tree/is_spill_tree.hpp>
 
 namespace mlpack {
-namespace neighbor {
 
 template<typename SortPolicy, typename MetricType, typename TreeType>
 NeighborSearchRules<SortPolicy, MetricType, TreeType>::NeighborSearchRules(
@@ -80,7 +79,7 @@ void NeighborSearchRules<SortPolicy, MetricType, TreeType>::GetResults(
 };
 
 template<typename SortPolicy, typename MetricType, typename TreeType>
-inline force_inline // Absolutely MUST be inline so optimizations can happen.
+inline mlpack_force_inline // Must be inline so optimizations can happen.
 double NeighborSearchRules<SortPolicy, MetricType, TreeType>::
 BaseCase(const size_t queryIndex, const size_t referenceIndex)
 {
@@ -114,12 +113,12 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Score(
 {
   ++scores; // Count number of Score() calls.
   double distance;
-  if (tree::TreeTraits<TreeType>::FirstPointIsCentroid)
+  if (TreeTraits<TreeType>::FirstPointIsCentroid)
   {
     // The first point in the tree is the centroid.  So we can then calculate
     // the base case between that and the query point.
     double baseCase = -1.0;
-    if (tree::TreeTraits<TreeType>::HasSelfChildren)
+    if (TreeTraits<TreeType>::HasSelfChildren)
     {
       // If the parent node is the same, then we have already calculated the
       // base case.
@@ -208,7 +207,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Score(
   // We want to set adjustedScore to be the distance between the centroid of the
   // last query node and last reference node.  We will do this by adjusting the
   // last score.  In some cases, we can just use the last base case.
-  if (tree::TreeTraits<TreeType>::FirstPointIsCentroid)
+  if (TreeTraits<TreeType>::FirstPointIsCentroid)
   {
     adjustedScore = traversalInfo.LastBaseCase();
   }
@@ -285,7 +284,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Score(
   // Can we prune?
   if (!SortPolicy::IsBetter(adjustedScore, bestDistance))
   {
-    if (!(tree::TreeTraits<TreeType>::FirstPointIsCentroid && score == 0.0))
+    if (!(TreeTraits<TreeType>::FirstPointIsCentroid && score == 0.0))
     {
       // There isn't any need to set the traversal information because no
       // descendant combinations will be visited, and those are the only
@@ -295,13 +294,13 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::Score(
   }
 
   double distance;
-  if (tree::TreeTraits<TreeType>::FirstPointIsCentroid)
+  if (TreeTraits<TreeType>::FirstPointIsCentroid)
   {
     // The first point in the node is the centroid, so we can calculate the
     // distance between the two points using BaseCase() and then find the
     // bounds.  This is potentially loose for non-ball bounds.
     double baseCase = -1.0;
-    if (tree::TreeTraits<TreeType>::HasSelfChildren &&
+    if (TreeTraits<TreeType>::HasSelfChildren &&
        (traversalInfo.LastQueryNode()->Point(0) == queryNode.Point(0)) &&
        (traversalInfo.LastReferenceNode()->Point(0) == referenceNode.Point(0)))
     {
@@ -397,9 +396,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::
   // take the better of the two.
 
   double worstDistance = SortPolicy::BestDistance();
-  double bestDistance = SortPolicy::WorstDistance();
   double bestPointDistance = SortPolicy::WorstDistance();
-  double auxDistance = SortPolicy::WorstDistance();
 
   // Loop over points held in the node.
   for (size_t i = 0; i < queryNode.NumPoints(); ++i)
@@ -411,7 +408,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::
       bestPointDistance = distance;
   }
 
-  auxDistance = bestPointDistance;
+  double auxDistance = bestPointDistance;
 
   // Loop over children of the node, and use their cached information to
   // assemble bounds.
@@ -428,7 +425,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::
 
   // Add triangle inequality adjustment to best distance.  It is possible this
   // could be tighter for some certain types of trees.
-  bestDistance = SortPolicy::CombineWorst(auxDistance,
+  double bestDistance = SortPolicy::CombineWorst(auxDistance,
       2 * queryNode.FurthestDescendantDistance());
 
   // Add triangle inequality adjustment to best distance of points in node.
@@ -476,7 +473,7 @@ inline double NeighborSearchRules<SortPolicy, MetricType, TreeType>::
   worstDistance = SortPolicy::Relax(worstDistance, epsilon);
 
   // We can't consider B_2 for Spill Trees.
-  if (tree::IsSpillTree<TreeType>::value)
+  if (IsSpillTree<TreeType>::value)
     return worstDistance;
 
   if (SortPolicy::IsBetter(worstDistance, bestDistance))
@@ -509,7 +506,6 @@ InsertNeighbor(
   }
 }
 
-} // namespace neighbor
 } // namespace mlpack
 
 #endif // MLPACK_METHODS_NEIGHBOR_SEARCH_NEAREST_NEIGHBOR_RULES_IMPL_HPP

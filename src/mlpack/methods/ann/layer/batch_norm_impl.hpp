@@ -3,6 +3,7 @@
  * @author Praveen Ch
  * @author Manthan-R-Sheth
  * @author Kartik Dutt
+ * @author Shubham Agrawal
  *
  * Implementation of the Batch Normalization Layer.
  *
@@ -19,101 +20,204 @@
 #include "batch_norm.hpp"
 
 namespace mlpack {
-namespace ann { /** Artificial Neural Network. */
 
-template<typename InputDataType, typename OutputDataType>
-BatchNorm<InputDataType, OutputDataType>::BatchNorm() :
-    size(0),
+template<typename MatType>
+BatchNormType<MatType>::BatchNormType() : 
+    Layer<MatType>(),
+    minAxis(2),
+    maxAxis(2),
     eps(1e-8),
     average(true),
     momentum(0.0),
-    loading(false),
-    deterministic(false),
     count(0),
-    averageFactor(0.0)
+    inputDimension(1),
+    size(0),
+    higherDimension(1)
 {
   // Nothing to do here.
 }
 
-template <typename InputDataType, typename OutputDataType>
-BatchNorm<InputDataType, OutputDataType>::BatchNorm(
-    const size_t size,
+template <typename MatType>
+BatchNormType<MatType>::BatchNormType(
+    const size_t minAxis,
+    const size_t maxAxis,
     const double eps,
     const bool average,
-    const double momentum) :
-    size(size),
+    const double momentum) : 
+    Layer<MatType>(),
+    minAxis(minAxis),
+    maxAxis(maxAxis),
     eps(eps),
     average(average),
     momentum(momentum),
-    loading(false),
-    deterministic(false),
     count(0),
-    averageFactor(0.0)
+    inputDimension(1),
+    size(0),
+    higherDimension(1)
 {
-  weights.set_size(WeightSize(), 1);
+  // Nothing to do here.
+}
+
+// Copy constructor.
+template<typename MatType>
+BatchNormType<MatType>::BatchNormType(const BatchNormType& layer) :
+    Layer<MatType>(layer),
+    minAxis(layer.minAxis),
+    maxAxis(layer.maxAxis),
+    eps(layer.eps),
+    average(layer.average),
+    momentum(layer.momentum),
+    variance(layer.variance),
+    count(layer.count),
+    inputDimension(layer.inputDimension),
+    size(layer.size),
+    higherDimension(layer.higherDimension),
+    runningMean(layer.runningMean),
+    runningVariance(layer.runningVariance)
+{
+  // Nothing else to do.
+}
+
+// Move constructor.
+template<typename MatType>
+BatchNormType<MatType>::BatchNormType(BatchNormType&& layer) :
+    Layer<MatType>(std::move(layer)),
+    minAxis(std::move(layer.minAxis)),
+    maxAxis(std::move(layer.maxAxis)),
+    eps(std::move(layer.eps)),
+    average(std::move(layer.average)),
+    momentum(std::move(layer.momentum)),
+    variance(std::move(layer.variance)),
+    count(std::move(layer.count)),
+    inputDimension(std::move(layer.inputDimension)),
+    size(std::move(layer.size)),
+    higherDimension(std::move(layer.higherDimension)),
+    runningMean(std::move(layer.runningMean)),
+    runningVariance(std::move(layer.runningVariance))
+{
+  // Nothing else to do.
+}
+
+template<typename MatType>
+BatchNormType<MatType>&
+BatchNormType<MatType>::operator=(const BatchNormType& layer)
+{
+  if (&layer != this)
+  {
+    Layer<MatType>::operator=(layer);
+    minAxis = layer.minAxis;
+    maxAxis = layer.maxAxis;
+    eps = layer.eps;
+    average = layer.average;
+    momentum = layer.momentum;
+    variance = layer.variance;
+    count = layer.count;
+    inputDimension = layer.inputDimension;
+    size = layer.size;
+    higherDimension = layer.higherDimension;
+    runningMean = layer.runningMean;
+    runningVariance = layer.runningVariance;
+  }
+
+  return *this;
+}
+
+template<typename MatType>
+BatchNormType<MatType>&
+BatchNormType<MatType>::operator=(
+    BatchNormType&& layer)
+{
+  if (&layer != this)
+  {
+    Layer<MatType>::operator=(std::move(layer));
+    minAxis = std::move(layer.minAxis);
+    maxAxis = std::move(layer.maxAxis);
+    eps = std::move(layer.eps);
+    average = std::move(layer.average);
+    momentum = std::move(layer.momentum);
+    variance = std::move(layer.variance);
+    count = std::move(layer.count);
+    inputDimension = std::move(layer.inputDimension);
+    size = std::move(layer.size);
+    higherDimension = std::move(layer.higherDimension);
+    runningMean = std::move(layer.runningMean);
+    runningVariance = std::move(layer.runningVariance);
+  }
+
+  return *this;
+}
+
+template<typename MatType>
+void BatchNormType<MatType>::SetWeights(
+    typename MatType::elem_type* weightsPtr)
+{
+  MakeAlias(weights, weightsPtr, WeightSize(), 1);
+  // Gamma acts as the scaling parameters for the normalized output.
+  MakeAlias(gamma, weightsPtr, size, 1);
+  // Beta acts as the shifting parameters for the normalized output.
+  MakeAlias(beta, weightsPtr + gamma.n_elem, size, 1);
+}
+
+template<typename MatType>
+void BatchNormType<MatType>::CustomInitialize(
+    MatType& W,
+    const size_t elements)
+{
+  if (elements != 2 * size) {
+    throw std::invalid_argument("BatchNormType::CustomInitialize(): wrong "
+        "elements size!"); 
+  }
+  MatType gammaTemp;
+  MatType betaTemp;
+  // Gamma acts as the scaling parameters for the normalized output.
+  MakeAlias(gammaTemp, W.memptr(), size, 1);
+  // Beta acts as the shifting parameters for the normalized output.
+  MakeAlias(betaTemp, W.memptr() + gammaTemp.n_elem, size, 1);
+
+  gammaTemp.fill(1.0);
+  betaTemp.fill(0.0);
+
   runningMean.zeros(size, 1);
   runningVariance.ones(size, 1);
 }
 
-template<typename InputDataType, typename OutputDataType>
-void BatchNorm<InputDataType, OutputDataType>::Reset()
+template<typename MatType>
+void BatchNormType<MatType>::Forward(
+    const MatType& input,
+    MatType& output)
 {
-  // Gamma acts as the scaling parameters for the normalized output.
-  gamma = arma::mat(weights.memptr(), size, 1, false, false);
-  // Beta acts as the shifting parameters for the normalized output.
-  beta = arma::mat(weights.memptr() + gamma.n_elem, size, 1, false, false);
-
-  if (!loading)
-  {
-    gamma.fill(1.0);
-    beta.fill(0.0);
-  }
-
-  deterministic = false;
-  loading = false;
-}
-
-template<typename InputDataType, typename OutputDataType>
-template<typename eT>
-void BatchNorm<InputDataType, OutputDataType>::Forward(
-    const arma::Mat<eT>& input,
-    arma::Mat<eT>& output)
-{
-  Log::Assert(input.n_rows % size == 0, "Input features must be divisible \
-      by feature maps.");
-
   const size_t batchSize = input.n_cols;
-  const size_t inputSize = input.n_rows / size;
-
-  // Set size of output equal to the size of input.
-  output.set_size(arma::size(input));
+  const size_t inputSize = inputDimension;
+  const size_t m = inputSize * batchSize * higherDimension;
 
   // We will calculate minibatch norm on each channel / feature map.
-  if (!deterministic)
+  if (this->training)
   {
     // Check only during training, batch-size can be one during inference.
-    if (batchSize == 1 && inputSize == 1)
+    if ((batchSize * higherDimension) == 1 && inputSize == 1)
     {
       Log::Warn << "Variance for single element isn't defined and" <<
-          " will be set to  0.0 for training. Use a batch-size" <<
+          " will be set to 0.0 for training. Use a batch-size" <<
           " greater than 1 to fix the warning." << std::endl;
     }
 
-    // Input corresponds to output from convolution layer.
-    // Use a cube for simplicity.
-    arma::cube inputTemp(const_cast<arma::Mat<eT>&>(input).memptr(),
-        inputSize, size, batchSize, false, false);
+    // Input corresponds to output from previous layer.
+    // Used a cube for simplicity.
+    arma::Cube<typename MatType::elem_type> inputTemp(
+        const_cast<MatType&>(input).memptr(), inputSize, size,
+        batchSize * higherDimension, false, false);
 
     // Initialize output to same size and values for convenience.
-    arma::cube outputTemp(const_cast<arma::Mat<eT>&>(output).memptr(),
-        inputSize, size, batchSize, false, false);
+    arma::Cube<typename MatType::elem_type> outputTemp(
+        const_cast<MatType&>(output).memptr(), inputSize, size,
+        batchSize * higherDimension, false, false);
     outputTemp = inputTemp;
 
     // Calculate mean and variance over all channels.
-    mean = arma::mean(arma::mean(inputTemp, 2), 0);
-    variance = arma::mean(arma::mean(arma::pow(
+    MatType mean = arma::sum(arma::sum(inputTemp, 2), 0) / m;
+    variance = arma::sum(arma::sum(arma::pow(
         inputTemp.each_slice() - arma::repmat(mean,
-        inputSize, 1), 2), 2), 0);
+        inputSize, 1), 2), 2), 0) / m;
 
     outputTemp.each_slice() -= arma::repmat(mean, inputSize, 1);
 
@@ -135,88 +239,94 @@ void BatchNorm<InputDataType, OutputDataType>::Forward(
         inputSize, 1);
 
     count += 1;
-    averageFactor = average ? 1.0 / count : momentum;
+    // Value for average factor which used to update running parameters.
+    double averageFactor = average ? 1.0 / count : momentum;
 
     double nElements = 0.0;
-    if (input.n_elem - size != 0)
-      nElements = 1.0 / (input.n_elem - size + eps);
+    if (m - 1 != 0)
+      nElements = m * (1.0 / (m - 1));
 
     // Update running mean and running variance.
     runningMean = (1 - averageFactor) * runningMean + averageFactor *
         mean.t();
     runningVariance = (1 - averageFactor) * runningVariance +
-       input.n_elem * nElements *
-       averageFactor * variance.t();
+        nElements * averageFactor * variance.t();
   }
   else
   {
     // Normalize the input and scale and shift the output.
     output = input;
-    arma::cube outputTemp(const_cast<arma::Mat<eT>&>(output).memptr(),
-        input.n_rows / size, size, batchSize, false, false);
+    arma::Cube<typename MatType::elem_type> outputTemp(
+        const_cast<MatType&>(output).memptr(), inputSize, size,
+        batchSize * higherDimension, false, false);
 
     outputTemp.each_slice() -= arma::repmat(runningMean.t(),
-        input.n_rows / size, 1);
+        inputSize, 1);
     outputTemp.each_slice() /= arma::sqrt(arma::repmat(runningVariance.t(),
-        input.n_rows / size, 1) + eps);
+        inputSize, 1) + eps);
     outputTemp.each_slice() %= arma::repmat(gamma.t(),
-        input.n_rows / size, 1);
+        inputSize, 1);
     outputTemp.each_slice() += arma::repmat(beta.t(),
-        input.n_rows / size, 1);
+        inputSize, 1);
   }
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename eT>
-void BatchNorm<InputDataType, OutputDataType>::Backward(
-    const arma::Mat<eT>& input,
-    const arma::Mat<eT>& gy,
-    arma::Mat<eT>& g)
+template<typename MatType>
+void BatchNormType<MatType>::Backward(
+    const MatType& input,
+    const MatType& gy,
+    MatType& g)
 {
   const arma::mat stdInv = 1.0 / arma::sqrt(variance + eps);
 
-  g.set_size(arma::size(input));
-  arma::cube gyTemp(const_cast<arma::Mat<eT>&>(gy).memptr(),
-      input.n_rows / size, size, input.n_cols, false, false);
-  arma::cube gTemp(const_cast<arma::Mat<eT>&>(g).memptr(),
-      input.n_rows / size, size, input.n_cols, false, false);
+  const size_t batchSize = input.n_cols;
+  const size_t inputSize = inputDimension;
+  const size_t m = inputSize * batchSize * higherDimension;
+
+  arma::Cube<typename MatType::elem_type> gyTemp(
+      const_cast<MatType&>(gy).memptr(), inputSize, size,
+      batchSize * higherDimension, false, false);
+  arma::Cube<typename MatType::elem_type> gTemp(
+      const_cast<MatType&>(g).memptr(), inputSize, size,
+      batchSize * higherDimension, false, false);
 
   // Step 1: dl / dxhat.
-  arma::cube norm = gyTemp.each_slice() % arma::repmat(gamma.t(),
-      input.n_rows / size, 1);
+  arma::Cube<typename MatType::elem_type> norm =
+      gyTemp.each_slice() % arma::repmat(gamma.t(), inputSize, 1);
 
   // Step 2: sum dl / dxhat * (x - mu) * -0.5 * stdInv^3.
-  arma::mat temp = arma::sum(norm % inputMean, 2);
-  arma::mat vars = temp % arma::repmat(arma::pow(stdInv, 3),
-      input.n_rows / size, 1) * -0.5;
+  MatType temp = arma::sum(arma::sum(norm % inputMean, 2), 0);
+  MatType vars = temp % arma::pow(stdInv, 3) * (-0.5);
 
   // Step 3: dl / dxhat * 1 / stdInv + variance * 2 * (x - mu) / m +
   // dl / dmu * 1 / m.
   gTemp = (norm.each_slice() % arma::repmat(stdInv,
-      input.n_rows / size, 1) +
-      (inputMean.each_slice() % vars * 2)) / input.n_cols;
+      inputSize, 1)) +
+      ((inputMean.each_slice() % arma::repmat(vars, inputSize, 1) * 2.0) / m);
 
   // Step 4: sum (dl / dxhat * -1 / stdInv) + variance *
-  // (sum -2 * (x - mu)) / m.
-  arma::mat normTemp = arma::sum(norm.each_slice() %
-      arma::repmat(-stdInv, input.n_rows / size, 1) , 2) /
-      input.n_cols;
-  gTemp.each_slice() += normTemp;
+  // sum (-2 * (x - mu)) / m.
+  MatType normTemp = arma::sum(arma::sum((norm.each_slice() %
+      arma::repmat(-stdInv, inputSize, 1)) + 
+      (inputMean.each_slice() % arma::repmat(vars, inputSize, 1) * (-2.0) / m),
+      2), 0) / m;
+  gTemp.each_slice() += arma::repmat(normTemp, inputSize, 1);
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename eT>
-void BatchNorm<InputDataType, OutputDataType>::Gradient(
-    const arma::Mat<eT>& /* input */,
-    const arma::Mat<eT>& error,
-    arma::Mat<eT>& gradient)
+template<typename MatType>
+void BatchNormType<MatType>::Gradient(
+    const MatType& /* input */,
+    const MatType& error,
+    MatType& gradient)
 {
-  gradient.set_size(size + size, 1);
-  arma::cube errorTemp(const_cast<arma::Mat<eT>&>(error).memptr(),
-      error.n_rows / size, size, error.n_cols, false, false);
+  const size_t inputSize = inputDimension;
+
+  arma::Cube<typename MatType::elem_type> errorTemp(
+      const_cast<MatType&>(error).memptr(), inputSize, size,
+      error.n_cols * higherDimension, false, false);
 
   // Step 5: dl / dy * xhat.
-  arma::mat temp = arma::sum(arma::sum(normalized % errorTemp, 0), 2);
+  MatType temp = arma::sum(arma::sum(normalized % errorTemp, 0), 2);
   gradient.submat(0, 0, gamma.n_elem - 1, 0) = temp.t();
 
   // Step 6: dl / dy.
@@ -224,31 +334,65 @@ void BatchNorm<InputDataType, OutputDataType>::Gradient(
   gradient.submat(gamma.n_elem, 0, gradient.n_elem - 1, 0) = temp.t();
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename Archive>
-void BatchNorm<InputDataType, OutputDataType>::serialize(
-    Archive& ar, const unsigned int /* version */)
+template<typename MatType>
+void BatchNormType<MatType>::ComputeOutputDimensions()
 {
-  ar & BOOST_SERIALIZATION_NVP(size);
-
-  if (Archive::is_loading::value)
+  if (minAxis > maxAxis)
   {
-    weights.set_size(size + size, 1);
-    loading = false;
+    Log::Fatal << "BatchNorm: minAxis must be less than or equal to maxAxis."
+        << std::endl;
+  }
+  this->outputDimensions = this->inputDimensions;
+  size_t mainMinAxis = minAxis;
+  if (minAxis > this->inputDimensions.size() - 1)
+  {
+    Log::Warn << "BatchNorm: minAxis is out of range.  Setting to last axis."
+        << std::endl;
+    mainMinAxis = this->inputDimensions.size() - 1;
   }
 
-  ar & BOOST_SERIALIZATION_NVP(eps);
-  ar & BOOST_SERIALIZATION_NVP(gamma);
-  ar & BOOST_SERIALIZATION_NVP(beta);
-  ar & BOOST_SERIALIZATION_NVP(count);
-  ar & BOOST_SERIALIZATION_NVP(averageFactor);
-  ar & BOOST_SERIALIZATION_NVP(momentum);
-  ar & BOOST_SERIALIZATION_NVP(average);
-  ar & BOOST_SERIALIZATION_NVP(runningMean);
-  ar & BOOST_SERIALIZATION_NVP(runningVariance);
+  size_t mainMaxAxis = maxAxis;
+  if (maxAxis > this->inputDimensions.size() - 1)
+  {
+    Log::Warn << "BatchNorm: maxAxis is out of range.  Setting to last axis."
+        << std::endl;
+    mainMaxAxis = this->inputDimensions.size() - 1;
+  }
+
+  inputDimension = 1;
+  for (size_t i = 0; i < mainMinAxis; i++)
+    inputDimension *= this->inputDimensions[i];
+
+  size = this->inputDimensions[mainMinAxis];
+  for (size_t i = mainMinAxis + 1; i <= mainMaxAxis; i++)
+    size *= this->inputDimensions[i];
+
+  higherDimension = 1;
+  for (size_t i = mainMaxAxis + 1; i < this->inputDimensions.size(); i++)
+    higherDimension *= this->inputDimensions[i];
 }
 
-} // namespace ann
+template<typename MatType>
+template<typename Archive>
+void BatchNormType<MatType>::serialize(
+    Archive& ar, const uint32_t /* version */)
+{
+  ar(cereal::base_class<Layer<MatType>>(this));
+
+  ar(CEREAL_NVP(minAxis));
+  ar(CEREAL_NVP(maxAxis));
+  ar(CEREAL_NVP(eps));
+  ar(CEREAL_NVP(count));
+  ar(CEREAL_NVP(momentum));
+  ar(CEREAL_NVP(average));
+  ar(CEREAL_NVP(runningMean));
+  ar(CEREAL_NVP(runningVariance));
+  ar(CEREAL_NVP(inputMean));
+  ar(CEREAL_NVP(inputDimension));
+  ar(CEREAL_NVP(size));
+  ar(CEREAL_NVP(higherDimension));
+}
+
 } // namespace mlpack
 
 #endif

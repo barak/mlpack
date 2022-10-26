@@ -13,14 +13,13 @@
 #ifndef MLPACK_METHODS_RL_Q_LEARNING_HPP
 #define MLPACK_METHODS_RL_Q_LEARNING_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
+#include <mlpack/methods/ann/ann.hpp>
 
-#include "replay/random_replay.hpp"
-#include "replay/prioritized_replay.hpp"
+#include "replay/replay.hpp"
 #include "training_config.hpp"
 
 namespace mlpack {
-namespace rl {
 
 /**
  * Implementation of various Q-Learning algorithms, such as DQN, double DQN.
@@ -183,7 +182,6 @@ class QLearning
   bool deterministic;
 };
 
-} // namespace rl
 } // namespace mlpack
 
 // Include implementation

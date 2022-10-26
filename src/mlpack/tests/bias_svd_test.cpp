@@ -11,14 +11,11 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/bias_svd/bias_svd.hpp>
-
-#include <ensmallen.hpp>
+#include <mlpack/methods/bias_svd.hpp>
 
 #include "catch.hpp"
 
 using namespace mlpack;
-using namespace mlpack::svd;
 
 TEST_CASE("BiasSVDFunctionRandomEvaluate", "[BiasSVDTest]")
 {
@@ -301,7 +298,7 @@ TEST_CASE("BiasSVDFunctionOptimize", "[BiasSVDTest]")
 
 // The test is only compiled if the user has specified OpenMP to be
 // used.
-#ifdef HAS_OPENMP
+#ifdef MLPACK_USE_OPENMP
 
 // Test Bias SVD with parallel SGD.
 TEST_CASE("BiasSVDFunctionParallelOptimize", "[BiasSVDTest]")

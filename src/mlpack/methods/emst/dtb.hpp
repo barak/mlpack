@@ -25,16 +25,12 @@
 #ifndef MLPACK_METHODS_EMST_DTB_HPP
 #define MLPACK_METHODS_EMST_DTB_HPP
 
+#include <mlpack/core.hpp>
+
 #include "dtb_stat.hpp"
 #include "edge_pair.hpp"
 
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/metrics/lmetric.hpp>
-
-#include <mlpack/core/tree/binary_space_tree.hpp>
-
 namespace mlpack {
-namespace emst /** Euclidean Minimum Spanning Trees. */ {
 
 /**
  * Performs the MST calculation using the Dual-Tree Boruvka algorithm, using any
@@ -74,11 +70,11 @@ namespace emst /** Euclidean Minimum Spanning Trees. */ {
  *      API.
  */
 template<
-    typename MetricType = metric::EuclideanDistance,
+    typename MetricType = EuclideanDistance,
     typename MatType = arma::mat,
     template<typename TreeMetricType,
              typename TreeStatType,
-             typename TreeMatType> class TreeType = tree::KDTree
+             typename TreeMatType> class TreeType = KDTree
 >
 class DualTreeBoruvka
 {
@@ -203,7 +199,6 @@ class DualTreeBoruvka
   void Cleanup();
 }; // class DualTreeBoruvka
 
-} // namespace emst
 } // namespace mlpack
 
 #include "dtb_impl.hpp"

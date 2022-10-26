@@ -181,6 +181,7 @@ end
 # Test a column vector input parameter.
 @testset "TestCol" begin
   x = rand(100)
+  oldX = copy(x)
 
   colOut, _, _, _, _, _, _, _, _, _, _, _, _, _ =
       test_julia_binding(4.0, 12, "hello",
@@ -190,13 +191,14 @@ end
   @test typeof(colOut) == Array{Float64, 1}
 
   for i in 1:100
-    @test colOut[i] == 2 * x[i]
+    @test colOut[i] == 2 * oldX[i]
   end
 end
 
 # Test an unsigned column vector input parameter.
 @testset "TestUCol" begin
   x = convert(Array{Int, 1}, rand(1:500, 100))
+  oldX = copy(x)
 
   _, _, _, _, _, _, _, _, _, _, ucolOut, _, _, _ =
       test_julia_binding(4.0, 12, "hello",
@@ -207,13 +209,14 @@ end
   for i in 1:100
     # Since we subtract one when we convert to C++, and then add one when we
     # convert back, we get a slightly different result here.
-    @test ucolOut[i] == 2 * x[i] - 1
+    @test ucolOut[i] == 2 * oldX[i] - 1
   end
 end
 
 # Test a row vector input parameter.
 @testset "TestRow" begin
   x = rand(100)
+  oldX = copy(x)
 
   _, _, _, _, _, _, _, rowOut, _, _, _, _, _, _ =
       test_julia_binding(4.0, 12, "hello",
@@ -222,7 +225,7 @@ end
   @test size(rowOut, 1) == 100
   @test typeof(rowOut) == Array{Float64, 1}
   for i in 1:100
-    @test rowOut[i] == 2 * x[i]
+    @test rowOut[i] == 2 * oldX[i]
   end
 end
 
@@ -248,7 +251,7 @@ end
   x = rand(Float64, (10, 100))
   # Dimension information.
   dims = [false, false, false, false, false, false, false, false, false, false]
-  z = x
+  z = copy(x)
 
   _, _, _, matrix_and_info_out, _, _, _,  _, _, _, _, _, _, _ =
       test_julia_binding(4.0, 12, "hello",
@@ -260,7 +263,7 @@ end
 
   for i in 1:100
     for j in 1:10
-      @test matrix_and_info_out[j, i] == 2.0 * z[j, i]
+      @test matrix_and_info_out[j, i] == 2.0 * x[j, i]
     end
   end
 end
@@ -270,7 +273,7 @@ end
   x = rand(Float64, (100, 10))
   # Dimension information.
   dims = [false, false, false, false, false, false, false, false, false, false]
-  z = x
+  z = copy(x)
 
   _, _, _, matrix_and_info_out, _, _, _,  _, _, _, _, _, _, _ =
       test_julia_binding(4.0, 12, "hello",
@@ -282,7 +285,65 @@ end
 
   for i in 1:100
     for j in 1:10
-      @test matrix_and_info_out[i, j] == 2.0 * z[i, j]
+      @test matrix_and_info_out[i, j] == 2.0 * x[i, j]
+    end
+  end
+end
+
+# Test that we can pass a matrix with categorical features.
+@testset "TestMatrixAndInfoCategorical" begin
+  x = collect(hcat(rand(100),
+                   rand(1:2, 100),
+                   rand(100),
+                   rand(1:4, 100),
+                   rand(1:6, 100),
+                   rand(100))')
+  dims = [false, true, false, true, true, false]
+  z = copy(x)
+
+  _, _, _, matrix_and_info_out, _, _, _,  _, _, _, _, _, _, _ =
+      test_julia_binding(4.0, 12, "hello",
+                         matrix_and_info_in=(dims, z),
+                         points_are_rows=false)
+
+  @test size(matrix_and_info_out, 1) == 6
+  @test size(matrix_and_info_out, 2) == 100
+
+  for i in 1:100
+    for j in [1, 3, 6]
+      @test matrix_and_info_out[j, i] == 2.0 * x[j, i]
+    end
+    for j in [2, 4, 5]
+      @test matrix_and_info_out[j, i] == x[j, i]
+    end
+  end
+end
+
+# Test that we can pass a matrix with categorical features.
+@testset "TestMatrixAndInfoCategoricalRowMajor" begin
+  x = hcat(rand(100),
+           rand(1:2, 100),
+           rand(100),
+           rand(1:4, 100),
+           rand(1:6, 100),
+           rand(100))
+  dims = [false, true, false, true, true, false]
+  z = copy(x)
+
+  _, _, _, matrix_and_info_out, _, _, _,  _, _, _, _, _, _, _ =
+      test_julia_binding(4.0, 12, "hello",
+                         matrix_and_info_in=(dims, z),
+                         points_are_rows=true)
+
+  @test size(matrix_and_info_out, 1) == 100
+  @test size(matrix_and_info_out, 2) == 6
+
+  for i in 1:100
+    for j in [1, 3, 6]
+      @test matrix_and_info_out[i, j] == 2.0 * x[i, j]
+    end
+    for j in [2, 4, 5]
+      @test matrix_and_info_out[i, j] == x[i, j]
     end
   end
 end
@@ -342,6 +403,27 @@ end
                          model_in=newModel)
 end
 
+# Test that we can serialize a model as part of a larger tuple.
+@testset "TestStreamTupleSerialization" begin
+  _, _, _, _, _, _, modelOut, _, _, _, _, _, _, _ =
+      test_julia_binding(4.0, 12, "hello",
+                         build_model=true)
+
+  stream = IOBuffer()
+  serialize(stream, (modelOut, 3, 4, 5))
+
+  newStream = IOBuffer(copy(stream.data))
+  (newModel, a, b, c) = deserialize(newStream)
+
+  _, _, _, _, _, bwOut, _, _, _, _, _, _, _, _ =
+      test_julia_binding(4.0, 12, "hello",
+                         model_in=newModel)
+
+  @test a == 3
+  @test b == 4
+  @test c == 5
+end
+
 @testset "TestFileSerialization" begin
   _, _, _, _, _, _, modelOut, _, _, _, _, _, _, _ =
       test_julia_binding(4.0, 12, "hello",
@@ -376,4 +458,21 @@ end
                          model_in=newModel)
 
   Filesystem.rm("model.bin")
+end
+
+# Ensure that we don't accidentally free a model multiple times.
+@testset "TestMultipleModelDealloc" begin
+  _, _, _, _, _, _, model, _, _, _, _, _, _, _ =
+      test_julia_binding(4.0, 12, "hello", build_model=true)
+
+  begin
+    for i = 1:100
+      out = test_julia_binding(4.0, 12, "hello", model_in=model,
+          duplicate_model=true)
+    end
+  end
+
+  # This should free the other models.  It's likely to crash if a model might be
+  # freed multiple times.
+  GC.gc()
 end

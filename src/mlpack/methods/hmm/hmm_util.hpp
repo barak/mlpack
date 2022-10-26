@@ -2,7 +2,8 @@
  * @file methods/hmm/hmm_util.hpp
  * @author Ryan Curtin
  *
- * Utility to read HMM type from file.
+ * Utility to read HMM type from file.  This is used in the HMM bindings
+ * specifically.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -15,7 +16,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace hmm {
 
 //! HMMType, to be stored on disk.  This is of type char, which is one byte.
 //! (I'm not sure what will happen on systems where one byte is not eight bits.)
@@ -37,7 +37,6 @@ void LoadHMMAndPerformAction(const std::string& modelFile,
 template<typename HMMType>
 void SaveHMM(HMMType& hmm, const std::string& modelFile);
 
-} // namespace hmm
 } // namespace mlpack
 
 #include "hmm_util_impl.hpp"

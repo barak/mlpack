@@ -19,7 +19,6 @@
 #include "first_point_is_root.hpp"
 
 namespace mlpack {
-namespace tree {
 
 /**
  * A cover tree is a tree specifically designed to speed up nearest-neighbor
@@ -92,7 +91,7 @@ namespace tree {
  * @tparam MatType Type of matrix to build the tree on (generally mat or
  *      sp_mat).
  */
-template<typename MetricType = metric::LMetric<2, true>,
+template<typename MetricType = LMetric<2, true>,
          typename StatisticType = EmptyStatistic,
          typename MatType = arma::mat,
          typename RootPointPolicy = FirstPointIsRoot>
@@ -255,12 +254,12 @@ class CoverTree
   CoverTree& operator=(CoverTree&& other);
 
   /**
-   * Create a cover tree from a boost::serialization archive.
+   * Create a cover tree from a cereal archive.
    */
   template<typename Archive>
   CoverTree(
       Archive& ar,
-      const typename std::enable_if_t<Archive::is_loading::value>* = 0);
+      const typename std::enable_if_t<cereal::is_loading<Archive>()>* = 0);
 
   /**
    * Delete this cover tree node and its children.
@@ -385,19 +384,19 @@ class CoverTree
   ElemType MaxDistance(const arma::vec& other, const ElemType distance) const;
 
   //! Return the minimum and maximum distance to another node.
-  math::RangeType<ElemType> RangeDistance(const CoverTree& other) const;
+  RangeType<ElemType> RangeDistance(const CoverTree& other) const;
 
   //! Return the minimum and maximum distance to another node given that the
   //! point-to-point distance has already been calculated.
-  math::RangeType<ElemType> RangeDistance(const CoverTree& other,
+  RangeType<ElemType> RangeDistance(const CoverTree& other,
                                           const ElemType distance) const;
 
   //! Return the minimum and maximum distance to another point.
-  math::RangeType<ElemType> RangeDistance(const arma::vec& other) const;
+  RangeType<ElemType> RangeDistance(const arma::vec& other) const;
 
   //! Return the minimum and maximum distance to another point given that the
   //! point-to-point distance has already been calculated.
-  math::RangeType<ElemType> RangeDistance(const arma::vec& other,
+  RangeType<ElemType> RangeDistance(const arma::vec& other,
                                           const ElemType distance) const;
 
   //! Get the parent node.
@@ -552,21 +551,21 @@ class CoverTree
  protected:
   /**
    * A default constructor.  This is meant to only be used with
-   * boost::serialization, which is allowed with the friend declaration below.
+   * cereal, which is allowed with the friend declaration below.
    * This does not return a valid tree!  This method must be protected, so that
    * the serialization shim can work with the default constructor.
    */
   CoverTree();
 
   //! Friend access is given for the default constructor.
-  friend class boost::serialization::access;
+  friend class cereal::access;
 
  public:
   /**
    * Serialize the tree.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
   size_t DistanceComps() const { return distanceComps; }
   size_t& DistanceComps() { return distanceComps; }
@@ -575,7 +574,6 @@ class CoverTree
   size_t distanceComps;
 };
 
-} // namespace tree
 } // namespace mlpack
 
 // Include implementation.

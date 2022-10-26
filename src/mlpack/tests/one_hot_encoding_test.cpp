@@ -12,7 +12,6 @@
 #include <mlpack/core.hpp>
 #include "test_catch_tools.hpp"
 #include "catch.hpp"
-#include <mlpack/core/data/one_hot_encoding.hpp>
 
 using namespace mlpack;
 using namespace mlpack::data;
@@ -191,7 +190,8 @@ TEST_CASE("OneHotEncodingDatasetinfoTest", "[OneHotEncodingTest]")
   // Load the test CSV.
   arma::umat matrix;
   DatasetInfo info;
-  data::Load("test.csv", matrix, info);
+  if (!data::Load("test.csv", matrix, info))
+    FAIL("Cannot load dataset test.csv");
   arma::umat output;
   data::OneHotEncoding(matrix, output, info);
   REQUIRE(output.n_cols == 7);

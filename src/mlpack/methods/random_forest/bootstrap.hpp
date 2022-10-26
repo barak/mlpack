@@ -14,7 +14,6 @@
 #define MLPACK_METHODS_RANDOM_FOREST_BOOTSTRAP_HPP
 
 namespace mlpack {
-namespace tree {
 
 /**
  * Given a dataset, create another dataset via bootstrap sampling, with labels.
@@ -38,16 +37,12 @@ void Bootstrap(const MatType& dataset,
   // Random sampling with replacement.
   arma::uvec indices = arma::randi<arma::uvec>(dataset.n_cols,
       arma::distr_param(0, dataset.n_cols - 1));
-  for (size_t i = 0; i < dataset.n_cols; ++i)
-  {
-    bootstrapDataset.col(i) = dataset.col(indices[i]);
-    bootstrapLabels[i] = labels[indices[i]];
-    if (UseWeights)
-      bootstrapWeights[i] = weights[indices[i]];
-  }
+  bootstrapDataset = dataset.cols(indices);
+  bootstrapLabels = labels.cols(indices);
+  if (UseWeights)
+    bootstrapWeights = weights.cols(indices);
 }
 
-} // namespace tree
 } // namespace mlpack
 
 #endif

@@ -16,47 +16,52 @@
 #include "mean_squared_logarithmic_error.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-MeanSquaredLogarithmicError<InputDataType, OutputDataType>
-::MeanSquaredLogarithmicError()
+template<typename MatType>
+MeanSquaredLogarithmicErrorType<MatType>::MeanSquaredLogarithmicErrorType(
+    const bool reduction) :
+    reduction(reduction)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type
-MeanSquaredLogarithmicError<InputDataType, OutputDataType>::Forward(
-    const InputType& input,
-    const TargetType& target)
+template<typename MatType>
+typename MatType::elem_type MeanSquaredLogarithmicErrorType<MatType>::Forward(
+    const MatType& prediction,
+    const MatType& target)
 {
-  return arma::accu(arma::square(arma::log(1. + target) -
-      arma::log(1. + input))) / target.n_cols;
+  typename MatType::elem_type lossSum =
+      arma::accu(arma::square(arma::log(1.0 + target) -
+      arma::log(1.0 + prediction)));
+
+  if (reduction)
+    return lossSum;
+
+  return lossSum / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void MeanSquaredLogarithmicError<InputDataType, OutputDataType>::Backward(
-    const InputType& input,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType>
+void MeanSquaredLogarithmicErrorType<MatType>::Backward(
+    const MatType& prediction,
+    const MatType& target,
+    MatType& loss)
 {
-  output = 2 * (arma::log(1. + input) - arma::log(1. + target)) /
-      ((1. + input) * target.n_cols);
+  loss = 2 * (arma::log(1. + prediction) - arma::log(1. + target)) /
+      (1. + prediction);
+
+  if (!reduction)
+    loss = loss / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void MeanSquaredLogarithmicError<InputDataType, OutputDataType>::serialize(
-    Archive& /* ar */,
-    const unsigned int /* version */)
+void MeanSquaredLogarithmicErrorType<MatType>::serialize(
+    Archive& ar,
+    const uint32_t /* version */)
 {
-  // Nothing to do here.
+  ar(CEREAL_NVP(reduction));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

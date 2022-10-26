@@ -12,13 +12,10 @@
  */
 
 #include <mlpack/core.hpp>
-#include <mlpack/core/tree/spill_tree.hpp>
 #include "catch.hpp"
 #include <stack>
 
 using namespace mlpack;
-using namespace mlpack::tree;
-using namespace mlpack::metric;
 
 /**
  * Test to make sure the tree contains the correct number of points after

@@ -3,7 +3,7 @@
  * @author Shangtong Zhang
  *
  * This file is an implementation of Cart Pole task:
- * https://gym.openai.com/envs/CartPole-v0
+ * https://www.gymlibrary.ml/environments/classic_control/cart_pole
  *
  * TODO: provide an option to use dynamics directly from OpenAI gym.
  *
@@ -18,7 +18,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace rl {
 
 /**
  * Implementation of Cart Pole task.
@@ -282,7 +281,6 @@ class CartPole
   size_t stepsPerformed;
 };
 
-} // namespace rl
 } // namespace mlpack
 
 #endif

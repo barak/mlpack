@@ -10,7 +10,6 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/core/tree/binary_space_tree.hpp>
 
 // Classes to test.
 #include <mlpack/methods/neighbor_search/sort_policies/nearest_neighbor_sort.hpp>
@@ -19,10 +18,6 @@
 #include "catch.hpp"
 
 using namespace mlpack;
-using namespace mlpack::neighbor;
-using namespace mlpack::bound;
-using namespace mlpack::tree;
-using namespace mlpack::metric;
 
 // Tests for NearestNeighborSort
 
@@ -107,7 +102,7 @@ TEST_CASE("NnsNodeToNodeDistance", "[SortPolicyTest]")
   utility[0] = 0.5;
   nodeTwo.Bound() |= utility;
 
-  REQUIRE(NearestNeighborSort::BestNodeToNodeDistance(&nodeOne, &nodeTwo) == 
+  REQUIRE(NearestNeighborSort::BestNodeToNodeDistance(&nodeOne, &nodeTwo) ==
       Approx(0.0).margin(1e-5));
 }
 
@@ -146,7 +141,7 @@ TEST_CASE("NnsPointToNodeDistance", "[SortPolicyTest]")
   // And now when the point is inside the bound.
   point[0] = 0.5;
 
-  REQUIRE(NearestNeighborSort::BestPointToNodeDistance(point, &node) == 
+  REQUIRE(NearestNeighborSort::BestPointToNodeDistance(point, &node) ==
       Approx(0.0).margin(1e-5));
 }
 

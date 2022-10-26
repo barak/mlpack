@@ -11,7 +11,7 @@
  */
 
 #include <mlpack/core.hpp>
-#include <mlpack/methods/quic_svd/quic_svd.hpp>
+#include <mlpack/methods/quic_svd.hpp>
 
 #include "catch.hpp"
 
@@ -24,7 +24,8 @@ TEST_CASE("QUICSVDReconstructionError", "[QUICSVDTest]")
 {
   // Load the dataset.
   arma::mat dataset;
-  data::Load("test_data_3_1000.csv", dataset);
+  if (!data::Load("test_data_3_1000.csv", dataset))
+    FAIL("Cannot load dataset test_data_3_1000.csv");
 
   // The QUIC-SVD procedure can fail---the Monte Carlo error calculation is
   // random.  Therefore we simply require at least one success.
@@ -33,7 +34,7 @@ TEST_CASE("QUICSVDReconstructionError", "[QUICSVDTest]")
   {
     // Obtain the SVD using default parameters.
     arma::mat u, v, sigma;
-    svd::QUIC_SVD quicsvd(dataset, u, v, sigma);
+    QUIC_SVD quicsvd(dataset, u, v, sigma);
 
     // Reconstruct the matrix using the SVD.
     arma::mat reconstruct;
@@ -70,7 +71,7 @@ TEST_CASE("QUICSVDSingularValueError", "[QUICSVDTest]")
 
   // Obtain the SVD using default parameters.
   arma::svd_econ(U1, s1, V1, data);
-  svd::QUIC_SVD quicsvd(data, U1, V1, s2);
+  QUIC_SVD quicsvd(data, U1, V1, s2);
 
   s3 = arma::diagvec(s2);
   s1 = s1.subvec(0, s3.n_elem - 1);
@@ -86,5 +87,5 @@ TEST_CASE("QUICSVDSameDimensionTest", "[QUICSVDTest]")
 
   // Obtain the SVD using default parameters.
   arma::mat u, v, sigma;
-  svd::QUIC_SVD quicsvd(dataset, u, v, sigma);
+  QUIC_SVD quicsvd(dataset, u, v, sigma);
 }

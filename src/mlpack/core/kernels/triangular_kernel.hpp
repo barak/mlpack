@@ -16,7 +16,6 @@
 #include <mlpack/core/metrics/lmetric.hpp>
 
 namespace mlpack {
-namespace kernel {
 
 /**
  * The trivially simple triangular kernel, defined by
@@ -48,8 +47,7 @@ class TriangularKernel
   template<typename VecTypeA, typename VecTypeB>
   double Evaluate(const VecTypeA& a, const VecTypeB& b) const
   {
-    return std::max(0.0, (1 - metric::EuclideanDistance::Evaluate(a, b) /
-        bandwidth));
+    return std::max(0.0, (1 - EuclideanDistance::Evaluate(a, b) / bandwidth));
   }
 
   /**
@@ -93,9 +91,9 @@ class TriangularKernel
 
   //! Serialize the kernel.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(bandwidth);
+    ar(CEREAL_NVP(bandwidth));
   }
 
  private:
@@ -114,7 +112,6 @@ class KernelTraits<TriangularKernel>
   static const bool UsesSquaredDistance = false;
 };
 
-} // namespace kernel
 } // namespace mlpack
 
 #endif

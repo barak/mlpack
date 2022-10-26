@@ -12,13 +12,12 @@
 #ifndef MLPACK_METHODS_LINEAR_SVM_LINEAR_SVM_HPP
 #define MLPACK_METHODS_LINEAR_SVM_LINEAR_SVM_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 #include <ensmallen.hpp>
 
 #include "linear_svm_function.hpp"
 
 namespace mlpack {
-namespace svm {
 
 /**
  * The LinearSVM class implements an L2-regularized support vector machine
@@ -291,12 +290,12 @@ class LinearSVM
    * Serialize the LinearSVM model.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(parameters);
-    ar & BOOST_SERIALIZATION_NVP(numClasses);
-    ar & BOOST_SERIALIZATION_NVP(lambda);
-    ar & BOOST_SERIALIZATION_NVP(fitIntercept);
+    ar(CEREAL_NVP(parameters));
+    ar(CEREAL_NVP(numClasses));
+    ar(CEREAL_NVP(lambda));
+    ar(CEREAL_NVP(fitIntercept));
   }
 
  private:
@@ -312,7 +311,6 @@ class LinearSVM
   bool fitIntercept;
 };
 
-} // namespace svm
 } // namespace mlpack
 
 // Include implementation.

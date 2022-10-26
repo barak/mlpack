@@ -9,26 +9,25 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/util/io.hpp>
+#include <mlpack/core.hpp>
+
+#undef BINDING_NAME
+#define BINDING_NAME hmm_loglik
+
 #include <mlpack/core/util/mlpack_main.hpp>
 
 #include "hmm.hpp"
 #include "hmm_model.hpp"
 
 #include <mlpack/methods/gmm/gmm.hpp>
-#include <mlpack/methods/gmm/diagonal_gmm.hpp>
 
 using namespace mlpack;
-using namespace mlpack::hmm;
-using namespace mlpack::distribution;
 using namespace mlpack::util;
-using namespace mlpack::gmm;
 using namespace arma;
 using namespace std;
 
 // Program Name.
-BINDING_NAME("Hidden Markov Model (HMM) Sequence Log-Likelihood");
+BINDING_USER_NAME("Hidden Markov Model (HMM) Sequence Log-Likelihood");
 
 // Short description.
 BINDING_SHORT_DESC(
@@ -58,9 +57,8 @@ BINDING_SEE_ALSO("@hmm_train", "#hmm_train");
 BINDING_SEE_ALSO("@hmm_generate", "#hmm_generate");
 BINDING_SEE_ALSO("@hmm_viterbi", "#hmm_viterbi");
 BINDING_SEE_ALSO("Hidden Mixture Models on Wikipedia",
-        "https://en.wikipedia.org/wiki/Hidden_Markov_model");
-BINDING_SEE_ALSO("mlpack::hmm::HMM class documentation",
-        "@doxygen/classmlpack_1_1hmm_1_1HMM.html");
+    "https://en.wikipedia.org/wiki/Hidden_Markov_model");
+BINDING_SEE_ALSO("HMM class documentation", "@src/mlpack/methods/hmm/hmm.hpp");
 
 PARAM_MATRIX_IN_REQ("input", "File containing observations,", "i");
 PARAM_MODEL_IN_REQ(HMMModel, "input_model", "File containing HMM.", "m");
@@ -72,10 +70,10 @@ PARAM_DOUBLE_OUT("log_likelihood", "Log-likelihood of the sequence.");
 struct Loglik
 {
   template<typename HMMType>
-  static void Apply(HMMType& hmm, void* /* extraInfo */)
+  static void Apply(util::Params& params, HMMType& hmm, void* /* extraInfo */)
   {
     // Load the data sequence.
-    mat dataSeq = std::move(IO::GetParam<mat>("input"));
+    mat dataSeq = std::move(params.Get<mat>("input"));
 
     // Detect if we need to transpose the data, in the case where the input data
     // has one dimension.
@@ -95,12 +93,13 @@ struct Loglik
 
     const double loglik = hmm.LogLikelihood(dataSeq);
 
-    IO::GetParam<double>("log_likelihood") = loglik;
+    params.Get<double>("log_likelihood") = loglik;
   }
 };
 
-static void mlpackMain()
+void BINDING_FUNCTION(util::Params& params, util::Timers& /* timers */)
 {
   // Load model, and calculate the log-likelihood of the sequence.
-  IO::GetParam<HMMModel*>("input_model")->PerformAction<Loglik>((void*) NULL);
+  params.Get<HMMModel*>("input_model")->PerformAction<Loglik>(
+      params, (void*) NULL);
 }

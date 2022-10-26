@@ -15,7 +15,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace ann {
 
 /**
  * Implementation of the NoRegularizer. This does not add any
@@ -44,9 +43,14 @@ class NoRegularizer
   {
     // Nothing to do here.
   }
+
+  template<typename Archive>
+  void serialize(Archive& /* ar */, const uint32_t /* version */)
+  {
+    // Nothing to do.
+  }
 };
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

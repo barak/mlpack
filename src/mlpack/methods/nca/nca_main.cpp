@@ -9,19 +9,17 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/util/io.hpp>
-#include <mlpack/core/data/normalize_labels.hpp>
+#include <mlpack/core.hpp>
+
+#undef BINDING_NAME
+#define BINDING_NAME nca
+
 #include <mlpack/core/util/mlpack_main.hpp>
-#include <mlpack/core/math/random.hpp>
-#include <mlpack/core/metrics/lmetric.hpp>
 
 #include "nca.hpp"
 
-#include <ensmallen.hpp>
-
 // Program Name.
-BINDING_NAME("Neighborhood Components Analysis (NCA)");
+BINDING_USER_NAME("Neighborhood Components Analysis (NCA)");
 
 // Short description.
 BINDING_SHORT_DESC(
@@ -97,12 +95,11 @@ BINDING_LONG_DESC(
 // See also...
 BINDING_SEE_ALSO("@lmnn", "#lmnn");
 BINDING_SEE_ALSO("Neighbourhood components analysis on Wikipedia",
-        "https://en.wikipedia.org/wiki/Neighbourhood_components_analysis");
+    "https://en.wikipedia.org/wiki/Neighbourhood_components_analysis");
 BINDING_SEE_ALSO("Neighbourhood components analysis (pdf)",
-        "http://papers.nips.cc/paper/2566-neighbourhood-components-"
-        "analysis.pdf");
-BINDING_SEE_ALSO("mlpack::nca::NCA C++ class documentation",
-        "@doxygen/classmlpack_1_1nca_1_1NCA.html");
+    "http://papers.nips.cc/paper/2566-neighbourhood-components-analysis.pdf");
+BINDING_SEE_ALSO("NCA C++ class documentation",
+    "@src/mlpack/methods/nca/nca.hpp");
 
 PARAM_MATRIX_IN_REQ("input", "Input dataset to run NCA on.", "i");
 PARAM_MATRIX_OUT("output", "Output matrix for learned distance matrix.", "o");
@@ -138,64 +135,68 @@ PARAM_DOUBLE_IN("max_step", "Maximum step of line search for L-BFGS.", "M",
 PARAM_INT_IN("seed", "Random seed.  If 0, 'std::time(NULL)' is used.", "s", 0);
 
 using namespace mlpack;
-using namespace mlpack::nca;
-using namespace mlpack::metric;
 using namespace mlpack::util;
 using namespace std;
 
-static void mlpackMain()
+void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
 {
-  if (IO::GetParam<int>("seed") != 0)
-    math::RandomSeed((size_t) IO::GetParam<int>("seed"));
+  if (params.Get<int>("seed") != 0)
+    RandomSeed((size_t) params.Get<int>("seed"));
   else
-    math::RandomSeed((size_t) std::time(NULL));
+    RandomSeed((size_t) std::time(NULL));
 
-  RequireAtLeastOnePassed({ "output" }, false, "no output will be saved");
+  RequireAtLeastOnePassed(params, { "output" }, false,
+      "no output will be saved");
 
-  const string optimizerType = IO::GetParam<string>("optimizer");
-  RequireParamInSet<string>("optimizer", { "sgd", "lbfgs" },
+  const string optimizerType = params.Get<string>("optimizer");
+  RequireParamInSet<string>(params, "optimizer", { "sgd", "lbfgs" },
       true, "unknown optimizer type");
 
   // Warn on unused parameters.
   if (optimizerType == "sgd")
   {
-    ReportIgnoredParam("num_basis", "L-BFGS optimizer is not being used");
-    ReportIgnoredParam("armijo_constant", "L-BFGS optimizer is not being used");
-    ReportIgnoredParam("wolfe", "L-BFGS optimizer is not being used");
-    ReportIgnoredParam("max_line_search_trials",
+    ReportIgnoredParam(params, "num_basis",
         "L-BFGS optimizer is not being used");
-    ReportIgnoredParam("min_step", "L-BFGS optimizer is not being used");
-    ReportIgnoredParam("max_step", "L-BFGS optimizer is not being used");
-    ReportIgnoredParam("batch_size", "L-BFGS optimizer is not being used");
+    ReportIgnoredParam(params, "armijo_constant",
+        "L-BFGS optimizer is not being used");
+    ReportIgnoredParam(params, "wolfe", "L-BFGS optimizer is not being used");
+    ReportIgnoredParam(params, "max_line_search_trials",
+        "L-BFGS optimizer is not being used");
+    ReportIgnoredParam(params, "min_step",
+        "L-BFGS optimizer is not being used");
+    ReportIgnoredParam(params, "max_step",
+        "L-BFGS optimizer is not being used");
+    ReportIgnoredParam(params, "batch_size",
+        "L-BFGS optimizer is not being used");
   }
   else if (optimizerType == "lbfgs")
   {
-    ReportIgnoredParam("step_size", "SGD optimizer is not being used");
-    ReportIgnoredParam("linear_scan", "SGD optimizer is not being used");
-    ReportIgnoredParam("batch_size", "SGD optimizer is not being used");
+    ReportIgnoredParam(params, "step_size", "SGD optimizer is not being used");
+    ReportIgnoredParam(params, "linear_scan", "SGD optimizer is not being used");
+    ReportIgnoredParam(params, "batch_size", "SGD optimizer is not being used");
   }
 
-  const double stepSize = IO::GetParam<double>("step_size");
-  const size_t maxIterations = (size_t) IO::GetParam<int>("max_iterations");
-  const double tolerance = IO::GetParam<double>("tolerance");
-  const bool normalize = IO::HasParam("normalize");
-  const bool shuffle = !IO::HasParam("linear_scan");
-  const int numBasis = IO::GetParam<int>("num_basis");
-  const double armijoConstant = IO::GetParam<double>("armijo_constant");
-  const double wolfe = IO::GetParam<double>("wolfe");
-  const int maxLineSearchTrials = IO::GetParam<int>("max_line_search_trials");
-  const double minStep = IO::GetParam<double>("min_step");
-  const double maxStep = IO::GetParam<double>("max_step");
-  const size_t batchSize = (size_t) IO::GetParam<int>("batch_size");
+  const double stepSize = params.Get<double>("step_size");
+  const size_t maxIterations = (size_t) params.Get<int>("max_iterations");
+  const double tolerance = params.Get<double>("tolerance");
+  const bool normalize = params.Has("normalize");
+  const bool shuffle = !params.Has("linear_scan");
+  const int numBasis = params.Get<int>("num_basis");
+  const double armijoConstant = params.Get<double>("armijo_constant");
+  const double wolfe = params.Get<double>("wolfe");
+  const int maxLineSearchTrials = params.Get<int>("max_line_search_trials");
+  const double minStep = params.Get<double>("min_step");
+  const double maxStep = params.Get<double>("max_step");
+  const size_t batchSize = (size_t) params.Get<int>("batch_size");
 
   // Load data.
-  arma::mat data = std::move(IO::GetParam<arma::mat>("input"));
+  arma::mat data = std::move(params.Get<arma::mat>("input"));
 
   // Do we want to load labels separately?
   arma::Row<size_t> rawLabels(data.n_cols);
-  if (IO::HasParam("labels"))
+  if (params.Has("labels"))
   {
-    rawLabels = std::move(IO::GetParam<arma::Row<size_t>>("labels"));
+    rawLabels = std::move(params.Get<arma::Row<size_t>>("labels"));
 
     if (rawLabels.n_elem != data.n_cols)
     {
@@ -238,6 +239,7 @@ static void mlpackMain()
   }
 
   // Now create the NCA object and run the optimization.
+  timers.Start("nca_optimization");
   if (optimizerType == "sgd")
   {
     NCA<LMetric<2> > nca(data, labels);
@@ -263,8 +265,9 @@ static void mlpackMain()
 
     nca.LearnDistance(distance);
   }
+  timers.Stop("nca_optimization");
 
   // Save the output.
-  if (IO::HasParam("output"))
-    IO::GetParam<arma::mat>("output") = std::move(distance);
+  if (params.Has("output"))
+    params.Get<arma::mat>("output") = std::move(distance);
 }

@@ -11,13 +11,11 @@
  */
 
 #include <mlpack/core.hpp>
-#include <mlpack/core/tree/cosine_tree/cosine_tree.hpp>
 
 #include "catch.hpp"
 #include "test_catch_tools.hpp"
 
 using namespace mlpack;
-using namespace mlpack::tree;
 
 /**
  * Constructs a cosine tree with epsilon = 1. Checks if the root node is split
@@ -174,6 +172,7 @@ TEST_CASE("CosineTreeModifiedGramSchmidt", "[CosineTreeTest]")
   arma::mat data = arma::randu(numRows, numCols);
 
   // Declare a queue and a dummy CosineTree object.
+  CompareCosineNode comp;
   CosineNodeQueue basisQueue;
   CosineTree dummyTree(data, epsilon, delta);
 
@@ -191,10 +190,10 @@ TEST_CASE("CosineTreeModifiedGramSchmidt", "[CosineTreeTest]")
     dummyTree.ModifiedGramSchmidt(basisQueue, centroid, newBasisVector);
 
     // Check if the obtained vector is orthonormal to the basis vectors.
-    CosineNodeQueue::const_iterator j = basisQueue.begin();
+    CosineNodeQueue::const_iterator j = basisQueue.cbegin();
     CosineTree* currentNode;
 
-    for (; j != basisQueue.end(); ++j)
+    for (; j != basisQueue.cend(); ++j)
     {
       currentNode = *j;
       REQUIRE(arma::dot(currentNode->BasisVector(), newBasisVector) ==
@@ -204,15 +203,17 @@ TEST_CASE("CosineTreeModifiedGramSchmidt", "[CosineTreeTest]")
     // Add the obtained vector to the basis.
     basisNode->BasisVector(newBasisVector);
     basisNode->L2Error(arma::randu());
-    basisQueue.push(basisNode);
+    basisQueue.push_back(basisNode);
+    std::push_heap(basisQueue.begin(), basisQueue.end(), comp);
   }
 
   // Deallocate memory given to the objects.
   for (size_t i = 0; i < numCols; ++i)
   {
     CosineTree* currentNode;
-    currentNode = basisQueue.top();
-    basisQueue.pop();
+    currentNode = basisQueue.front();
+    std::pop_heap(basisQueue.begin(), basisQueue.end(), comp);
+    basisQueue.pop_back();
 
     delete currentNode;
   }

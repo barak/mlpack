@@ -6,9 +6,9 @@
  * Definition of the ELU activation function as described by Djork-Arne Clevert,
  * Thomas Unterthiner and Sepp Hochreiter.
  *
- * Definition of the SELU function as introduced by
- * Klambauer et. al. in Self Neural Networks.  The SELU activation
- * function keeps the mean and variance of the input invariant.
+ * Definition of the SELU function as introduced by Klambauer et. al. in Self
+ * Neural Networks.  The SELU activation function keeps the mean and variance of
+ * the input invariant.
  *
  * In short, SELU = lambda * ELU, with 'alpha' and 'lambda' fixed for
  * normalized inputs.
@@ -26,8 +26,9 @@
 
 #include <mlpack/prereqs.hpp>
 
+#include "layer.hpp"
+
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
  * The ELU activation function, defined by
@@ -61,7 +62,6 @@ namespace ann /** Artificial Neural Network. */ {
  * }
  * @endcode
  *
- *
  * The SELU activation function is defined by
  *
  * @f{eqnarray*}{
@@ -92,23 +92,19 @@ namespace ann /** Artificial Neural Network. */ {
  * }
  * @endcode
  *
- * In the deterministic mode, there is no computation of the derivative.
+ * In testing mode, there is no computation of the derivative.
  *
- * @note During training deterministic should be set to false and during
- *       testing/inference deterministic should be set to true.
  * @note Make sure to use SELU activation function with normalized inputs and
  *       weights initialized with Lecun Normal Initialization.
  *
- * @tparam InputDataType Type of the input data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam OutputDataType Type of the output data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
+ * @tparam InputType The type of the layer's inputs. The layer automatically
+ *     cast inputs to this type (Default: arma::mat).
+ * @tparam OutputType The type of the computation which also causes the output
+ *     to also be in this type. The type also allows the computation and weight
+ *     type to differ from the input type (Default: arma::mat).
  */
-template <
-    typename InputDataType = arma::mat,
-    typename OutputDataType = arma::mat
->
-class ELU
+template <typename MatType = arma::mat>
+class ELUType : public Layer<MatType>
 {
  public:
   /**
@@ -116,7 +112,7 @@ class ELU
    *
    * NOTE: Use this constructor for SELU activation function.
    */
-  ELU();
+  ELUType();
 
   /**
    * Create the ELU object using the specified parameter. The non zero
@@ -126,7 +122,25 @@ class ELU
    * @note Use this constructor for ELU activation function.
    * @param alpha Scale parameter for the negative factor.
    */
-  ELU(const double alpha);
+  ELUType(const double alpha);
+
+  //! Clone the ELUType object. This handles polymorphism correctly.
+  ELUType* Clone() const { return new ELUType(*this); }
+
+  // Virtual destructor.
+  virtual ~ELUType() {};
+
+  // Copy constructor.
+  ELUType(const ELUType& other);
+
+  // Move Constructor.
+  ELUType(ELUType&& other);
+
+  // Copy assignment operator.
+  ELUType& operator=(const ELUType& other);
+
+  // Move assignement operator.
+  ELUType& operator=(ELUType&& other);
 
   /**
    * Ordinary feed forward pass of a neural network, evaluating the function
@@ -135,8 +149,7 @@ class ELU
    * @param input Input data used for evaluating the specified function.
    * @param output Resulting output activation.
    */
-  template<typename InputType, typename OutputType>
-  void Forward(const InputType& input, OutputType& output);
+  void Forward(const MatType& input, MatType& output);
 
   /**
    * Ordinary feed backward pass of a neural network, calculating the function
@@ -147,28 +160,12 @@ class ELU
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
-  template<typename DataType>
-  void Backward(const DataType& input, const DataType& gy, DataType& g);
-
-  //! Get the output parameter.
-  OutputDataType const& OutputParameter() const { return outputParameter; }
-  //! Modify the output parameter.
-  OutputDataType& OutputParameter() { return outputParameter; }
-
-  //! Get the delta.
-  OutputDataType const& Delta() const { return delta; }
-  //! Modify the delta.
-  OutputDataType& Delta() { return delta; }
+  void Backward(const MatType& input, const MatType& gy, MatType& g);
 
   //! Get the non zero gradient.
   double const& Alpha() const { return alpha; }
   //! Modify the non zero gradient.
   double& Alpha() { return alpha; }
-
-  //! Get the value of deterministic parameter.
-  bool Deterministic() const { return deterministic; }
-  //! Modify the value of deterministic parameter.
-  bool& Deterministic() { return deterministic; }
 
   //! Get the lambda parameter.
   double const& Lambda() const { return lambda; }
@@ -177,36 +174,31 @@ class ELU
    * Serialize the layer.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
-  //! Locally-stored delta object.
-  OutputDataType delta;
-
-  //! Locally-stored output parameter object.
-  OutputDataType outputParameter;
-
   //! Locally stored first derivative of the activation function.
-  arma::mat derivative;
+  MatType derivative;
 
   //! ELU Hyperparameter (0 < alpha)
   //! SELU parameter fixed to 1.6732632423543774 for normalized inputs.
   double alpha;
 
-  //! Lambda Parameter used for multiplication of ELU function.
+  //! Lambda parameter used for multiplication of ELU function.
   //! For ELU activation function, lambda = 1.
   //! For SELU activation function, lambda = 1.0507009873554802 for normalized
   //! inputs.
   double lambda;
+}; // class ELUType
 
-  //! If true the derivative computation is disabled, see notes above.
-  bool deterministic;
-}; // class ELU
+// Convenience typedefs.
 
-// Template alias for SELU using ELU class.
-using SELU = ELU<arma::mat, arma::mat>;
+// ELU layer.
+typedef ELUType<arma::mat> ELU;
 
-} // namespace ann
+// SELU layer.
+typedef ELUType<arma::mat> SELU;
+
 } // namespace mlpack
 
 // Include implementation.

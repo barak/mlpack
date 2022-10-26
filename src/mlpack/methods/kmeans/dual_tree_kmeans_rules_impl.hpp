@@ -15,7 +15,6 @@
 #include "dual_tree_kmeans_rules.hpp"
 
 namespace mlpack {
-namespace kmeans {
 
 template<typename MetricType, typename TreeType>
 DualTreeKMeansRules<MetricType, TreeType>::DualTreeKMeansRules(
@@ -40,7 +39,8 @@ DualTreeKMeansRules<MetricType, TreeType>::DualTreeKMeansRules(
     baseCases(0),
     scores(0),
     lastQueryIndex(dataset.n_cols),
-    lastReferenceIndex(centroids.n_cols)
+    lastReferenceIndex(centroids.n_cols),
+    lastBaseCase(0.0)
 {
   // We must set the traversal info last query and reference node pointers to
   // something that is both invalid (i.e. not a tree node) and not NULL.  We'll
@@ -50,7 +50,8 @@ DualTreeKMeansRules<MetricType, TreeType>::DualTreeKMeansRules(
 }
 
 template<typename MetricType, typename TreeType>
-inline force_inline double DualTreeKMeansRules<MetricType, TreeType>::BaseCase(
+inline mlpack_force_inline
+double DualTreeKMeansRules<MetricType, TreeType>::BaseCase(
     const size_t queryIndex,
     const size_t referenceIndex)
 {
@@ -73,7 +74,7 @@ inline force_inline double DualTreeKMeansRules<MetricType, TreeType>::BaseCase(
   {
     lowerBounds[queryIndex] = upperBounds[queryIndex];
     upperBounds[queryIndex] = distance;
-    assignments[queryIndex] = (tree::TreeTraits<TreeType>::RearrangesDataset) ?
+    assignments[queryIndex] = (TreeTraits<TreeType>::RearrangesDataset) ?
         oldFromNewCentroids[referenceIndex] : referenceIndex;
   }
   else if (distance < lowerBounds[queryIndex])
@@ -136,7 +137,7 @@ inline double DualTreeKMeansRules<MetricType, TreeType>::Score(
   // We want to set adjustedScore to be the distance between the centroid of the
   // last query node and last reference node.  We will do this by adjusting the
   // last score.  In some cases, we can just use the last base case.
-  if (tree::TreeTraits<TreeType>::FirstPointIsCentroid)
+  if (TreeTraits<TreeType>::FirstPointIsCentroid)
   {
     adjustedScore = traversalInfo.LastBaseCase();
   }
@@ -156,8 +157,7 @@ inline double DualTreeKMeansRules<MetricType, TreeType>::Score(
         traversalInfo.LastQueryNode()->MinimumBoundDistance();
     const double lastRefDescDist =
         traversalInfo.LastReferenceNode()->MinimumBoundDistance();
-    adjustedScore = lastScore + lastQueryDescDist;
-    adjustedScore = lastScore + lastRefDescDist;
+    adjustedScore = lastScore + lastQueryDescDist + lastRefDescDist;
   }
 
   // Assemble an adjusted score.  For nearest neighbor search, this adjusted
@@ -212,7 +212,7 @@ inline double DualTreeKMeansRules<MetricType, TreeType>::Score(
   // Now, check if we can prune.
   if (adjustedScore > queryNode.Stat().UpperBound())
   {
-    if (!(tree::TreeTraits<TreeType>::FirstPointIsCentroid && score == 0.0))
+    if (!(TreeTraits<TreeType>::FirstPointIsCentroid && score == 0.0))
     {
       // There isn't any need to set the traversal information because no
       // descendant combinations will be visited, and those are the only
@@ -233,7 +233,7 @@ inline double DualTreeKMeansRules<MetricType, TreeType>::Score(
   if (score != DBL_MAX)
   {
     // Get minimum and maximum distances.
-    const math::Range distances = queryNode.RangeDistance(referenceNode);
+    const Range distances = queryNode.RangeDistance(referenceNode);
 
     score = distances.Lo();
     ++scores;
@@ -266,7 +266,7 @@ inline double DualTreeKMeansRules<MetricType, TreeType>::Score(
         // owner, but note that the node is not truly owned unless
         // Stat().Pruned() is centroids.n_cols.
         queryNode.Stat().Owner() =
-            (tree::TreeTraits<TreeType>::RearrangesDataset) ?
+            (TreeTraits<TreeType>::RearrangesDataset) ?
             oldFromNewCentroids[referenceNode.Descendant(0)] :
             referenceNode.Descendant(0);
       }
@@ -333,7 +333,6 @@ inline double DualTreeKMeansRules<MetricType, TreeType>::Rescore(
   return oldScore;
 }
 
-} // namespace kmeans
 } // namespace mlpack
 
 #endif

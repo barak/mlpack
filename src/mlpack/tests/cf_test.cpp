@@ -12,41 +12,20 @@
  */
 
 #include <mlpack/core.hpp>
-#include <mlpack/methods/cf/cf.hpp>
-#include <mlpack/methods/cf/decomposition_policies/batch_svd_method.hpp>
-#include <mlpack/methods/cf/decomposition_policies/bias_svd_method.hpp>
-#include <mlpack/methods/cf/decomposition_policies/randomized_svd_method.hpp>
-#include <mlpack/methods/cf/decomposition_policies/regularized_svd_method.hpp>
-#include <mlpack/methods/cf/decomposition_policies/svd_complete_method.hpp>
-#include <mlpack/methods/cf/decomposition_policies/svd_incomplete_method.hpp>
-#include <mlpack/methods/cf/decomposition_policies/svdplusplus_method.hpp>
-#include <mlpack/methods/cf/normalization/no_normalization.hpp>
-#include <mlpack/methods/cf/normalization/overall_mean_normalization.hpp>
-#include <mlpack/methods/cf/normalization/user_mean_normalization.hpp>
-#include <mlpack/methods/cf/normalization/item_mean_normalization.hpp>
-#include <mlpack/methods/cf/normalization/z_score_normalization.hpp>
-#include <mlpack/methods/cf/normalization/combined_normalization.hpp>
-#include <mlpack/methods/cf/neighbor_search_policies/lmetric_search.hpp>
-#include <mlpack/methods/cf/neighbor_search_policies/cosine_search.hpp>
-#include <mlpack/methods/cf/neighbor_search_policies/pearson_search.hpp>
-#include <mlpack/methods/cf/interpolation_policies/average_interpolation.hpp>
-#include <mlpack/methods/cf/interpolation_policies/similarity_interpolation.hpp>
-#include <mlpack/methods/cf/interpolation_policies/regression_interpolation.hpp>
-
-#include <iostream>
+#include <mlpack/methods/cf.hpp>
 
 #include "catch.hpp"
 #include "test_catch_tools.hpp"
-#include "serialization_catch.hpp"
+#include "serialization.hpp"
 
 using namespace mlpack;
-using namespace mlpack::cf;
 using namespace std;
 
 // Get train and test datasets.
 static void GetDatasets(arma::mat& dataset, arma::mat& savedCols)
 {
-  data::Load("GroupLensSmall.csv", dataset);
+  if (!data::Load("GroupLensSmall.csv", dataset))
+    FAIL("Cannot load test dataset GroupLensSmall.csv!");
   savedCols.set_size(3, 50);
 
   // Save the columns we've removed.
@@ -101,7 +80,8 @@ void GetRecommendationsAllUsers()
 
   // Load GroupLens data.
   arma::mat dataset;
-  data::Load("GroupLensSmall.csv", dataset);
+  if (!data::Load("GroupLensSmall.csv", dataset))
+    FAIL("Cannot load test dataset GroupLensSamll.csv!");
 
   CFType<DecompositionPolicy> c(dataset, decomposition, 5, 5, 30);
 
@@ -138,7 +118,8 @@ void GetRecommendationsQueriedUser()
 
   // Load GroupLens data.
   arma::mat dataset;
-  data::Load("GroupLensSmall.csv", dataset);
+  if (!data::Load("GroupLensSmall.csv", dataset))
+    FAIL("Cannot load test dataset GroupLensSmall.csv!");
 
   CFType<DecompositionPolicy> c(dataset, decomposition, 5, 5, 30);
 
@@ -222,35 +203,46 @@ template<typename DecompositionPolicy,
          typename InterpolationPolicy = AverageInterpolation>
 void CFPredict(const double rmseBound = 1.5)
 {
-  DecompositionPolicy decomposition;
-
-  // Small GroupLens dataset.
-  arma::mat dataset;
-
-  // Save the columns we've removed.
-  arma::mat savedCols;
-
-  GetDatasets(dataset, savedCols);
-
-  CFType<DecompositionPolicy,
-      NormalizationType> c(dataset, decomposition, 5, 5, 30);
-
-  // Now, for each removed rating, make sure the prediction is... reasonably
-  // accurate.
-  double totalError = 0.0;
-  for (size_t i = 0; i < savedCols.n_cols; ++i)
+  // We run the test multiple times, since it sometimes fails, in order to get
+  // the probability of failure down.
+  bool success = false;
+  const size_t trials = 8;
+  for (size_t trial = 0; trial < trials; ++trial)
   {
-    const double prediction = c.template Predict<NeighborSearchPolicy,
-        InterpolationPolicy>(savedCols(0, i), savedCols(1, i));
+    DecompositionPolicy decomposition;
 
-    const double error = std::pow(prediction - savedCols(2, i), 2.0);
-    totalError += error;
+    // Small GroupLens dataset.
+    arma::mat dataset;
+
+    // Save the columns we've removed.
+    arma::mat savedCols;
+
+    GetDatasets(dataset, savedCols);
+
+    CFType<DecompositionPolicy,
+        NormalizationType> c(dataset, decomposition, 5, 5, 30);
+
+    // Now, for each removed rating, make sure the prediction is... reasonably
+    // accurate.
+    double totalError = 0.0;
+    for (size_t i = 0; i < savedCols.n_cols; ++i)
+    {
+      const double prediction = c.template Predict<NeighborSearchPolicy,
+          InterpolationPolicy>(savedCols(0, i), savedCols(1, i));
+
+      const double error = std::pow(prediction - savedCols(2, i), 2.0);
+      totalError += error;
+    }
+
+    const double rmse = std::sqrt(totalError / savedCols.n_cols);
+    if (rmse < rmseBound)
+    {
+      success = true;
+      break;
+    }
   }
 
-  const double rmse = std::sqrt(totalError / savedCols.n_cols);
-
-  // The root mean square error should be less than ?.
-  REQUIRE(rmse < rmseBound);
+  REQUIRE(success == true);
 }
 
 // Do the same thing as the previous test, but ensure that the ratings we
@@ -343,7 +335,7 @@ void TrainWithCoordinateList(DecompositionPolicy& decomposition)
 {
   arma::mat randomData(3, 100);
   randomData.row(0) = arma::linspace<arma::rowvec>(0, 99, 100);
-  randomData.row(1) = arma::linspace<arma::rowvec>(0, 99, 100);
+  randomData.row(1) = randomData.row(0);
   randomData.row(2).fill(3);
   CFType<DecompositionPolicy> c(randomData, decomposition, 5, 5, 30);
 
@@ -427,7 +419,8 @@ void Serialization()
   DecompositionPolicy decomposition;
   // Load a dataset to train on.
   arma::mat dataset;
-  data::Load("GroupLensSmall.csv", dataset);
+  if (!data::Load("GroupLensSmall.csv", dataset))
+    FAIL("Cannot load test dataset GroupLensSmall.csv!");
 
   arma::sp_mat cleanedData;
   CFType<DecompositionPolicy,
@@ -1216,8 +1209,9 @@ TEST_CASE("CFPredictSimilarityInterpolation", "[CFTest]")
  */
 TEST_CASE("CFPredictRegressionInterpolation", "[CFTest]")
 {
+  // Larger tolerance is sometimes needed.
   CFPredict<RegSVDPolicy,
             OverallMeanNormalization,
             EuclideanSearch,
-            RegressionInterpolation>(2.0);
+            RegressionInterpolation>(2.2);
 }

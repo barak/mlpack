@@ -17,44 +17,53 @@
 #include "log_cosh_loss.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-LogCoshLoss<InputDataType, OutputDataType>::LogCoshLoss(const double a) :
-    a(a)
+template<typename MatType>
+LogCoshLossType<MatType>::LogCoshLossType(
+    const double a,
+    const bool reduction) :
+    a(a),
+    reduction(reduction)
 {
   Log::Assert(a > 0, "Hyper-Parameter \'a\' must be positive");
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-typename InputType::elem_type
-LogCoshLoss<InputDataType, OutputDataType>::Forward(const InputType& input,
-                                                    const TargetType& target)
+template<typename MatType>
+typename MatType::elem_type LogCoshLossType<MatType>::Forward(
+    const MatType& prediction,
+    const MatType& target)
 {
-  return arma::accu(arma::log(arma::cosh(a * (target - input)))) / a;
+  typename MatType::elem_type lossSum =
+      arma::accu(arma::log(arma::cosh(a * (target - prediction)))) / a;
+
+  if (reduction)
+    return lossSum;
+
+  return lossSum / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void LogCoshLoss<InputDataType, OutputDataType>::Backward(
-    const InputType& input,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType>
+void LogCoshLossType<MatType>::Backward(
+    const MatType& prediction,
+    const MatType& target,
+    MatType& loss)
 {
-  output = arma::tanh(a * (target - input));
+  loss = arma::tanh(a * (target - prediction));
+
+  if (!reduction)
+    loss = loss / target.n_elem;
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void LogCoshLoss<InputDataType, OutputDataType>::serialize(
+void LogCoshLossType<MatType>::serialize(
     Archive& ar,
-    const unsigned int /* version */)
+    const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(a);
+  ar(CEREAL_NVP(a));
+  ar(CEREAL_NVP(reduction));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

@@ -9,16 +9,11 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/neighbor_search/neighbor_search.hpp>
-#include <mlpack/core/tree/cover_tree.hpp>
+#include <mlpack/methods/neighbor_search.hpp>
 #include "test_catch_tools.hpp"
 #include "catch.hpp"
 
 using namespace mlpack;
-using namespace mlpack::neighbor;
-using namespace mlpack::tree;
-using namespace mlpack::metric;
-using namespace mlpack::bound;
 
 /**
  * Simple furthest-neighbors test with small, synthetic dataset.  This is an
@@ -335,7 +330,7 @@ TEST_CASE("KFNDualTreeVsNaive1", "[KFNTest]")
 
   // Hard-coded filename: bad?
   if (!data::Load("test_data_3_1000.csv", dataset))
-    FAIL("Cannot load test dataset test_data_3_1000.csv!");
+    FAIL("Cannot load test dataset test_data_3_1000.csv");
 
   KFN kfn(dataset);
 
@@ -369,7 +364,7 @@ TEST_CASE("KFNDualTreeVsNaive2", "[KFNTest]")
   // Hard-coded filename: bad?
   // Code duplication: also bad!
   if (!data::Load("test_data_3_1000.csv", dataset))
-    FAIL("Cannot load test dataset test_data_3_1000.csv!");
+    FAIL("Cannot load test dataset test_data_3_1000.csv");
 
   KFN kfn(dataset);
 
@@ -403,7 +398,7 @@ TEST_CASE("KFNSingleTreeVsNaive", "[KFNTest]")
   // Hard-coded filename: bad!
   // Code duplication: also bad!
   if (!data::Load("test_data_3_1000.csv", dataset))
-    FAIL("Cannot load test dataset test_data_3_1000.csv!");
+    FAIL("Cannot load test dataset test_data_3_1000.csv");
 
   KFN kfn(dataset, SINGLE_TREE_MODE);
 
@@ -466,7 +461,8 @@ TEST_CASE("KFNSingleCoverTreeTest", "[KFNTest]")
 TEST_CASE("KFNDualCoverTreeTest", "[KFNTest]")
 {
   arma::mat dataset;
-  data::Load("test_data_3_1000.csv", dataset);
+  if (!data::Load("test_data_3_1000.csv", dataset))
+    FAIL("Cannot load test dataset test_data_3_1000.csv");
 
   KFN tree(dataset);
 
@@ -538,7 +534,8 @@ TEST_CASE("KFNSingleBallTreeTest", "[KFNTest]")
 TEST_CASE("KFNDualBallTreeTest", "[KFNTest]")
 {
   arma::mat dataset;
-  data::Load("test_data_3_1000.csv", dataset);
+  if (!data::Load("test_data_3_1000.csv", dataset))
+    FAIL("Cannot load test dataset test_data_3_1000.csv");
 
   KFN tree(dataset);
 

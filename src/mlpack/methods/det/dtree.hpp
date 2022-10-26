@@ -13,10 +13,9 @@
 #ifndef MLPACK_METHODS_DET_DTREE_HPP
 #define MLPACK_METHODS_DET_DTREE_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 
 namespace mlpack {
-namespace det /** Density Estimation Trees */ {
 
 /**
  * A density estimation tree is similar to both a decision tree and a space
@@ -330,7 +329,7 @@ class DTree
    * Serialize the density estimation tree.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
   // Utility methods.
@@ -357,7 +356,6 @@ class DTree
                    const StatType& maxs);
 };
 
-} // namespace det
 } // namespace mlpack
 
 #include "dtree_impl.hpp"

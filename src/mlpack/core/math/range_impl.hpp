@@ -16,7 +16,6 @@
 #include <sstream>
 
 namespace mlpack {
-namespace math {
 
 /**
  * Initialize the range to 0.
@@ -201,13 +200,12 @@ inline bool RangeType<T>::Contains(const RangeType<T>& r) const
 //! Serialize the range.
 template<typename T>
 template<typename Archive>
-void RangeType<T>::serialize(Archive& ar, const unsigned int /* version */)
+void RangeType<T>::serialize(Archive& ar, const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(hi);
-  ar & BOOST_SERIALIZATION_NVP(lo);
+  ar(CEREAL_NVP(hi));
+  ar(CEREAL_NVP(lo));
 }
 
-} // namespace math
 } // namespace mlpack
 
 #endif

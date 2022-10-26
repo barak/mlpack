@@ -10,15 +10,12 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/perceptron/perceptron.hpp>
-#include <mlpack/methods/perceptron/learning_policies/simple_weight_update.hpp>
+#include <mlpack/methods/perceptron.hpp>
 
 #include "catch.hpp"
 
 using namespace mlpack;
 using namespace arma;
-using namespace mlpack::perceptron;
-using namespace mlpack::distribution;
 
 /**
  * This test tests whether the SimpleWeightUpdate updates weights and biases correctly,
@@ -110,17 +107,17 @@ TEST_CASE("SimpleWeightUpdateInstanceWeight", "[PerceptronTest]")
 TEST_CASE("And", "[PerceptronTest]")
 {
   mat trainData;
-  trainData << 0 << 1 << 1 << 0 << endr
-            << 1 << 0 << 1 << 0 << endr;
+  trainData = { { 0, 1, 1, 0 },
+                { 1, 0, 1, 0 } };
   Mat<size_t> labels;
-  labels << 0 << 0 << 1 << 0;
+  labels = { 0, 0, 1, 0 };
 
   Perceptron<> p(trainData, labels.row(0), 2, 1000);
 
   mat testData;
-  testData << 0 << 1 << 1 << 0 << endr
-           << 1 << 0 << 1 << 0 << endr;
-  Row<size_t> predictedLabels(testData.n_cols);
+  testData = { { 0, 1, 1, 0 },
+               { 1, 0, 1, 0 } };
+  Row<size_t> predictedLabels;
   p.Classify(testData, predictedLabels);
 
   CHECK(predictedLabels(0, 0) == 0);
@@ -135,18 +132,18 @@ TEST_CASE("And", "[PerceptronTest]")
 TEST_CASE("Or", "[PerceptronTest]")
 {
   mat trainData;
-  trainData << 0 << 1 << 1 << 0 << endr
-            << 1 << 0 << 1 << 0 << endr;
+  trainData = { { 0, 1, 1, 0 },
+                { 1, 0, 1, 0 } };
 
   Mat<size_t> labels;
-  labels << 1 << 1 << 1 << 0;
+  labels = { 1, 1, 1, 0 };
 
   Perceptron<> p(trainData, labels.row(0), 2, 1000);
 
   mat testData;
-  testData << 0 << 1 << 1 << 0 << endr
-           << 1 << 0 << 1 << 0 << endr;
-  Row<size_t> predictedLabels(testData.n_cols);
+  testData = { { 0, 1, 1, 0 },
+               { 1, 0, 1, 0 } };
+  Row<size_t> predictedLabels;
   p.Classify(testData, predictedLabels);
 
   CHECK(predictedLabels(0, 0) == 1);
@@ -162,18 +159,18 @@ TEST_CASE("Or", "[PerceptronTest]")
 TEST_CASE("Random3", "[PerceptronTest]")
 {
   mat trainData;
-  trainData << 0 << 1 << 1 << 4 << 5 << 4 << 1 << 2 << 1 << endr
-            << 1 << 0 << 1 << 1 << 1 << 2 << 4 << 5 << 4 << endr;
+  trainData = { { 0, 1, 1, 4, 5, 4, 1, 2, 1 },
+                { 1, 0, 1, 1, 1, 2, 4, 5, 4 } };
 
   Mat<size_t> labels;
-  labels << 0 << 0 << 0 << 1 << 1 << 1 << 2 << 2 << 2;
+  labels = { 0, 0, 0, 1, 1, 1, 2, 2, 2 };
 
   Perceptron<> p(trainData, labels.row(0), 3, 1000);
 
   mat testData;
-  testData << 0 << 1 << 1 << endr
-           << 1 << 0 << 1 << endr;
-  Row<size_t> predictedLabels(testData.n_cols);
+  testData = { { 0, 1, 1 },
+               { 1, 0, 1 } };
+  Row<size_t> predictedLabels;
   p.Classify(testData, predictedLabels);
 
   for (size_t i = 0; i < predictedLabels.n_cols; ++i)
@@ -187,18 +184,18 @@ TEST_CASE("Random3", "[PerceptronTest]")
 TEST_CASE("TwoPoints", "[PerceptronTest]")
 {
   mat trainData;
-  trainData << 0 << 1 << endr
-            << 1 << 0 << endr;
+  trainData = { { 0, 1 },
+                { 1, 0 } };
 
   Mat<size_t> labels;
-  labels << 0 << 1;
+  labels = { 0, 1 };
 
   Perceptron<> p(trainData, labels.row(0), 2, 1000);
 
   mat testData;
-  testData << 0 << 1 << endr
-           << 1 << 0 << endr;
-  Row<size_t> predictedLabels(testData.n_cols);
+  testData = { { 0, 1 },
+               { 1, 0 } };
+  Row<size_t> predictedLabels;
   p.Classify(testData, predictedLabels);
 
   CHECK(predictedLabels(0, 0) == 0);
@@ -212,21 +209,18 @@ TEST_CASE("TwoPoints", "[PerceptronTest]")
 TEST_CASE("NonLinearlySeparableDataset", "[PerceptronTest]")
 {
   mat trainData;
-  trainData << 1 << 2 << 3 << 4 << 5 << 6 << 7 << 8
-            << 1 << 2 << 3 << 4 << 5 << 6 << 7 << 8 << endr
-            << 1 << 1 << 1 << 1 << 1 << 1 << 1 << 1
-            << 2 << 2 << 2 << 2 << 2 << 2 << 2 << 2 << endr;
+  trainData = { { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 },
+                { 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2 } };
 
   Mat<size_t> labels;
-  labels << 0 << 0 << 0 << 1 << 0 << 1 << 1 << 1
-         << 0 << 0 << 0 << 1 << 0 << 1 << 1 << 1;
+  labels = { 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1 };
 
   Perceptron<> p(trainData, labels.row(0), 2, 1000);
 
   mat testData;
-  testData << 3 << 4   << 5   << 6   << endr
-           << 3 << 2.3 << 1.7 << 1.5 << endr;
-  Row<size_t> predictedLabels(testData.n_cols);
+  testData = { { 3,   4,   5,   6 },
+               { 3, 2.3, 1.7, 1.5 } };
+  Row<size_t> predictedLabels;
   p.Classify(testData, predictedLabels);
 
   CHECK(predictedLabels(0, 0) == 0);
@@ -238,16 +232,37 @@ TEST_CASE("NonLinearlySeparableDataset", "[PerceptronTest]")
 TEST_CASE("SecondaryConstructor", "[PerceptronTest]")
 {
   mat trainData;
-  trainData << 1 << 2 << 3 << 4 << 5 << 6 << 7 << 8
-            << 1 << 2 << 3 << 4 << 5 << 6 << 7 << 8 << endr
-            << 1 << 1 << 1 << 1 << 1 << 1 << 1 << 1
-            << 2 << 2 << 2 << 2 << 2 << 2 << 2 << 2 << endr;
+  trainData = { { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 },
+                { 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2 } };
 
   Mat<size_t> labels;
-  labels << 0 << 0 << 0 << 1 << 0 << 1 << 1 << 1
-         << 0 << 0 << 0 << 1 << 0 << 1 << 1 << 1;
+  labels = { 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1 };
 
   Perceptron<> p1(trainData, labels.row(0), 2, 1000);
 
   Perceptron<> p2(p1);
+
+  REQUIRE(p1.Weights().n_elem > 0);
+  REQUIRE(p2.Weights().n_elem > 0);
+}
+
+/**
+ * This tests that we can build the Perceptron when specifying instance weights.
+ */
+TEST_CASE("InstanceWeightsConstructor", "[PerceptronTest]")
+{
+  mat trainData;
+  trainData = { { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 },
+                { 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2 } };
+
+  Mat<size_t> labels;
+  labels = { 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1 };
+
+  rowvec instanceWeights;
+  instanceWeights = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 0.9,
+      0.8, 0.7, 0.6, 0.5, 0.4 };
+
+  Perceptron<> p(trainData, labels.row(0), 2, instanceWeights, 1000);
+
+  REQUIRE(p.Weights().n_elem > 0);
 }

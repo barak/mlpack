@@ -66,7 +66,7 @@ void StringEncoding<EncodingPolicyType, DictionaryType>::CreateMap(
     const std::string& input,
     const TokenizerType& tokenizer)
 {
-  boost::string_view strView(input);
+  MLPACK_STRING_VIEW strView(input);
   auto token = tokenizer(strView);
 
   static_assert(
@@ -112,7 +112,7 @@ EncodeHelper(const std::vector<std::string>& input,
   // The first pass adds the extracted tokens to the dictionary.
   for (size_t i = 0; i < input.size(); ++i)
   {
-    boost::string_view strView(input[i]);
+    MLPACK_STRING_VIEW strView(input[i]);
     auto token = tokenizer(strView);
 
     static_assert(
@@ -143,7 +143,7 @@ EncodeHelper(const std::vector<std::string>& input,
   // The second pass writes the encoded values to the output.
   for (size_t i = 0; i < input.size(); ++i)
   {
-    boost::string_view strView(input[i]);
+    MLPACK_STRING_VIEW strView(input[i]);
     auto token = tokenizer(strView);
     size_t numTokens = 0;
 
@@ -172,7 +172,7 @@ EncodeHelper(const std::vector<std::string>& input,
   // at once.
   for (size_t i = 0; i < input.size(); ++i)
   {
-    boost::string_view strView(input[i]);
+    MLPACK_STRING_VIEW strView(input[i]);
     auto token = tokenizer(strView);
 
     static_assert(
@@ -199,10 +199,10 @@ EncodeHelper(const std::vector<std::string>& input,
 template<typename EncodingPolicyType, typename DictionaryType>
 template<typename Archive>
 void StringEncoding<EncodingPolicyType, DictionaryType>::serialize(
-    Archive& ar, const unsigned int /* version */)
+    Archive& ar, const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(encodingPolicy);
-  ar & BOOST_SERIALIZATION_NVP(dictionary);
+  ar(CEREAL_NVP(encodingPolicy));
+  ar(CEREAL_NVP(dictionary));
 }
 
 } // namespace data

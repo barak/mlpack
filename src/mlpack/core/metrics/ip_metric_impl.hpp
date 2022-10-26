@@ -19,7 +19,6 @@
 #include <mlpack/core/kernels/linear_kernel.hpp>
 
 namespace mlpack {
-namespace metric {
 
 // Constructor with no instantiated kernel.
 template<typename KernelType>
@@ -85,32 +84,31 @@ inline typename Vec1Type::elem_type IPMetric<KernelType>::Evaluate(
 template<typename KernelType>
 template<typename Archive>
 void IPMetric<KernelType>::serialize(Archive& ar,
-                                     const unsigned int /* version */)
+                                     const uint32_t /* version */)
 {
   // If we're loading, we need to allocate space for the kernel, and we will own
   // the kernel.
-  if (Archive::is_loading::value)
+  if (cereal::is_loading<Archive>())
   {
     if (kernelOwner)
       delete kernel;
     kernelOwner = true;
   }
 
-  ar & BOOST_SERIALIZATION_NVP(kernel);
+  ar(CEREAL_POINTER(kernel));
 }
 
 // A specialization for the linear kernel, which actually just turns out to be
 // the Euclidean distance.
 template<>
 template<typename Vec1Type, typename Vec2Type>
-inline typename Vec1Type::elem_type IPMetric<kernel::LinearKernel>::Evaluate(
+inline typename Vec1Type::elem_type IPMetric<LinearKernel>::Evaluate(
     const Vec1Type& a,
     const Vec2Type& b)
 {
-  return metric::LMetric<2, true>::Evaluate(a, b);
+  return LMetric<2, true>::Evaluate(a, b);
 }
 
-} // namespace metric
 } // namespace mlpack
 
 #endif

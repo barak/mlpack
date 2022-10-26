@@ -13,10 +13,8 @@
 #define MLPACK_CORE_CV_METRICS_PRECISION_IMPL_HPP
 
 #include <mlpack/core/cv/metrics/accuracy.hpp>
-#include <mlpack/core/cv/metrics/facilities.hpp>
 
 namespace mlpack {
-namespace cv {
 
 template<AverageStrategy AS, size_t PC /* PositiveClass */>
 template<typename MLAlgorithm, typename DataType>
@@ -33,7 +31,7 @@ double Precision<AS, PC>::Evaluate(MLAlgorithm& model,
                                    const DataType& data,
                                    const arma::Row<size_t>& labels)
 {
-  AssertSizes(data, labels, "Precision<Binary>::Evaluate()");
+  util::CheckSameSizes(data, labels, "Precision<Binary>::Evaluate()");
 
   arma::Row<size_t> predictedLabels;
   model.Classify(data, predictedLabels);
@@ -51,7 +49,7 @@ double Precision<AS, PC>::Evaluate(MLAlgorithm& model,
                                    const DataType& data,
                                    const arma::Row<size_t>& labels)
 {
-  AssertSizes(data, labels, "Precision<Micro>::Evaluate()");
+  util::CheckSameSizes(data, labels, "Precision<Micro>::Evaluate()");
 
   // Microaveraged precision turns out to be just accuracy.
   return Accuracy::Evaluate(model, data, labels);
@@ -64,7 +62,7 @@ double Precision<AS, PC>::Evaluate(MLAlgorithm& model,
                                    const DataType& data,
                                    const arma::Row<size_t>& labels)
 {
-  AssertSizes(data, labels, "Precision<Macro>::Evaluate()");
+  util::CheckSameSizes(data, labels, "Precision<Macro>::Evaluate()");
 
   arma::Row<size_t> predictedLabels;
   model.Classify(data, predictedLabels);
@@ -82,7 +80,6 @@ double Precision<AS, PC>::Evaluate(MLAlgorithm& model,
   return arma::mean(precisions);
 }
 
-} // namespace cv
 } // namespace mlpack
 
 #endif

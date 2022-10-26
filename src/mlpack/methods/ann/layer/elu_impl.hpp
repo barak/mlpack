@@ -22,75 +22,115 @@
 #include "elu.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 // This constructor is called for SELU activation function.  The values of
 // alpha and lambda are constant for normalized inputs.
-template<typename InputDataType, typename OutputDataType>
-ELU<InputDataType, OutputDataType>::ELU() :
+template<typename MatType>
+ELUType<MatType>::ELUType() :
+    Layer<MatType>(),
     alpha(1.6732632423543774),
-    lambda(1.0507009873554802),
-    deterministic(false)
+    lambda(1.0507009873554802)
 {
   // Nothing to do here.
 }
 
-// This constructor is called for ELU activation function.  The value of lambda
-// is fixed and equal to 1.  'alpha' is a hyperparameter.
-template<typename InputDataType, typename OutputDataType>
-ELU<InputDataType, OutputDataType>::ELU(const double alpha) :
+// This constructor is called for ELU activation function. The value of lambda
+// is fixed and equal to 1. 'alpha' is a hyperparameter.
+template<typename MatType>
+ELUType<MatType>::ELUType(const double alpha) :
+    Layer<MatType>(),
     alpha(alpha),
-    lambda(1),
-    deterministic(false)
+    lambda(1)
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename OutputType>
-void ELU<InputDataType, OutputDataType>::Forward(
-    const InputType& input, OutputType& output)
+template<typename MatType>
+ELUType<MatType>::ELUType(const ELUType& other) :
+    Layer<MatType>(other),
+    alpha(other.alpha),
+    lambda(other.lambda)
 {
-  output = arma::ones<OutputDataType>(arma::size(input));
+  // Nothing to do.
+}
+
+template<typename MatType>
+ELUType<MatType>::ELUType(
+    ELUType&& other) :
+    Layer<MatType>(std::move(other)),
+    alpha(std::move(other.alpha)),
+    lambda(std::move(other.lambda))
+{
+  // Nothing to do.
+}
+
+template<typename MatType>
+ELUType<MatType>&
+ELUType<MatType>::operator=(const ELUType& other)
+{
+  if (&other != this)
+  {
+    Layer<MatType>::operator=(other);
+    alpha = other.alpha;
+    lambda = other.lambda;
+  }
+
+  return *this;
+}
+
+template<typename MatType>
+ELUType<MatType>&
+ELUType<MatType>::operator=(ELUType&& other)
+{
+  if (&other != this)
+  {
+    Layer<MatType>::operator=(std::move(other));
+    alpha = std::move(other.alpha);
+    lambda = std::move(other.lambda);
+  }
+
+  return *this;
+}
+
+template<typename MatType>
+void ELUType<MatType>::Forward(
+    const MatType& input, MatType& output)
+{
   for (size_t i = 0; i < input.n_elem; ++i)
   {
     if (input(i) < DBL_MAX)
     {
-      output(i) = (input(i) > 0) ? lambda * input(i) : lambda *
-          alpha * (std::exp(input(i)) - 1);
+      output(i) = (input(i) > 0) ? lambda * input(i) : lambda * alpha *
+          (std::exp(input(i)) - 1);
     }
   }
 
-    if (!deterministic)
-    {
-      derivative.set_size(arma::size(input));
-      for (size_t i = 0; i < input.n_elem; ++i)
-      {
-        derivative(i) = (input(i) > 0) ? lambda : output(i) +
-            lambda * alpha;
-      }
-    }
+  if (this->training)
+  {
+    derivative.set_size(arma::size(input));
+    for (size_t i = 0; i < input.n_elem; ++i)
+      derivative(i) = (input(i) > 0) ? lambda : output(i) + lambda * alpha;
+  }
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename DataType>
-void ELU<InputDataType, OutputDataType>::Backward(
-    const DataType& /* input */, const DataType& gy, DataType& g)
+template<typename MatType>
+void ELUType<MatType>::Backward(
+    const MatType& /* input */, const MatType& gy, MatType& g)
 {
   g = gy % derivative;
 }
 
-template<typename InputDataType, typename OutputDataType>
+template<typename MatType>
 template<typename Archive>
-void ELU<InputDataType, OutputDataType>::serialize(
-    Archive& ar,
-    const unsigned int /* version */)
+void ELUType<MatType>::serialize(
+    Archive& ar, const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(alpha);
-  ar & BOOST_SERIALIZATION_NVP(lambda);
+  ar(cereal::base_class<Layer<MatType>>(this));
+
+  ar(CEREAL_NVP(alpha));
+  ar(CEREAL_NVP(lambda));
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

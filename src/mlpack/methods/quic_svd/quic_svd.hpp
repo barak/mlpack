@@ -12,11 +12,9 @@
 #ifndef MLPACK_METHODS_QUIC_SVD_QUIC_SVD_HPP
 #define MLPACK_METHODS_QUIC_SVD_QUIC_SVD_HPP
 
-#include <mlpack/prereqs.hpp>
-#include <mlpack/core/tree/cosine_tree/cosine_tree.hpp>
+#include <mlpack/core.hpp>
 
 namespace mlpack {
-namespace svd {
 
 /**
  * QUIC-SVD is a matrix factorization technique, which operates in a subspace
@@ -91,7 +89,9 @@ class QUIC_SVD
   arma::mat basis;
 };
 
-} // namespace svd
 } // namespace mlpack
+
+// Include implementation.
+#include "quic_svd_impl.hpp"
 
 #endif

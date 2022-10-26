@@ -13,7 +13,6 @@
 #define MLPACK_CORE_UTIL_LOG_HPP
 
 #include <string>
-#include <mlpack/mlpack_export.hpp>
 
 #include "prefixedoutstream.hpp"
 #include "nulloutstream.hpp"
@@ -35,7 +34,7 @@ namespace mlpack {
  * fatal output will terminate the program when a newline is encountered.  An
  * example is given below.
  *
- * @code
+ * ```c++
  * Log::Info << "Checking a condition." << std::endl;
  * if (!someCondition())
  *   Log::Warn << "someCondition() is not satisfied!" << std::endl;
@@ -45,54 +44,102 @@ namespace mlpack {
  *   Log::Fatal << "someImportantCondition() is not satisfied! Terminating.";
  *   Log::Fatal << std::endl;
  * }
- * @endcode
+ * ```
  *
  * Any messages sent to Log::Debug will not be shown when compiling in non-debug
- * mode.  Messages to Log::Info will only be shown when the --verbose flag is
- * given to the program (or rather, the IO class).
+ * mode.
+ *
+ * When using mlpack in C++, log output (except for `Log::Fatal`) is disabled by
+ * default.  To enable it, define any of the following macros before including
+ * mlpack:
+ *
+ * ```c++
+ * #define MLPACK_PRINT_DEBUG
+ * #define MLPACK_PRINT_INFO
+ * #define MLPACK_PRINT_WARN
+ * ```
+ *
+ * If you want to disable printing of `[FATAL]` messages, define this macro
+ * before including mlpack:
+ *
+ * ```c++
+ * #define MLPACK_SUPPRESS_FATAL
+ * ```
  *
  * @see PrefixedOutStream, NullOutStream, IO
  */
-class Log
-{
- public:
-  /**
-   * Checks if the specified condition is true.
-   * If not, halts program execution and prints a custom error message.
-   * Does nothing in non-debug mode.
-   */
-  static void Assert(bool condition,
-                     const std::string& message = "Assert Failed.");
+namespace Log {
 
-  /**
-   * MLPACK_EXPORT is required for global variables, so that they are properly
-   * exported by the Windows compiler.
-   */
+/**
+ * Checks if the specified condition is true.
+ * If not, halts program execution and prints a custom error message.
+ * Does nothing in non-debug mode.
+ */
+void Assert(bool condition,
+            const std::string& message = "Assert Failed.");
 
-  // We only use PrefixedOutStream if the program is compiled with debug
-  // symbols.
-#ifdef DEBUG
-  //! Prints debug output with the appropriate tag: [DEBUG].
-  static MLPACK_EXPORT util::PrefixedOutStream Debug;
+/**
+ * MLPACK_EXPORT is required for global variables, so that they are properly
+ * exported by the Windows compiler.
+ */
+
+// Color code escape sequences -- but not on Windows.
+#ifndef _WIN32
+  #define BASH_RED "\033[0;31m"
+  #define BASH_GREEN "\033[0;32m"
+  #define BASH_YELLOW "\033[0;33m"
+  #define BASH_CYAN "\033[0;36m"
+  #define BASH_CLEAR "\033[0m"
 #else
-  //! Dumps debug output into the bit nether regions.
-  static MLPACK_EXPORT util::NullOutStream Debug;
+  #define BASH_RED ""
+  #define BASH_GREEN ""
+  #define BASH_YELLOW ""
+  #define BASH_CYAN ""
+  #define BASH_CLEAR ""
 #endif
 
-  //! Prints informational messages if --verbose is specified, prefixed with
-  //! [INFO ].
-  static MLPACK_EXPORT util::PrefixedOutStream Info;
+#if defined(DEBUG) || defined(MLPACK_PRINT_DEBUG)
+static util::PrefixedOutStream Debug =
+    util::PrefixedOutStream(MLPACK_COUT_STREAM,
+                            BASH_CYAN "[DEBUG] " BASH_CLEAR);
+#else
+static util::NullOutStream Debug = util::NullOutStream();
+#endif
 
-  //! Prints warning messages prefixed with [WARN ].
-  static MLPACK_EXPORT util::PrefixedOutStream Warn;
+static util::PrefixedOutStream Info =
+    util::PrefixedOutStream(MLPACK_COUT_STREAM,
+                            BASH_GREEN "[INFO ] " BASH_CLEAR,
+#ifdef MLPACK_PRINT_INFO
+                            false,
+#else
+                            true, /* unless --verbose */
+#endif
+                            false);
 
-  //! Prints fatal messages prefixed with [FATAL], then terminates the program.
-  static MLPACK_EXPORT util::PrefixedOutStream Fatal;
+static util::PrefixedOutStream Warn =
+    util::PrefixedOutStream(MLPACK_COUT_STREAM,
+                            BASH_YELLOW "[WARN ] " BASH_CLEAR,
+#ifdef MLPACK_PRINT_WARN
+                            false,
+#else
+                            true,
+#endif
+                            false);
 
-  //! Reference to cout, if necessary.
-  static std::ostream& cout;
-};
+static util::PrefixedOutStream Fatal =
+    util::PrefixedOutStream(MLPACK_CERR_STREAM,
+                            BASH_RED "[FATAL] " BASH_CLEAR,
+#ifdef MLPACK_SUPPRESS_FATAL
+                            true,
+#else
+                            false,
+#endif
+                            true /* fatal */);
 
-}; // namespace mlpack
+} // namespace Log
+} // namespace mlpack
+
+// Include implementation.
+#include "log_impl.hpp"
 
 #endif

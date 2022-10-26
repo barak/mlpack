@@ -15,10 +15,9 @@
 #ifndef MLPACK_METHODS_NAIVE_BAYES_NAIVE_BAYES_CLASSIFIER_HPP
 #define MLPACK_METHODS_NAIVE_BAYES_NAIVE_BAYES_CLASSIFIER_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 
 namespace mlpack {
-namespace naive_bayes /** The Naive Bayes Classifier. */ {
 
 /**
  * The simple Naive Bayes classifier.  This class trains on the data by
@@ -216,7 +215,7 @@ class NaiveBayesClassifier
 
   //! Serialize the classifier.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
  private:
   //! Sample mean for each class.
@@ -243,7 +242,6 @@ class NaiveBayesClassifier
                      ModelMatType& logLikelihoods) const;
 };
 
-} // namespace naive_bayes
 } // namespace mlpack
 
 // Include implementation.

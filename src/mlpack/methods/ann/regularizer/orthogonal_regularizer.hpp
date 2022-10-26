@@ -15,7 +15,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace ann {
 
 /**
  * Implementation of the OrthogonalRegularizer. Orthogonality of weights is a
@@ -55,15 +54,14 @@ class OrthogonalRegularizer
   template<typename MatType>
   void Evaluate(const MatType& weight, MatType& gradient);
 
-  //! Serialize the regularizer (nothing to do).
+  //! Serialize the regularizer.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */);
+  void serialize(Archive& ar, const uint32_t /* version */);
 
   //! The constant for the regularization
   double factor;
 };
 
-} // namespace ann
 } // namespace mlpack
 
 // Include implementation.

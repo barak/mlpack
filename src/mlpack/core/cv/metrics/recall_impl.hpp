@@ -13,10 +13,8 @@
 #define MLPACK_CORE_CV_METRICS_RECALL_IMPL_HPP
 
 #include <mlpack/core/cv/metrics/accuracy.hpp>
-#include <mlpack/core/cv/metrics/facilities.hpp>
 
 namespace mlpack {
-namespace cv {
 
 template<AverageStrategy AS, size_t PC /* PositiveClass */>
 template<typename MLAlgorithm, typename DataType>
@@ -33,7 +31,7 @@ double Recall<AS, PC>::Evaluate(MLAlgorithm& model,
                                 const DataType& data,
                                 const arma::Row<size_t>& labels)
 {
-  AssertSizes(data, labels, "Recall<Binary>::Evaluate()");
+  util::CheckSameSizes(data, labels, "Recall<Binary>::Evaluate()");
 
   arma::Row<size_t> predictedLabels;
   model.Classify(data, predictedLabels);
@@ -51,7 +49,7 @@ double Recall<AS, PC>::Evaluate(MLAlgorithm& model,
                                 const DataType& data,
                                 const arma::Row<size_t>& labels)
 {
-  AssertSizes(data, labels, "Recall<Micro>::Evaluate()");
+  util::CheckSameSizes(data, labels, "Recall<Micro>::Evaluate()");
 
   // Microaveraged recall is really the same as accuracy.
   return Accuracy::Evaluate(model, data, labels);
@@ -64,7 +62,7 @@ double Recall<AS, PC>::Evaluate(MLAlgorithm& model,
                                 const DataType& data,
                                 const arma::Row<size_t>& labels)
 {
-  AssertSizes(data, labels, "Recall<Macro>::Evaluate()");
+  util::CheckSameSizes(data, labels, "Recall<Macro>::Evaluate()");
 
   arma::Row<size_t> predictedLabels;
   model.Classify(data, predictedLabels);
@@ -82,7 +80,6 @@ double Recall<AS, PC>::Evaluate(MLAlgorithm& model,
   return arma::mean(recalls);
 }
 
-} // namespace cv
 } // namespace mlpack
 
 #endif

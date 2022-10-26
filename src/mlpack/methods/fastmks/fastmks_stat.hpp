@@ -16,7 +16,6 @@
 #include <mlpack/core/tree/tree_traits.hpp>
 
 namespace mlpack {
-namespace fastmks {
 
 /**
  * The statistic used in trees with FastMKS.  This stores both the bound and the
@@ -49,12 +48,12 @@ class FastMKSStat
       lastKernelNode(NULL)
   {
     // Do we have to calculate the centroid?
-    if (tree::TreeTraits<TreeType>::FirstPointIsCentroid)
+    if (TreeTraits<TreeType>::FirstPointIsCentroid)
     {
       // If this type of tree has self-children, then maybe the evaluation is
       // already done.  These statistics are built bottom-up, so the child stat
       // should already be done.
-      if ((tree::TreeTraits<TreeType>::HasSelfChildren) &&
+      if ((TreeTraits<TreeType>::HasSelfChildren) &&
           (node.NumChildren() > 0) &&
           (node.Point(0) == node.Child(0).Point(0)))
       {
@@ -100,13 +99,13 @@ class FastMKSStat
 
   //! Serialize the statistic.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(bound);
-    ar & BOOST_SERIALIZATION_NVP(selfKernel);
+    ar(CEREAL_NVP(bound));
+    ar(CEREAL_NVP(selfKernel));
 
     // Void out last kernel information on load.
-    if (Archive::is_loading::value)
+    if (cereal::is_loading<Archive>())
     {
       lastKernel = 0.0;
       lastKernelNode = NULL;
@@ -128,7 +127,6 @@ class FastMKSStat
   void* lastKernelNode;
 };
 
-} // namespace fastmks
 } // namespace mlpack
 
 #endif

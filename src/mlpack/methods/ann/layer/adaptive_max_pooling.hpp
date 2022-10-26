@@ -13,28 +13,29 @@
 #define MLPACK_METHODS_ANN_LAYER_ADAPTIVE_MAX_POOLING_HPP
 
 #include <mlpack/prereqs.hpp>
-#include "layer_types.hpp"
+
+#include "layer.hpp"
+#include "max_pooling.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
 /**
- * Implementation of the AdaptiveMaxPooling layer.
+ * Implementation of the AdaptiveMaxPooling layer. 
+ * 
+ * The AdaptiveMaxPooling layer works similarly to MaxPooling layer, but it 
+ * adaptively changes the size of the pooling region to minimize the amount of
+ * computation.  In MaxPooling, we specifies the kernel and stride size whereas
+ * in AdaptiveMaxPooling, we specify the output size of the pooling region.
  *
- * @tparam InputDataType Type of the input data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
- * @tparam OutputDataType Type of the output data (arma::colvec, arma::mat,
- *         arma::sp_mat or arma::cube).
+ * @tparam MatType Matrix representation to accept as input and use for
+ *         computation.
  */
-template <
-    typename InputDataType = arma::mat,
-    typename OutputDataType = arma::mat
->
-class AdaptiveMaxPooling
+template <typename MatType = arma::mat>
+class AdaptiveMaxPoolingType : public Layer<MatType>
 {
  public:
   //! Create the AdaptiveMaxPooling object.
-  AdaptiveMaxPooling();
+  AdaptiveMaxPoolingType();
 
   /**
    * Create the AdaptiveMaxPooling object.
@@ -42,15 +43,30 @@ class AdaptiveMaxPooling
    * @param outputWidth Width of the output.
    * @param outputHeight Height of the output.
    */
-  AdaptiveMaxPooling(const size_t outputWidth,
-                     const size_t outputHeight);
+  AdaptiveMaxPoolingType(const size_t outputWidth,
+                         const size_t outputHeight);
 
-  /**
-   * Create the AdaptiveMaxPooling object.
-   *
-   * @param outputShape A two-value tuple indicating width and height of the output.
-   */
-  AdaptiveMaxPooling(const std::tuple<size_t, size_t>& outputShape);
+  // Virtual destructor.
+  virtual ~AdaptiveMaxPoolingType() 
+  { 
+    // Nothing to do here.
+  }
+
+  //! Copy the given AdaptiveMaxPoolingType.
+  AdaptiveMaxPoolingType(const AdaptiveMaxPoolingType& other);
+  //! Take ownership of the given AdaptiveMaxPoolingType.
+  AdaptiveMaxPoolingType(AdaptiveMaxPoolingType&& other);
+  //! Copy the given AdaptiveMaxPoolingType.
+  AdaptiveMaxPoolingType& operator=(const AdaptiveMaxPoolingType& other);
+  //! Take ownership of the given AdaptiveMaxPoolingType.
+  AdaptiveMaxPoolingType& operator=(AdaptiveMaxPoolingType&& other);
+
+  //! Clone the AdaptiveMaxPoolingType object. 
+  //! This handles polymorphism correctly.
+  AdaptiveMaxPoolingType* Clone() const 
+  { 
+    return new AdaptiveMaxPoolingType(*this); 
+  }
 
   /**
    * Ordinary feed forward pass of a neural network, evaluating the function
@@ -59,8 +75,7 @@ class AdaptiveMaxPooling
    * @param input Input data used for evaluating the specified function.
    * @param output Resulting output activation.
    */
-  template<typename eT>
-  void Forward(const arma::Mat<eT>& input, arma::Mat<eT>& output);
+  void Forward(const MatType& input, MatType& output);
 
   /**
    * Ordinary feed backward pass of a neural network, using 3rd-order tensors as
@@ -71,95 +86,49 @@ class AdaptiveMaxPooling
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
-  template<typename eT>
-  void Backward(const arma::Mat<eT>& input,
-                const arma::Mat<eT>& gy,
-                arma::Mat<eT>& g);
-
-  //! Get the output parameter.
-  const OutputDataType& OutputParameter() const
-  { return poolingLayer.OutputParameter(); }
-
-  //! Modify the output parameter.
-  OutputDataType& OutputParameter() { return poolingLayer.OutputParameter(); }
-
-  //! Get the delta.
-  const OutputDataType& Delta() const { return poolingLayer.Delta(); }
-  //! Modify the delta.
-  OutputDataType& Delta() { return poolingLayer.Delta(); }
-
-  //! Get the input width.
-  size_t InputWidth() const { return poolingLayer.InputWidth(); }
-  //! Modify the input width.
-  size_t& InputWidth() { return poolingLayer.InputWidth(); }
-
-  //! Get the input height.
-  size_t InputHeight() const { return poolingLayer.InputHeight(); }
-  //! Modify the input height.
-  size_t& InputHeight() { return poolingLayer.InputHeight(); }
+  void Backward(const MatType& input,
+                const MatType& gy,
+                MatType& g);
 
   //! Get the output width.
-  size_t OutputWidth() const { return outputWidth; }
+  size_t const& OutputWidth() const { return outputWidth; }
   //! Modify the output width.
   size_t& OutputWidth() { return outputWidth; }
 
   //! Get the output height.
-  size_t OutputHeight() const { return outputHeight; }
+  size_t const& OutputHeight() const { return outputHeight; }
   //! Modify the output height.
   size_t& OutputHeight() { return outputHeight; }
 
-  //! Get the input size.
-  size_t InputSize() const { return poolingLayer.InputSize(); }
-
-  //! Get the output size.
-  size_t OutputSize() const { return poolingLayer.OutputSize(); }
+  //! Compute the size of the output given `InputDimensions()`.
+  void ComputeOutputDimensions();
 
   /**
    * Serialize the layer.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int version);
+  void serialize(Archive& ar, const uint32_t version);
 
  private:
-  /**
-   * Initialize Kernel Size and Stride for Adaptive Pooling.
-   */
-  void IntializeAdaptivePadding()
-  {
-    poolingLayer.StrideWidth() = std::floor(poolingLayer.InputWidth() /
-        outputWidth);
-    poolingLayer.StrideHeight() = std::floor(poolingLayer.InputHeight() /
-        outputHeight);
-
-    poolingLayer.KernelWidth() = poolingLayer.InputWidth() -
-        (outputWidth - 1) * poolingLayer.StrideWidth();
-    poolingLayer.KernelHeight() = poolingLayer.InputHeight() -
-        (outputHeight - 1) * poolingLayer.StrideHeight();
-
-    if (poolingLayer.KernelHeight() <= 0 || poolingLayer.KernelWidth() <= 0 ||
-        poolingLayer.StrideWidth() <= 0 || poolingLayer.StrideHeight() <= 0)
-    {
-      Log::Fatal << "Given output shape (" << outputWidth << ", "
-        << outputHeight << ") is not possible for given input shape ("
-        << poolingLayer.InputWidth() << ", " << poolingLayer.InputHeight()
-        << ")." << std::endl;
-    }
-  }
-
   //! Locally stored MaxPooling Object.
-  MaxPooling<InputDataType, OutputDataType> poolingLayer;
+  MaxPoolingType<MatType> poolingLayer;
 
-  //! Locally-stored output width.
+  //! Locally-stored output width. These are user specified outputWidth.
+  //! Actual outputWidth will be equal to this but only after 
+  //! `ComputeOutputDimensions()` is called.
   size_t outputWidth;
 
-  //! Locally-stored output height.
+  //! Locally-stored output height. These are user specified outputWidth.
+  //! Actual outputWidth will be equal to this but only after
+  //! `ComputeOutputDimensions()` is called.
   size_t outputHeight;
+}; // class AdaptiveMaxPoolingType
 
-  //! Locally-stored reset parameter used to initialize the layer once.
-  bool reset;
-}; // class AdaptiveMaxPooling
+// Convenience typedefs.
 
-} // namespace ann
+// Standard Adaptive max pooling layer.
+typedef AdaptiveMaxPoolingType<arma::mat> AdaptiveMaxPooling;
+
 } // namespace mlpack
 
 // Include implementation.

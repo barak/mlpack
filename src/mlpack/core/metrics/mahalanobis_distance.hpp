@@ -15,7 +15,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace metric {
 
 /**
  * The Mahalanobis distance, which is essentially a stretched Euclidean
@@ -112,14 +111,13 @@ class MahalanobisDistance
 
   //! Serialize the Mahalanobis distance.
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int version);
+  void serialize(Archive& ar, const uint32_t version);
 
  private:
   //! The covariance matrix associated with this distance.
   arma::mat covariance;
 };
 
-} // namespace metric
 } // namespace mlpack
 
 #include "mahalanobis_distance_impl.hpp"

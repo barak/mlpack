@@ -5,9 +5,9 @@
  * @author Rohan Raj
  *
  * Tests for the classes:
- *  * mlpack::distribution::DiscreteDistribution
- *  * mlpack::distribution::GaussianDistribution
- *  * mlpack::distribution::GammaDistribution
+ *  * DiscreteDistribution
+ *  * GaussianDistribution
+ *  * GammaDistribution
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -16,17 +16,11 @@
  */
 #include <mlpack/core.hpp>
 
-#include <mlpack/core/dists/regression_distribution.hpp>
-#include <mlpack/core/metrics/mahalanobis_distance.hpp>
-
 #include "catch.hpp"
-#include "serialization_catch.hpp"
+#include "serialization.hpp"
 #include "test_catch_tools.hpp"
 
 using namespace mlpack;
-using namespace mlpack::distribution;
-using namespace mlpack::metric;
-using namespace mlpack::math;
 
 /*********************************/
 /** Discrete Distribution Tests **/
@@ -471,7 +465,7 @@ TEST_CASE("GaussianDistributionRandomTest", "[DistributionTest]")
 
   // Now make sure that reflects the actual distribution.
   arma::vec obsMean = arma::mean(obs, 1);
-  arma::mat obsCov = mlpack::math::ColumnCovariance(obs);
+  arma::mat obsCov = ColumnCovariance(obs);
 
   // 10% tolerance because this can be noisy.
   REQUIRE(obsMean[0] == Approx(mean[0]).epsilon(0.1));
@@ -506,7 +500,7 @@ TEST_CASE("GaussianDistributionTrainTest", "[DistributionTest]")
 
   // Find actual mean and covariance of data.
   arma::vec actualMean = arma::mean(observations, 1);
-  arma::mat actualCov = mlpack::math::ColumnCovariance(observations);
+  arma::mat actualCov = ColumnCovariance(observations);
 
   d.Train(observations);
 
@@ -669,7 +663,7 @@ TEST_CASE("GammaDistributionTrainTest", "[DistributionTest]")
   // Random generation of gamma-like points.
   for (size_t j = 0; j < d; ++j)
     for (size_t i = 0; i < N; ++i)
-      rdata(j, i) = dist(math::randGen);
+      rdata(j, i) = dist(RandGen());
 
   // Create Gamma object and call Train() on reference set.
   GammaDistribution gDist;
@@ -687,7 +681,7 @@ TEST_CASE("GammaDistributionTrainTest", "[DistributionTest]")
   // Random generation of gamma-like points.
   for (size_t j = 0; j < d2; ++j)
     for (size_t i = 0; i < N2; ++i)
-      rdata2(j, i) = dist(math::randGen);
+      rdata2(j, i) = dist(RandGen());
 
   // Fit results using old object.
   gDist.Train(rdata2);
@@ -715,7 +709,7 @@ TEST_CASE("GammaDistributionTrainWithProbabilitiesTest", "[DistributionTest]")
 
   for (size_t j = 0; j < d; ++j)
     for (size_t i = 0; i < N; ++i)
-      rdata(j, i) = dist(math::randGen);
+      rdata(j, i) = dist(RandGen());
 
   // Fill the probabilities randomly.
   arma::vec probabilities(N, arma::fill::randu);
@@ -759,7 +753,7 @@ TEST_CASE("GammaDistributionTrainAllProbabilities1Test", "[DistributionTest]")
 
   for (size_t j = 0; j < d; ++j)
     for (size_t i = 0; i < N; ++i)
-      rdata(j, i) = dist(math::randGen);
+      rdata(j, i) = dist(RandGen());
 
   // Fit results with only data.
   GammaDistribution gDist;
@@ -808,18 +802,18 @@ TEST_CASE("GammaDistributionTrainTwoDistProbabilities1Test",
     for (size_t i = 0; i < N; ++i)
     {
       if (i % 2 == 0)
-        rdata(j, i) = dist(math::randGen);
+        rdata(j, i) = dist(RandGen());
       else
-        rdata(j, i) = dist2(math::randGen);
+        rdata(j, i) = dist2(RandGen());
     }
   }
 
   for (size_t i = 0; i < N; ++i)
   {
     if (i % 2 == 0)
-      probabilities(i) = 0.02 * math::Random();
+      probabilities(i) = 0.02 * Random();
     else
-      probabilities(i) = 0.98 + 0.02 * math::Random();
+      probabilities(i) = 0.98 + 0.02 * Random();
   }
 
   GammaDistribution gDist;
@@ -859,7 +853,7 @@ TEST_CASE("GammaDistributionFittingTest", "[DistributionTest]")
   arma::mat rdata(d, N);
   for (size_t j = 0; j < d; ++j)
     for (size_t i = 0; i < N; ++i)
-      rdata(j, i) = dist(math::randGen);
+      rdata(j, i) = dist(RandGen());
 
   // Create Gamma object and call Train() on reference set.
   GammaDistribution gDist;
@@ -880,7 +874,7 @@ TEST_CASE("GammaDistributionFittingTest", "[DistributionTest]")
   arma::mat rdata2(d, N);
   for (size_t j = 0; j < d; ++j)
     for (size_t i = 0; i < N; ++i)
-      rdata2(j, i) = dist2(math::randGen);
+      rdata2(j, i) = dist2(RandGen());
 
   // Create Gamma object and call Train() on reference set.
   GammaDistribution gDist2;
@@ -981,8 +975,8 @@ TEST_CASE("GammaDistributionProbabilityTest", "[DistributionTest]")
   // Combine into one 2-dimensional distribution.
   const arma::vec a3("2.0 3.1"), b3("0.9 1.4");
   arma::mat x3(2, 2);
-  x3 << 2.0 << 2.94 << arma::endr
-     << 2.0 << 2.94;
+  x3 = { { 2.0, 2.94 },
+         { 2.0, 2.94 } };
   arma::vec prob3;
 
   // Expect that the 2-dimensional distribution returns the product of the
@@ -1017,9 +1011,8 @@ TEST_CASE("GammaDistributionLogProbabilityTest", "[DistributionTest]")
   // Combine into one 2-dimensional distribution.
   const arma::vec a3("2.0 3.1"), b3("0.9 1.4");
   arma::mat x3(2, 2);
-  x3
-    << 2.0 << 2.94 << arma::endr
-    << 2.0 << 2.94;
+  x3 = { { 2.0, 2.94 },
+         { 2.0, 2.94 } };
   arma::vec logprob3;
 
   // Expect that the 2-dimensional distribution returns the product of the
@@ -1042,10 +1035,10 @@ TEST_CASE("DiscreteDistributionTest", "[DistributionTest]")
   std::vector<arma::vec> probVector = std::vector<arma::vec>(1, prob);
   DiscreteDistribution t(probVector);
 
-  DiscreteDistribution xmlT, textT, binaryT;
+  DiscreteDistribution xmlT, jsonT, binaryT;
 
   // Load and save with all serializers.
-  SerializeObjectAll(t, xmlT, textT, binaryT);
+  SerializeObjectAll(t, xmlT, jsonT, binaryT);
 
   for (size_t i = 0; i < 12; ++i)
   {
@@ -1055,13 +1048,13 @@ TEST_CASE("DiscreteDistributionTest", "[DistributionTest]")
     if (prob == 0.0)
     {
       REQUIRE(xmlT.Probability(obs) == Approx(0.0).margin(1e-8));
-      REQUIRE(textT.Probability(obs) == Approx(0.0).margin(1e-8));
+      REQUIRE(jsonT.Probability(obs) == Approx(0.0).margin(1e-8));
       REQUIRE(binaryT.Probability(obs) == Approx(0.0).margin(1e-8));
     }
     else
     {
       REQUIRE(prob == Approx(xmlT.Probability(obs)).epsilon(1e-10));
-      REQUIRE(prob == Approx(textT.Probability(obs)).epsilon(1e-10));
+      REQUIRE(prob == Approx(jsonT.Probability(obs)).epsilon(1e-10));
       REQUIRE(prob == Approx(binaryT.Probability(obs)).epsilon(1e-10));
     }
   }
@@ -1080,19 +1073,19 @@ TEST_CASE("GaussianDistributionTest", "[DistributionTest]")
   cov = (cov * cov.t());
 
   GaussianDistribution g(mean, cov);
-  GaussianDistribution xmlG, textG, binaryG;
+  GaussianDistribution xmlG, jsonG, binaryG;
 
-  SerializeObjectAll(g, xmlG, textG, binaryG);
+  SerializeObjectAll(g, xmlG, jsonG, binaryG);
 
   REQUIRE(g.Dimensionality() == xmlG.Dimensionality());
-  REQUIRE(g.Dimensionality() == textG.Dimensionality());
+  REQUIRE(g.Dimensionality() == jsonG.Dimensionality());
   REQUIRE(g.Dimensionality() == binaryG.Dimensionality());
 
   // First, check the means.
-  CheckMatrices(g.Mean(), xmlG.Mean(), textG.Mean(), binaryG.Mean());
+  CheckMatrices(g.Mean(), xmlG.Mean(), jsonG.Mean(), binaryG.Mean());
 
   // Now, check the covariance.
-  CheckMatrices(g.Covariance(), xmlG.Covariance(), textG.Covariance(),
+  CheckMatrices(g.Covariance(), xmlG.Covariance(), jsonG.Covariance(),
       binaryG.Covariance());
 
   // Lastly, run some observations through and make sure the probability is the
@@ -1108,7 +1101,7 @@ TEST_CASE("GaussianDistributionTest", "[DistributionTest]")
     {
       REQUIRE(xmlG.Probability(randomObs.unsafe_col(i)) ==
           Approx(0.0).margin(1e-8));
-      REQUIRE(textG.Probability(randomObs.unsafe_col(i)) ==
+      REQUIRE(jsonG.Probability(randomObs.unsafe_col(i)) ==
           Approx(0.0).margin(1e-8));
       REQUIRE(binaryG.Probability(randomObs.unsafe_col(i)) ==
           Approx(0.0).margin(1e-8));
@@ -1118,7 +1111,7 @@ TEST_CASE("GaussianDistributionTest", "[DistributionTest]")
       REQUIRE(prob ==
           Approx(xmlG.Probability(randomObs.unsafe_col(i))).epsilon(1e-10));
       REQUIRE(prob ==
-          Approx(textG.Probability(randomObs.unsafe_col(i))).epsilon(1e-10));
+          Approx(jsonG.Probability(randomObs.unsafe_col(i))).epsilon(1e-10));
       REQUIRE(prob ==
           Approx(binaryG.Probability(randomObs.unsafe_col(i))).epsilon(1e-10));
     }
@@ -1134,15 +1127,15 @@ TEST_CASE("LaplaceDistributionTest", "[DistributionTest]")
   mean.randu();
 
   LaplaceDistribution l(mean, 2.5);
-  LaplaceDistribution xmlL, textL, binaryL;
+  LaplaceDistribution xmlL, jsonL, binaryL;
 
-  SerializeObjectAll(l, xmlL, textL, binaryL);
+  SerializeObjectAll(l, xmlL, jsonL, binaryL);
 
   REQUIRE(l.Scale() == Approx(xmlL.Scale()).epsilon(1e-10));
-  REQUIRE(l.Scale() == Approx(textL.Scale()).epsilon(1e-10));
+  REQUIRE(l.Scale() == Approx(jsonL.Scale()).epsilon(1e-10));
   REQUIRE(l.Scale() == Approx(binaryL.Scale()).epsilon(1e-10));
 
-  CheckMatrices(l.Mean(), xmlL.Mean(), textL.Mean(), binaryL.Mean());
+  CheckMatrices(l.Mean(), xmlL.Mean(), jsonL.Mean(), binaryL.Mean());
 }
 
 /**
@@ -1206,14 +1199,14 @@ TEST_CASE("MahalanobisDistanceTest", "[DistributionTest]")
   MahalanobisDistance<> d;
   d.Covariance().randu(50, 50);
 
-  MahalanobisDistance<> xmlD, textD, binaryD;
+  MahalanobisDistance<> xmlD, jsonD, binaryD;
 
-  SerializeObjectAll(d, xmlD, textD, binaryD);
+  SerializeObjectAll(d, xmlD, jsonD, binaryD);
 
   // Check the covariance matrices.
   CheckMatrices(d.Covariance(),
                 xmlD.Covariance(),
-                textD.Covariance(),
+                jsonD.Covariance(),
                 binaryD.Covariance());
 }
 
@@ -1229,38 +1222,38 @@ TEST_CASE("RegressionDistributionTest", "[DistributionTest]")
   responses.randn(800);
 
   RegressionDistribution rd(data, responses);
-  RegressionDistribution xmlRd, textRd, binaryRd;
+  RegressionDistribution xmlRd, jsonRd, binaryRd;
 
   // Okay, now save it and load it.
-  SerializeObjectAll(rd, xmlRd, textRd, binaryRd);
+  SerializeObjectAll(rd, xmlRd, jsonRd, binaryRd);
 
   // Check the gaussian distribution.
   CheckMatrices(rd.Err().Mean(),
                 xmlRd.Err().Mean(),
-                textRd.Err().Mean(),
+                jsonRd.Err().Mean(),
                 binaryRd.Err().Mean());
   CheckMatrices(rd.Err().Covariance(),
                 xmlRd.Err().Covariance(),
-                textRd.Err().Covariance(),
+                jsonRd.Err().Covariance(),
                 binaryRd.Err().Covariance());
 
   // Check the regression function.
   if (rd.Rf().Lambda() == 0.0)
   {
     REQUIRE(xmlRd.Rf().Lambda() == Approx(0.0).margin(1e-8));
-    REQUIRE(textRd.Rf().Lambda() == Approx(0.0).margin(1e-8));
+    REQUIRE(jsonRd.Rf().Lambda() == Approx(0.0).margin(1e-8));
     REQUIRE(binaryRd.Rf().Lambda() == Approx(0.0).margin(1e-8));
   }
   else
   {
     REQUIRE(rd.Rf().Lambda() == Approx(xmlRd.Rf().Lambda()).epsilon(1e-10));
-    REQUIRE(rd.Rf().Lambda() == Approx(textRd.Rf().Lambda()).epsilon(1e-10));
+    REQUIRE(rd.Rf().Lambda() == Approx(jsonRd.Rf().Lambda()).epsilon(1e-10));
     REQUIRE(rd.Rf().Lambda() == Approx(binaryRd.Rf().Lambda()).epsilon(1e-10));
   }
 
   CheckMatrices(rd.Rf().Parameters(),
                 xmlRd.Rf().Parameters(),
-                textRd.Rf().Parameters(),
+                jsonRd.Rf().Parameters(),
                 binaryRd.Rf().Parameters());
 }
 
@@ -1442,7 +1435,7 @@ TEST_CASE("DiagonalGaussianDistributionRandomTest", "[DistributionTest]")
 
   // Make sure that reflects the actual distribution.
   arma::vec obsMean = arma::mean(obs, 1);
-  arma::mat obsCov = mlpack::math::ColumnCovariance(obs);
+  arma::mat obsCov = ColumnCovariance(obs);
 
   // 10% tolerance because this can be noisy.
   REQUIRE(obsMean(0) == Approx(mean(0)).epsilon(0.1));
@@ -1470,7 +1463,7 @@ TEST_CASE("DiagonalGaussianDistributionTrainTest", "[DistributionTest]")
 
   // Calculate the actual mean and covariance of data using armadillo.
   arma::vec actualMean = arma::mean(observations, 1);
-  arma::mat actualCov = mlpack::math::ColumnCovariance(observations);
+  arma::mat actualCov = ColumnCovariance(observations);
 
   // Estimate the parameters.
   d.Train(observations);
@@ -1518,7 +1511,8 @@ TEST_CASE("DiagonalGaussianUnbiasedEstimatorTest", "[DistributionTest]")
  * the weighted mean and covariance reduce to the unweighted sample mean and
  * covariance.
  */
-TEST_CASE("DiagonalGaussianWeightedParametersReductionTest", "[DistributionTest]")
+TEST_CASE("DiagonalGaussianWeightedParametersReductionTest",
+          "[DistributionTest]")
 {
   arma::vec mean("2.5 1.5 8.2 3.1");
   arma::vec cov("1.2 3.1 8.3 4.3");

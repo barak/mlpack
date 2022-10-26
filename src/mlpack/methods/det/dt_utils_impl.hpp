@@ -17,7 +17,6 @@
 #include <mlpack/core/tree/enumerate_tree.hpp>
 
 namespace mlpack {
-namespace det {
 
 template <typename MatType>
 void PrintLeafMembership(DTree<MatType, int>* dtree,
@@ -112,12 +111,13 @@ DTree<MatType, TagType>* Trainer(MatType& dataset,
                                  const bool useVolumeReg,
                                  const size_t maxLeafSize,
                                  const size_t minLeafSize,
-                                 const bool skipPruning)
+                                 const bool skipPruning,
+                                 util::Timers& timers)
 {
   // Initialize the tree.
   DTree<MatType, TagType>* dtree = new DTree<MatType, TagType>(dataset);
 
-  Timer::Start("tree_growing");
+  timers.Start("tree_growing");
   // Prepare to grow the tree...
   arma::Col<size_t> oldFromNew(dataset.n_cols);
   for (size_t i = 0; i < oldFromNew.n_elem; ++i)
@@ -131,7 +131,7 @@ DTree<MatType, TagType>* Trainer(MatType& dataset,
   double alpha = dtree->Grow(newDataset, oldFromNew, useVolumeReg, maxLeafSize,
       minLeafSize);
 
-  Timer::Stop("tree_growing");
+  timers.Stop("tree_growing");
   Log::Info << dtree->SubtreeLeaves() << " leaf nodes in the tree using full "
       << "dataset; minimum alpha: " << alpha << "." << std::endl;
 
@@ -144,7 +144,7 @@ DTree<MatType, TagType>* Trainer(MatType& dataset,
     Log::Info << "Performing " << folds << "-fold cross validation." <<
       std::endl;
 
-  Timer::Start("pruning_sequence");
+  timers.Start("pruning_sequence");
 
   // Sequentially prune and save the alpha values and the values of c_t^2 * r_t.
   std::vector<std::pair<double, double> > prunedSequence;
@@ -169,7 +169,7 @@ DTree<MatType, TagType>* Trainer(MatType& dataset,
                                     dtree->SubtreeLeavesLogNegError());
   prunedSequence.push_back(treeSeq);
 
-  Timer::Stop("pruning_sequence");
+  timers.Stop("pruning_sequence");
   Log::Info << prunedSequence.size() << " trees in the sequence; maximum alpha:"
       << " " << oldAlpha << "." << std::endl;
 
@@ -179,13 +179,10 @@ DTree<MatType, TagType>* Trainer(MatType& dataset,
   arma::vec regularizationConstants(prunedSequence.size());
   regularizationConstants.fill(0.0);
 
-  Timer::Start("cross_validation");
-  // Go through each fold.  On the Visual Studio compiler, we have to use
-  // intmax_t because size_t is not yet supported by their OpenMP
-  // implementation. omp_size_t is the appropriate type according to the
-  // platform.
+  timers.Start("cross_validation");
+  // Go through each fold.
   #pragma omp parallel for shared(prunedSequence, regularizationConstants)
-  for (omp_size_t fold = 0; fold < (omp_size_t) folds; fold++)
+  for (size_t fold = 0; fold < (size_t) folds; fold++)
   {
     // Break up data into train and test sets.
     const size_t start = fold * testSize;
@@ -238,7 +235,7 @@ DTree<MatType, TagType>* Trainer(MatType& dataset,
       }
 
       // Update the cv regularization constant.
-      cvRegularizationConstants[i] += 2.0 * cvVal / (double) cvData.n_cols;
+      cvRegularizationConstants[i] = 2.0 * cvVal / (double) cvData.n_cols;
 
       // Determine the new alpha value and prune accordingly.
       double cvOldAlpha = 0.5 * (prunedSequence[i + 1].first
@@ -255,27 +252,29 @@ DTree<MatType, TagType>* Trainer(MatType& dataset,
     }
 
     if (prunedSequence.size() > 2)
-      cvRegularizationConstants[prunedSequence.size() - 2] += 2.0 * cvVal
+    {
+      cvRegularizationConstants[prunedSequence.size() - 2] = 2.0 * cvVal
         / (double) cvData.n_cols;
+    }
 
     #pragma omp critical(DTreeCVUpdate)
     regularizationConstants += cvRegularizationConstants;
   }
-  Timer::Stop("cross_validation");
+  timers.Stop("cross_validation");
 
   double optimalAlpha = -1.0;
-  long double cvBestError = -std::numeric_limits<long double>::max();
+  long double cvBestNegError = -std::numeric_limits<long double>::max();
 
   for (size_t i = 0; i < prunedSequence.size() - 1; ++i)
   {
     // We can no longer work in the log-space for this because we have no
     // guarantee the quantity will be positive.
-    long double thisError = -std::exp((long double) prunedSequence[i].second) +
+    long double thisNegError = std::exp((long double) prunedSequence[i].second) -
         (long double) regularizationConstants[i];
 
-    if (thisError > cvBestError)
+    if (thisNegError > cvBestNegError)
     {
-      cvBestError = thisError;
+      cvBestNegError = thisNegError;
       optimalAlpha = prunedSequence[i].first;
     }
   }
@@ -327,7 +326,7 @@ PathCacher::PathCacher(PathCacher::PathFormat fmt, DTree<MatType, int>* dtree) :
   // number of _nodes_ in the tree.
   pathCache.resize(dtree->TagTree(0, true));
   pathCache[0] = PathCacheType::value_type(-1, "");
-  tree::EnumerateTree(dtree, *this);
+  EnumerateTree(dtree, *this);
 }
 
 template<typename MatType>
@@ -385,7 +384,6 @@ const std::string& PathCacher::PathFor(int tag) const
   return pathCache[tag].second;
 }
 
-} // namespace det
 } // namespace mlpack
 
 #endif // MLPACK_METHODS_DET_DT_UTILS_IMPL_HPP

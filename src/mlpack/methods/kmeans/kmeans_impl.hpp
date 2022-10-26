@@ -14,9 +14,9 @@
 
 #include <mlpack/core/metrics/lmetric.hpp>
 #include <mlpack/core/util/sfinae_utility.hpp>
+#include <mlpack/core/util/size_checks.hpp>
 
 namespace mlpack {
-namespace kmeans {
 
 /**
  * This gives us a GivesCentroids object that we can use to tell whether or not
@@ -161,15 +161,8 @@ Cluster(const MatType& data,
   // Check validity of initial guess.
   if (initialGuess)
   {
-    if (centroids.n_cols != clusters)
-      Log::Fatal << "KMeans::Cluster(): wrong number of initial cluster "
-        << "centroids (" << centroids.n_cols << ", should be " << clusters
-        << ")!" << std::endl;
-
-    if (centroids.n_rows != data.n_rows)
-      Log::Fatal << "KMeans::Cluster(): initial cluster centroids have wrong "
-        << " dimensionality (" << centroids.n_rows << ", should be "
-        << data.n_rows << ")!" << std::endl;
+    util::CheckSameSizes(centroids, clusters, "KMeans::Cluster()", "clusters");
+    util::CheckSameDimensionality(data, centroids, "KMeans::Cluster()");
   }
 
   // Use the partitioner to come up with the partition assignments and calculate
@@ -288,10 +281,7 @@ Cluster(const MatType& data,
   // Now, the initial assignments.  First determine if they are necessary.
   if (initialAssignmentGuess)
   {
-    if (assignments.n_elem != data.n_cols)
-      Log::Fatal << "KMeans::Cluster(): initial cluster assignments (length "
-          << assignments.n_elem << ") not the same size as the dataset (size "
-          << data.n_cols << ")!" << std::endl;
+    util::CheckSameSizes(data, assignments, "KMeans::Cluster()", "assignments");
 
     // Calculate initial centroids.
     arma::Row<size_t> counts;
@@ -315,7 +305,7 @@ Cluster(const MatType& data,
   assignments.set_size(data.n_cols);
 
   #pragma omp parallel for
-  for (omp_size_t i = 0; i < (omp_size_t) data.n_cols; ++i)
+  for (size_t i = 0; i < (size_t) data.n_cols; ++i)
   {
     // Find the closest centroid to this point.
     double minDistance = std::numeric_limits<double>::infinity();
@@ -347,13 +337,12 @@ void KMeans<MetricType,
             InitialPartitionPolicy,
             EmptyClusterPolicy,
             LloydStepType,
-            MatType>::serialize(Archive& ar, const unsigned int /* version */)
+            MatType>::serialize(Archive& ar, const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(maxIterations);
-  ar & BOOST_SERIALIZATION_NVP(metric);
-  ar & BOOST_SERIALIZATION_NVP(partitioner);
-  ar & BOOST_SERIALIZATION_NVP(emptyClusterAction);
+  ar(CEREAL_NVP(maxIterations));
+  ar(CEREAL_NVP(metric));
+  ar(CEREAL_NVP(partitioner));
+  ar(CEREAL_NVP(emptyClusterAction));
 }
 
-} // namespace kmeans
 } // namespace mlpack

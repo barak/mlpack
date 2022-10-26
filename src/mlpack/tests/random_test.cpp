@@ -2,7 +2,7 @@
  * @file tests/random_test.cpp
  * @author Konstantin Sidorov
  *
- * Tests for generators of random numbers from math:: namespace.
+ * Tests for generators of random numbers.
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
@@ -10,19 +10,13 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/core/math/random.hpp>
-#include <mlpack/core/dists/discrete_distribution.hpp>
 
-#include <boost/test/unit_test.hpp>
-#include "test_tools.hpp"
+#include "catch.hpp"
 
 using namespace mlpack;
-using namespace math;
-
-BOOST_AUTO_TEST_SUITE(RandomTest);
 
 // Test for RandInt() sampler from discrete uniform distribution.
-BOOST_AUTO_TEST_CASE(DiscreteUniformRandomTest)
+TEST_CASE("DiscreteUniformRandomTest", "[RandomTest]")
 {
   std::vector<std::pair<int, int>> ranges =
   {
@@ -43,8 +37,8 @@ BOOST_AUTO_TEST_CASE(DiscreteUniformRandomTest)
     }
     for (size_t i = 0; i < count.size(); ++i)
     {
-      BOOST_REQUIRE_SMALL(
-        1.0 / (hiExclusive - lo) - count[i] * 1.0 / iterations, 0.15);
+      REQUIRE(1.0 / (hiExclusive - lo) - count[i] * 1.0 / iterations ==
+          Approx(0.0).margin(0.15));
     }
   }
 
@@ -61,14 +55,14 @@ BOOST_AUTO_TEST_CASE(DiscreteUniformRandomTest)
 
     for (size_t i = 0; i < count.size(); ++i)
     {
-      BOOST_REQUIRE_SMALL(
-          1.0 / (hiExclusive - lo) - count[i] * 1.0 / iterations, 0.15);
+      REQUIRE(1.0 / (hiExclusive - lo) - count[i] * 1.0 / iterations ==
+          Approx(0.0).margin(0.15));
     }
   }
 }
 
 // Test for RandInt() sampler from discrete (possibly nonuniform) distribution.
-BOOST_AUTO_TEST_CASE(WeightedRandomTest)
+TEST_CASE("WeightedRandomTest", "[RandomTest]")
 {
   std::vector<std::vector<double>> weights = {
     {1},
@@ -82,7 +76,7 @@ BOOST_AUTO_TEST_CASE(WeightedRandomTest)
   const size_t iterations = 50000;
   for (std::vector<double> weightSet : weights)
   {
-    mlpack::distribution::DiscreteDistribution d(1);
+    DiscreteDistribution d(1);
     d.Probabilities(0) =  arma::vec(weightSet);
     std::vector<int> count(weightSet.size(), 0);
     for (size_t iter = 0; iter < iterations; ++iter)
@@ -92,9 +86,8 @@ BOOST_AUTO_TEST_CASE(WeightedRandomTest)
 
     for (size_t i = 0; i < weightSet.size(); ++i)
     {
-      BOOST_REQUIRE_SMALL(weightSet[i] - count[i] * 1.0 / iterations, 0.15);
+      REQUIRE(weightSet[i] - count[i] * 1.0 / iterations ==
+          Approx(0.0).margin(0.15));
     }
   }
 }
-
-BOOST_AUTO_TEST_SUITE_END();

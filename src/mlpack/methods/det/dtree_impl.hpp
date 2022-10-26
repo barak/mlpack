@@ -15,11 +15,7 @@
 #include <stack>
 #include <vector>
 
-using namespace mlpack;
-using namespace det;
-
-namespace details
-{
+namespace mlpack {
 
 /**
  * This one sorts and scand the given per-dimension extract and puts all splits
@@ -146,8 +142,6 @@ void ExtractSplits(std::vector<std::pair<ElemType, size_t>>& splitVec,
     lastVal = newVal;
   }
 }
-
-} // namespace details
 
 template<typename MatType, typename TagType>
 DTree<MatType, TagType>::DTree() :
@@ -488,8 +482,7 @@ bool DTree<MatType, TagType>::FindSplit(const MatType& data,
     // sparse matrices.
 
     std::vector<SplitItem> splitVec;
-    details::ExtractSplits<ElemType>(splitVec, data, dim, start, end,
-        minLeafSize);
+    ExtractSplits<ElemType>(splitVec, data, dim, start, end, minLeafSize);
 
     // Iterate on all the splits for this dimension
     for (typename std::vector<SplitItem>::iterator i = splitVec.begin();
@@ -552,10 +545,11 @@ bool DTree<MatType, TagType>::FindSplit(const MatType& data,
 }
 
 template<typename MatType, typename TagType>
-size_t DTree<MatType, TagType>::SplitData(MatType& data,
-                                          const size_t splitDim,
-                                          const ElemType splitValue,
-                                          arma::Col<size_t>& oldFromNew) const
+size_t DTree<MatType, TagType>::SplitData(
+    MatType& data,
+    const size_t splitDim,
+    const ElemType splitValue,
+    arma::Col<size_t>& oldFromNew) const
 {
   // Swap all columns such that any columns with value in dimension splitDim
   // less than or equal to splitValue are on the left side, and all others are
@@ -874,19 +868,13 @@ double DTree<MatType, TagType>::ComputeValue(const VecType& query) const
   }
 
   if (subtreeLeaves == 1)  // If we are a leaf...
-  {
     return std::exp(std::log(ratio) - logVolume);
-  }
-  else
-  {
-    // Return either of the two children - left or right, depending on the
-    // splitValue
-    return (query[splitDim] <= splitValue) ?
+
+  // Return either of the two children - left or right, depending on the
+  // splitValue.
+  return (query[splitDim] <= splitValue) ?
       left->ComputeValue(query) :
       right->ComputeValue(query);
-  }
-
-  return 0.0;
 }
 
 // Index the buckets for possible usage later.
@@ -939,8 +927,8 @@ TagType DTree<MatType, TagType>::FindBucket(const VecType& query) const
 }
 
 template<typename MatType, typename TagType>
-void DTree<MatType, TagType>::ComputeVariableImportance(arma::vec& importances)
-    const
+void DTree<MatType, TagType>::ComputeVariableImportance(
+  arma::vec& importances) const
 {
   // Clear and set to right size.
   importances.zeros(maxVals.n_elem);
@@ -993,24 +981,24 @@ void DTree<MatType, TagType>::FillMinMax(const StatType& mins,
 template <typename MatType, typename TagType>
 template <typename Archive>
 void DTree<MatType, TagType>::serialize(Archive& ar,
-                                        const unsigned int /* version */)
+                                        const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(start);
-  ar & BOOST_SERIALIZATION_NVP(end);
-  ar & BOOST_SERIALIZATION_NVP(maxVals);
-  ar & BOOST_SERIALIZATION_NVP(minVals);
-  ar & BOOST_SERIALIZATION_NVP(splitDim);
-  ar & BOOST_SERIALIZATION_NVP(splitValue);
-  ar & BOOST_SERIALIZATION_NVP(logNegError);
-  ar & BOOST_SERIALIZATION_NVP(subtreeLeavesLogNegError);
-  ar & BOOST_SERIALIZATION_NVP(subtreeLeaves);
-  ar & BOOST_SERIALIZATION_NVP(root);
-  ar & BOOST_SERIALIZATION_NVP(ratio);
-  ar & BOOST_SERIALIZATION_NVP(logVolume);
-  ar & BOOST_SERIALIZATION_NVP(bucketTag);
-  ar & BOOST_SERIALIZATION_NVP(alphaUpper);
+  ar(CEREAL_NVP(start));
+  ar(CEREAL_NVP(end));
+  ar(CEREAL_NVP(maxVals));
+  ar(CEREAL_NVP(minVals));
+  ar(CEREAL_NVP(splitDim));
+  ar(CEREAL_NVP(splitValue));
+  ar(CEREAL_NVP(logNegError));
+  ar(CEREAL_NVP(subtreeLeavesLogNegError));
+  ar(CEREAL_NVP(subtreeLeaves));
+  ar(CEREAL_NVP(root));
+  ar(CEREAL_NVP(ratio));
+  ar(CEREAL_NVP(logVolume));
+  ar(CEREAL_NVP(bucketTag));
+  ar(CEREAL_NVP(alphaUpper));
 
-  if (Archive::is_loading::value)
+  if (cereal::is_loading<Archive>())
   {
     if (left)
       delete left;
@@ -1024,21 +1012,23 @@ void DTree<MatType, TagType>::serialize(Archive& ar,
   bool hasLeft = (left != NULL);
   bool hasRight = (right != NULL);
 
-  ar & BOOST_SERIALIZATION_NVP(hasLeft);
-  ar & BOOST_SERIALIZATION_NVP(hasRight);
+  ar(CEREAL_NVP(hasLeft));
+  ar(CEREAL_NVP(hasRight));
 
   if (hasLeft)
-    ar & BOOST_SERIALIZATION_NVP(left);
+    ar(CEREAL_POINTER(left));
   if (hasRight)
-    ar & BOOST_SERIALIZATION_NVP(right);
+    ar(CEREAL_POINTER(right));
 
   if (root)
   {
-    ar & BOOST_SERIALIZATION_NVP(maxVals);
-    ar & BOOST_SERIALIZATION_NVP(minVals);
+    ar(CEREAL_NVP(maxVals));
+    ar(CEREAL_NVP(minVals));
 
     // This is added in order to reduce (dramatically!) the model file size.
-    if (Archive::is_loading::value && left && right)
+    if (cereal::is_loading<Archive>() && left && right)
       FillMinMax(minVals, maxVals);
   }
 }
+
+} // namespace mlpack

@@ -16,7 +16,6 @@
 #include <mlpack/core/math/random.hpp>
 
 namespace mlpack {
-namespace neighbor {
 
 // Construct the object with random tables
 template<typename SortPolicy, typename MatType>
@@ -195,10 +194,10 @@ void LSHSearch<SortPolicy, MatType>::Train(MatType referenceSet,
     // Compute a heuristic hash width from the data.
     for (size_t i = 0; i < numSamples; ++i)
     {
-      size_t p1 = (size_t) math::RandInt(this->referenceSet.n_cols);
-      size_t p2 = (size_t) math::RandInt(this->referenceSet.n_cols);
+      size_t p1 = (size_t) RandInt(this->referenceSet.n_cols);
+      size_t p2 = (size_t) RandInt(this->referenceSet.n_cols);
 
-      hashWidth += std::sqrt(metric::EuclideanDistance::Evaluate(
+      hashWidth += std::sqrt(EuclideanDistance::Evaluate(
           this->referenceSet.col(p1),
           this->referenceSet.col(p2)));
     }
@@ -352,7 +351,7 @@ void LSHSearch<SortPolicy, MatType>::Train(MatType referenceSet,
 // Base case where the query set is the reference set.  (So, we can't return
 // ourselves as the nearest neighbor.)
 template<typename SortPolicy, typename MatType>
-inline force_inline
+inline mlpack_force_inline
 void LSHSearch<SortPolicy, MatType>::BaseCase(
     const size_t queryIndex,
     const arma::uvec& referenceIndices,
@@ -375,7 +374,7 @@ void LSHSearch<SortPolicy, MatType>::BaseCase(
     if (queryIndex == referenceIndex)
       continue;
 
-    const double distance = metric::EuclideanDistance::Evaluate(
+    const double distance = EuclideanDistance::Evaluate(
         referenceSet.col(queryIndex),
         referenceSet.col(referenceIndex));
 
@@ -398,7 +397,7 @@ void LSHSearch<SortPolicy, MatType>::BaseCase(
 
 // Base case for bichromatic search.
 template<typename SortPolicy, typename MatType>
-inline force_inline
+inline mlpack_force_inline
 void LSHSearch<SortPolicy, MatType>::BaseCase(
     const size_t queryIndex,
     const arma::uvec& referenceIndices,
@@ -418,7 +417,7 @@ void LSHSearch<SortPolicy, MatType>::BaseCase(
   for (size_t j = 0; j < referenceIndices.n_elem; ++j)
   {
     const size_t referenceIndex = referenceIndices[j];
-    const double distance = metric::EuclideanDistance::Evaluate(
+    const double distance = EuclideanDistance::Evaluate(
         querySet.col(queryIndex),
         referenceSet.col(referenceIndex));
 
@@ -440,7 +439,7 @@ void LSHSearch<SortPolicy, MatType>::BaseCase(
 }
 
 template<typename SortPolicy, typename MatType>
-inline force_inline
+inline mlpack_force_inline
 double LSHSearch<SortPolicy, MatType>::PerturbationScore(
     const std::vector<bool>& A,
     const arma::vec& scores) const
@@ -453,7 +452,7 @@ double LSHSearch<SortPolicy, MatType>::PerturbationScore(
 }
 
 template<typename SortPolicy, typename MatType>
-inline force_inline
+inline mlpack_force_inline
 bool LSHSearch<SortPolicy, MatType>::PerturbationShift(
     std::vector<bool>& A) const
 {
@@ -472,7 +471,7 @@ bool LSHSearch<SortPolicy, MatType>::PerturbationShift(
 }
 
 template<typename SortPolicy, typename MatType>
-inline force_inline
+inline mlpack_force_inline
 bool LSHSearch<SortPolicy, MatType>::PerturbationExpand(
     std::vector<bool>& A) const
 {
@@ -491,7 +490,7 @@ bool LSHSearch<SortPolicy, MatType>::PerturbationExpand(
 }
 
 template<typename SortPolicy, typename MatType>
-inline force_inline
+inline mlpack_force_inline
 bool LSHSearch<SortPolicy, MatType>::PerturbationValid(
     const std::vector<bool>& A) const
 {
@@ -865,14 +864,8 @@ void LSHSearch<SortPolicy, MatType>::Search(
     const size_t T)
 {
   // Ensure the dimensionality of the query set is correct.
-  if (querySet.n_rows != referenceSet.n_rows)
-  {
-    std::ostringstream oss;
-    oss << "LSHSearch::Search(): dimensionality of query set ("
-        << querySet.n_rows << ") is not equal to the dimensionality the model "
-        << "was trained on (" << referenceSet.n_rows << ")!" << std::endl;
-    throw std::invalid_argument(oss.str());
-  }
+  util::CheckSameDimensionality(querySet, referenceSet, "LSHSearch::Search()",
+      "query set");
 
   if (k > referenceSet.n_cols)
   {
@@ -909,14 +902,12 @@ void LSHSearch<SortPolicy, MatType>::Search(
 
   size_t avgIndicesReturned = 0;
 
-  Timer::Start("computing_neighbors");
-
   // Parallelization to process more than one query at a time.
   #pragma omp parallel for \
       shared(resultingNeighbors, distances) \
       schedule(dynamic)\
       reduction(+:avgIndicesReturned)
-  for (omp_size_t i = 0; i < (omp_size_t) querySet.n_cols; ++i)
+  for (size_t i = 0; i < (size_t) querySet.n_cols; ++i)
   {
     // Go through every query point.
     // Hash every query into every hash table and eventually into the
@@ -935,8 +926,6 @@ void LSHSearch<SortPolicy, MatType>::Search(
     // candidates.
     BaseCase(i, refIndices, k, querySet, resultingNeighbors, distances);
   }
-
-  Timer::Stop("computing_neighbors");
 
   distanceEvaluations += avgIndicesReturned;
   avgIndicesReturned /= querySet.n_cols;
@@ -975,14 +964,12 @@ Search(const size_t k,
 
   size_t avgIndicesReturned = 0;
 
-  Timer::Start("computing_neighbors");
-
   // Parallelization to process more than one query at a time.
   #pragma omp parallel for \
       shared(resultingNeighbors, distances) \
       schedule(dynamic)\
       reduction(+:avgIndicesReturned)
-  for (omp_size_t i = 0; i < (omp_size_t) referenceSet.n_cols; ++i)
+  for (size_t i = 0; i < (size_t) referenceSet.n_cols; ++i)
   {
     // Go through every query point.
     // Hash every query into every hash table and eventually into the
@@ -1001,8 +988,6 @@ Search(const size_t k,
     // candidates.
     BaseCase(i, refIndices, k, resultingNeighbors, distances);
   }
-
-  Timer::Stop("computing_neighbors");
 
   distanceEvaluations += avgIndicesReturned;
   avgIndicesReturned /= referenceSet.n_cols;
@@ -1040,113 +1025,28 @@ double LSHSearch<SortPolicy, MatType>::ComputeRecall(
 template<typename SortPolicy, typename MatType>
 template<typename Archive>
 void LSHSearch<SortPolicy, MatType>::serialize(Archive& ar,
-                                               const unsigned int version)
+                                               const uint32_t /* version */)
 {
-  ar & BOOST_SERIALIZATION_NVP(referenceSet);
-  ar & BOOST_SERIALIZATION_NVP(numProj);
-  ar & BOOST_SERIALIZATION_NVP(numTables);
+  ar(CEREAL_NVP(referenceSet));
+  ar(CEREAL_NVP(numProj));
+  ar(CEREAL_NVP(numTables));
 
   // Delete existing projections, if necessary.
-  if (Archive::is_loading::value)
+  if (cereal::is_loading<Archive>())
     projections.reset();
 
-  // Backward compatibility: older versions of LSHSearch stored the projection
-  // tables in a std::vector<arma::mat>.
-  if (version == 0)
-  {
-    std::vector<arma::mat> tmpProj;
-    ar & BOOST_SERIALIZATION_NVP(tmpProj);
-
-    projections.set_size(tmpProj[0].n_rows, tmpProj[0].n_cols, tmpProj.size());
-    for (size_t i = 0; i < tmpProj.size(); ++i)
-      projections.slice(i) = tmpProj[i];
-  }
-  else
-  {
-    ar & BOOST_SERIALIZATION_NVP(projections);
-  }
-
-  ar & BOOST_SERIALIZATION_NVP(offsets);
-  ar & BOOST_SERIALIZATION_NVP(hashWidth);
-  ar & BOOST_SERIALIZATION_NVP(secondHashSize);
-  ar & BOOST_SERIALIZATION_NVP(secondHashWeights);
-  ar & BOOST_SERIALIZATION_NVP(bucketSize);
-  // needs specific handling for new version
-
-  // Backward compatibility: in older versions of LSHSearch, the secondHashTable
-  // was stored as an arma::Mat<size_t>.  So we need to properly load that, then
-  // prune it down to size.
-  if (version == 0)
-  {
-    arma::Mat<size_t> tmpSecondHashTable;
-    ar & BOOST_SERIALIZATION_NVP(tmpSecondHashTable);
-
-    // The old secondHashTable was stored in row-major format, so we transpose
-    // it.
-    tmpSecondHashTable = tmpSecondHashTable.t();
-
-    secondHashTable.resize(tmpSecondHashTable.n_cols);
-    for (size_t i = 0; i < tmpSecondHashTable.n_cols; ++i)
-    {
-      // Find length of each column.  We know we are at the end of the list when
-      // the value referenceSet.n_cols is seen.
-
-      size_t len = 0;
-      for (; len < tmpSecondHashTable.n_rows; ++len)
-        if (tmpSecondHashTable(len, i) == referenceSet.n_cols)
-          break;
-
-      // Set the size of the new column correctly.
-      secondHashTable[i].set_size(len);
-      for (size_t j = 0; j < len; ++j)
-        secondHashTable[i](j) = tmpSecondHashTable(j, i);
-    }
-  }
-  else
-  {
-    size_t tables;
-    if (Archive::is_saving::value)
-      tables = secondHashTable.size();
-    ar & BOOST_SERIALIZATION_NVP(tables);
-
-    // Set size of second hash table if needed.
-    if (Archive::is_loading::value)
-    {
-      secondHashTable.clear();
-      secondHashTable.resize(tables);
-    }
-
-    ar & BOOST_SERIALIZATION_NVP(secondHashTable);
-  }
-
-  // Backward compatibility: old versions of LSHSearch held bucketContentSize
-  // for all possible buckets (of size secondHashSize), but now we hold a
-  // compressed representation.
-  if (version == 0)
-  {
-    // The vector was stored in the old uncompressed form.  So we need to shrink
-    // it.  But we can't do that until we have bucketRowInHashTable, so we also
-    // have to load that.
-    arma::Col<size_t> tmpBucketContentSize;
-    ar & BOOST_SERIALIZATION_NVP(tmpBucketContentSize);
-    ar & BOOST_SERIALIZATION_NVP(bucketRowInHashTable);
-
-    // Compress into a smaller vector by just dropping all of the zeros.
-    bucketContentSize.set_size(secondHashTable.size());
-    for (size_t i = 0; i < tmpBucketContentSize.n_elem; ++i)
-      if (tmpBucketContentSize[i] > 0)
-        bucketContentSize[bucketRowInHashTable[i]] = tmpBucketContentSize[i];
-  }
-  else
-  {
-    ar & BOOST_SERIALIZATION_NVP(bucketContentSize);
-    ar & BOOST_SERIALIZATION_NVP(bucketRowInHashTable);
-  }
-
-  ar & BOOST_SERIALIZATION_NVP(distanceEvaluations);
+  ar(CEREAL_NVP(projections));
+  ar(CEREAL_NVP(offsets));
+  ar(CEREAL_NVP(hashWidth));
+  ar(CEREAL_NVP(secondHashSize));
+  ar(CEREAL_NVP(secondHashWeights));
+  ar(CEREAL_NVP(bucketSize));
+  ar(CEREAL_NVP(secondHashTable));
+  ar(CEREAL_NVP(bucketContentSize));
+  ar(CEREAL_NVP(bucketRowInHashTable));
+  ar(CEREAL_NVP(distanceEvaluations));
 }
 
-} // namespace neighbor
 } // namespace mlpack
 
 #endif

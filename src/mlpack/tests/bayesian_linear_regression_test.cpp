@@ -10,13 +10,13 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 
-#include <mlpack/core/data/load.hpp>
-#include <mlpack/methods/bayesian_linear_regression/bayesian_linear_regression.hpp>
-#include <mlpack/methods/linear_regression/linear_regression.hpp>
+#include <mlpack/core.hpp>
+#include <mlpack/methods/bayesian_linear_regression.hpp>
+#include <mlpack/methods/linear_regression.hpp>
 
 #include "catch.hpp"
 
-using namespace mlpack::regression;
+using namespace mlpack;
 using namespace mlpack::data;
 
 void GenerateProblem(arma::mat& matX,

@@ -12,8 +12,7 @@
 #ifndef MLPACK_CORE_UTIL_BINDING_DETAILS_HPP
 #define MLPACK_CORE_UTIL_BINDING_DETAILS_HPP
 
-#include <mlpack/prereqs.hpp>
-#include "program_doc.hpp"
+#include <mlpack/base.hpp>
 
 namespace mlpack {
 namespace util {
@@ -23,8 +22,8 @@ namespace util {
  */
 struct BindingDetails
 {
-  //! Name of the binding.
-  std::string programName;
+  //! User-friendly name of the binding.
+  std::string name;
   //! A short two-sentence description of the binding, what it does, and what
   //! it is useful for.
   std::string shortDescription;

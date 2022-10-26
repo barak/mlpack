@@ -14,10 +14,9 @@
 #ifndef MLPACK_METHODS_RADICAL_RADICAL_HPP
 #define MLPACK_METHODS_RADICAL_RADICAL_HPP
 
-#include <mlpack/prereqs.hpp>
+#include <mlpack/core.hpp>
 
 namespace mlpack {
-namespace radical {
 
 /**
  * An implementation of RADICAL, an algorithm for independent component
@@ -70,8 +69,12 @@ class Radical
    * @param matY Estimated independent components - a matrix where each column
    *    is a point and each row is an estimated independent component.
    * @param matW Estimated unmixing matrix, where matY = matW * matX.
+   * @param timers Optional Timers struct for storing timing information.
    */
-  void DoRadical(const arma::mat& matX, arma::mat& matY, arma::mat& matW);
+  void DoRadical(const arma::mat& matX,
+                 arma::mat& matY,
+                 arma::mat& matW,
+                 util::Timers& timers = IO::GetTimers());
 
   /**
    * Vasicek's m-spacing estimator of entropy, with overlap modification from
@@ -89,7 +92,8 @@ class Radical
   void CopyAndPerturb(arma::mat& xNew, const arma::mat& x) const;
 
   //! Two-dimensional version of RADICAL.
-  double DoRadical2D(const arma::mat& matX);
+  double DoRadical2D(const arma::mat& matX,
+                     util::Timers& timers = IO::GetTimers());
 
   //! Get the standard deviation of the additive Gaussian noise.
   double NoiseStdDev() const { return noiseStdDev; }
@@ -139,7 +143,9 @@ void WhitenFeatureMajorMatrix(const arma::mat& matX,
                               arma::mat& matXWhitened,
                               arma::mat& matWhitening);
 
-} // namespace radical
 } // namespace mlpack
+
+// Include implementation.
+#include "radical_impl.hpp"
 
 #endif

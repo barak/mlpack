@@ -10,19 +10,13 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/core.hpp>
-#include <mlpack/methods/amf/amf.hpp>
-#include <mlpack/methods/amf/init_rules/random_acol_init.hpp>
-#include <mlpack/methods/amf/init_rules/given_init.hpp>
-#include <mlpack/methods/amf/update_rules/nmf_mult_div.hpp>
-#include <mlpack/methods/amf/update_rules/nmf_als.hpp>
-#include <mlpack/methods/amf/update_rules/nmf_mult_dist.hpp>
+#include <mlpack/methods/nmf.hpp>
 
 #include "catch.hpp"
 
 using namespace std;
 using namespace arma;
 using namespace mlpack;
-using namespace mlpack::amf;
 
 /**
  * Check the if the product of the calculated factorization is close to the
@@ -85,7 +79,7 @@ TEST_CASE("NMFRandomDivTest", "[NMFTest]")
     // Custom tighter tolerance.
     SimpleResidueTermination srt(1e-8, 10000);
     AMF<SimpleResidueTermination,
-        RandomInitialization,
+        RandomAMFInitialization,
         NMFMultiplicativeDivergenceUpdate> nmf(srt);
     nmf.Apply(v, r, w, h);
 
@@ -194,8 +188,11 @@ TEST_CASE("SparseNMFALSTest", "[NMFTest]")
 
   mat vp, dvp; // Resulting matrices.
 
+  // We run the test multiple times, since it sometimes fails, in order to get
+  // the probability of failure down.
   bool success = false;
-  for (size_t trial = 0; trial < 3; ++trial)
+  const size_t trials = 8;
+  for (size_t trial = 0; trial < trials; ++trial)
   {
     while (sparseResidue != sparseResidue && denseResidue != denseResidue)
     {
@@ -273,7 +270,7 @@ TEST_CASE("NonNegNMFRandomDivTest", "[NMFTest]")
   // Custom tighter tolerance.
   SimpleResidueTermination srt(1e-8, 10000);
   AMF<SimpleResidueTermination,
-      RandomInitialization,
+      RandomAMFInitialization,
       NMFMultiplicativeDivergenceUpdate> nmf(srt);
   nmf.Apply(v, r, w, h);
 

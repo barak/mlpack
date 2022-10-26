@@ -18,33 +18,29 @@
 #include "empty_loss.hpp"
 
 namespace mlpack {
-namespace ann /** Artificial Neural Network. */ {
 
-template<typename InputDataType, typename OutputDataType>
-EmptyLoss<InputDataType, OutputDataType>::EmptyLoss()
+template<typename MatType>
+EmptyLossType<MatType>::EmptyLossType()
 {
   // Nothing to do here.
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType>
-double EmptyLoss<InputDataType, OutputDataType>::Forward(
-    const InputType& /* input */, const TargetType& /* target */)
+template<typename MatType>
+double EmptyLossType<MatType>::Forward(
+    const MatType& /* prediction */, const MatType& /* target */)
 {
   return 0;
 }
 
-template<typename InputDataType, typename OutputDataType>
-template<typename InputType, typename TargetType, typename OutputType>
-void EmptyLoss<InputDataType, OutputDataType>::Backward(
-    const InputType& /* input */,
-    const TargetType& target,
-    OutputType& output)
+template<typename MatType>
+void EmptyLossType<MatType>::Backward(
+    const MatType& /* prediction */,
+    const MatType& target,
+    MatType& loss)
 {
-  output = target;
+  loss = target;
 }
 
-} // namespace ann
 } // namespace mlpack
 
 #endif

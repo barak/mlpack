@@ -15,7 +15,6 @@
 #include <mlpack/prereqs.hpp>
 
 namespace mlpack {
-namespace cf {
 
 /**
  * This normalization class performs z-score normalization on raw ratings.
@@ -151,10 +150,10 @@ class ZScoreNormalization
    * Serialization.
    */
   template<typename Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
+  void serialize(Archive& ar, const uint32_t /* version */)
   {
-    ar & BOOST_SERIALIZATION_NVP(mean);
-    ar & BOOST_SERIALIZATION_NVP(stddev);
+    ar(CEREAL_NVP(mean));
+    ar(CEREAL_NVP(stddev));
   }
 
  private:
@@ -164,7 +163,6 @@ class ZScoreNormalization
   double stddev;
 };
 
-} // namespace cf
 } // namespace mlpack
 
 #endif

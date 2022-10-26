@@ -18,7 +18,6 @@
 #include "pelleg_moore_kmeans_rules.hpp"
 
 namespace mlpack {
-namespace kmeans {
 
 template<typename MetricType, typename TreeType>
 PellegMooreKMeansRules<MetricType, TreeType>::PellegMooreKMeansRules(
@@ -38,7 +37,7 @@ PellegMooreKMeansRules<MetricType, TreeType>::PellegMooreKMeansRules(
 }
 
 template<typename MetricType, typename TreeType>
-inline force_inline
+inline mlpack_force_inline
 double PellegMooreKMeansRules<MetricType, TreeType>::BaseCase(
     const size_t /* queryIndex */,
     const size_t /* referenceIndex */)
@@ -177,7 +176,6 @@ double PellegMooreKMeansRules<MetricType, TreeType>::Rescore(
   return oldScore;
 }
 
-} // namespace kmeans
 } // namespace mlpack
 
 #endif
