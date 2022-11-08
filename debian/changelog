@@ -7,14 +7,15 @@ mlpack (4.0.0-1) unstable; urgency=medium
   * remove build dependency on boost
   * add build dependency on libcereal-dev
   * package is now header-only: remove shared library binary package
-  * remove clang build machinery
+  * remove clang build machinery (closes: #1017678)
   * remove doxygen documentation build
   * remove code related to no-longer-present files
   * work around upstream python3 installing into /usr/local
   * include new docs
   * bump policy
+  * patch to not disable optimization with -O0 (closes: #970227)
 
- -- Barak A. Pearlmutter <bap@debian.org>  Tue, 08 Nov 2022 10:18:11 +0000
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 08 Nov 2022 13:13:44 +0000
 
 mlpack (3.4.2-7) unstable; urgency=medium
 
