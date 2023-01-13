@@ -125,8 +125,8 @@ if (DEBUG)
   set(DISABLE_CFLAGS "NDEBUG;MLPACK_HAS_BFD_DL" PARENT_SCOPE)
 endif ()
 
-add_custom_target(python ALL DEPENDS mlpack)
-add_custom_target(python_copy ALL DEPENDS mlpack)
+add_custom_target(python ALL DEPENDS python_copy)
+add_custom_target(python_copy ALL)
 # The python_configure target is added later; this is a dummy target.
 add_custom_target(python_configured ALL)
 
@@ -148,6 +148,10 @@ add_custom_command(TARGET python_copy PRE_BUILD
 add_custom_command(TARGET python_copy PRE_BUILD
     COMMAND ${CMAKE_COMMAND} ARGS -E copy
         ${CMAKE_CURRENT_SOURCE_DIR}/copy_artifacts.py
+        ${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/)
+add_custom_command(TARGET python_copy PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} ARGS -E copy
+        ${CMAKE_CURRENT_SOURCE_DIR}/setup_readme.md
         ${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/)
 
 if (BUILD_TESTS)
@@ -242,7 +246,11 @@ macro (add_python_binding directory name)
         ${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/generate_pyx_${name}.cpp
         ${CMAKE_SOURCE_DIR}/src/mlpack/bindings/python/print_pyx.hpp
         ${CMAKE_SOURCE_DIR}/src/mlpack/bindings/python/print_pyx.cpp)
-    target_link_libraries(generate_pyx_${name} ${MLPACK_LIBRARIES})
+    if (BUILD_SHARED_LIBS)
+      target_link_libraries(generate_pyx_${name} ${MLPACK_LIBRARIES})
+    else ()
+      target_link_libraries(generate_pyx_${name} -static ${MLPACK_LIBRARIES})
+    endif ()
     set_target_properties(generate_pyx_${name} PROPERTIES COMPILE_FLAGS
         -DBINDING_TYPE=BINDING_TYPE_PYX)
     add_custom_command(TARGET generate_pyx_${name} POST_BUILD
@@ -309,7 +317,12 @@ macro (add_python_wrapper directory group_name)
       ${CMAKE_SOURCE_DIR}/src/mlpack/bindings/python/print_wrapper_py.hpp
       ${CMAKE_SOURCE_DIR}/src/mlpack/bindings/python/print_wrapper_py.cpp)
 
-  target_link_libraries(generate_py_wrapper_${group_name} ${MLPACK_LIBRARIES})
+  if (BUILD_SHARED_LIBS)
+    target_link_libraries(generate_py_wrapper_${group_name} ${MLPACK_LIBRARIES})
+  else ()
+    target_link_libraries(generate_py_wrapper_${group_name} -static
+        ${MLPACK_LIBRARIES})
+  endif ()
 
   add_custom_command(TARGET generate_py_wrapper_${group_name} POST_BUILD
       COMMAND ${CMAKE_COMMAND}
@@ -322,12 +335,14 @@ endmacro ()
 
 # Add a test.
 if (BUILD_PYTHON_BINDINGS)
-  add_test(NAME python_bindings_test
-      COMMAND ${PYTHON_EXECUTABLE}
-          ${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/setup.py test
-      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/)
-  set_tests_properties(python_bindings_test
-      PROPERTIES ENVIRONMENT "NO_BUILD=1;LD_LIBRARY_PATH=$ENV{LD_LIBRARY_PATH}:${CMAKE_BINARY_DIR}/lib/")
+  if (BUILD_TESTS)
+    add_test(NAME python_bindings_test
+        COMMAND ${PYTHON_EXECUTABLE}
+            ${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/setup.py test
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/)
+    set_tests_properties(python_bindings_test
+        PROPERTIES ENVIRONMENT "NO_BUILD=1;LD_LIBRARY_PATH=$ENV{LD_LIBRARY_PATH}:${CMAKE_BINARY_DIR}/lib/")
+  endif ()
 endif ()
 
 if (BUILD_TESTS)

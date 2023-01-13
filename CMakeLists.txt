@@ -13,7 +13,7 @@ option(DEBUG "Compile with debugging information." OFF)
 option(PROFILE "Compile with profiling information." OFF)
 option(ARMA_EXTRA_DEBUG "Compile with extra Armadillo debugging symbols." OFF)
 option(TEST_VERBOSE "Run test cases with verbose output." OFF)
-option(BUILD_TESTS "Build tests." ON)
+option(BUILD_TESTS "Build tests. (Note: time consuming!)" OFF)
 option(BUILD_CLI_EXECUTABLES "Build command-line executables." ON)
 option(DOWNLOAD_DEPENDENCIES "Automatically download dependencies if not available." OFF)
 option(BUILD_GO_SHLIB "Build Go shared library." OFF)
@@ -185,12 +185,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     exec_program(/usr/bin/sw_vers ARGS
         -productVersion OUTPUT_VARIABLE MACOSX_VERSION_RAW)
     string(REGEX REPLACE
-        "([0-9]+)(?:\\.([0-9]+).*)*" "\\1"
+        "([0-9]+)(\\.([0-9]+).*)*" "\\1"
         MACOSX_MAJOR_VERSION
         "${MACOSX_VERSION_RAW}")
 
     string(REGEX REPLACE
-        "([0-9]+)(?:\\.([0-9]+).*)*" "\\2"
+        "([0-9]+)(\\.([0-9]+).*)*" "\\3"
         MACOSX_MINOR_VERSION
         "${MACOSX_VERSION_RAW}")
 
@@ -246,7 +246,6 @@ if (DEBUG)
     endif()
   endif()
 else()
-  add_definitions(-DARMA_NO_DEBUG)
   add_definitions(-DNDEBUG)
   if (NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
