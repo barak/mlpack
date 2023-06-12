@@ -83,6 +83,11 @@ if (BUILD_R_BINDINGS)
       "\\1" MLPACK_VERSION_PATCH "${VERSION_HPP_CONTENTS}")
   set(PACKAGE_VERSION
       "${MLPACK_VERSION_MAJOR}.${MLPACK_VERSION_MINOR}.${MLPACK_VERSION_PATCH}")
+  if (USING_GIT)
+    set(PACKAGE_DOC_VERSION "git")
+  else ()
+    set(PACKAGE_DOC_VERSION "${PACKAGE_VERSION}")
+  endif ()
 
   string(TIMESTAMP PACKAGE_DATE "%Y-%m-%d")
 
@@ -285,9 +290,9 @@ if (BUILD_R_BINDINGS)
        "${CMAKE_CURRENT_BINARY_DIR}/mlpack/")
 
   file(COPY
-       "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/configure"
+       "${CMAKE_CURRENT_SOURCE_DIR}/mlpack/inst/CITATION"
        DESTINATION
-       "${CMAKE_CURRENT_BINARY_DIR}/mlpack/")
+       "${CMAKE_CURRENT_BINARY_DIR}/mlpack/inst")
 
   # Do the actual build.
   add_custom_target(r_build ALL)
