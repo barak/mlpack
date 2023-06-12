@@ -1,6 +1,7 @@
 mlpack (4.1.0-1) unstable; urgency=medium
 
   * new upstream version
+  * Update standards version to 4.6.2, no changes needed.
 
  -- Barak A. Pearlmutter <bap@debian.org>  Mon, 12 Jun 2023 10:14:05 +0100
 
