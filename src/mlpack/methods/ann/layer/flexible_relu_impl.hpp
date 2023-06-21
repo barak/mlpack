@@ -1,27 +1,28 @@
 /**
- * @file methods/ann/layer/parametric_relu_impl.hpp
- * @author Prasanna Patil
+ * @file methods/ann/layer/flexible_relu_impl.hpp
+ * @author Aarush Gupta
+ * @author Manthan-R-Sheth
  *
- * Definition of PReLU layer first introduced in the,
- * Kaiming He, Xiangyu Zhang, Shaoqing, Ren Jian Sun,
- * "Delving Deep into Rectifiers:
- * Surpassing Human-Level Performance on ImageNet Classification", 2014
+ * Implementation of FlexibleReLU layer as described by
+ * Suo Qiu, Xiangmin Xu and Bolun Cai in
+ * "FReLU: Flexible Rectified Linear Units for Improving Convolutional
+ *  Neural Networks", 2018
  *
  * mlpack is free software; you may redistribute it and/or modify it under the
  * terms of the 3-clause BSD license.  You should have received a copy of the
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef MLPACK_METHODS_ANN_LAYER_PRELU_IMPL_HPP
-#define MLPACK_METHODS_ANN_LAYER_PRELU_IMPL_HPP
 
-// In case it hasn't yet been included.
-#include "parametric_relu.hpp"
+#ifndef MLPACK_METHODS_ANN_LAYER_FLEXIBLE_RELU_IMPL_HPP
+#define MLPACK_METHODS_ANN_LAYER_FLEXIBLE_RELU_IMPL_HPP
+
+#include "flexible_relu.hpp"
 
 namespace mlpack {
 
 template<typename MatType>
-PReLUType<MatType>::PReLUType(const double userAlpha) :
+FlexibleReLUType<MatType>::FlexibleReLUType(const double userAlpha) :
     Layer<MatType>(),
     userAlpha(userAlpha)
 {
@@ -29,8 +30,8 @@ PReLUType<MatType>::PReLUType(const double userAlpha) :
 }
 
 template<typename MatType>
-PReLUType<MatType>::PReLUType(
-    const PReLUType& other) :
+FlexibleReLUType<MatType>::FlexibleReLUType(
+    const FlexibleReLUType& other) :
     Layer<MatType>(other),
     userAlpha(other.userAlpha)
 {
@@ -38,8 +39,8 @@ PReLUType<MatType>::PReLUType(
 }
 
 template<typename MatType>
-PReLUType<MatType>::PReLUType(
-    PReLUType&& other) :
+FlexibleReLUType<MatType>::FlexibleReLUType(
+    FlexibleReLUType&& other) :
     Layer<MatType>(std::move(other)),
     userAlpha(std::move(other.userAlpha))
 {
@@ -47,8 +48,8 @@ PReLUType<MatType>::PReLUType(
 }
 
 template<typename MatType>
-PReLUType<MatType>&
-PReLUType<MatType>::operator=(const PReLUType& other)
+FlexibleReLUType<MatType>&
+FlexibleReLUType<MatType>::operator=(const FlexibleReLUType& other)
 {
   if (&other != this)
   {
@@ -60,8 +61,8 @@ PReLUType<MatType>::operator=(const PReLUType& other)
 }
 
 template<typename MatType>
-PReLUType<MatType>&
-PReLUType<MatType>::operator=(PReLUType&& other)
+FlexibleReLUType<MatType>&
+FlexibleReLUType<MatType>::operator=(FlexibleReLUType&& other)
 {
   if (&other != this)
   {
@@ -73,20 +74,20 @@ PReLUType<MatType>::operator=(PReLUType&& other)
 }
 
 template<typename MatType>
-void PReLUType<MatType>::SetWeights(
+void FlexibleReLUType<MatType>::SetWeights(
     typename MatType::elem_type* weightsPtr)
 {
   MakeAlias(alpha, weightsPtr, 1, 1);
 }
 
 template<typename MatType>
-void PReLUType<MatType>::CustomInitialize(
+void FlexibleReLUType<MatType>::CustomInitialize(
     MatType& W,
     const size_t elements)
 {
   if (elements != 1)
   {
-    throw std::invalid_argument("PReLUType::CustomInitialize(): wrong "
+    throw std::invalid_argument("FlexibleReLUType::CustomInitialize(): wrong "
         "elements size!"); 
   }
 
@@ -94,48 +95,38 @@ void PReLUType<MatType>::CustomInitialize(
 }
 
 template<typename MatType>
-void PReLUType<MatType>::Forward(
+void FlexibleReLUType<MatType>::Forward(
     const MatType& input, MatType& output)
 {
-  output = input;
-  #pragma omp for
-  for (size_t i = 0; i < input.n_elem; ++i)
-    output(i) *= (input(i) >= 0) ? 1 : alpha(0);
+  output = arma::clamp(input, 0.0, DBL_MAX) + alpha(0);
 }
 
 template<typename MatType>
-void PReLUType<MatType>::Backward(
+void FlexibleReLUType<MatType>::Backward(
     const MatType& input, const MatType& gy, MatType& g)
 {
-  MatType derivative;
-  derivative.set_size(arma::size(input));
-  #pragma omp for
-  for (size_t i = 0; i < input.n_elem; ++i)
-    derivative(i) = (input(i) >= 0) ? 1 : alpha(0);
-
-  g = gy % derivative;
+  // Compute the first derivative of FlexibleReLU function.
+  g = gy % arma::clamp(arma::sign(input), 0.0, 1.0);
 }
 
 template<typename MatType>
-void PReLUType<MatType>::Gradient(
+void FlexibleReLUType<MatType>::Gradient(
     const MatType& input,
     const MatType& error,
     MatType& gradient)
 {
-  MatType zeros = arma::zeros<MatType>(input.n_rows, input.n_cols);
-  gradient.set_size(1, 1);
-  gradient(0) = arma::accu(error % arma::min(zeros, input)) / input.n_cols;
+  gradient(0) = arma::accu(error) / input.n_cols;
 }
 
 template<typename MatType>
 template<typename Archive>
-void PReLUType<MatType>::serialize(
+void FlexibleReLUType<MatType>::serialize(
     Archive& ar,
-    const uint32_t /* version */)
+    const uint32_t /* version*/)
 {
   ar(cereal::base_class<Layer<MatType>>(this));
 
-  ar(CEREAL_NVP(userAlpha));
+  ar(CEREAL_NVP(alpha));
 }
 
 } // namespace mlpack
