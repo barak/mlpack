@@ -1,8 +1,9 @@
 mlpack (4.2.0-1) unstable; urgency=medium
 
   * new upstream version
+  * enable build-time testing
 
- -- Barak A. Pearlmutter <bap@debian.org>  Wed, 21 Jun 2023 10:25:57 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 21 Jun 2023 10:28:30 +0100
 
 mlpack (4.1.0-1) unstable; urgency=medium
 
