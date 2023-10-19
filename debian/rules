@@ -62,6 +62,7 @@ endif
 
 DO_IT_TO_JULIA=OFF
 TAKE_IT_TO_GO=OFF
+WHY_R_WHY_NOT=OFF
 
 %:
 	dh $@ --without python2 --with python3 --buildsystem=cmake ${DH_FLAGS}
@@ -80,6 +81,7 @@ override_dh_auto_configure:
 		-DPYTHON_EXECUTABLE=/usr/bin/python3 \
 		-DBUILD_JULIA_BINDINGS=$(DO_IT_TO_JULIA) \
 		-DBUILD_GO_BINDINGS=$(TAKE_IT_TO_GO) \
+		-DBUILD_R_BINDINGS=$(WHY_R_WHY_NOT) \
 		-DBUILD_TESTS=$(BUILD_TESTS) \
 		-DBUILD_SHARED_LIBS=ON \
 		-DDISABLE_DOWNLOADS=ON \
