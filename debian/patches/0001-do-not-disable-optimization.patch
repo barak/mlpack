@@ -8,10 +8,10 @@ Do not disable optimization (-O0) just because debugging is enabled (-g)
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 0118cf6..a733ca6 100644
+index cc82692..034663f 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -225,8 +225,8 @@ endif()
+@@ -226,8 +226,8 @@ set (BFD_DL_AVAILABLE "NO")
  if (DEBUG)
    if (NOT MSVC)
      add_definitions(-DDEBUG)
