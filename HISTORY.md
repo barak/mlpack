@@ -1,3 +1,24 @@
+### mlpack ?.?.?
+###### ????-??-??
+  * Reinforcement Learning: Gaussian noise (#3515).
+
+  * Reinforcement Learning: Twin Delayed Deep Deterministic
+    Policy Gradient (#3512).
+
+  * Reinforcement Learning: Ornstein-Uhlenbeck noise (#3499).
+
+  * Reinforcement Learning: Deep Deterministic Policy Gradient (#3494).
+
+  * Add `ClassProbabilities()` member to `DecisionTree` so that the internal
+    details of trees can be more easily inspected (#3511).
+  
+  * Bipolar sigmoid activation function added and invertible functions 
+    fixed (#3506).
+
+  * Add auto-configured `mlpack/config.hpp` to contain configuration details of
+    mlpack that are required at compile time.  STB detection is now done in this
+    file with the `MLPACK_HAS_STB` macro (#3519).
+
 ### mlpack 4.2.0
 ###### 2023-06-14
   * Adapt C_ReLU, ReLU6, FlexibleReLU layer for new neural network API (#3445).
@@ -6,9 +27,9 @@
 
   * Fix bug in LogSoftMax derivative (#3469).
 
-  * Add `serialize` method to `GaussianInitialization`, 
+  * Add `serialize` method to `GaussianInitialization`,
     `LecunNormalInitialization`,
-    `KathirvalavakumarSubavathiInitialization`, `NguyenWidrowInitialization`, 
+    `KathirvalavakumarSubavathiInitialization`, `NguyenWidrowInitialization`,
     and `OrthogonalInitialization` (#3483).
 
   * Allow categorical features to `preprocess_one_hot_encode` (#3487).
@@ -106,8 +127,8 @@
   * Disable the usage of autodownloader by default (#2953).
 
   * Install dependencies downloaded with the autodownloader (#2952).
- 
-  * Download older Boost if the compiler is old (#2940). 
+
+  * Download older Boost if the compiler is old (#2940).
 
   * Add support for embedded systems (#2531).
 
@@ -201,7 +222,7 @@
     `decision_tree()` and `hoeffding_tree()` (#2971).
 
   * Depend on `pkgbuild` for R bindings (#3081).
- 
+
   * Replaced Numpy deprecated code in Python bindings (#3126).
 
 ### mlpack 3.4.2
