@@ -7,6 +7,7 @@ include /usr/share/dpkg/default.mk
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 export LIBS="pthread"
+export DESTDIR=debian/tmp
 
 ## Memory consumption issues on some autobuilders have been causing
 ## build failures.  There are three ways to address such issues:
