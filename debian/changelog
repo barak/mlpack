@@ -5,6 +5,8 @@ mlpack (4.2.1-1) unstable; urgency=medium
   * move stray documentation files into /usr/share/doc/ per lintian
   * remove extra license file
   * updates to debian/copyright
+  * export DESTDIR and depend on python-pip (closes: #1028633),
+    thanks to Nick Rosbrook for the patch
 
  -- Barak A. Pearlmutter <bap@debian.org>  Thu, 19 Oct 2023 20:01:27 +0100
 
