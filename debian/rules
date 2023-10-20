@@ -104,6 +104,8 @@ execute_after_dh_install:
 	@echo "remove byte-compiled python files per policy"
 	-find debian/python-mlpack  -name '*.pyc' -ls -delete || true
 	-find debian/python3-mlpack -name '*.pyc' -ls -delete || true
+	@echo "remove extra license file"
+	-rm --verbose debian/libmlpack-dev/usr/include/mlpack/core/std_backport/LICENSE.txt
 	@echo "move stray documentation files into /usr/share/doc/"
 	(cd debian/libmlpack-dev && \
 	 for f in $$(find usr/include -type f \! -name '*.hpp' \! -name '*.cpp'); do \

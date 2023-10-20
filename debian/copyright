@@ -126,7 +126,33 @@ License: BSD-3-clause
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+Files: src/mlpack/core/std_backport/*
+Copyright: 2013 - 2015 MNMLSTC
+License: Apache-2.0
+Comment:
+ From LICENSE.txt:
+  mlpack also contains some usage of the source code of MNMLSTC Core library,
+  which is a backport of C++17 features to C++11. MNMLSTC is licensed under the
+  Apache 2.0 License. This code can be found in src/mlpack/core/std_backport/ and
+  more details about licensing can be found there.
+
 Files: debian/*
-Copyright: Barak A. Pearlmutter <bap@debian.org>
+Copyright: 2014-2023 Barak A. Pearlmutter <bap@debian.org>
 License: Public-Domain
-  This material is released to the public domain.
+ This material is released to the public domain.
+
+License: Apache-2.0
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ .
+ http://www.apache.org/licenses/LICENSE-2.0
+ .
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ .
+ On Debian systems, the complete text of the Apache version 2.0 license
+ can be found in "/usr/share/common-licenses/Apache-2.0".
