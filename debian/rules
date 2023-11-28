@@ -108,16 +108,18 @@ execute_after_dh_install:
 	@echo "remove extra license file"
 	-rm --verbose debian/libmlpack-dev/usr/include/mlpack/core/std_backport/LICENSE.txt
 	@echo "move stray documentation files into /usr/share/doc/"
+	(test \! -d debian/libmlpack-dev || \
 	(cd debian/libmlpack-dev && \
 	 for f in $$(find usr/include -type f \! -name '*.hpp' \! -name '*.cpp'); do \
 	   mkdir -p usr/share/doc/libmlpack-dev/$$(dirname $$f) && \
 	   mv --verbose $$f usr/share/doc/libmlpack-dev/$$(dirname $$f)/; \
-	 done)
+	 done))
+	(test \! -d debian/python3-mlpack || \
 	(cd debian/python3-mlpack && \
 	 for f in $$(find usr/lib -type f -name '*.txt'); do \
 	   mkdir -p usr/share/doc/python3-mlpack/$$(dirname $$f) && \
 	   mv --verbose $$f usr/share/doc/python3-mlpack/$$(dirname $$f)/; \
-	 done)
+	 done))
 
 override_dh_installdocs:
 	dh_installdocs -pmlpack-doc --doc-main-package libmlpack-dev
