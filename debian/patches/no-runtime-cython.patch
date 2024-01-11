@@ -1,0 +1,15 @@
+Description: Drop the runtime dependency on Cython
+Author: Graham Inggs <ginggs@debian.org>
+Last-Update: 2024-01-10
+
+--- a/src/mlpack/bindings/python/setup.py.in
++++ b/src/mlpack/bindings/python/setup.py.in
+@@ -138,7 +138,7 @@
+           'Documentation': 'http://www.mlpack.org/doc/mlpack-${PACKAGE_VERSION}/python.html',
+           'Source': 'https://github.com/mlpack/mlpack/',
+           'Tracker': 'https://github.com/mlpack/mlpack/issues'},
+-      install_requires=['cython>=0.24', 'numpy', 'pandas'],
++      install_requires=['numpy', 'pandas'],
+       package_dir={ '': '.' }, # Might be superfluous.
+       packages=['mlpack'],
+       cmdclass={ 'build_ext': build_ext },
