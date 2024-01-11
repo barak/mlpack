@@ -1,5 +1,6 @@
-mlpack (4.3.0-2) UNRELEASED; urgency=medium
+mlpack (4.3.0-2) unstable; urgency=medium
 
+  * Team upload
   * Drop the runtime dependency on Cython (Closes: #1057992)
 
  -- Graham Inggs <ginggs@debian.org>  Thu, 11 Jan 2024 09:40:13 +0000
