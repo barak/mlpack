@@ -49,7 +49,7 @@ struct InitHMMModel
          ++it)
     {
       arma::Col<size_t> maxSeqs =
-          arma::conv_to<arma::Col<size_t>>::from(arma::max(*it, 1)) + 1;
+          ConvTo<arma::Col<size_t>>::From(arma::max(*it, 1)) + 1;
       maxEmissions = arma::max(maxEmissions, maxSeqs);
     }
 
@@ -140,7 +140,7 @@ struct InitHMMModel
     for (size_t i = 0; i < e.size(); ++i)
     {
       e[i].Probabilities().randu();
-      e[i].Probabilities() /= arma::accu(e[i].Probabilities());
+      e[i].Probabilities() /= accu(e[i].Probabilities());
     }
   }
 
@@ -162,7 +162,7 @@ struct InitHMMModel
     {
       // Random weights.
       e[i].Weights().randu();
-      e[i].Weights() /= arma::accu(e[i].Weights());
+      e[i].Weights() /= accu(e[i].Weights());
 
       // Random means and covariances.
       for (int g = 0; g < 2; ++g)
@@ -185,7 +185,7 @@ struct InitHMMModel
     {
       // Random weights.
       e[i].Weights().randu();
-      e[i].Weights() /= arma::accu(e[i].Weights());
+      e[i].Weights() /= accu(e[i].Weights());
 
       // Random means and covariances.
       for (int g = 0; g < 2; ++g)

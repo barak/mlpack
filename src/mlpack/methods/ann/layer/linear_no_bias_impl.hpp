@@ -95,9 +95,9 @@ LinearNoBiasType<MatType, RegularizerType>::operator=(
 
 template<typename MatType, typename RegularizerType>
 void LinearNoBiasType<MatType, RegularizerType>::SetWeights(
-    typename MatType::elem_type* weightsPtr)
+    const MatType& weights)
 {
-  MakeAlias(weight, weightsPtr, outSize, inSize);
+  MakeAlias(weight, weights, outSize, inSize);
 }
 
 template<typename MatType, typename RegularizerType>
@@ -123,8 +123,7 @@ void LinearNoBiasType<MatType, RegularizerType>::Gradient(
     const MatType& error,
     MatType& gradient)
 {
-  gradient.submat(0, 0, weight.n_elem - 1, 0) = arma::vectorise(
-      error * input.t());
+  gradient.submat(0, 0, weight.n_elem - 1, 0) = vectorise(error * input.t());
   regularizer.Evaluate(weight, gradient);
 }
 

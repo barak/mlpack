@@ -62,8 +62,8 @@ BINDING_SEE_ALSO("@dbscan", "#dbscan");
 BINDING_SEE_ALSO("Mean shift on Wikipedia",
         "https://en.wikipedia.org/wiki/Mean_shift");
 BINDING_SEE_ALSO("Mean Shift, Mode Seeking, and Clustering (pdf)",
-        "http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.510.1222"
-        "&rep=rep1&type=pdf");
+        "https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf"
+        "&doi=1c168275c59ba382588350ee1443537f59978183");
 BINDING_SEE_ALSO("mlpack::mean_shift::MeanShift C++ class documentation",
         "@src/mlpack/methods/mean_shift/mean_shift.hpp");
 
@@ -156,7 +156,7 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
       // TODO: figure out how to output as an arma::Mat<size_t> so that files
       // aren't way larger than needed.
       params.Get<arma::mat>("output") =
-          arma::conv_to<arma::mat>::from(assignments);
+          ConvTo<arma::mat>::From(assignments);
     }
   }
 

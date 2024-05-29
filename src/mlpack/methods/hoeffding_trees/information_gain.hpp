@@ -35,7 +35,7 @@ class HoeffdingInformationGain
     arma::vec splitCounts(counts.n_elem);
     for (size_t i = 0; i < counts.n_cols; ++i)
     {
-      splitCounts[i] = arma::accu(counts.col(i));
+      splitCounts[i] = accu(counts.col(i));
       numElem += splitCounts[i];
     }
 
@@ -43,7 +43,7 @@ class HoeffdingInformationGain
     if (numElem == 0)
       return 0.0;
 
-    arma::Col<size_t> classCounts = arma::sum(counts, 1);
+    arma::Col<size_t> classCounts = sum(counts, 1);
 
     // Calculate the gain of the unsplit node.
     double gain = 0.0;

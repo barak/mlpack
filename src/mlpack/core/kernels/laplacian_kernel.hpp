@@ -30,19 +30,11 @@ class LaplacianKernel
 {
  public:
   /**
-   * Default constructor; sets bandwidth to 1.0.
-   */
-  LaplacianKernel() : bandwidth(1.0)
-  { }
-
-  /**
-   * Construct the Laplacian kernel with a custom bandwidth.
+   * Construct the Laplacian kernel with the given bandwidth.
    *
    * @param bandwidth The bandwidth of the kernel (@f$\mu@f$).
    */
-  LaplacianKernel(double bandwidth) :
-      bandwidth(bandwidth)
-  { }
+  LaplacianKernel(const double bandwidth = 1.0) : bandwidth(bandwidth) { }
 
   /**
    * Evaluation of the Laplacian kernel.  This could be generalized to use any
@@ -60,7 +52,7 @@ class LaplacianKernel
   double Evaluate(const VecTypeA& a, const VecTypeB& b) const
   {
     // The precalculation of gamma saves us a little computation time.
-    return exp(-EuclideanDistance::Evaluate(a, b) / bandwidth);
+    return std::exp(-EuclideanDistance::Evaluate(a, b) / bandwidth);
   }
 
   /**
@@ -74,7 +66,7 @@ class LaplacianKernel
   double Evaluate(const double t) const
   {
     // The precalculation of gamma saves us a little computation time.
-    return exp(-t / bandwidth);
+    return std::exp(-t / bandwidth);
   }
 
   /**
@@ -87,13 +79,13 @@ class LaplacianKernel
    *     constructor.
    */
   double Gradient(const double t) const  {
-    return exp(-t / bandwidth) / -bandwidth;
+    return std::exp(-t / bandwidth) / -bandwidth;
   }
 
   //! Get the bandwidth.
   double Bandwidth() const { return bandwidth; }
   //! Modify the bandwidth.
-  double& Bandwidth() { return bandwidth; }
+  void Bandwidth(const double bandwidth) { this->bandwidth = bandwidth; }
 
   //! Serialize the kernel.
   template<typename Archive>

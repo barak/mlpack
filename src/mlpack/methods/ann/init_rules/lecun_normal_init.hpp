@@ -64,12 +64,12 @@ class LecunNormalInitialization
    * @param rows Number of rows.
    * @param cols Number of columns.
    */
-  template <typename eT>
-  void Initialize(arma::Mat<eT>& W,
+  template <typename MatType>
+  void Initialize(MatType& W,
                   const size_t rows,
                   const size_t cols)
   {
-    // He initialization rule says to initialize weights with random
+    // Lecun initialization rule says to initialize weights with random
     // values taken from a gaussian distribution with mean = 0 and
     // standard deviation = sqrt(1 / rows), i.e. variance = (1 / rows).
     const double variance = 1.0 / ((double) rows);
@@ -79,7 +79,7 @@ class LecunNormalInitialization
 
     // Multipling a random variable X with variance V(X) by some factor c,
     // then the variance V(cX) = (c ^ 2) * V(X).
-    W.imbue( [&]() { return sqrt(variance) * arma::randn(); } );
+    W = randn<MatType>(rows, cols) * std::sqrt(variance);
   }
 
   /**
@@ -88,10 +88,11 @@ class LecunNormalInitialization
    *
    * @param W Weight matrix to initialize.
    */
-  template <typename eT>
-  void Initialize(arma::Mat<eT>& W)
+  template <typename MatType>
+  void Initialize(MatType& W,
+      const typename std::enable_if_t<IsMatrix<MatType>::value>* = 0)
   {
-    // He initialization rule says to initialize weights with random
+    // Lecun initialization rule says to initialize weights with random
     // values taken from a gaussian distribution with mean = 0 and
     // standard deviation = sqrt(1 / rows), i.e. variance = (1 / rows).
     const double variance = 1.0 / (double) W.n_rows;
@@ -101,7 +102,7 @@ class LecunNormalInitialization
 
     // Multipling a random variable X with variance V(X) by some factor c,
     // then the variance V(cX) = (c ^ 2) * V(X).
-    W.imbue( [&]() { return sqrt(variance) * arma::randn(); } );
+    W = randn<MatType>(W.n_rows, W.n_cols) * std::sqrt(variance);
   }
 
   /**
@@ -113,8 +114,8 @@ class LecunNormalInitialization
    * @param cols Number of columns.
    * @param slices Number of slices.
    */
-  template <typename eT>
-  void Initialize(arma::Cube<eT> & W,
+  template <typename CubeType>
+  void Initialize(CubeType& W,
                   const size_t rows,
                   const size_t cols,
                   const size_t slices)
@@ -132,8 +133,9 @@ class LecunNormalInitialization
    *
    * @param W Weight matrix to initialize.
    */
-  template <typename eT>
-  void Initialize(arma::Cube<eT> & W)
+  template <typename CubeType>
+  void Initialize(CubeType& W,
+      const typename std::enable_if_t<IsCube<CubeType>::value>* = 0)
   {
     if (W.is_empty())
       Log::Fatal << "Cannot initialize an empty cube." << std::endl;

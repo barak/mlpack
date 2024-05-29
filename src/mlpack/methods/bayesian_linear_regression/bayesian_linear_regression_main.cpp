@@ -97,10 +97,11 @@ BINDING_EXAMPLE(
 
 // See also...
 BINDING_SEE_ALSO("Bayesian Interpolation",
-    "https://authors.library.caltech.edu/13792/1/MACnc92a.pdf");
-BINDING_SEE_ALSO("Bayesian Linear Regression, Section 3.3", "MLA Bishop, "
-    "Christopher M. Pattern Recognition and Machine Learning. New York: "
-    "Springer, 2006, section 3.3.");
+    "https://cs.uwaterloo.ca/~mannr/cs886-w10/mackay-bayesian.pdf");
+BINDING_SEE_ALSO("Bayesian Linear Regression, Section 3.3",
+    // I wonder how long this full text PDF will remain available...
+    "https://www.microsoft.com/en-us/research/uploads/prod/2006/01/"
+    "Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf");
 BINDING_SEE_ALSO("BayesianLinearRegression C++ class documentation",
     "@src/mlpack/methods/bayesian_linear_regression/"
     "bayesian_linear_regression.hpp");
@@ -109,10 +110,10 @@ PARAM_MATRIX_IN("input", "Matrix of covariates (X).", "i");
 
 PARAM_ROW_IN("responses", "Matrix of responses/observations (y).", "r");
 
-PARAM_MODEL_IN(BayesianLinearRegression, "input_model", "Trained "
+PARAM_MODEL_IN(BayesianLinearRegression<>, "input_model", "Trained "
                "BayesianLinearRegression model to use.", "m");
 
-PARAM_MODEL_OUT(BayesianLinearRegression, "output_model", "Output "
+PARAM_MODEL_OUT(BayesianLinearRegression<>, "output_model", "Output "
                 "BayesianLinearRegression model.", "M");
 
 PARAM_MATRIX_IN("test", "Matrix containing points to regress on (test "
@@ -149,12 +150,12 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
   // Ignore out_predictions unless test is specified.
   ReportIgnoredParam(params, {{"test", false}}, "predictions");
 
-  BayesianLinearRegression* bayesLinReg;
+  BayesianLinearRegression<>* bayesLinReg;
   if (params.Has("input"))
   {
     Log::Info << "Input given; model will be trained." << std::endl;
     // Initialize the object.
-    bayesLinReg = new BayesianLinearRegression(center, scale);
+    bayesLinReg = new BayesianLinearRegression<>(center, scale);
 
     // Load covariates.
     mat matX = std::move(params.Get<arma::mat>("input"));
@@ -180,7 +181,7 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
   }
   else // We must have --input_model_file.
   {
-    bayesLinReg = params.Get<BayesianLinearRegression*>("input_model");
+    bayesLinReg = params.Get<BayesianLinearRegression<>*>("input_model");
   }
 
   if (params.Has("test"))
@@ -209,5 +210,5 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
     params.Get<arma::mat>("predictions") = std::move(predictions);
   }
 
-  params.Get<BayesianLinearRegression*>("output_model") = bayesLinReg;
+  params.Get<BayesianLinearRegression<>*>("output_model") = bayesLinReg;
 }

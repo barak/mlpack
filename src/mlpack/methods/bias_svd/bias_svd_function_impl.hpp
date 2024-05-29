@@ -14,18 +14,18 @@
 #define MLPACK_METHODS_BIAS_SVD_BIAS_SVD_FUNCTION_IMPL_HPP
 
 #include "bias_svd_function.hpp"
-#include <mlpack/core/math/make_alias.hpp>
 
 namespace mlpack {
 
 template <typename MatType>
-BiasSVDFunction<MatType>::BiasSVDFunction(const MatType& data,
+BiasSVDFunction<MatType>::BiasSVDFunction(const MatType& dataIn,
                                           const size_t rank,
                                           const double lambda) :
-    data(MakeAlias(const_cast<MatType&>(data), false)),
     rank(rank),
     lambda(lambda)
 {
+  MakeAlias(data, dataIn, dataIn.n_rows, dataIn.n_cols, false);
+
   // Number of users and items in the data.
   numUsers = max(data.row(0)) + 1;
   numItems = max(data.row(1)) + 1;
@@ -43,13 +43,13 @@ void BiasSVDFunction<MatType>::Shuffle()
 }
 
 template <typename MatType>
-double BiasSVDFunction<MatType>::Evaluate(const arma::mat& parameters) const
+double BiasSVDFunction<MatType>::Evaluate(const MatType& parameters) const
 {
   return Evaluate(parameters, 0, data.n_cols);
 }
 
 template <typename MatType>
-double BiasSVDFunction<MatType>::Evaluate(const arma::mat& parameters,
+double BiasSVDFunction<MatType>::Evaluate(const MatType& parameters,
                                           const size_t start,
                                           const size_t batchSize) const
 {
@@ -74,13 +74,13 @@ double BiasSVDFunction<MatType>::Evaluate(const arma::mat& parameters,
     const double userBias = parameters(rank, user);
     const double itemBias = parameters(rank, item);
     double ratingError = rating - userBias - itemBias -
-        arma::dot(parameters.col(user).subvec(0, rank - 1),
+        dot(parameters.col(user).subvec(0, rank - 1),
                   parameters.col(item).subvec(0, rank - 1));
     double ratingErrorSquared = ratingError * ratingError;
 
     // Calculate the regularization penalty corresponding to the parameters.
-    double userVecNorm = arma::norm(parameters.col(user), 2);
-    double itemVecNorm = arma::norm(parameters.col(item), 2);
+    double userVecNorm = norm(parameters.col(user), 2);
+    double itemVecNorm = norm(parameters.col(item), 2);
     double regularizationError = lambda * (userVecNorm * userVecNorm +
                                            itemVecNorm * itemVecNorm);
 
@@ -91,8 +91,8 @@ double BiasSVDFunction<MatType>::Evaluate(const arma::mat& parameters,
 }
 
 template <typename MatType>
-void BiasSVDFunction<MatType>::Gradient(const arma::mat& parameters,
-                                        arma::mat& gradient) const
+void BiasSVDFunction<MatType>::Gradient(const MatType& parameters,
+                                        MatType& gradient) const
 {
   // For an example with rating corresponding to user 'i' and item 'j', the
   // gradients for the parameters is as follows:
@@ -118,7 +118,7 @@ void BiasSVDFunction<MatType>::Gradient(const arma::mat& parameters,
     const double userBias = parameters(rank, user);
     const double itemBias = parameters(rank, item);
     double ratingError = rating - userBias - itemBias -
-        arma::dot(parameters.col(user).subvec(0, rank - 1),
+        dot(parameters.col(user).subvec(0, rank - 1),
                   parameters.col(item).subvec(0, rank - 1));
 
     // Gradient is non-zero only for the parameter columns corresponding to the
@@ -138,7 +138,7 @@ void BiasSVDFunction<MatType>::Gradient(const arma::mat& parameters,
 
 template <typename MatType>
 template <typename GradType>
-void BiasSVDFunction<MatType>::Gradient(const arma::mat& parameters,
+void BiasSVDFunction<MatType>::Gradient(const MatType& parameters,
                                         const size_t start,
                                         GradType& gradient,
                                         const size_t batchSize) const
@@ -156,7 +156,7 @@ void BiasSVDFunction<MatType>::Gradient(const arma::mat& parameters,
     const double userBias = parameters(rank, user);
     const double itemBias = parameters(rank, item);
     double ratingError = rating - userBias - itemBias -
-        arma::dot(parameters.col(user).subvec(0, rank - 1),
+        dot(parameters.col(user).subvec(0, rank - 1),
                   parameters.col(item).subvec(0, rank - 1));
 
     // Gradient is non-zero only for the parameter columns corresponding to the
@@ -230,7 +230,7 @@ double StandardSGD::Optimize(
     const double userBias = parameters(rank, user);
     const double itemBias = parameters(rank, item);
     double ratingError = rating - userBias - itemBias -
-        arma::dot(parameters.col(user).subvec(0, rank - 1),
+        dot(parameters.col(user).subvec(0, rank - 1),
                   parameters.col(item).subvec(0, rank - 1));
 
     double lambda = function.Lambda();
@@ -339,7 +339,7 @@ inline double ParallelSGD<ExponentialBackoff>::Optimize(
         const double userBias = iterate(rank, user);
         const double itemBias = iterate(rank, item);
         double ratingError = rating - userBias - itemBias -
-            arma::dot(iterate.col(user).subvec(0, rank - 1),
+            dot(iterate.col(user).subvec(0, rank - 1),
                       iterate.col(item).subvec(0, rank - 1));
 
         arma::mat userVecUpdate = stepSize * 2 * (

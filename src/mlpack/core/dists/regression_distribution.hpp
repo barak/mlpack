@@ -31,7 +31,7 @@ class RegressionDistribution
 {
  private:
   //! Regression function for representing conditional mean.
-  LinearRegression rf;
+  LinearRegression<> rf;
   //! Error distribution.
   GaussianDistribution err;
 
@@ -40,18 +40,6 @@ class RegressionDistribution
    * Default constructor, which creates a Gaussian with zero dimension.
    */
   RegressionDistribution() { /* nothing to do */ }
-
-  /**
-   * Create a Conditional Gaussian distribution with conditional mean function
-   * obtained by running RegressionFunction on predictors, responses.
-   *
-   * @param predictors Matrix of predictors (X).
-   * @param responses Vector of responses (y).
-   */
-  mlpack_deprecated RegressionDistribution(const arma::mat& predictors,
-                                           const arma::vec& responses) :
-    RegressionDistribution(predictors, arma::rowvec(responses.t()))
-  {}
 
   /**
    * Create a Conditional Gaussian distribution with conditional mean function
@@ -81,9 +69,9 @@ class RegressionDistribution
   }
 
   //! Return regression function.
-  const LinearRegression& Rf() const { return rf; }
+  const LinearRegression<>& Rf() const { return rf; }
   //! Modify regression function.
-  LinearRegression& Rf() { return rf; }
+  LinearRegression<>& Rf() { return rf; }
 
   //! Return error distribution.
   const GaussianDistribution& Err() const { return err; }
@@ -96,15 +84,6 @@ class RegressionDistribution
    * @param observations List of observations.
    */
   void Train(const arma::mat& observations);
-
-  /**
-   * Estimate parameters using provided observation weights.
-   *
-   * @param observations List of observations.
-   * @param weights Probability that given observation is from distribution.
-   */
-  mlpack_deprecated void Train(const arma::mat& observations,
-                               const arma::vec& weights);
 
   /**
    * Estimate parameters using provided observation weights.
@@ -128,17 +107,8 @@ class RegressionDistribution
    */
   double LogProbability(const arma::vec& observation) const
   {
-    return log(Probability(observation));
+    return std::log(Probability(observation));
   }
-
-  /**
-   * Calculate y_i for each data point in points.
-   *
-   * @param points The data points to calculate with.
-   * @param predictions Y, will contain calculated values on completion.
-   */
-  mlpack_deprecated void Predict(const arma::mat& points,
-                                 arma::vec& predictions) const;
 
   /**
    * Calculate y_i for each data point in points.

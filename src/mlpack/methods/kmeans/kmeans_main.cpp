@@ -106,14 +106,12 @@ BINDING_EXAMPLE(
         "clusters", 10, "max_iterations", 500, "centroid", "final"));
 
 // See also...
-BINDING_SEE_ALSO("K-Means tutorial", "@doc/tutorials/kmeans.md");
 BINDING_SEE_ALSO("@dbscan", "#dbscan");
 BINDING_SEE_ALSO("k-means++", "https://en.wikipedia.org/wiki/K-means%2B%2B");
 BINDING_SEE_ALSO("Using the triangle inequality to accelerate k-means (pdf)",
-    "http://www.aaai.org/Papers/ICML/2003/ICML03-022.pdf");
+    "https://cdn.aaai.org/ICML/2003/ICML03-022.pdf");
 BINDING_SEE_ALSO("Making k-means even faster (pdf)",
-    "http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.586.2554&rep=rep1"
-    "&type=pdf");
+    "https://epubs.siam.org/doi/pdf/10.1137/1.9781611972801.12");
 BINDING_SEE_ALSO("Accelerating exact k-means algorithms with geometric"
     " reasoning (pdf)", "http://reports-archive.adm.cs.cmu.edu/anon/anon/usr/"
     "ftp/usr0/ftp/2000/CMU-CS-00-105.pdf");
@@ -385,7 +383,7 @@ void RunKMeans(util::Params& params,
         // Save only the labels.  TODO: figure out how to get this to output an
         // arma::Mat<size_t> instead of an arma::mat.
         params.Get<arma::mat>("output") =
-            arma::conv_to<arma::mat>::from(assignments);
+            ConvTo<arma::mat>::From(assignments);
       }
       else
       {

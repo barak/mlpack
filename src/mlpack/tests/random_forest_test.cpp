@@ -145,8 +145,8 @@ TEST_CASE("UnweightedNumericLearningTest", "[RandomForestTest]")
   dt.Classify(testDataset, dtPredictions);
 
   // Calculate the number of correct points.
-  size_t rfCorrect = arma::accu(rfPredictions == testLabels);
-  size_t dtCorrect = arma::accu(dtPredictions == testLabels);
+  size_t rfCorrect = accu(rfPredictions == testLabels);
+  size_t dtCorrect = accu(dtPredictions == testLabels);
 
   REQUIRE(rfCorrect >= dtCorrect * 0.9);
   REQUIRE(rfCorrect >= size_t(0.7 * testDataset.n_cols));
@@ -172,8 +172,8 @@ TEST_CASE("WeightedNumericLearningTest", "[RandomForestTest]")
     noiseLabels[i] = RandInt(3); // Random label.
 
   // Concatenate data matrices.
-  arma::mat fullData = arma::join_rows(dataset, noise);
-  arma::Row<size_t> fullLabels = arma::join_rows(labels, noiseLabels);
+  arma::mat fullData = join_rows(dataset, noise);
+  arma::Row<size_t> fullLabels = join_rows(labels, noiseLabels);
 
   // Now set weights.
   arma::rowvec weights(dataset.n_cols + 1000);
@@ -201,8 +201,8 @@ TEST_CASE("WeightedNumericLearningTest", "[RandomForestTest]")
   dt.Classify(testDataset, dtPredictions);
 
   // Calculate the number of correct points.
-  size_t rfCorrect = arma::accu(rfPredictions == testLabels);
-  size_t dtCorrect = arma::accu(dtPredictions == testLabels);
+  size_t rfCorrect = accu(rfPredictions == testLabels);
+  size_t dtCorrect = accu(dtPredictions == testLabels);
 
   REQUIRE(rfCorrect >= dtCorrect * 0.8);
   REQUIRE(rfCorrect >= size_t(0.7 * testDataset.n_cols));
@@ -238,8 +238,8 @@ TEST_CASE("UnweightedCategoricalLearningTest", "[RandomForestTest]")
   dt.Classify(testData, dtPredictions);
 
   // Calculate the number of correct points.
-  size_t rfCorrect = arma::accu(rfPredictions == testLabels);
-  size_t dtCorrect = arma::accu(dtPredictions == testLabels);
+  size_t rfCorrect = accu(rfPredictions == testLabels);
+  size_t dtCorrect = accu(dtPredictions == testLabels);
 
   REQUIRE(rfCorrect >= dtCorrect - 35);
   REQUIRE(rfCorrect >= size_t(0.7 * testData.n_cols));
@@ -280,8 +280,8 @@ TEST_CASE("WeightedCategoricalLearningTest", "[RandomForestTest]")
   for (size_t i = 2000; i < 4000; ++i)
     weights[i] = Random(0.0, 0.001);
 
-  arma::mat fullData = arma::join_rows(trainingData, randomNoise);
-  arma::Row<size_t> fullLabels = arma::join_rows(trainingLabels, randomLabels);
+  arma::mat fullData = join_rows(trainingData, randomNoise);
+  arma::Row<size_t> fullLabels = join_rows(trainingLabels, randomLabels);
 
   // Build a random forest and a decision tree.
   RandomForest<> rf(fullData, di, fullLabels, 5, weights, 25 /* 25 trees */, 1,
@@ -296,8 +296,8 @@ TEST_CASE("WeightedCategoricalLearningTest", "[RandomForestTest]")
   dt.Classify(testData, dtPredictions);
 
   // Calculate the number of correct points.
-  size_t rfCorrect = arma::accu(rfPredictions == testLabels);
-  size_t dtCorrect = arma::accu(dtPredictions == testLabels);
+  size_t rfCorrect = accu(rfPredictions == testLabels);
+  size_t dtCorrect = accu(dtPredictions == testLabels);
 
   REQUIRE(rfCorrect >= dtCorrect - 25);
   REQUIRE(rfCorrect >= size_t(0.7 * testData.n_cols));
@@ -396,8 +396,8 @@ TEST_CASE("RandomForestNumericTrainReturnEntropy", "[RandomForestTest]")
     noiseLabels[i] = RandInt(3); // Random label.
 
   // Concatenate data matrices.
-  arma::mat fullData = arma::join_rows(dataset, noise);
-  arma::Row<size_t> fullLabels = arma::join_rows(labels, noiseLabels);
+  arma::mat fullData = join_rows(dataset, noise);
+  arma::Row<size_t> fullLabels = join_rows(labels, noiseLabels);
 
   // Now set weights.
   arma::rowvec weights(dataset.n_cols + 1000);
@@ -449,8 +449,8 @@ TEST_CASE("RandomForestCategoricalTrainReturnEntropy", "[RandomForestTest]")
   for (size_t i = 4000; i < 6000; ++i)
     weights[i] = Random(0.0, 0.001);
 
-  arma::mat fullData = arma::join_rows(d, randomNoise);
-  arma::Row<size_t> fullLabels = arma::join_rows(l, randomLabels);
+  arma::mat fullData = join_rows(d, randomNoise);
+  arma::Row<size_t> fullLabels = join_rows(l, randomLabels);
 
   // Test random forest on unweighted categorical dataset.
   RandomForest<> rf;
@@ -542,7 +542,7 @@ TEST_CASE("WarmStartTreesPredictionsQualityTest", "[RandomForestTest]")
   rf.Classify(trainingData, oldPredictions);
 
   // Calculate the number of correct points.
-  size_t oldCorrect = arma::accu(oldPredictions == trainingLabels);
+  size_t oldCorrect = accu(oldPredictions == trainingLabels);
 
   rf.Train(trainingData, di, trainingLabels, 5, 20 /* 20 trees */, 1, 1e-7, 0,
       true /* warmStart */, MultipleRandomDimensionSelect(4));
@@ -552,7 +552,7 @@ TEST_CASE("WarmStartTreesPredictionsQualityTest", "[RandomForestTest]")
   rf.Classify(trainingData, newPredictions);
 
   // Calculate the number of correct points.
-  size_t newCorrect = arma::accu(newPredictions == trainingLabels);
+  size_t newCorrect = accu(newPredictions == trainingLabels);
 
   REQUIRE(newCorrect >= oldCorrect);
 }
@@ -577,8 +577,8 @@ TEST_CASE("ExtraTreesAccuracyTest", "[RandomForestTest]")
     noiseLabels[i] = RandInt(3); // Random label.
 
   // Concatenate data matrices.
-  arma::mat fullData = arma::join_rows(dataset, noise);
-  arma::Row<size_t> fullLabels = arma::join_rows(labels, noiseLabels);
+  arma::mat fullData = join_rows(dataset, noise);
+  arma::Row<size_t> fullLabels = join_rows(labels, noiseLabels);
 
   // Now set weights.
   arma::rowvec weights(dataset.n_cols + 1000);
@@ -602,7 +602,7 @@ TEST_CASE("ExtraTreesAccuracyTest", "[RandomForestTest]")
   et.Classify(testDataset, predictions);
 
   // Calculate the prediction accuracy.
-  double accuracy = arma::accu(predictions == testLabels);
+  double accuracy = accu(predictions == testLabels);
   accuracy /= predictions.n_elem;
 
   REQUIRE(accuracy >= 0.85);

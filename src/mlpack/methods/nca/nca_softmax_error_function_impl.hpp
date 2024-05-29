@@ -22,14 +22,15 @@ namespace mlpack {
 // Initialize with the given kernel.
 template<typename MetricType>
 SoftmaxErrorFunction<MetricType>::SoftmaxErrorFunction(
-    const arma::mat& dataset,
-    const arma::Row<size_t>& labels,
+    const arma::mat& datasetIn,
+    const arma::Row<size_t>& labelsIn,
     MetricType metric) :
-    dataset(MakeAlias(const_cast<arma::mat&>(dataset), false)),
-    labels(MakeAlias(const_cast<arma::Row<size_t>&>(labels), false)),
     metric(metric),
     precalculated(false)
-{ /* nothing to do */ }
+{
+  MakeAlias(dataset, datasetIn, datasetIn.n_rows, datasetIn.n_cols, 0, false);
+  MakeAlias(labels, labelsIn, labelsIn.n_elem, 0, false);
+}
 
 //! Shuffle the dataset.
 template<typename MetricType>
@@ -133,7 +134,7 @@ void SoftmaxErrorFunction<MetricType>::Gradient(const arma::mat& coordinates,
     for (size_t k = (i + 1); k < stretchedDataset.n_cols; ++k)
     {
       // Calculate p_ik and p_ki first.
-      double eval = exp(-metric.Evaluate(stretchedDataset.unsafe_col(i),
+      double eval = std::exp(-metric.Evaluate(stretchedDataset.unsafe_col(i),
                                          stretchedDataset.unsafe_col(k)));
       double p_ik = 0, p_ki = 0;
       p_ik = eval / denominators(i);
@@ -188,7 +189,7 @@ void SoftmaxErrorFunction<MetricType>::Gradient(const arma::mat& coordinates,
         continue;
 
       // Calculate the numerator of p_ik.
-      double eval = exp(-metric.Evaluate(stretchedDataset.unsafe_col(i),
+      double eval = std::exp(-metric.Evaluate(stretchedDataset.unsafe_col(i),
                                          stretchedDataset.unsafe_col(k)));
 
       // If the points are in the same class, we must add to the second term of
@@ -269,7 +270,7 @@ void SoftmaxErrorFunction<MetricType>::Precalculate(
     for (size_t j = (i + 1); j < stretchedDataset.n_cols; ++j)
     {
       // Evaluate exp(-d(x_i, x_j)).
-      double eval = exp(-metric.Evaluate(stretchedDataset.unsafe_col(i),
+      double eval = std::exp(-metric.Evaluate(stretchedDataset.unsafe_col(i),
                                          stretchedDataset.unsafe_col(j)));
 
       // Add this to the denominators of both p_i and p_j: K(i, j) = K(j, i).

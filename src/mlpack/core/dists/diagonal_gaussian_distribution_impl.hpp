@@ -28,14 +28,14 @@ inline DiagonalGaussianDistribution::DiagonalGaussianDistribution(
 inline void DiagonalGaussianDistribution::Covariance(const arma::vec& covariance)
 {
   invCov = 1 / covariance;
-  logDetCov = arma::accu(log(covariance));
+  logDetCov = accu(log(covariance));
   this->covariance = covariance;
 }
 
 inline void DiagonalGaussianDistribution::Covariance(arma::vec&& covariance)
 {
   invCov = 1 / covariance;
-  logDetCov = arma::accu(log(covariance));
+  logDetCov = accu(log(covariance));
   this->covariance = std::move(covariance);
 }
 
@@ -60,14 +60,14 @@ inline void DiagonalGaussianDistribution::LogProbability(
 
   // Calculates log of exponent equation in multivariate Gaussian
   // distribution. We use only diagonal part for faster computation.
-  arma::vec logExponents = -0.5 * arma::trans(diffs % diffs) * invCov;
+  arma::vec logExponents = -0.5 * trans(diffs % diffs) * invCov;
 
   logProbabilities = -0.5 * k * log2pi - 0.5 * logDetCov + logExponents;
 }
 
 inline arma::vec DiagonalGaussianDistribution::Random() const
 {
-  return (arma::sqrt(covariance) % arma::randn<arma::vec>(mean.n_elem)) + mean;
+  return (sqrt(covariance) % arma::randn<arma::vec>(mean.n_elem)) + mean;
 }
 
 inline void DiagonalGaussianDistribution::Train(const arma::mat& observations)
@@ -84,17 +84,17 @@ inline void DiagonalGaussianDistribution::Train(const arma::mat& observations)
   }
 
   // Calculate and normalize the mean.
-  mean = arma::sum(observations, 1) / observations.n_cols;
+  mean = sum(observations, 1) / observations.n_cols;
 
   // Now calculate the covariance.
   const arma::mat diffs = observations.each_col() - mean;
-  covariance += arma::sum(diffs % diffs, 1);
+  covariance += sum(diffs % diffs, 1);
 
   // Finish estimating the covariance by normalizing, with the (1 / (n - 1))
   // to make the estimator unbiased.
   covariance /= (observations.n_cols - 1);
   invCov = 1 / covariance;
-  logDetCov = arma::accu(log(covariance));
+  logDetCov = accu(log(covariance));
 }
 
 inline void DiagonalGaussianDistribution::Train(const arma::mat& observations,
@@ -116,14 +116,14 @@ inline void DiagonalGaussianDistribution::Train(const arma::mat& observations,
   // of the weights, and the v2 is the sum of the each weight squared.
   // If you want to know more detailed description,
   // please refer to https://en.wikipedia.org/wiki/Weighted_arithmetic_mean.
-  double v1 = arma::accu(probabilities);
+  double v1 = accu(probabilities);
 
   // If their sum is 0, there is nothing in this Gaussian.
   // At least, set the covariance so that it's invertible.
   if (v1 == 0)
   {
     invCov = 1 / (covariance += 1e-50);
-    logDetCov = arma::accu(log(covariance));
+    logDetCov = accu(log(covariance));
     return;
   }
 
@@ -138,7 +138,7 @@ inline void DiagonalGaussianDistribution::Train(const arma::mat& observations,
   covariance += (diffs % diffs) * normalizedProbs;
 
   // Calculate the sum of each weight squared.
-  const double v2 = arma::accu(normalizedProbs % normalizedProbs);
+  const double v2 = accu(normalizedProbs % normalizedProbs);
 
   // Finish estimating the covariance by normalizing, with
   // the (1 / (v1 - (v2 / v1))) to make the estimator unbiased.
@@ -146,7 +146,7 @@ inline void DiagonalGaussianDistribution::Train(const arma::mat& observations,
     covariance /= (1 - v2);
 
   invCov = 1 / covariance;
-  logDetCov = arma::accu(log(covariance));
+  logDetCov = accu(log(covariance));
 }
 
 } // namespace mlpack

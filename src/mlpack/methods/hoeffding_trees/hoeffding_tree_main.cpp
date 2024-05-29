@@ -214,7 +214,7 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
       // Extract the labels from the last dimension of training set.
       Log::Info << "Using the last dimension of training set as labels."
           << endl;
-      labels = arma::conv_to<arma::Row<size_t>>::from(
+      labels = ConvTo<arma::Row<size_t>>::From(
           trainingSet.row(trainingSet.n_rows - 1));
       trainingSet.shed_row(trainingSet.n_rows - 1);
     }
@@ -230,7 +230,7 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
     {
       // Build the model.
       model->BuildModel(trainingSet, datasetInfo, labels,
-          arma::max(labels) + 1, batchTraining, confidence, maxSamples,
+          max(labels) + 1, batchTraining, confidence, maxSamples,
           100, minSamples, bins, observationsBeforeBinning);
       --passes; // This model-building takes one pass.
     }

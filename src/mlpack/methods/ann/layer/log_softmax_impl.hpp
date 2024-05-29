@@ -65,7 +65,16 @@ LogSoftMaxType<MatType>::operator=(LogSoftMaxType&& other)
 template<typename MatType>
 void LogSoftMaxType<MatType>::Forward(const MatType& input, MatType& output)
 {
-  MatType maxInput = arma::repmat(arma::max(input), input.n_rows, 1);
+  ForwardImpl(input, output);
+}
+
+template<typename MatType>
+void LogSoftMaxType<MatType>::ForwardImpl(const MatType& input,
+                                          MatType& output,
+                                          const typename std::enable_if_t<
+                                              arma::is_arma_type<MatType>::value>*)
+{
+  MatType maxInput = repmat(max(input), input.n_rows, 1);
   output = (maxInput - input);
 
   // Approximation of the base-e exponential function. The acuracy however is
@@ -92,10 +101,26 @@ void LogSoftMaxType<MatType>::Forward(const MatType& input, MatType& output)
 
     return 0.0;
   });
-
-  maxInput.each_row() += arma::log(arma::sum(output));
+  maxInput.each_row() += log(sum(output));
   output = input - maxInput;
 }
+
+#ifdef MLPACK_HAS_COOT
+
+template<typename MatType>
+void LogSoftMaxType<MatType>::ForwardImpl(const MatType& input,
+                                          MatType& output,
+                                          const typename std::enable_if_t<
+                                              coot::is_coot_type<MatType>::value>*)
+{
+  MatType maxInput = repmat(max(input), input.n_rows, 1);
+  output = (maxInput - input);
+  output = exp(output * -1);
+  maxInput.each_row() += log(sum(output));
+  output = input - maxInput;
+}
+
+#endif
 
 template<typename MatType>
 void LogSoftMaxType<MatType>::Backward(
@@ -104,7 +129,7 @@ void LogSoftMaxType<MatType>::Backward(
     const MatType& gy,
     MatType& g)
 {
-  g = gy - arma::exp(output) % arma::repmat(arma::sum(gy), output.n_rows, 1);
+  g = gy - exp(output) % repmat(sum(gy), output.n_rows, 1);
 }
 
 } // namespace mlpack

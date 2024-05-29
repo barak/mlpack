@@ -203,38 +203,38 @@ TEST_CASE("MDFullCovarianceTest", "[KernelTest]")
 /**
  * Simple test case for the cosine distance.
  */
-TEST_CASE("CosineDistanceSameAngleTest", "[KernelTest]")
+TEST_CASE("CosineSimilaritySameAngleTest", "[KernelTest]")
 {
   arma::vec a = "1.0 2.0 3.0";
   arma::vec b = "2.0 4.0 6.0";
 
-  REQUIRE(CosineDistance::Evaluate(a, b) == Approx(1.0).epsilon(1e-7));
-  REQUIRE(CosineDistance::Evaluate(b, a) == Approx(1.0).epsilon(1e-7));
+  REQUIRE(CosineSimilarity::Evaluate(a, b) == Approx(1.0).epsilon(1e-7));
+  REQUIRE(CosineSimilarity::Evaluate(b, a) == Approx(1.0).epsilon(1e-7));
 }
 
 /**
  * Now let's have them be orthogonal.
  */
-TEST_CASE("CosineDistanceOrthogonalTest", "[KernelTest]")
+TEST_CASE("CosineSimilarityOrthogonalTest", "[KernelTest]")
 {
   arma::vec a = "0.0 1.0";
   arma::vec b = "1.0 0.0";
 
-  REQUIRE(CosineDistance::Evaluate(a, b) == Approx(0.0).margin(1e-5));
-  REQUIRE(CosineDistance::Evaluate(b, a) == Approx(0.0).margin(1e-5));
+  REQUIRE(CosineSimilarity::Evaluate(a, b) == Approx(0.0).margin(1e-5));
+  REQUIRE(CosineSimilarity::Evaluate(b, a) == Approx(0.0).margin(1e-5));
 }
 
 /**
  * Some random angle test.
  */
-TEST_CASE("CosineDistanceRandomTest", "[KernelTest]")
+TEST_CASE("CosineSimilarityRandomTest", "[KernelTest]")
 {
   arma::vec a = "0.1 0.2 0.3 0.4 0.5";
   arma::vec b = "1.2 1.0 0.8 -0.3 -0.5";
 
-  REQUIRE(CosineDistance::Evaluate(a, b) ==
+  REQUIRE(CosineSimilarity::Evaluate(a, b) ==
       Approx(0.1385349024).epsilon(1e-7));
-  REQUIRE(CosineDistance::Evaluate(b, a) ==
+  REQUIRE(CosineSimilarity::Evaluate(b, a) ==
       Approx(0.1385349024).epsilon(1e-7));
 }
 
@@ -286,13 +286,6 @@ TEST_CASE("GaussianKernelTest", "[KernelTest]")
   REQUIRE(gk.Normalizer(2) == Approx(1.5707963267948963).epsilon(1e-7));
   REQUIRE(gk.Normalizer(3) == Approx(1.9687012432153019).epsilon(1e-7));
   REQUIRE(gk.Normalizer(4) == Approx(2.4674011002723386).epsilon(1e-7));
-  /* check the convolution integral */
-  REQUIRE(gk.ConvolutionIntegral(a, b) ==
-      Approx(0.024304474038457577).epsilon(1e-7));
-  REQUIRE(gk.ConvolutionIntegral(a, c) ==
-      Approx(0.024304474038457577).epsilon(1e-7));
-  REQUIRE(gk.ConvolutionIntegral(b, c) ==
-      Approx(0.024304474038457577).epsilon(1e-7));
 }
 
 TEST_CASE("GaussianKernelSerializationTest", "[KernelTest]")
@@ -329,11 +322,6 @@ TEST_CASE("SphericalKernelTest", "[KernelTest]")
   REQUIRE(sk.Normalizer(2) == Approx(0.78539816339744828).epsilon(1e-7));
   REQUIRE(sk.Normalizer(3) == Approx(0.52359877559829893).epsilon(1e-7));
   REQUIRE(sk.Normalizer(4) == Approx(0.30842513753404244).epsilon(1e-7));
-  /* check the convolution integral */
-  REQUIRE(sk.ConvolutionIntegral(a, b) == Approx(0.0).epsilon(1e-7));
-  REQUIRE(sk.ConvolutionIntegral(a, c) == Approx(0.0).epsilon(1e-7));
-  REQUIRE(sk.ConvolutionIntegral(b, c) ==
-      Approx(1.0021155029652784).epsilon(1e-7));
 }
 
 TEST_CASE("EpanechnikovKernelTest", "[KernelTest]")
@@ -356,11 +344,6 @@ TEST_CASE("EpanechnikovKernelTest", "[KernelTest]")
   REQUIRE(ek.Normalizer(2) == Approx(0.39269908169872414).epsilon(1e-7));
   REQUIRE(ek.Normalizer(3) == Approx(0.20943951023931956).epsilon(1e-7));
   REQUIRE(ek.Normalizer(4) == Approx(0.10280837917801415).epsilon(1e-7));
-  /* check the convolution integral */
-  REQUIRE(ek.ConvolutionIntegral(a, b) == Approx(0.0).epsilon(1e-7));
-  REQUIRE(ek.ConvolutionIntegral(a, c) == Approx(0.0).epsilon(1e-7));
-  REQUIRE(ek.ConvolutionIntegral(b, c) ==
-      Approx(1.5263455690698258).epsilon(1e-7));
 }
 
 TEST_CASE("PolynomialKernelTest", "[KernelTest]")

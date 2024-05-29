@@ -26,7 +26,7 @@ HoeffdingNumericSplit<FitnessFunction, ObservationType>::HoeffdingNumericSplit(
     bins(bins),
     observationsBeforeBinning(observationsBeforeBinning),
     samplesSeen(0),
-    sufficientStatistics(arma::zeros<arma::Mat<size_t>>(numClasses, bins))
+    sufficientStatistics(zeros<arma::Mat<size_t>>(numClasses, bins))
 {
   observations.zeros();
   labels.zeros();
@@ -41,7 +41,7 @@ HoeffdingNumericSplit<FitnessFunction, ObservationType>::HoeffdingNumericSplit(
     bins(other.bins),
     observationsBeforeBinning(other.observationsBeforeBinning),
     samplesSeen(0),
-    sufficientStatistics(arma::zeros<arma::Mat<size_t>>(numClasses, bins))
+    sufficientStatistics(zeros<arma::Mat<size_t>>(numClasses, bins))
 {
   observations.zeros();
   labels.zeros();
@@ -152,7 +152,7 @@ size_t HoeffdingNumericSplit<FitnessFunction, ObservationType>::
   {
     // We've calculated the bins, so we can just sum over the sufficient
     // statistics.
-    arma::Col<size_t> classCounts = arma::sum(sufficientStatistics, 1);
+    arma::Col<size_t> classCounts = sum(sufficientStatistics, 1);
 
     arma::uword maxIndex = 0;
     classCounts.max(maxIndex);
@@ -173,15 +173,15 @@ double HoeffdingNumericSplit<FitnessFunction, ObservationType>::
     for (size_t i = 0; i < samplesSeen; ++i)
       classes[labels[i]]++;
 
-    return double(classes.max()) / double(arma::accu(classes));
+    return double(classes.max()) / double(accu(classes));
   }
   else
   {
     // We've calculated the bins, so we can just sum over the sufficient
     // statistics.
-    arma::Col<size_t> classCounts = arma::sum(sufficientStatistics, 1);
+    arma::Col<size_t> classCounts = sum(sufficientStatistics, 1);
 
-    return double(classCounts.max()) / double(arma::sum(classCounts));
+    return double(classCounts.max()) / double(sum(classCounts));
   }
 }
 

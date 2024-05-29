@@ -17,7 +17,6 @@
 #define MLPACK_METHODS_RL_ENVIRONMENT_MOUNTAIN_CAR_HPP
 
 #include <mlpack/prereqs.hpp>
-#include <mlpack/core/math/clamp.hpp>
 
 namespace mlpack {
 
@@ -140,13 +139,13 @@ class MountainCar
     int direction = action.action - 1;
     nextState.Velocity() = state.Velocity() + 0.001 * direction - 0.0025 *
         std::cos(3 * state.Position());
-    nextState.Velocity() = ClampRange(nextState.Velocity(),
-        velocityMin, velocityMax);
+    nextState.Velocity() = std::min(std::max(nextState.Velocity(),
+        velocityMin), velocityMax);
 
     // Update states.
     nextState.Position() = state.Position() + nextState.Velocity();
-    nextState.Position() = ClampRange(nextState.Position(),
-        positionMin, positionMax);
+    nextState.Position() = std::min(std::max(nextState.Position(),
+        positionMin), positionMax);
 
     if (nextState.Position() == positionMin && nextState.Velocity() < 0)
       nextState.Velocity() = 0.0;
@@ -188,7 +187,7 @@ class MountainCar
     State state;
     stepsPerformed = 0;
     state.Velocity() = 0.0;
-    state.Position() = arma::as_scalar(arma::randu(1)) * 0.2 - 0.6;
+    state.Position() = randu() * 0.2 - 0.6;
     return state;
   }
 

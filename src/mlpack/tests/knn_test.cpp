@@ -17,6 +17,18 @@
 using namespace mlpack;
 
 /**
+ * A couple of handful declarations for float32 testing.
+ * These will be removed when we refactor the Bounds to accept MatType.
+ * For now, we will keep the following declarations.
+ */
+template<typename MetricType>
+using FloatHRectBound = HRectBound<MetricType, float>;
+
+template<typename MetricType, typename StatisticType, typename MatType>
+using FloatKDTree = BinarySpaceTree<MetricType, StatisticType, MatType,
+                                    FloatHRectBound, MidpointSplit>;
+
+/**
  * Test that Unmap() works in the dual-tree case (see unmap.hpp).
  */
 TEST_CASE("KNNDualTreeUnmapTest", "[KNNTest]")
@@ -746,6 +758,48 @@ TEST_CASE("KNNSingleTreeVsNaive", "[KNNTest]")
   }
 }
 
+/**
+ * Test the single-tree nearest-neighbors method with the naive method.
+ *
+ * The main difference with the above test is that this one loads the reference
+ * dataset as a float32, and the distances as a float32 as well.
+ *
+ * Errors are produced if the results are not identical.
+ */
+TEST_CASE("KNNSingleTreeVsNaiveF32", "[KNNTest]")
+{
+  arma::fmat dataset;
+
+  // Hard-coded filename: bad?
+  // Code duplication: also bad!
+  if (!data::Load("test_data_3_1000.csv", dataset))
+    FAIL("Cannot load test dataset test_data_3_1000.csv!");
+
+  NeighborSearch<NearestNeighborSort,
+                 EuclideanDistance,
+                 arma::fmat,
+                 FloatKDTree> knn(dataset, SINGLE_TREE_MODE);
+
+  // Set up computation for naive mode.
+  NeighborSearch<NearestNeighborSort,
+                 EuclideanDistance,
+                 arma::fmat,
+                 FloatKDTree> naive(dataset, NAIVE_MODE);
+
+  arma::Mat<size_t> neighborsTree;
+  arma::fmat distancesTree;
+  knn.Search(15, neighborsTree, distancesTree);
+
+  arma::Mat<size_t> neighborsNaive;
+  arma::fmat distancesNaive;
+  naive.Search(15, neighborsNaive, distancesNaive);
+
+  for (size_t i = 0; i < neighborsTree.n_elem; ++i)
+  {
+    REQUIRE(neighborsTree[i] ==neighborsNaive[i]);
+    REQUIRE(distancesTree[i] == Approx(distancesNaive[i]).epsilon(1e-7));
+  }
+}
 /**
  * Test the cover tree single-tree nearest-neighbors method against the naive
  * method.  This uses only a random reference dataset.
@@ -1775,11 +1829,11 @@ TEST_CASE("KNNGreedyTreeSearch", "[KNNTest]")
 
   // Check that all neighbour values are between 0 and 100, as only 100 points
   // are present in dataset.
-  REQUIRE(arma::accu(neighbors < 0 || neighbors >= 100) ==0);
+  REQUIRE(accu(neighbors < 0 || neighbors >= 100) ==0);
 
   // Check that all distances values are between 0.0 and sqrt(3) as arma::randu
   // generates a uniform distribution in [0, 1].
-  REQUIRE(arma::accu(distances < 0.0 || distances > std::sqrt(3.0)) == 0);
+  REQUIRE(accu(distances < 0.0 || distances > std::sqrt(3.0)) == 0);
 }
 
 /**
@@ -1812,16 +1866,16 @@ TEST_CASE("KNNSpillTreeSearchEnoughResults", "[KNNTest]")
 
   // Check that all neighbor values are between 0 and 100, as only 100 points
   // are present in dataset.
-  REQUIRE(arma::accu(neighborsDual < 0 || neighborsDual >= 100) == 0);
-  REQUIRE(arma::accu(neighborsSingle < 0 || neighborsSingle >= 100) == 0);
-  REQUIRE(arma::accu(neighborsGreedy < 0 || neighborsGreedy >= 100) == 0);
+  REQUIRE(accu(neighborsDual < 0 || neighborsDual >= 100) == 0);
+  REQUIRE(accu(neighborsSingle < 0 || neighborsSingle >= 100) == 0);
+  REQUIRE(accu(neighborsGreedy < 0 || neighborsGreedy >= 100) == 0);
 
   // Check that all distances values are between 0.0 and sqrt(3) as arma::randu
   // generates a uniform distribution in [0, 1].
-  REQUIRE(arma::accu(distancesDual < 0.0 || distancesDual > std::sqrt(3.0))
+  REQUIRE(accu(distancesDual < 0.0 || distancesDual > std::sqrt(3.0))
       == 0);
-  REQUIRE(arma::accu(distancesSingle < 0.0 || distancesSingle > std::sqrt(3.0))
+  REQUIRE(accu(distancesSingle < 0.0 || distancesSingle > std::sqrt(3.0))
       == 0);
-  REQUIRE(arma::accu(distancesGreedy < 0.0 || distancesGreedy > std::sqrt(3.0))
+  REQUIRE(accu(distancesGreedy < 0.0 || distancesGreedy > std::sqrt(3.0))
       == 0);
 }

@@ -34,7 +34,7 @@ TEST_CASE("QUICSVDReconstructionError", "[QUICSVDTest]")
   {
     // Obtain the SVD using default parameters.
     arma::mat u, v, sigma;
-    QUIC_SVD quicsvd(dataset, u, v, sigma);
+    QUIC_SVD<> quicsvd(dataset, u, v, sigma);
 
     // Reconstruct the matrix using the SVD.
     arma::mat reconstruct;
@@ -64,14 +64,14 @@ TEST_CASE("QUICSVDSingularValueError", "[QUICSVDTest]")
 
   arma::mat s = arma::diagmat(arma::vec("1 0.1 0.01"));
 
-  arma::mat data = arma::trans(U * arma::diagmat(s) * V.t());
+  arma::mat data = trans(U * arma::diagmat(s) * V.t());
 
   arma::vec s1, s3;
   arma::mat U1, U2, V1, V2, s2;
 
   // Obtain the SVD using default parameters.
   arma::svd_econ(U1, s1, V1, data);
-  QUIC_SVD quicsvd(data, U1, V1, s2);
+  QUIC_SVD<> quicsvd(data, U1, V1, s2);
 
   s3 = arma::diagvec(s2);
   s1 = s1.subvec(0, s3.n_elem - 1);
@@ -87,5 +87,5 @@ TEST_CASE("QUICSVDSameDimensionTest", "[QUICSVDTest]")
 
   // Obtain the SVD using default parameters.
   arma::mat u, v, sigma;
-  QUIC_SVD quicsvd(dataset, u, v, sigma);
+  QUIC_SVD<> quicsvd(dataset, u, v, sigma);
 }

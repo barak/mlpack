@@ -112,14 +112,14 @@ void QDAFN<MatType>::Search(const MatType& querySet,
     std::priority_queue<std::pair<double, size_t>> queue;
     for (size_t i = 0; i < l; ++i)
     {
-      const double val = sValues(0, i) - arma::dot(querySet.col(q),
+      const double val = sValues(0, i) - dot(querySet.col(q),
           lines.col(i));
       queue.push(std::make_pair(val, i));
     }
 
     // To track where we are in each S table, we keep the next index to look at
     // in each table (they start at 0).
-    arma::Col<size_t> tableLocations = arma::zeros<arma::Col<size_t>>(l);
+    arma::Col<size_t> tableLocations = zeros<arma::Col<size_t>>(l);
 
     // Now that the queue is initialized, iterate over m elements.
     std::vector<std::pair<double, size_t>> v(k, std::make_pair(-1.0,

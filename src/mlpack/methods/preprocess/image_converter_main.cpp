@@ -10,13 +10,12 @@
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
 #include <mlpack/prereqs.hpp>
-#include <mlpack/core/util/io.hpp>
+#include <mlpack/core.hpp>
 
 #undef BINDING_NAME
 #define BINDING_NAME image_converter
 
 #include <mlpack/core/util/mlpack_main.hpp>
-#include <mlpack/core.hpp>
 
 using namespace mlpack;
 using namespace mlpack::util;
@@ -65,7 +64,9 @@ BINDING_EXAMPLE(
 // See also...
 BINDING_SEE_ALSO("@preprocess_binarize", "#preprocess_binarize");
 BINDING_SEE_ALSO("@preprocess_describe", "#preprocess_describe");
+#if BINDING_TYPE == BINDING_TYPE_CLI
 BINDING_SEE_ALSO("@preprocess_imputer", "#preprocess_imputer");
+#endif
 
 // DEFINE PARAM
 PARAM_VECTOR_IN_REQ(string, "input", "Image filenames which have to "

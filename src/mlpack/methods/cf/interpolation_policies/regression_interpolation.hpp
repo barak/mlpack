@@ -116,7 +116,7 @@ class RegressionInterpolation
     arma::vec constant(neighborNum);
 
     arma::vec userRating(cleanedData.col(queryUser));
-    const size_t support = arma::accu(userRating != 0);
+    const size_t support = accu(userRating != 0);
 
     // If user has no rating at all, average interpolation is used.
     if (support == 0)
@@ -144,7 +144,7 @@ class RegressionInterpolation
             // Avoid recalculation of iPrediction.
             iPrediction = w * h.col(neighbors(i));
           arma::vec jPrediction = w * h.col(neighbors(j));
-          coeff(i, j) = arma::dot(iPrediction, jPrediction) / itemNum;
+          coeff(i, j) = dot(iPrediction, jPrediction) / itemNum;
           if (coeff(i, j) == 0)
             coeff(i, j) = std::numeric_limits<double>::min();
           coeff(j, i) = coeff(i, j);
@@ -164,7 +164,7 @@ class RegressionInterpolation
         if (iPrediction.size() == 0)
             // Avoid recalculation of iPrediction.
             iPrediction = w * h.col(neighbors(i));
-        constant(i) = arma::dot(iPrediction, userRating) / support;
+        constant(i) = dot(iPrediction, userRating) / support;
         if (constant(i) == 0)
           constant(i) = std::numeric_limits<double>::min();
         // Cache calculated constant term.

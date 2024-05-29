@@ -37,7 +37,7 @@ typename MatType::elem_type MarginRankingLossType<MatType>::Forward(
   const MatType& prediction2 = prediction.rows(predictionRows / 2,
       predictionRows - 1);
 
-  double lossSum = arma::accu(arma::max(arma::zeros(size(target)),
+  double lossSum = accu(max(zeros(size(target)),
       -target % (prediction1 - prediction2) + margin));
 
   if (reduction)
@@ -63,7 +63,7 @@ void MarginRankingLossType<MatType>::Backward(
   MatType lossPrediction2 = lossPrediction1;
   lossPrediction1 = -target % lossPrediction1;
   lossPrediction2 = target % lossPrediction2;
-  loss = arma::join_cols(lossPrediction1, lossPrediction2);
+  loss = join_cols(lossPrediction1, lossPrediction2);
 
   if (!reduction)
     loss = loss / target.n_elem;

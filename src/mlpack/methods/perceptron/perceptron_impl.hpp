@@ -58,7 +58,8 @@ Perceptron<LearnPolicy, WeightInitializationPolicy, MatType>::Perceptron(
     maxIterations(maxIterations)
 {
   // Start training.
-  Train(data, labels, numClasses);
+  TrainInternal<false, arma::Row<typename MatType::elem_type>>(data, labels,
+      numClasses);
 }
 
 /**
@@ -75,16 +76,19 @@ template<
     typename WeightInitializationPolicy,
     typename MatType
 >
+template<typename WeightsType>
 Perceptron<LearnPolicy, WeightInitializationPolicy, MatType>::Perceptron(
     const MatType& data,
     const arma::Row<size_t>& labels,
     const size_t numClasses,
-    const arma::rowvec& instanceWeights,
-    const size_t maxIterations) :
+    const WeightsType& instanceWeights,
+    const size_t maxIterations,
+    const typename std::enable_if<
+        arma::is_arma_type<WeightsType>::value>::type*) :
     maxIterations(maxIterations)
 {
   // Start training.
-  Train(data, labels, numClasses, instanceWeights);
+  TrainInternal<true>(data, labels, numClasses, instanceWeights);
 }
 
 /**
@@ -103,45 +107,93 @@ template<
     typename WeightInitializationPolicy,
     typename MatType
 >
+template<typename WeightsType>
+mlpack_deprecated
 Perceptron<LearnPolicy, WeightInitializationPolicy, MatType>::Perceptron(
     const Perceptron& other,
     const MatType& data,
     const arma::Row<size_t>& labels,
     const size_t numClasses,
-    const arma::rowvec& instanceWeights) :
+    const WeightsType& instanceWeights,
+    const typename std::enable_if<
+        arma::is_arma_type<WeightsType>::value>::type*) :
     maxIterations(other.maxIterations)
 {
-  Train(data, labels, numClasses, instanceWeights);
+  TrainInternal<true>(data, labels, numClasses, instanceWeights);
 }
 
 /**
- * Classification function. After training, use the weights matrix to classify
- * test, and put the predicted classes in predictedLabels.
+ * Train the perceptron on the given data for up to the given maximum number
+ * of iterations.  A single iteration corresponds to a single pass through the
+ * data, so if you want to pass through the dataset only once, set
+ * `maxIterations` to 1.
  *
- * @param test Testing data or data to classify.
- * @param predictedLabels Vector to store the predicted classes after
- *      classifying test.
+ * After calling this overload, `MaxIterations()` will return whatever
+ * `maxIterations` was given to this function.
+ *
+ * This training does not reset the model weights, so you can call Train() on
+ * multiple datasets sequentially.
+ *
+ * @param data Dataset on which training should be performed.
+ * @param labels Labels of the dataset.
+ * @param numClasses Number of classes in the data.
+ * @param maxIterations Maximum number of iterations for training.
  */
 template<
     typename LearnPolicy,
     typename WeightInitializationPolicy,
     typename MatType
 >
-void Perceptron<LearnPolicy, WeightInitializationPolicy, MatType>::Classify(
-    const MatType& test,
-    arma::Row<size_t>& predictedLabels)
+void Perceptron<LearnPolicy, WeightInitializationPolicy, MatType>::Train(
+    const MatType& data,
+    const arma::Row<size_t>& labels,
+    const size_t numClasses,
+    const std::optional<size_t> maxIterations)
 {
-  arma::vec tempLabelMat;
-  arma::uword maxIndex = 0;
-  predictedLabels.set_size(test.n_cols);
+  // Set the maximum number of iterations and call unweighted Train().
+  if (maxIterations.has_value())
+    this->maxIterations = maxIterations.value();
 
-  // Could probably be faster if done in batch.
-  for (size_t i = 0; i < test.n_cols; ++i)
-  {
-    tempLabelMat = weights.t() * test.col(i) + biases;
-    tempLabelMat.max(maxIndex);
-    predictedLabels(i) = maxIndex;
-  }
+  TrainInternal<false, arma::Row<typename MatType::elem_type>>(data, labels,
+      numClasses);
+}
+
+/**
+ * Train the perceptron on the given data for up to the given maximum number
+ * of iterations.  A single iteration corresponds to a single pass through the
+ * data, so if you want to pass through the dataset only once, set
+ * `maxIterations` to 1.
+ *
+ * After calling this overload, `MaxIterations()` will return whatever
+ * `maxIterations` was given to this function.
+ *
+ * This training does not reset the model weights, so you can call Train() on
+ * multiple datasets sequentially.
+ *
+ * @param data Dataset on which training should be performed.
+ * @param labels Labels of the dataset.
+ * @param numClasses Number of classes in the data.
+ * @param instanceWeights Cost matrix. Stores the cost of mispredicting
+ *      instances.  This is useful for boosting.
+ * @param maxIterations Maximum number of iterations for training.
+ */
+template<
+    typename LearnPolicy,
+    typename WeightInitializationPolicy,
+    typename MatType
+>
+void Perceptron<LearnPolicy, WeightInitializationPolicy, MatType>::Train(
+    const MatType& data,
+    const arma::Row<size_t>& labels,
+    const size_t numClasses,
+    const arma::rowvec& instanceWeights,
+    const std::optional<size_t> maxIterations)
+{
+  // Set the maximum number of iterations and call weighted training.
+  if (maxIterations.has_value())
+    this->maxIterations = maxIterations.value();
+
+  TrainInternal<true>(data, labels, numClasses, instanceWeights);
 }
 
 /**
@@ -158,14 +210,16 @@ template<
     typename WeightInitializationPolicy,
     typename MatType
 >
-void Perceptron<LearnPolicy, WeightInitializationPolicy, MatType>::Train(
-    const MatType& data,
-    const arma::Row<size_t>& labels,
-    const size_t numClasses,
-    const arma::rowvec& instanceWeights)
+template<bool HasWeights, typename WeightsType>
+void Perceptron<
+    LearnPolicy, WeightInitializationPolicy, MatType
+>::TrainInternal(const MatType& data,
+                 const arma::Row<size_t>& labels,
+                 const size_t numClasses,
+                 const WeightsType& instanceWeights)
 {
   // Do we need to resize the weights?
-  if (weights.n_elem != numClasses)
+  if (weights.n_cols != numClasses || weights.n_rows != data.n_rows)
   {
     WeightInitializationPolicy wip;
     wip.Initialize(weights, biases, data.n_rows, numClasses);
@@ -175,11 +229,9 @@ void Perceptron<LearnPolicy, WeightInitializationPolicy, MatType>::Train(
   bool converged = false;
   size_t tempLabel;
   arma::uword maxIndexRow = 0, maxIndexCol = 0;
-  arma::mat tempLabelMat;
+  arma::Mat<ElemType> tempLabelMat;
 
   LearnPolicy LP;
-
-  const bool hasWeights = (instanceWeights.n_elem > 0);
 
   while ((i < maxIterations) && (!converged))
   {
@@ -207,15 +259,88 @@ void Perceptron<LearnPolicy, WeightInitializationPolicy, MatType>::Train(
         // Send maxIndexRow for knowing which weight to update, send j to know
         // the value of the vector to update it with.  Send tempLabel to know
         // the correct class.
-        if (hasWeights)
+        if (HasWeights)
           LP.UpdateWeights(data.col(j), weights, biases, maxIndexRow, tempLabel,
-              instanceWeights(j));
+              (typename MatType::elem_type) instanceWeights(j));
         else
           LP.UpdateWeights(data.col(j), weights, biases, maxIndexRow,
               tempLabel);
       }
     }
   }
+}
+
+/**
+ * After training, use the weights matrix to classify `point`, and return the
+ * predicted class.
+ *
+ * @param point Test point to classify.
+ */
+template<
+    typename LearnPolicy,
+    typename WeightInitializationPolicy,
+    typename MatType
+>
+template<typename VecType>
+size_t Perceptron<LearnPolicy, WeightInitializationPolicy, MatType>::Classify(
+    const VecType& point) const
+{
+  util::CheckSameDimensionality(point, weights.n_rows, "Perceptron::Classify()",
+      "point");
+
+  arma::Col<ElemType> tempLabelVec;
+  arma::uword maxIndex = 0;
+
+  tempLabelVec = weights.t() * point + biases;
+  tempLabelVec.max(maxIndex);
+
+  return size_t(maxIndex);
+}
+
+/**
+ * Classification function. After training, use the weights matrix to classify
+ * test, and put the predicted classes in predictedLabels.
+ *
+ * @param test Testing data or data to classify.
+ * @param predictedLabels Vector to store the predicted classes after
+ *      classifying test.
+ */
+template<
+    typename LearnPolicy,
+    typename WeightInitializationPolicy,
+    typename MatType
+>
+void Perceptron<LearnPolicy, WeightInitializationPolicy, MatType>::Classify(
+    const MatType& test,
+    arma::Row<size_t>& predictedLabels) const
+{
+  util::CheckSameDimensionality(test, weights.n_rows, "Perceptron::Classify()",
+      "points");
+
+  arma::Col<ElemType> tempLabelMat;
+  arma::uword maxIndex = 0;
+  predictedLabels.set_size(test.n_cols);
+
+  // Could probably be faster if done in batch.
+  for (size_t i = 0; i < test.n_cols; ++i)
+  {
+    tempLabelMat = weights.t() * test.col(i) + biases;
+    tempLabelMat.max(maxIndex);
+    predictedLabels(i) = maxIndex;
+  }
+}
+
+/**
+ * Reset the model, so that the next call to `Train()` will not be
+ * incremental.
+ */
+template<typename LearnPolicy,
+         typename WeightInitializationPolicy,
+         typename MatType>
+void Perceptron<LearnPolicy, WeightInitializationPolicy, MatType>::Reset()
+{
+  weights.clear();
+  biases.clear();
 }
 
 //! Serialize the perceptron.

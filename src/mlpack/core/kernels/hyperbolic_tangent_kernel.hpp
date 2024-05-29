@@ -58,18 +58,18 @@ class HyperbolicTangentKernel
   template<typename VecTypeA, typename VecTypeB>
   double Evaluate(const VecTypeA& a, const VecTypeB& b)
   {
-    return tanh(scale * arma::dot(a, b) + offset);
+    return tanh(scale * dot(a, b) + offset);
   }
 
   //! Get scale factor.
   double Scale() const { return scale; }
   //! Modify scale factor.
-  double& Scale() { return scale; }
+  void Scale(const double scale) { this->scale = scale; }
 
   //! Get offset for the kernel.
   double Offset() const { return offset; }
   //! Modify offset for the kernel.
-  double& Offset() { return offset; }
+  void Offset(const double offset) { this->offset = offset; }
 
   //! Serialize the kernel.
   template<typename Archive>

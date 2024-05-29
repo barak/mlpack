@@ -167,7 +167,7 @@ TEST_CASE("GMMTrainEMMultipleGaussians", "[GMMTest]")
     counts += 1;
 
     // Account for rounding errors (possibly necessary).
-    counts[gaussians - 1] += (data.n_cols - arma::accu(counts));
+    counts[gaussians - 1] += (data.n_cols - accu(counts));
 
     // Build each Gaussian individually.
     size_t point = 0;
@@ -497,7 +497,7 @@ TEST_CASE("GMMClassifyTest", "[GMMTest]")
   gmm.Component(2) = GaussianDistribution("-2 -2", "2.2 1.4; 1.4 5.1");
   gmm.Weights() = "0.6 0.25 0.15";
 
-  arma::mat observations = arma::trans(arma::mat(
+  arma::mat observations = trans(arma::mat(
     " 0  0;"
     " 0  1;"
     " 0  2;"
@@ -702,7 +702,7 @@ TEST_CASE("UseExistingModelTest", "[GMMTest]")
   counts += 1;
 
   // Account for rounding errors (possibly necessary).
-  counts[gaussians - 1] += (data.n_cols - arma::accu(counts));
+  counts[gaussians - 1] += (data.n_cols - accu(counts));
 
   // Build each Gaussian individually.
   size_t point = 0;

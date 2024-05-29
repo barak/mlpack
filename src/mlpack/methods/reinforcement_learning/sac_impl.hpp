@@ -183,11 +183,11 @@ void SAC<
   targetQ1Network.Predict(targetQInput, Q1);
   targetQ2Network.Predict(targetQInput, Q2);
   arma::rowvec nextQ = sampledRewards + config.Discount() * ((1 - isTerminal)
-      % arma::min(Q1, Q2));
+      % min(Q1, Q2));
 
   arma::mat sampledActionValues(action.size, sampledActions.size());
   for (size_t i = 0; i < sampledActions.size(); i++)
-    sampledActionValues.col(i) = arma::conv_to<arma::colvec>::from
+    sampledActionValues.col(i) = ConvTo<arma::colvec>::From
                                  (sampledActions[i].action);
   arma::mat learningQInput = arma::join_vert(sampledActionValues,
       sampledStates);
@@ -302,11 +302,12 @@ void SAC<
 
   if (!deterministic)
   {
-    arma::colvec noise = arma::randn<arma::colvec>(outputAction.n_rows) * 0.1;
+    arma::colvec noise;
+    noise.randn(outputAction.n_rows) * 0.1;
     noise = arma::clamp(noise, -0.25, 0.25);
     outputAction = outputAction + noise;
   }
-  action.action = arma::conv_to<std::vector<double>>::from(outputAction);
+  action.action = ConvTo<std::vector<double>>::From(outputAction);
 }
 
 template <

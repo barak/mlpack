@@ -81,8 +81,6 @@ BINDING_EXAMPLE(
         "output_predictions", "X_test_responses"));
 
 // See also...
-BINDING_SEE_ALSO("Linear/ridge regression tutorial",
-    "@doc/tutorials/linear_regression.md");
 BINDING_SEE_ALSO("@lars", "#lars");
 BINDING_SEE_ALSO("Linear regression on Wikipedia",
     "https://en.wikipedia.org/wiki/Linear_regression");
@@ -95,9 +93,9 @@ PARAM_ROW_IN("training_responses", "Optional vector containing y "
     "(responses). If not given, the responses are assumed to be the last row "
     "of the input file.", "r");
 
-PARAM_MODEL_IN(LinearRegression, "input_model", "Existing LinearRegression "
+PARAM_MODEL_IN(LinearRegression<>, "input_model", "Existing LinearRegression "
     "model to use.", "m");
-PARAM_MODEL_OUT(LinearRegression, "output_model", "Output LinearRegression "
+PARAM_MODEL_OUT(LinearRegression<>, "output_model", "Output LinearRegression "
     "model.", "M");
 
 PARAM_MATRIX_IN("test", "Matrix containing X' (test regressors).", "T");
@@ -120,7 +118,7 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timer)
   mat regressors;
   rowvec responses;
 
-  LinearRegression* lr;
+  LinearRegression<>* lr;
 
   const bool computeModel = !params.Has("input_model");
   const bool computePrediction = params.Has("test");
@@ -172,14 +170,14 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timer)
     }
 
     timer.Start("regression");
-    lr = new LinearRegression(regressors, responses, lambda);
+    lr = new LinearRegression<>(regressors, responses, lambda);
     timer.Stop("regression");
   }
   else
   {
     // A model file was passed in, so load it.
     timer.Start("load_model");
-    lr = params.Get<LinearRegression*>("input_model");
+    lr = params.Get<LinearRegression<>*>("input_model");
     timer.Stop("load_model");
   }
 
@@ -221,5 +219,5 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timer)
   }
 
   // Save the model if needed.
-  params.Get<LinearRegression*>("output_model") = lr;
+  params.Get<LinearRegression<>*>("output_model") = lr;
 }

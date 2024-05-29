@@ -146,7 +146,8 @@ inline int RandInt(const int lo, const int hiExclusive)
 }
 
 /**
- * Generates a normally distributed random number with mean 0 and variance 1.
+ * Generates a normally distributed random number with mean 0 and standard
+ * deviation of 1.
  */
 inline double RandNormal()
 {
@@ -155,52 +156,14 @@ inline double RandNormal()
 
 /**
  * Generates a normally distributed random number with specified mean and
- * variance.
+ * standard deviation.
  *
  * @param mean Mean of distribution.
- * @param variance Variance of distribution.
+ * @param stddev Standard deviation of distribution.
  */
-inline double RandNormal(const double mean, const double variance)
+inline double RandNormal(const double mean, const double stddev)
 {
-  return variance * RandNormalDist()(RandGen()) + mean;
-}
-
-/**
- * Obtains no more than maxNumSamples distinct samples. Each sample belongs to
- * [loInclusive, hiExclusive).
- *
- * @param loInclusive The lower bound (inclusive).
- * @param hiExclusive The high bound (exclusive).
- * @param maxNumSamples The maximum number of samples to obtain.
- * @param distinctSamples The samples that will be obtained.
- */
-inline void ObtainDistinctSamples(const size_t loInclusive,
-                                  const size_t hiExclusive,
-                                  const size_t maxNumSamples,
-                                  arma::uvec& distinctSamples)
-{
-  const size_t samplesRangeSize = hiExclusive - loInclusive;
-
-  if (samplesRangeSize > maxNumSamples)
-  {
-    arma::Col<size_t> samples;
-
-    samples.zeros(samplesRangeSize);
-
-    for (size_t i = 0; i < maxNumSamples; ++i)
-      samples [ (size_t) RandInt(samplesRangeSize) ]++;
-
-    distinctSamples = arma::find(samples > 0);
-
-    if (loInclusive > 0)
-      distinctSamples += loInclusive;
-  }
-  else
-  {
-    distinctSamples.set_size(samplesRangeSize);
-    for (size_t i = 0; i < samplesRangeSize; ++i)
-      distinctSamples[i] = loInclusive + i;
-  }
+  return stddev * RandNormalDist()(RandGen()) + mean;
 }
 
 } // namespace mlpack

@@ -97,9 +97,9 @@ void ReparametrizationType<InputType, OutputType>::Forward(
   preStdDev = input.submat(0, 0, latentSize - 1, input.n_cols - 1);
 
   if (stochastic)
-    gaussianSample = arma::randn<OutputType>(latentSize, input.n_cols);
+    gaussianSample.randn(latentSize, input.n_cols);
   else
-    gaussianSample = arma::ones<OutputType>(latentSize, input.n_cols) * 0.7;
+    gaussianSample.ones(latentSize, input.n_cols) * 0.7;
 
   SoftplusFunction::Fn(preStdDev, stdDev);
   output = mean + stdDev % gaussianSample;
@@ -129,8 +129,8 @@ double ReparametrizationType<InputType, OutpuType>::Loss()
   if (!includeKl)
     return 0;
 
-  return -0.5 * beta * arma::accu(2 * arma::log(stdDev) - arma::pow(stdDev, 2)
-      - arma::pow(mean, 2) + 1) / mean.n_cols;
+  return -0.5 * beta * accu(2 * log(stdDev) - pow(stdDev, 2)
+      - pow(mean, 2) + 1) / mean.n_cols;
 }
 
 template<typename InputType, typename OutputType>

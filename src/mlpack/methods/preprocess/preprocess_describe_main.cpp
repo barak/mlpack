@@ -64,7 +64,9 @@ BINDING_EXAMPLE(
 
 // See also...
 BINDING_SEE_ALSO("@preprocess_binarize", "#preprocess_binarize");
+#if BINDING_TYPE == BINDING_TYPE_CLI
 BINDING_SEE_ALSO("@preprocess_imputer", "#preprocess_imputer");
+#endif
 BINDING_SEE_ALSO("@preprocess_split", "#preprocess_split");
 
 // Define parameters for data.
@@ -92,7 +94,7 @@ double SumNthPowerDeviations(const arma::rowvec& input,
                              const double& fMean,
                              size_t n)
 {
-  return arma::sum(arma::pow(input - fMean, static_cast<double>(n)));
+  return sum(pow(input - fMean, static_cast<double>(n)));
 }
 
 /**
@@ -195,13 +197,13 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
   {
     arma::rowvec feature;
     if (rowMajor)
-      feature = arma::conv_to<arma::rowvec>::from(data.col(dim));
+      feature = ConvTo<arma::rowvec>::From(data.col(dim));
     else
       feature = data.row(dim);
 
     // f at the front of the variable names means "feature".
-    const double fMax = arma::max(feature);
-    const double fMin = arma::min(feature);
+    const double fMax = max(feature);
+    const double fMin = min(feature);
     const double fMean = arma::mean(feature);
     const double fStd = arma::stddev(feature, population);
 
