@@ -51,7 +51,7 @@ size_t RStarTreeSplit::ReinsertPoints(TreeType* tree,
       tree->Bound().Center(center);
       for (size_t i = 0; i < sorted.size(); ++i)
       {
-        sorted[i].first = tree->Metric().Evaluate(center,
+        sorted[i].first = tree->Distance().Evaluate(center,
             tree->Dataset().col(tree->Point(i)));
         sorted[i].second = tree->Point(i);
       }
@@ -106,9 +106,9 @@ void RStarTreeSplit::PickLeafSplit(TreeType* tree,
     // We'll store each of the three scores for each distribution.
     const size_t numPossibleSplits = tree->MaxLeafSize() -
         2 * tree->MinLeafSize() + 2;
-    arma::Col<ElemType> areas(numPossibleSplits, arma::fill::zeros);
-    arma::Col<ElemType> margins(numPossibleSplits, arma::fill::zeros);
-    arma::Col<ElemType> overlaps(numPossibleSplits, arma::fill::zeros);
+    arma::Col<ElemType> areas(numPossibleSplits);
+    arma::Col<ElemType> margins(numPossibleSplits);
+    arma::Col<ElemType> overlaps(numPossibleSplits);
 
     for (size_t i = 0; i < numPossibleSplits; ++i)
     {
@@ -310,9 +310,9 @@ bool RStarTreeSplit::SplitNonLeafNode(
     // each rectangle.
     const size_t numPossibleSplits = tree->MaxNumChildren() -
         2 * tree->MinNumChildren() + 2;
-    arma::Col<ElemType> areas(2 * numPossibleSplits, arma::fill::zeros);
-    arma::Col<ElemType> margins(2 * numPossibleSplits, arma::fill::zeros);
-    arma::Col<ElemType> overlaps(2 * numPossibleSplits, arma::fill::zeros);
+    arma::Col<ElemType> areas(2 * numPossibleSplits);
+    arma::Col<ElemType> margins(2 * numPossibleSplits);
+    arma::Col<ElemType> overlaps(2 * numPossibleSplits);
 
     for (size_t i = 0; i < numPossibleSplits; ++i)
     {

@@ -43,7 +43,7 @@ std::cout << arma::accu(predictions == 2) << " test points classified as class "
 #### See also:
 
  * [mlpack classifiers](../../index.md#classification-algorithms)
- * [`GaussianDistribution`](../core.md#gaussiandistribution)
+ * [`GaussianDistribution`](../core/distributions.md#gaussiandistribution)
  * [Naive Bayes classifier on Wikipedia](https://en.wikipedia.org/wiki/Naive_Bayes_classifier)
 
 ### Constructors
@@ -275,7 +275,7 @@ std::cout << "Random point class probabilities: " << probabilities.t();
 
 See also the following fully-working examples:
 
- - [Microchip QA Classification using `NaiveBayesClassifier`](https://github.com/mlpack/examples/blob/master/microchip_quality_control_naive_bayes/microchip-quality-control-naive-bayes-cpp.ipynb)
+ - [Microchip QA Classification using `NaiveBayesClassifier`](https://github.com/mlpack/examples/blob/master/jupyter_notebook/naive_bayes/microchip_quality_control/microchip-quality-control-cpp.ipynb)
 
 ### Advanced Functionality: Different Element Types
 

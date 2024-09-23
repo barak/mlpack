@@ -99,11 +99,12 @@ class LinearRegression
    * @return The least squares error after training.
    */
   template<typename T>
-  mlpack_deprecated /** Will be removed in mlpack 5.0.0. */
+  [[deprecated("Will be removed in mlpack 5.0.0, use other constructors")]]
   double Train(const arma::mat& predictors,
                const arma::rowvec& responses,
                const T intercept,
-               const typename std::enable_if<std::is_same<T, bool>::value>::type* = 0);
+               const typename std::enable_if<std::is_same<T, bool>::value
+                   >::type* = 0);
 
   /**
    * Train the LinearRegression model on the given data and instance weights.
@@ -123,12 +124,13 @@ class LinearRegression
    * @return The least squares error after training.
    */
   template<typename T>
-  mlpack_deprecated /** Will be removed in mlpack 5.0.0. */
+  [[deprecated("Will be removed in mlpack 5.0.0, use other constructors")]]
   double Train(const arma::mat& predictors,
                const arma::rowvec& responses,
                const arma::rowvec& weights,
                const T intercept,
-               const typename std::enable_if<std::is_same<T, bool>::value>::type* = 0);
+               const typename std::enable_if<std::is_same<T, bool>::value
+                   >::type* = 0);
 
   /**
    * Train the LinearRegression model.  This is a dummy overload so that

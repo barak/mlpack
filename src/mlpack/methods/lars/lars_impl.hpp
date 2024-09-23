@@ -41,7 +41,6 @@ inline LARS<ModelMatType>::LARS(
 { /* Nothing left to do. */ }
 
 template<typename ModelMatType>
-mlpack_deprecated
 inline LARS<ModelMatType>::LARS(
     const bool useCholesky,
     const arma::mat& gramMatrix,
@@ -249,7 +248,6 @@ inline LARS<ModelMatType>& LARS<ModelMatType>::operator=(
 }
 
 template<typename ModelMatType>
-mlpack_deprecated
 inline double LARS<ModelMatType>::Train(const arma::mat& matX,
                                         const arma::rowvec& y,
                                         arma::vec& beta,
@@ -575,8 +573,8 @@ LARS<ModelMatType>::Train(const MatType& matX,
   isIgnored.resize(dataRef.n_cols, false);
 
   // Initialize yHat and beta.
-  arma::Col<ElemType> beta(dataRef.n_cols, arma::fill::zeros);
-  arma::Col<ElemType> yHat(dataRef.n_rows, arma::fill::zeros);
+  arma::Col<ElemType> beta(dataRef.n_cols);
+  arma::Col<ElemType> yHat(dataRef.n_rows);
   arma::Col<ElemType> yHatDirection(dataRef.n_rows, arma::fill::none);
 
   bool lassocond = false;
