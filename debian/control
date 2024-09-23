@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Debian Science Maintainers <debian-science-maintainers@alioth-lists.debian.net>
 Uploaders: Barak A. Pearlmutter <bap@debian.org>
 Build-Depends: cmake, debhelper-compat (= 13),
-		pkg-config,
+		pkgconf,
 		libcereal-dev,
 		libarmadillo-dev,
 		libensmallen-dev (>= 2.10.0),
