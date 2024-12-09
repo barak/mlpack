@@ -1,5 +1,5 @@
 /**
- * @file methods/decision_tree/best_binary_categorical_split.hpp
+ * @file methods/decision_tree/splits/best_binary_categorical_split.hpp
  * @author Nikolay Apanasov (nikolay@apanasov.org)
  *
  * A tree splitter that finds the best binary categorical split.
@@ -9,8 +9,8 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef MLPACK_METHODS_DECISION_TREE_BEST_BINARY_CATEGORICAL_SPLIT_HPP
-#define MLPACK_METHODS_DECISION_TREE_BEST_BINARY_CATEGORICAL_SPLIT_HPP
+#ifndef MLPACK_METHODS_DECISION_TREE_SPLITS_BEST_BINARY_CATEGORICAL_SPLIT_HPP
+#define MLPACK_METHODS_DECISION_TREE_SPLITS_BEST_BINARY_CATEGORICAL_SPLIT_HPP
 
 #include <mlpack/prereqs.hpp>
 
@@ -65,10 +65,10 @@ class BestBinaryCategoricalSplit
   // No extra info needed for split.
   class AuxiliarySplitInfo { };
   // Allow access to the numeric split type.
-  typedef BestBinaryNumericSplit<FitnessFunction> NumericSplit;
+  using NumericSplit = BestBinaryNumericSplit<FitnessFunction>;
   // For calls to the numeric splitter.
-  typedef typename BestBinaryNumericSplit<FitnessFunction>
-      ::AuxiliarySplitInfo NumericAux;
+  using NumericAux =
+      typename BestBinaryNumericSplit<FitnessFunction>::AuxiliarySplitInfo;
 
   /**
    * Check if we can split a node.  If we can split a node in a way that

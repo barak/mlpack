@@ -127,14 +127,17 @@ Computations based on distance metrics.
 
 ### Preprocessing utilities
 
-***NOTE:*** this documentation is still under construction and so no
-preprocessing utilities in mlpack are documented yet.  For now, see
-[the mlpack/methods/preprocess directory](https://github.com/mlpack/mlpack/tree/master/src/mlpack/methods)
-for a full list of algorithms.
-
 Prepare data for machine learning algorithms.
 
-<!-- TODO: add some -->
+ * [Normalizing labels](user/core/normalizing_labels.md): map labels to and from
+   the range `[0, numClasses - 1]`.
+ * [Dataset splitting](user/core/split.md): split a dataset into a
+   training set and a test set.
+
+***NOTE:*** this documentation is still under construction and so not all
+preprocessing utilities in mlpack are documented yet.  See also
+[the mlpack/methods/preprocess directory](https://github.com/mlpack/mlpack/tree/master/src/mlpack/methods)
+for a full list of algorithms.
 
 ### Transformations
 
@@ -178,6 +181,15 @@ mlpack in C++, but almost all the same algorithms are available.
 | ***R*** | -- | [quickstart](quickstart/r.md) | -- | [reference](user/bindings/r.md)
 | ***Command-line programs*** | -- | [quickstart](quickstart/cli.md) | -- | [reference](user/bindings/cli.md) |
 | ***Go*** | -- | [quickstart](quickstart/go.md) | -- | [reference](user/bindings/go.md) |
+
+## mlpack on embedded systems
+
+mlpack is well suited for embedded systems due to the fact that it is written
+in C++ and it is header-only with minimal dependencies. In the following, we are
+adding a set of tutorials to allow you to experiment mlpack on various types of
+these systems.
+
+* [cross-compile and run k-NN on a Raspberry Pi 2 (armv7)](embedded/crosscompile_armv7.md)
 
 ## Examples and further documentation
 

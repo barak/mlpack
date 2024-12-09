@@ -287,7 +287,7 @@ endif()
 # Download and compile OpenBLAS if we are cross compiling mlpack for a specific
 # architecture. The function takes the version of OpenBLAS as variable.
 if (CMAKE_CROSSCOMPILING)
-  search_openblas(0.3.26)
+  search_openblas(0.3.28)
 endif()
 
 if (NOT DOWNLOAD_DEPENDENCIES)
@@ -343,7 +343,7 @@ if (NOT DOWNLOAD_DEPENDENCIES)
 else()
   find_package(Ensmallen "${ENSMALLEN_VERSION}")
   if (NOT ENSMALLEN_FOUND)
-    get_deps(https://www.ensmallen.org/files/ensmallen-2.21.1.tar.gz ensmallen ensmallen-latest.tar.gz)
+    get_deps(https://www.ensmallen.org/files/ensmallen-2.22.1.tar.gz ensmallen ensmallen-latest.tar.gz)
     set(ENSMALLEN_INCLUDE_DIR ${GENERIC_INCLUDE_DIR})
     find_package(Ensmallen REQUIRED)
   endif()

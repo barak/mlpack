@@ -1,5 +1,5 @@
 /**
- * @file methods/decision_tree/split_functions/best_binary_numeric_split_impl.hpp
+ * @file methods/decision_tree/splits/best_binary_numeric_split_impl.hpp
  * @author Ryan Curtin
  *
  * Implementation of strategy that finds the best binary numeric split.
@@ -9,8 +9,8 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#ifndef MLPACK_METHODS_DECISION_TREE_BEST_BINARY_NUMERIC_SPLIT_IMPL_HPP
-#define MLPACK_METHODS_DECISION_TREE_BEST_BINARY_NUMERIC_SPLIT_IMPL_HPP
+#ifndef MLPACK_METHODS_DECISION_TREE_SPLITS_BEST_BINARY_NUMERIC_SPLIT_IMPL_HPP
+#define MLPACK_METHODS_DECISION_TREE_SPLITS_BEST_BINARY_NUMERIC_SPLIT_IMPL_HPP
 
 namespace mlpack {
 
@@ -207,9 +207,9 @@ double BestBinaryNumericSplit<FitnessFunction>::SplitIfBetter(
 template<typename FitnessFunction>
 template<bool UseWeights, typename VecType, typename ResponsesType,
          typename WeightVecType>
-typename std::enable_if<
+std::enable_if_t<
     !HasOptimizedBinarySplitForms<FitnessFunction, UseWeights>::value,
-    double>::type
+    double>
 BestBinaryNumericSplit<FitnessFunction>::SplitIfBetter(
     const double bestGain,
     const VecType& data,
@@ -221,8 +221,8 @@ BestBinaryNumericSplit<FitnessFunction>::SplitIfBetter(
     AuxiliarySplitInfo& /* aux */,
     FitnessFunction& fitnessFunction)
 {
-  typedef typename ResponsesType::elem_type RType;
-  typedef typename WeightVecType::elem_type WType;
+  using RType = typename ResponsesType::elem_type;
+  using WType = typename WeightVecType::elem_type;
 
   // First sanity check: if we don't have enough points, we can't split.
   if (data.n_elem < (minimumLeafSize * 2))
@@ -363,9 +363,9 @@ BestBinaryNumericSplit<FitnessFunction>::SplitIfBetter(
 template<typename FitnessFunction>
 template<bool UseWeights, typename VecType, typename ResponsesType,
          typename WeightVecType>
-typename std::enable_if<
+std::enable_if_t<
     HasOptimizedBinarySplitForms<FitnessFunction, UseWeights>::value,
-    double>::type
+    double>
 BestBinaryNumericSplit<FitnessFunction>::SplitIfBetter(
     const double bestGain,
     const VecType& data,
@@ -377,8 +377,8 @@ BestBinaryNumericSplit<FitnessFunction>::SplitIfBetter(
     AuxiliarySplitInfo& /* aux */,
     FitnessFunction& fitnessFunction)
 {
-  typedef typename ResponsesType::elem_type RType;
-  typedef typename WeightVecType::elem_type WType;
+  using RType = typename ResponsesType::elem_type;
+  using WType = typename WeightVecType::elem_type;
 
   // First sanity check: if we don't have enough points, we can't split.
   if (data.n_elem < (minimumLeafSize * 2))

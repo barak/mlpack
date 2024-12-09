@@ -55,11 +55,11 @@ class BinarySpaceTree
 {
  public:
   //! So other classes can use TreeType::Mat.
-  typedef MatType Mat;
+  using Mat = MatType;
   //! The type of element held in MatType.
-  typedef typename MatType::elem_type ElemType;
+  using ElemType = typename MatType::elem_type;
 
-  typedef SplitType<BoundType<DistanceType, ElemType>, MatType> Split;
+  using Split = SplitType<BoundType<DistanceType, ElemType>, MatType>;
 
  private:
   //! The left child node.
@@ -101,6 +101,13 @@ class BinarySpaceTree
 
   template<typename RuleType>
   class BreadthFirstDualTreeTraverser;
+
+  /**
+   * A default constructor.  This returns an empty tree, which is not useful.
+   * In general this is only used for serialization or right before copying from
+   * a different object.
+   */
+  BinarySpaceTree();
 
   /**
    * Construct this as the root node of a binary space tree using the given
@@ -554,18 +561,6 @@ class BinarySpaceTree
    * @param boundToUpdate The bound to update.
    */
   void UpdateBound(HollowBallBound<DistanceType, ElemType>& boundToUpdate);
-
- protected:
-  /**
-   * A default constructor.  This is meant to only be used with
-   * cereal, which is allowed with the friend declaration below.
-   * This does not return a valid tree!  The method must be protected, so that
-   * the serialization shim can work with the default constructor.
-   */
-  BinarySpaceTree();
-
-  //! Friend access is given for the default constructor.
-  friend class cereal::access;
 
  public:
   /**

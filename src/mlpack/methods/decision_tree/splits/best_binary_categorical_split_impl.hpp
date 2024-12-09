@@ -1,5 +1,5 @@
 /**
- * @file methods/decision_tree/split_functions/all_categorical_split_impl.hpp
+ * @file methods/decision_tree/splits/all_categorical_split_impl.hpp
  * @author Nikolay Apanasov (nikolay@apanasov.org)
  *
  * Implementation of the BestBinaryCategoricalSplit categorical split class.
@@ -157,7 +157,7 @@ double BestBinaryCategoricalSplit<FitnessFunction>::SplitIfBetter(
     AuxiliarySplitInfo& aux,
     FitnessFunction& fitnessFunction)
 {
-  static_assert(std::is_same<FitnessFunction, MSEGain>::value,
+  static_assert(std::is_same_v<FitnessFunction, MSEGain>,
       "BestBinaryCategoricalSplit: regression FitnessFunction must be "
       "MSEGain.");
   const size_t n = data.n_elem;
@@ -180,7 +180,7 @@ double BestBinaryCategoricalSplit<FitnessFunction>::SplitIfBetter(
   }
   for (size_t i = 0; i < numCategories; ++i)
   {
-    categoryResponse[i] =  categoryCounts[i] == 0 ? 0 :
+    categoryResponse[i] = categoryCounts[i] == 0 ? 0 :
         categoryResponse[i] / categoryCounts[i];
   }
 

@@ -45,7 +45,7 @@ inline typename VecType::elem_type Radical::Vasicek(
     VecType& z,
     const size_t m) const
 {
-  typedef typename VecType::elem_type ElemType;
+  using ElemType = typename VecType::elem_type;
 
   z = sort(z);
 
@@ -75,8 +75,8 @@ inline typename MatType::elem_type Radical::Apply2D(const MatType& matX,
                                                     MatType& candidate,
                                                     util::Timers& timers)
 {
-  typedef typename GetColType<MatType>::type VecType;
-  typedef typename MatType::elem_type ElemType;
+  using VecType = typename GetColType<MatType>::type;
+  using ElemType = typename MatType::elem_type;
 
   timers.Start("radical_copy_and_perturb");
   CopyAndPerturb(perturbed, matX);
@@ -103,8 +103,7 @@ inline typename MatType::elem_type Radical::Apply2D(const MatType& matX,
     values(i) = Vasicek(candidateY1, m) + Vasicek(candidateY2, m);
   }
 
-  arma::uword indOpt = 0;
-  values.min(indOpt); // we ignore the return value; we don't care about it
+  arma::uword indOpt = values.index_min();
   return (indOpt / (ElemType) angles) * M_PI / 2.0;
 }
 
@@ -123,7 +122,7 @@ inline void Radical::Apply(const MatType& matXT,
                            MatType& matW,
                            util::Timers& timers)
 {
-  typedef typename MatType::elem_type ElemType;
+  using ElemType = typename MatType::elem_type;
 
   // matX is nPoints by nDims (although less intuitive than columns being
   // points, and although this is the transpose of the ICA literature, this
@@ -232,7 +231,7 @@ inline void WhitenFeatureMajorMatrix(const MatType& matX,
                                      MatType& matXWhitened,
                                      MatType& matWhitening)
 {
-  typedef typename GetColType<MatType>::type VecType;
+  using VecType = typename GetColType<MatType>::type;
 
   MatType matU, matV;
   VecType s;
