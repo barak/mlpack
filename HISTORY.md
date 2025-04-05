@@ -1,5 +1,30 @@
 # mlpack changelog
 
+## mlpack 4.6.0
+
+_2025-04-02_
+
+ * Fix command-line duplicate output bug when loading matrices for some bindings
+   (#3838).
+ * Use `CMAKE_BUILD_TYPE` to specify build type instead of DEBUG and PROFILE options (#3865).
+
+ * Add `MLPACK_NO_STD_MUTEX` to allow disabling `std::mutex` (#3868).
+
+ * Bundle STB with mlpack and add `ResizeImages()` functionality (#3823).
+
+ * Add `mlpack.cmake` to facilitate finding mlpack and its dependencies (#3872).
+
+ * Fix conversion of empty Armadillo objects to numpy in Python bindings
+   (#3896).
+
+ * Added bootstrap strategies for `RandomForest`: `IdentityBootstrap`,
+   `DefaultBootstrap`, and `SequentialBootstrap` (#3829).
+
+ * Add `ResizeCropImages()` for resize-and-crop image preprocessing
+   functionality (#3903).
+
+ * Fix `LSTM` input size calculation for multidimensional inputs (#3913).
+
 ## mlpack 4.5.1
 
 _2024-12-02_
@@ -14,6 +39,10 @@ _2024-12-02_
  * Fix compilation if only including `mlpack/methods/kde/kde_model.hpp` (#3800).
 
  * Fix serialization and `MinDistance()` bugs with `HollowBallBound` (#3808).
+
+ * Add `LinearRecurrent` layer and revamp `LSTM` layer (#3859).
+
+ * Fix BPTT issues in `RNN` (#3859).
 
 ## mlpack 4.5.0
 

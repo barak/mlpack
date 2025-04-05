@@ -125,7 +125,8 @@ different.
    not supported, because this generally results in a kd-tree with very loose
    bounding boxes.  It is better to simply build a new `KDTree` on the modified
    dataset.  For trees that support individual insertion and deletions, see the
-   `RectangleTree` class and all its variants (e.g. `RTree`, `RStarTree`, etc.).
+   [`RectangleTree`](rectangle_tree.md) class and all its variants (e.g.
+   [`RTree`](r_tree.md), `RStarTree`, etc.).
 
  - See also the
    [developer documentation on tree constructors](../../../developer/trees.md#constructors-and-destructors).
@@ -268,7 +269,7 @@ accessing them does not require any computation.
    distance between the center of the bounding hyperrectangle of `node` and the
    furthest descendant point held by `node`.
 
- * `node.MinimumBoundDistance()` returns a `double` representing minimum
+ * `node.MinimumBoundDistance()` returns a `double` representing the minimum
    possible distance from the center of the node to any edge of the
    hyperrectangle bound.
    - This quantity is half the width of the smallest dimension of
@@ -378,7 +379,7 @@ nodes.  The following functions can be used for these tasks.
      `arma::fmat`, and the returned type is
      [`RangeType<float>`](../math.md#range)).
 
-### Tree traversals
+## Tree traversals
 
 Like every mlpack tree, the `KDTree` class provides a [single-tree and dual-tree
 traversal](../../../developer/trees.md#traversals) that can be paired with a

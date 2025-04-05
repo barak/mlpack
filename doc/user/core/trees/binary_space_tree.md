@@ -9,6 +9,12 @@ instead:
 
  * [`KDTree`](kdtree.md)
  * [`MeanSplitKDTree`](mean_split_kdtree.md)
+ * [`BallTree`](ball_tree.md)
+ * [`MeanSplitBallTree`](mean_split_ball_tree.md)
+ * [`VPTree`](vptree.md)
+ * [`RPTree`](rp_tree.md)
+ * [`MaxRPTree`](max_rp_tree.md)
+ * [`UBTree`](ub_tree.md)
 
 ---
 
@@ -161,8 +167,8 @@ different.
    `BinarySpaceTree` is not supported, because this generally results in a tree
    with very loose bounding boxes.  It is better to simply build a new
    `BinarySpaceTree` on the modified dataset.  For trees that support individual
-   insertion and deletions, see the `RectangleTree` class and all its variants
-   (e.g. `RTree`, `RStarTree`, etc.).
+   insertion and deletions, see the [`RectangleTree`](rectangle_tree.md) class
+   and all its variants (e.g. [`RTree`](r_tree.md), `RStarTree`, etc.).
 
  - See also the
    [developer documentation on tree constructors](../../../developer/trees.md#constructors-and-destructors).
@@ -295,7 +301,7 @@ accessing them does not require any computation.  In the documentation below,
    distance between the center of the bound of `node` and the furthest
    descendant point held by `node`.
 
- * `node.MinimumBoundDistance()` returns an `ElemType` representing minimum
+ * `node.MinimumBoundDistance()` returns an `ElemType` representing the minimum
    possible distance from the center of the node to any edge of its bound.
 
  * `node.ParentDistance()` returns an `ElemType` representing the distance
@@ -430,9 +436,6 @@ write a custom `BoundType` for use with `BinarySpaceTree`:
  * [Custom `BoundType`s](#custom-boundtypes): implement a fully custom
    `BoundType`
 
-*Note:* this section is still under construction---not all bound types are
-documented yet.
-
 ### `HRectBound`
 
 The `HRectBound` class represents a hyper-rectangle bound; that is, a
@@ -551,10 +554,12 @@ operations with data points or other bounds.
    [column-major `arma::mat`](../../matrices.md#representing-data-in-mlpack).
    The expansion operation is minimal, so `b` is not expanded any more than
    necessary.
+   - If the dimensionality of `b` is `0`, it is set to `data.n_rows`.
 
  * `b |= bound` expands `b` to fully include `bound`, where `bound` is another
    `HRectBound`.  The expansion/union operation is minimal, so `b` is not
    expanded any more than necessary.
+   - If the dimensionality of `b` is `0`, it is set to `bound.Dim()`.
 
  * `b & bound` returns a new `HRectBound` whose bounding hyper-rectangle is the
    intersection of the bounding hyperrectangles of `b` and `bound`.  If `b` and
@@ -1873,13 +1878,13 @@ class BoundType
 ```
 
 Behavior of some aspects of the `BinarySpaceTree` depend on the traits of a
-particular bound.  Optionally, you may define a `BoundTraits` specialization for
-your bound type, of the following form:
+particular bound.  Optionally, you may define an `mlpack::BoundTraits`
+specialization for your bound type, of the following form:
 
 ```c++
 // Replace `BoundType` below with the name of the custom class.
 template<typename DistanceType, typename ElemType>
-struct BoundTraits<BoundType<DistanceType, ElemType>>
+struct mlpack::BoundTraits<BoundType<DistanceType, ElemType>>
 {
   //! If true, then the bounds for each dimension are tight.  If false, then the
   //! bounds for each dimension may be looser than the range of all points held
@@ -1977,9 +1982,6 @@ to write a fully custom split:
    balanced children
  * [Custom `SplitType`s](#custom-splittypes): implement a fully custom
    `SplitType` class
-
-*Note:* this section is still under construction---not all split types are
-documented yet.
 
 ### `MidpointSplit`
 
@@ -2412,7 +2414,7 @@ while (!stack.empty())
 // stack is the better option here.
 
 // Print the results.
-std::cout << leafCount << " out of " << totalLeafCount << " leaves have less "
+std::cout << leafCount << " out of " << totalLeafCount << " leaves have fewer "
   << "than 10 points." << std::endl;
 ```
 
