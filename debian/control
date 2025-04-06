@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Debian Science Maintainers <debian-science-maintainers@alioth-lists.debian.net>
 Uploaders: Barak A. Pearlmutter <bap@debian.org>
 Build-Depends: cmake, debhelper-compat (= 13),
+		python3-numpy-dev,
 		pkgconf,
 		libcereal-dev,
 		libarmadillo-dev,
