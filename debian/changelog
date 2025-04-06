@@ -4,8 +4,10 @@ mlpack (4.6.0-1) unstable; urgency=medium
   * Forward port quilt patches
   * Bump policy
   * Build dependency for dh --with python3
+  * Adjust to upstream removal of pre-C++17 support via
+    src/mlpack/core/std_backport/*
 
- -- Barak A. Pearlmutter <bap@debian.org>  Sun, 06 Apr 2025 16:17:52 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Sun, 06 Apr 2025 20:13:11 +0100
 
 mlpack (4.5.1-1) unstable; urgency=medium
 
