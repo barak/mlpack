@@ -118,6 +118,8 @@ execute_after_dh_install:
 	   mkdir -p usr/share/doc/python3-mlpack/$$(dirname $$f) && \
 	   mv --verbose $$f usr/share/doc/python3-mlpack/$$(dirname $$f)/; \
 	 done))
+	@echo "remove empty directory"
+	-rmdir --verbose debian/libmlpack-dev/usr/include/mlpack/core/stb/bundled
 
 override_dh_installdocs:
 	dh_installdocs -pmlpack-doc --doc-main-package libmlpack-dev

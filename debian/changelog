@@ -6,8 +6,9 @@ mlpack (4.6.0-1) unstable; urgency=medium
   * Build dependency for dh --with python3
   * Adjust to upstream removal of pre-C++17 support via
     src/mlpack/core/std_backport/*
+  * Remove stray empty directory
 
- -- Barak A. Pearlmutter <bap@debian.org>  Sun, 06 Apr 2025 20:13:11 +0100
+ -- Barak A. Pearlmutter <bap@debian.org>  Sun, 06 Apr 2025 20:19:15 +0100
 
 mlpack (4.5.1-1) unstable; urgency=medium
 
