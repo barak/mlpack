@@ -49,7 +49,6 @@
   #define MLPACK_CERR_STREAM std::cerr
 #endif
 
-
 //
 // MLPACK_NO_STD_MUTEX is used to disable mutex usage inside mlpack. Assuming
 // the system has one core only.
@@ -71,6 +70,56 @@
 //
 #if defined(MLPACK_DONT_USE_SYSTEM_STB) && defined(MLPACK_USE_SYSTEM_STB)
   #undef MLPACK_USE_SYSTEM_STB
+#endif
+
+//
+// MLPACK_USE_SYSTEM_DR_LIBS is used to enable usage of locally
+// installed dr_mp3 and dr_wav.
+//
+#if !defined(MLPACK_USE_SYSTEM_DR_LIBS)
+  // #define MLPACK_USE_SYSTEM_DR_LIBS
+#endif
+
+//
+// This is necessary if we would like to overwrite the default packaging
+// condition.
+//
+#if defined(MLPACK_DONT_USE_SYSTEM_DR_LIBS) \
+  && defined(MLPACK_USE_SYSTEM_DR_LIBS)
+  #undef MLPACK_USE_SYSTEM_DR_LIBS
+#endif
+
+//
+// MLPACK_USE_SYSTEM_HTTPLIB is used to enable usage of locally installed
+// cpp-httplib.
+//
+#if !defined(MLPACK_USE_SYSTEM_HTTPLIB)
+  // #define MLPACK_USE_SYSTEM_HTTPLIB
+#endif
+
+//
+// MLPACK_ENABLE_HTTPLIB is used to enable usage of locally installed
+// cpp-httplib.
+//
+#if !defined(MLPACK_ENABLE_HTTPLIB)
+  // #define MLPACK_ENABLE_HTTPLIB
+#endif
+
+//
+// MLPACK_DISABLE_HTTPLIB is used to disable usage of locally installed
+// cpp-httplib.
+//
+#if !defined(MLPACK_DISABLE_HTTPLIB)
+  // #define MLPACK_DISABLE_HTTPLIB
+#endif
+
+//
+// This is necessary if we would like to overwrite the default packaging
+// condition.
+//
+#if defined(MLPACK_DONT_USE_SYSTEM_HTTPLIB) \
+  && defined(MLPACK_USE_SYSTEM_HTTPLIB)
+  #undef MLPACK_USE_SYSTEM_HTTPLIB
 #endif
 
 #ifdef MLPACK_DISABLE_BFD_DL

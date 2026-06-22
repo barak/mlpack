@@ -157,114 +157,6 @@ _, neighbors, _ := mlpack.ApproxKfn(param)
  - [QDAFN class documentation](https://github.com/mlpack/mlpack/blob/master/src/mlpack/methods/approx_kfn/qdafn.hpp)
  - [DrusillaSelect class documentation](https://github.com/mlpack/mlpack/blob/master/src/mlpack/methods/approx_kfn/drusilla_select.hpp)
 
-## BayesianLinearRegression()
-{: #bayesian_linear_regression }
-
-#### BayesianLinearRegression
-{: #bayesian_linear_regression_descr }
-
-```go
-import (
-  "mlpack.org/v1/mlpack"
-  "gonum.org/v1/gonum/mat"
-)
-
-// Initialize optional parameters for BayesianLinearRegression().
-param := mlpack.BayesianLinearRegressionOptions()
-param.Center = false
-param.Input = mat.NewDense(1, 1, nil)
-param.InputModel = nil
-param.Responses = mat.NewDense(1, 1, nil)
-param.Scale = false
-param.Test = mat.NewDense(1, 1, nil)
-param.Verbose = false
-
-output_model, predictions, stds := mlpack.BayesianLinearRegression(param)
-```
-
-An implementation of the bayesian linear regression. [Detailed documentation](#bayesian_linear_regression_detailed-documentation).
-
-
-
-### Input options
-There are two types of input options: required options, which are passed directly to the function call, and optional options, which are passed via an initialized struct, which allows keyword access to each of the options.
-
-| ***name*** | ***type*** | ***description*** | ***default*** |
-|------------|------------|-------------------|---------------|
-| `Center` | [`bool`](#doc_bool) | Center the data and fit the intercept if enabled. | `false` |
-| `CheckInputMatrices` | [`bool`](#doc_bool) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `false` |
-| `Input` | [`*mat.Dense`](#doc_a__mat_Dense) | Matrix of covariates (X). | `mat.NewDense(1, 1, nil)` |
-| `InputModel` | [`bayesianLinearRegression`](#doc_model) | Trained BayesianLinearRegression model to use. | `nil` |
-| `Responses` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Matrix of responses/observations (y). | `mat.NewDense(1, 1, nil)` |
-| `Scale` | [`bool`](#doc_bool) | Scale each feature by their standard deviations if enabled. | `false` |
-| `Test` | [`*mat.Dense`](#doc_a__mat_Dense) | Matrix containing points to regress on (test points). | `mat.NewDense(1, 1, nil)` |
-| `Verbose` | [`bool`](#doc_bool) | Display informational messages and the full list of parameters and timers at the end of execution. | `false` |
-
-### Output options
-
-Output options are returned via Go's support for multiple return values, in the order listed below.
-
-| ***name*** | ***type*** | ***description*** |
-|------------|------------|-------------------|
-| `OutputModel` | [`bayesianLinearRegression`](#doc_model) | Output BayesianLinearRegression model. | 
-| `Predictions` | [`*mat.Dense`](#doc_a__mat_Dense) | If --test_file is specified, this file is where the predicted responses will be saved. | 
-| `Stds` | [`*mat.Dense`](#doc_a__mat_Dense) | If specified, this is where the standard deviations of the predictive distribution will be saved. | 
-
-### Detailed documentation
-{: #bayesian_linear_regression_detailed-documentation }
-
-An implementation of the bayesian linear regression.
-This model is a probabilistic view and implementation of the linear regression. The final solution is obtained by computing a posterior distribution from gaussian likelihood and a zero mean gaussian isotropic  prior distribution on the solution. 
-Optimization is AUTOMATIC and does not require cross validation. The optimization is performed by maximization of the evidence function. Parameters are tuned during the maximization of the marginal likelihood. This procedure includes the Ockham's razor that penalizes over complex solutions. 
-
-This program is able to train a Bayesian linear regression model or load a model from file, output regression predictions for a test set, and save the trained model to a file.
-
-To train a BayesianLinearRegression model, the `Input` and `Responses`parameters must be given. The `Center`and `Scale` parameters control the centering and the normalizing options. A trained model can be saved with the `OutputModel`. If no training is desired at all, a model can be passed via the `InputModel` parameter.
-
-The program can also provide predictions for test data using either the trained model or the given input model.  Test points can be specified with the `Test` parameter.  Predicted responses to the test points can be saved with the `Predictions` output parameter. The corresponding standard deviation can be save by precising the `Stds` parameter.
-
-### Example
-For example, the following command trains a model on the data `data` and responses `responses`with center set to true and scale set to false (so, Bayesian linear regression is being solved, and then the model is saved to `blr_model`:
-
-```go
-// Initialize optional parameters for BayesianLinearRegression().
-param := mlpack.BayesianLinearRegressionOptions()
-param.Input = data
-param.Responses = responses
-param.Center = 1
-param.Scale = 0
-
-blr_model, _, _ := mlpack.BayesianLinearRegression(param)
-```
-
-The following command uses the `blr_model` to provide predicted  responses for the data `test` and save those  responses to `test_predictions`: 
-
-```go
-// Initialize optional parameters for BayesianLinearRegression().
-param := mlpack.BayesianLinearRegressionOptions()
-param.InputModel = &blr_model
-param.Test = test
-
-_, test_predictions, _ := mlpack.BayesianLinearRegression(param)
-```
-
-Because the estimator computes a predictive distribution instead of a simple point estimate, the `Stds` parameter allows one to save the prediction uncertainties: 
-
-```go
-// Initialize optional parameters for BayesianLinearRegression().
-param := mlpack.BayesianLinearRegressionOptions()
-param.InputModel = &blr_model
-param.Test = test
-
-_, test_predictions, stds := mlpack.BayesianLinearRegression(param)
-```
-
-### See also
-
- - [Bayesian Interpolation](https://cs.uwaterloo.ca/~mannr/cs886-w10/mackay-bayesian.pdf)
- - [Bayesian Linear Regression, Section 3.3](https://www.microsoft.com/en-us/research/wp-content/uploads/2006/01/Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf)
- - [BayesianLinearRegression C++ class documentation](../../user/methods/bayesian_linear_regression.md)
-
 ## Cf()
 {: #cf }
 
@@ -496,112 +388,6 @@ _, _ := mlpack.Dbscan(input, param)
  - [DBSCAN on Wikipedia](https://en.wikipedia.org/wiki/DBSCAN)
  - [A density-based algorithm for discovering clusters in large spatial databases with noise (pdf)](https://cdn.aaai.org/KDD/1996/KDD96-037.pdf)
  - [DBSCAN class documentation](https://github.com/mlpack/mlpack/blob/master/src/mlpack/methods/dbscan/dbscan.hpp)
-
-## DecisionTree()
-{: #decision_tree }
-
-#### Decision tree
-{: #decision_tree_descr }
-
-```go
-import (
-  "mlpack.org/v1/mlpack"
-  "gonum.org/v1/gonum/mat"
-)
-
-// Initialize optional parameters for DecisionTree().
-param := mlpack.DecisionTreeOptions()
-param.InputModel = nil
-param.Labels = mat.NewDense(1, 1, nil)
-param.MaximumDepth = 0
-param.MinimumGainSplit = 1e-07
-param.MinimumLeafSize = 20
-param.PrintTrainingAccuracy = false
-param.Test = mat.NewDense(1, 1, nil)
-param.TestLabels = mat.NewDense(1, 1, nil)
-param.Training = mat.NewDense(1, 1, nil)
-param.Verbose = false
-param.Weights = mat.NewDense(1, 1, nil)
-
-output_model, predictions, probabilities := mlpack.DecisionTree(param)
-```
-
-An implementation of an ID3-style decision tree for classification, which supports categorical data.  Given labeled data with numeric or categorical features, a decision tree can be trained and saved; or, an existing decision tree can be used for classification on new points. [Detailed documentation](#decision_tree_detailed-documentation).
-
-
-
-### Input options
-There are two types of input options: required options, which are passed directly to the function call, and optional options, which are passed via an initialized struct, which allows keyword access to each of the options.
-
-| ***name*** | ***type*** | ***description*** | ***default*** |
-|------------|------------|-------------------|---------------|
-| `CheckInputMatrices` | [`bool`](#doc_bool) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `false` |
-| `InputModel` | [`decisionTreeModel`](#doc_model) | Pre-trained decision tree, to be used with test points. | `nil` |
-| `Labels` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Training labels. | `mat.NewDense(1, 1, nil)` |
-| `MaximumDepth` | [`int`](#doc_int) | Maximum depth of the tree (0 means no limit). | `0` |
-| `MinimumGainSplit` | [`float64`](#doc_float64) | Minimum gain for node splitting. | `1e-07` |
-| `MinimumLeafSize` | [`int`](#doc_int) | Minimum number of points in a leaf. | `20` |
-| `PrintTrainingAccuracy` | [`bool`](#doc_bool) | Print the training accuracy. | `false` |
-| `Test` | [`matrixWithInfo`](#doc_matrixWithInfo) | Testing dataset (may be categorical). | `mat.NewDense(1, 1, nil)` |
-| `TestLabels` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Test point labels, if accuracy calculation is desired. | `mat.NewDense(1, 1, nil)` |
-| `Training` | [`matrixWithInfo`](#doc_matrixWithInfo) | Training dataset (may be categorical). | `mat.NewDense(1, 1, nil)` |
-| `Verbose` | [`bool`](#doc_bool) | Display informational messages and the full list of parameters and timers at the end of execution. | `false` |
-| `Weights` | [`*mat.Dense`](#doc_a__mat_Dense) | The weight of labels | `mat.NewDense(1, 1, nil)` |
-
-### Output options
-
-Output options are returned via Go's support for multiple return values, in the order listed below.
-
-| ***name*** | ***type*** | ***description*** |
-|------------|------------|-------------------|
-| `OutputModel` | [`decisionTreeModel`](#doc_model) | Output for trained decision tree. | 
-| `Predictions` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Class predictions for each test point. | 
-| `Probabilities` | [`*mat.Dense`](#doc_a__mat_Dense) | Class probabilities for each test point. | 
-
-### Detailed documentation
-{: #decision_tree_detailed-documentation }
-
-Train and evaluate using a decision tree.  Given a dataset containing numeric or categorical features, and associated labels for each point in the dataset, this program can train a decision tree on that data.
-
-The training set and associated labels are specified with the `Training` and `Labels` parameters, respectively.  The labels should be in the range `[0, num_classes - 1]`. Optionally, if `Labels` is not specified, the labels are assumed to be the last dimension of the training dataset.
-
-When a model is trained, the `OutputModel` output parameter may be used to save the trained model.  A model may be loaded for predictions with the `InputModel` parameter.  The `InputModel` parameter may not be specified when the `Training` parameter is specified.  The `MinimumLeafSize` parameter specifies the minimum number of training points that must fall into each leaf for it to be split.  The `MinimumGainSplit` parameter specifies the minimum gain that is needed for the node to split.  The `MaximumDepth` parameter specifies the maximum depth of the tree.  If `PrintTrainingAccuracy` is specified, the training accuracy will be printed.
-
-Test data may be specified with the `Test` parameter, and if performance numbers are desired for that test set, labels may be specified with the `TestLabels` parameter.  Predictions for each test point may be saved via the `Predictions` output parameter.  Class probabilities for each prediction may be saved with the `Probabilities` output parameter.
-
-### Example
-For example, to train a decision tree with a minimum leaf size of 20 on the dataset contained in `data` with labels `labels`, saving the output model to `tree` and printing the training error, one could call
-
-```go
-// Initialize optional parameters for DecisionTree().
-param := mlpack.DecisionTreeOptions()
-param.Training = data
-param.Labels = labels
-param.MinimumLeafSize = 20
-param.MinimumGainSplit = 0.001
-param.PrintTrainingAccuracy = true
-
-tree, _, _ := mlpack.DecisionTree(param)
-```
-
-Then, to use that model to classify points in `test_set` and print the test error given the labels `test_labels` using that model, while saving the predictions for each point to `predictions`, one could call 
-
-```go
-// Initialize optional parameters for DecisionTree().
-param := mlpack.DecisionTreeOptions()
-param.InputModel = &tree
-param.Test = test_set
-param.TestLabels = test_labels
-
-_, predictions, _ := mlpack.DecisionTree(param)
-```
-
-### See also
-
- - [Random forest](#random_forest)
- - [Decision trees on Wikipedia](https://en.wikipedia.org/wiki/Decision_tree_learning)
- - [Induction of Decision Trees (pdf)](https://www.hunch.net/~coms-4771/quinlan.pdf)
- - [DecisionTree C++ class documentation](../../user/methods/decision_tree.md)
 
 ## Det()
 {: #det }
@@ -1902,6 +1688,114 @@ final, _ := mlpack.Kmeans(data, 10, param)
  - [Accelerating exact k-means algorithms with geometric reasoning (pdf)](http://reports-archive.adm.cs.cmu.edu/anon/anon/usr/ftp/usr0/ftp/2000/CMU-CS-00-105.pdf)
  - [A dual-tree algorithm for fast k-means clustering with large k (pdf)](http://www.ratml.org/pub/pdf/2017dual.pdf)
  - [KMeans class documentation](https://github.com/mlpack/mlpack/blob/master/src/mlpack/methods/kmeans/kmeans.hpp)
+
+## BayesianLinearRegression()
+{: #bayesian_linear_regression }
+
+#### BayesianLinearRegression
+{: #bayesian_linear_regression_descr }
+
+```go
+import (
+  "mlpack.org/v1/mlpack"
+  "gonum.org/v1/gonum/mat"
+)
+
+// Initialize optional parameters for BayesianLinearRegression().
+param := mlpack.BayesianLinearRegressionOptions()
+param.Center = false
+param.Input = mat.NewDense(1, 1, nil)
+param.InputModel = nil
+param.Responses = mat.NewDense(1, 1, nil)
+param.Scale = false
+param.Test = mat.NewDense(1, 1, nil)
+param.Verbose = false
+
+output_model, predictions, stds := mlpack.BayesianLinearRegression(param)
+```
+
+An implementation of the Bayesian linear regression. [Detailed documentation](#bayesian_linear_regression_detailed-documentation).
+
+
+
+### Input options
+There are two types of input options: required options, which are passed directly to the function call, and optional options, which are passed via an initialized struct, which allows keyword access to each of the options.
+
+| ***name*** | ***type*** | ***description*** | ***default*** |
+|------------|------------|-------------------|---------------|
+| `Center` | [`bool`](#doc_bool) | Center the data and fit the intercept if enabled. | `false` |
+| `CheckInputMatrices` | [`bool`](#doc_bool) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `false` |
+| `Input` | [`*mat.Dense`](#doc_a__mat_Dense) | Matrix of covariates (X). | `mat.NewDense(1, 1, nil)` |
+| `InputModel` | [`bayesianLinearRegression`](#doc_model) | Trained BayesianLinearRegression model to use. | `nil` |
+| `Responses` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Matrix of responses/observations (y). | `mat.NewDense(1, 1, nil)` |
+| `Scale` | [`bool`](#doc_bool) | Scale each feature by their standard deviations if enabled. | `false` |
+| `Test` | [`*mat.Dense`](#doc_a__mat_Dense) | Matrix containing points to regress on (test points). | `mat.NewDense(1, 1, nil)` |
+| `Verbose` | [`bool`](#doc_bool) | Display informational messages and the full list of parameters and timers at the end of execution. | `false` |
+
+### Output options
+
+Output options are returned via Go's support for multiple return values, in the order listed below.
+
+| ***name*** | ***type*** | ***description*** |
+|------------|------------|-------------------|
+| `OutputModel` | [`bayesianLinearRegression`](#doc_model) | Output BayesianLinearRegression model. | 
+| `Predictions` | [`*mat.Dense`](#doc_a__mat_Dense) | If --test_file is specified, this file is where the predicted responses will be saved. | 
+| `Stds` | [`*mat.Dense`](#doc_a__mat_Dense) | If specified, this is where the standard deviations of the predictive distribution will be saved. | 
+
+### Detailed documentation
+{: #bayesian_linear_regression_detailed-documentation }
+
+An implementation of the Bayesian linear regression.
+This model is a probabilistic view and implementation of the linear regression. The final solution is obtained by computing a posterior distribution from gaussian likelihood and a zero mean gaussian isotropic  prior distribution on the solution. 
+Optimization is AUTOMATIC and does not require cross validation. The optimization is performed by maximization of the evidence function. Parameters are tuned during the maximization of the marginal likelihood. This procedure includes the Ockham's razor that penalizes over complex solutions. 
+
+This program is able to train a Bayesian linear regression model or load a model from file, output regression predictions for a test set, and save the trained model to a file.
+
+To train a BayesianLinearRegression model, the `Input` and `Responses`parameters must be given. The `Center`and `Scale` parameters control the centering and the normalizing options. A trained model can be saved with the `OutputModel`. If no training is desired at all, a model can be passed via the `InputModel` parameter.
+
+The program can also provide predictions for test data using either the trained model or the given input model.  Test points can be specified with the `Test` parameter.  Predicted responses to the test points can be saved with the `Predictions` output parameter. The corresponding standard deviation can be save by precising the `Stds` parameter.
+
+### Example
+For example, the following command trains a model on the data `data` and responses `responses`with center set to true and scale set to false (so, Bayesian linear regression is being solved, and then the model is saved to `blr_model`:
+
+```go
+// Initialize optional parameters for BayesianLinearRegression().
+param := mlpack.BayesianLinearRegressionOptions()
+param.Input = data
+param.Responses = responses
+param.Center = 1
+param.Scale = 0
+
+blr_model, _, _ := mlpack.BayesianLinearRegression(param)
+```
+
+The following command uses the `blr_model` to provide predicted  responses for the data `test` and save those  responses to `test_predictions`: 
+
+```go
+// Initialize optional parameters for BayesianLinearRegression().
+param := mlpack.BayesianLinearRegressionOptions()
+param.InputModel = &blr_model
+param.Test = test
+
+_, test_predictions, _ := mlpack.BayesianLinearRegression(param)
+```
+
+Because the estimator computes a predictive distribution instead of a simple point estimate, the `Stds` parameter allows one to save the prediction uncertainties: 
+
+```go
+// Initialize optional parameters for BayesianLinearRegression().
+param := mlpack.BayesianLinearRegressionOptions()
+param.InputModel = &blr_model
+param.Test = test
+
+_, test_predictions, stds := mlpack.BayesianLinearRegression(param)
+```
+
+### See also
+
+ - [Bayesian Interpolation](https://cs.uwaterloo.ca/~mannr/cs886-w10/mackay-bayesian.pdf)
+ - [Bayesian Linear Regression, Section 3.3](https://www.microsoft.com/en-us/research/wp-content/uploads/2006/01/Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf)
+ - [BayesianLinearRegression C++ class documentation](../../user/methods/bayesian_linear_regression.md)
 
 ## Lars()
 {: #lars }
@@ -3737,7 +3631,7 @@ param := mlpack.PreprocessOneHotEncodingOptions()
 param.Dimensions = 1
 param.Dimensions = 3
 
-X_ouput := mlpack.PreprocessOneHotEncoding(X, param)
+X_output := mlpack.PreprocessOneHotEncoding(X, param)
 ```
 
 ### See also
@@ -3822,120 +3716,6 @@ ic, _ := mlpack.Radical(X, param)
  - [Independent component analysis on Wikipedia](https://en.wikipedia.org/wiki/Independent_component_analysis)
  - [ICA using spacings estimates of entropy (pdf)](https://www.jmlr.org/papers/volume4/learned-miller03a/learned-miller03a.pdf)
  - [Radical C++ class documentation](../../user/methods/radical.md)
-
-## RandomForest()
-{: #random_forest }
-
-#### Random forests
-{: #random_forest_descr }
-
-```go
-import (
-  "mlpack.org/v1/mlpack"
-  "gonum.org/v1/gonum/mat"
-)
-
-// Initialize optional parameters for RandomForest().
-param := mlpack.RandomForestOptions()
-param.InputModel = nil
-param.Labels = mat.NewDense(1, 1, nil)
-param.MaximumDepth = 0
-param.MinimumGainSplit = 0
-param.MinimumLeafSize = 1
-param.NumTrees = 10
-param.PrintTrainingAccuracy = false
-param.Seed = 0
-param.SubspaceDim = 0
-param.Test = mat.NewDense(1, 1, nil)
-param.TestLabels = mat.NewDense(1, 1, nil)
-param.Training = mat.NewDense(1, 1, nil)
-param.Verbose = false
-param.WarmStart = false
-
-output_model, predictions, probabilities := mlpack.RandomForest(param)
-```
-
-An implementation of the standard random forest algorithm by Leo Breiman for classification.  Given labeled data, a random forest can be trained and saved for future use; or, a pre-trained random forest can be used for classification. [Detailed documentation](#random_forest_detailed-documentation).
-
-
-
-### Input options
-There are two types of input options: required options, which are passed directly to the function call, and optional options, which are passed via an initialized struct, which allows keyword access to each of the options.
-
-| ***name*** | ***type*** | ***description*** | ***default*** |
-|------------|------------|-------------------|---------------|
-| `CheckInputMatrices` | [`bool`](#doc_bool) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `false` |
-| `InputModel` | [`randomForestModel`](#doc_model) | Pre-trained random forest to use for classification. | `nil` |
-| `Labels` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Labels for training dataset. | `mat.NewDense(1, 1, nil)` |
-| `MaximumDepth` | [`int`](#doc_int) | Maximum depth of the tree (0 means no limit). | `0` |
-| `MinimumGainSplit` | [`float64`](#doc_float64) | Minimum gain needed to make a split when building a tree. | `0` |
-| `MinimumLeafSize` | [`int`](#doc_int) | Minimum number of points in each leaf node. | `1` |
-| `NumTrees` | [`int`](#doc_int) | Number of trees in the random forest. | `10` |
-| `PrintTrainingAccuracy` | [`bool`](#doc_bool) | If set, then the accuracy of the model on the training set will be predicted (verbose must also be specified). | `false` |
-| `Seed` | [`int`](#doc_int) | Random seed.  If 0, 'std::time(NULL)' is used. | `0` |
-| `SubspaceDim` | [`int`](#doc_int) | Dimensionality of random subspace to use for each split.  '0' will autoselect the square root of data dimensionality. | `0` |
-| `Test` | [`*mat.Dense`](#doc_a__mat_Dense) | Test dataset to produce predictions for. | `mat.NewDense(1, 1, nil)` |
-| `TestLabels` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Test dataset labels, if accuracy calculation is desired. | `mat.NewDense(1, 1, nil)` |
-| `Training` | [`*mat.Dense`](#doc_a__mat_Dense) | Training dataset. | `mat.NewDense(1, 1, nil)` |
-| `Verbose` | [`bool`](#doc_bool) | Display informational messages and the full list of parameters and timers at the end of execution. | `false` |
-| `WarmStart` | [`bool`](#doc_bool) | If true and passed along with `training` and `input_model` then trains more trees on top of existing model. | `false` |
-
-### Output options
-
-Output options are returned via Go's support for multiple return values, in the order listed below.
-
-| ***name*** | ***type*** | ***description*** |
-|------------|------------|-------------------|
-| `OutputModel` | [`randomForestModel`](#doc_model) | Model to save trained random forest to. | 
-| `Predictions` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Predicted classes for each point in the test set. | 
-| `Probabilities` | [`*mat.Dense`](#doc_a__mat_Dense) | Predicted class probabilities for each point in the test set. | 
-
-### Detailed documentation
-{: #random_forest_detailed-documentation }
-
-This program is an implementation of the standard random forest classification algorithm by Leo Breiman.  A random forest can be trained and saved for later use, or a random forest may be loaded and predictions or class probabilities for points may be generated.
-
-The training set and associated labels are specified with the `Training` and `Labels` parameters, respectively.  The labels should be in the range `[0, num_classes - 1]`. Optionally, if `Labels` is not specified, the labels are assumed to be the last dimension of the training dataset.
-
-When a model is trained, the `OutputModel` output parameter may be used to save the trained model.  A model may be loaded for predictions with the `InputModel`parameter. The `InputModel` parameter may not be specified when the `Training` parameter is specified.  The `MinimumLeafSize` parameter specifies the minimum number of training points that must fall into each leaf for it to be split.  The `NumTrees` controls the number of trees in the random forest.  The `MinimumGainSplit` parameter controls the minimum required gain for a decision tree node to split.  Larger values will force higher-confidence splits.  The `MaximumDepth` parameter specifies the maximum depth of the tree.  The `SubspaceDim` parameter is used to control the number of random dimensions chosen for an individual node's split.  If `PrintTrainingAccuracy` is specified, the calculated accuracy on the training set will be printed.
-
-Test data may be specified with the `Test` parameter, and if performance measures are desired for that test set, labels for the test points may be specified with the `TestLabels` parameter.  Predictions for each test point may be saved via the `Predictions`output parameter.  Class probabilities for each prediction may be saved with the `Probabilities` output parameter.
-
-### Example
-For example, to train a random forest with a minimum leaf size of 20 using 10 trees on the dataset contained in `data`with labels `labels`, saving the output random forest to `rf_model` and printing the training error, one could call
-
-```go
-// Initialize optional parameters for RandomForest().
-param := mlpack.RandomForestOptions()
-param.Training = data
-param.Labels = labels
-param.MinimumLeafSize = 20
-param.NumTrees = 10
-param.PrintTrainingAccuracy = true
-
-rf_model, _, _ := mlpack.RandomForest(param)
-```
-
-Then, to use that model to classify points in `test_set` and print the test error given the labels `test_labels` using that model, while saving the predictions for each point to `predictions`, one could call 
-
-```go
-// Initialize optional parameters for RandomForest().
-param := mlpack.RandomForestOptions()
-param.InputModel = &rf_model
-param.Test = test_set
-param.TestLabels = test_labels
-
-_, predictions, _ := mlpack.RandomForest(param)
-```
-
-### See also
-
- - [DecisionTree()](#decision_tree)
- - [HoeffdingTree()](#hoeffding_tree)
- - [SoftmaxRegression()](#softmax_regression)
- - [Random forest on Wikipedia](https://en.wikipedia.org/wiki/Random_forest)
- - [Random forests (pdf)](https://www.eecis.udel.edu/~shatkay/Course/papers/BreimanRandomForests2001.pdf)
- - [RandomForest C++ class documentation](../../user/methods/random_forest.md)
 
 ## Krann()
 {: #krann }
@@ -4246,6 +4026,226 @@ codes, _, _ := mlpack.SparseCoding(param)
  - [Efficient sparse coding algorithms (pdf)](https://proceedings.neurips.cc/paper_files/paper/2006/file/2d71b2ae158c7c5912cc0bbde2bb9d95-Paper.pdf)
  - [Regularization and variable selection via the elastic net](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=46217f372a75dddc2254fdbc6b9418ba3554e453)
  - [SparseCoding C++ class documentation](../../user/methods/sparse_coding.md)
+
+## RandomForest()
+{: #random_forest }
+
+#### Random Forests
+{: #random_forest_descr }
+
+```go
+import (
+  "mlpack.org/v1/mlpack"
+  "gonum.org/v1/gonum/mat"
+)
+
+// Initialize optional parameters for RandomForest().
+param := mlpack.RandomForestOptions()
+param.InputModel = nil
+param.Labels = mat.NewDense(1, 1, nil)
+param.MaximumDepth = 0
+param.MinimumGainSplit = 0
+param.MinimumLeafSize = 1
+param.NumTrees = 10
+param.PrintTrainingAccuracy = false
+param.Seed = 0
+param.SubspaceDim = 0
+param.Test = mat.NewDense(1, 1, nil)
+param.TestLabels = mat.NewDense(1, 1, nil)
+param.Training = mat.NewDense(1, 1, nil)
+param.Verbose = false
+param.WarmStart = false
+
+output_model, predictions, probabilities := mlpack.RandomForest(param)
+```
+
+An implementation of the standard random forest algorithm by Leo Breiman for classification.  Given labeled data, a random forest can be trained and saved for future use; or, a pre-trained random forest can be used for classification. [Detailed documentation](#random_forest_detailed-documentation).
+
+
+
+### Input options
+There are two types of input options: required options, which are passed directly to the function call, and optional options, which are passed via an initialized struct, which allows keyword access to each of the options.
+
+| ***name*** | ***type*** | ***description*** | ***default*** |
+|------------|------------|-------------------|---------------|
+| `CheckInputMatrices` | [`bool`](#doc_bool) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `false` |
+| `InputModel` | [`randomForestModel`](#doc_model) | Pre-trained random forest to use for classification. | `nil` |
+| `Labels` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Labels for training dataset. | `mat.NewDense(1, 1, nil)` |
+| `MaximumDepth` | [`int`](#doc_int) | Maximum depth of the tree (0 means no limit). | `0` |
+| `MinimumGainSplit` | [`float64`](#doc_float64) | Minimum gain needed to make a split when building a tree. | `0` |
+| `MinimumLeafSize` | [`int`](#doc_int) | Minimum number of points in each leaf node. | `1` |
+| `NumTrees` | [`int`](#doc_int) | Number of trees in the random forest. | `10` |
+| `PrintTrainingAccuracy` | [`bool`](#doc_bool) | If set, then the accuracy of the model on the training set will be predicted (verbose must also be specified). | `false` |
+| `Seed` | [`int`](#doc_int) | Random seed.  If 0, 'std::time(NULL)' is used. | `0` |
+| `SubspaceDim` | [`int`](#doc_int) | Dimensionality of random subspace to use for each split.  '0' will autoselect the square root of data dimensionality. | `0` |
+| `Test` | [`*mat.Dense`](#doc_a__mat_Dense) | Test dataset to produce predictions for. | `mat.NewDense(1, 1, nil)` |
+| `TestLabels` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Test dataset labels, if accuracy calculation is desired. | `mat.NewDense(1, 1, nil)` |
+| `Training` | [`*mat.Dense`](#doc_a__mat_Dense) | Training dataset. | `mat.NewDense(1, 1, nil)` |
+| `Verbose` | [`bool`](#doc_bool) | Display informational messages and the full list of parameters and timers at the end of execution. | `false` |
+| `WarmStart` | [`bool`](#doc_bool) | If true and passed along with `training` and `input_model` then trains more trees on top of existing model. | `false` |
+
+### Output options
+
+Output options are returned via Go's support for multiple return values, in the order listed below.
+
+| ***name*** | ***type*** | ***description*** |
+|------------|------------|-------------------|
+| `OutputModel` | [`randomForestModel`](#doc_model) | Model to save trained random forest to. | 
+| `Predictions` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Predicted classes for each point in the test set. | 
+| `Probabilities` | [`*mat.Dense`](#doc_a__mat_Dense) | Predicted class probabilities for each point in the test set. | 
+
+### Detailed documentation
+{: #random_forest_detailed-documentation }
+
+This program is an implementation of the standard random forest classification algorithm by Leo Breiman.  A random forest can be trained and saved for later use, or a random forest may be loaded and predictions or class probabilities for points may be generated.
+
+The training set and associated labels are specified with the `Training` and `Labels` parameters, respectively.  The labels should be in the range `[0, num_classes - 1]`. Optionally, if `Labels` is not specified, the labels are assumed to be the last dimension of the training dataset.
+
+When a model is trained, the `OutputModel` output parameter may be used to save the trained model.  A model may be loaded for predictions with the `InputModel`parameter. The `InputModel` parameter may not be specified when the `Training` parameter is specified.  The `MinimumLeafSize` parameter specifies the minimum number of training points that must fall into each leaf for it to be split.  The `NumTrees` controls the number of trees in the random forest.  The `MinimumGainSplit` parameter controls the minimum required gain for a decision tree node to split.  Larger values will force higher-confidence splits.  The `MaximumDepth` parameter specifies the maximum depth of the tree.  The `SubspaceDim` parameter is used to control the number of random dimensions chosen for an individual node's split.  If `PrintTrainingAccuracy` is specified, the calculated accuracy on the training set will be printed.
+
+Test data may be specified with the `Test` parameter, and if performance measures are desired for that test set, labels for the test points may be specified with the `TestLabels` parameter.  Predictions for each test point may be saved via the `Predictions`output parameter.  Class probabilities for each prediction may be saved with the `Probabilities` output parameter.
+
+### Example
+For example, to train a random forest with a minimum leaf size of 20 using 10 trees on the dataset contained in `data`with labels `labels`, saving the output random forest to `rf_model` and printing the training error, one could call
+
+```go
+// Initialize optional parameters for RandomForest().
+param := mlpack.RandomForestOptions()
+param.Training = data
+param.Labels = labels
+param.MinimumLeafSize = 20
+param.NumTrees = 10
+param.PrintTrainingAccuracy = true
+
+rf_model, _, _ := mlpack.RandomForest(param)
+```
+
+Then, to use that model to classify points in `test_set` and print the test error given the labels `test_labels` using that model, while saving the predictions for each point to `predictions`, one could call 
+
+```go
+// Initialize optional parameters for RandomForest().
+param := mlpack.RandomForestOptions()
+param.InputModel = &rf_model
+param.Test = test_set
+param.TestLabels = test_labels
+
+_, predictions, _ := mlpack.RandomForest(param)
+```
+
+### See also
+
+ - [DecisionTree()](#decision_tree)
+ - [HoeffdingTree()](#hoeffding_tree)
+ - [SoftmaxRegression()](#softmax_regression)
+ - [Random forest on Wikipedia](https://en.wikipedia.org/wiki/Random_forest)
+ - [Random forests (pdf)](https://www.eecis.udel.edu/~shatkay/Course/papers/BreimanRandomForests2001.pdf)
+ - [RandomForest C++ class documentation](../../user/methods/random_forest.md)
+
+## DecisionTree()
+{: #decision_tree }
+
+#### Decision tree
+{: #decision_tree_descr }
+
+```go
+import (
+  "mlpack.org/v1/mlpack"
+  "gonum.org/v1/gonum/mat"
+)
+
+// Initialize optional parameters for DecisionTree().
+param := mlpack.DecisionTreeOptions()
+param.InputModel = nil
+param.Labels = mat.NewDense(1, 1, nil)
+param.MaximumDepth = 0
+param.MinimumGainSplit = 1e-07
+param.MinimumLeafSize = 20
+param.PrintTrainingAccuracy = false
+param.Test = mat.NewDense(1, 1, nil)
+param.TestLabels = mat.NewDense(1, 1, nil)
+param.Training = mat.NewDense(1, 1, nil)
+param.Verbose = false
+param.Weights = mat.NewDense(1, 1, nil)
+
+output_model, predictions, probabilities := mlpack.DecisionTree(param)
+```
+
+An implementation of an ID3-style decision tree for classification, which supports categorical data.  Given labeled data with numeric or categorical features, a decision tree can be trained and saved; or, an existing decision tree can be used for classification on new points. [Detailed documentation](#decision_tree_detailed-documentation).
+
+
+
+### Input options
+There are two types of input options: required options, which are passed directly to the function call, and optional options, which are passed via an initialized struct, which allows keyword access to each of the options.
+
+| ***name*** | ***type*** | ***description*** | ***default*** |
+|------------|------------|-------------------|---------------|
+| `CheckInputMatrices` | [`bool`](#doc_bool) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `false` |
+| `InputModel` | [`decisionTreeModel`](#doc_model) | Pre-trained decision tree, to be used with test points. | `nil` |
+| `Labels` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Training labels. | `mat.NewDense(1, 1, nil)` |
+| `MaximumDepth` | [`int`](#doc_int) | Maximum depth of the tree (0 means no limit). | `0` |
+| `MinimumGainSplit` | [`float64`](#doc_float64) | Minimum gain for node splitting. | `1e-07` |
+| `MinimumLeafSize` | [`int`](#doc_int) | Minimum number of points in a leaf. | `20` |
+| `PrintTrainingAccuracy` | [`bool`](#doc_bool) | Print the training accuracy. | `false` |
+| `Test` | [`matrixWithInfo`](#doc_matrixWithInfo) | Testing dataset (may be categorical). | `mat.NewDense(1, 1, nil)` |
+| `TestLabels` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Test point labels, if accuracy calculation is desired. | `mat.NewDense(1, 1, nil)` |
+| `Training` | [`matrixWithInfo`](#doc_matrixWithInfo) | Training dataset (may be categorical). | `mat.NewDense(1, 1, nil)` |
+| `Verbose` | [`bool`](#doc_bool) | Display informational messages and the full list of parameters and timers at the end of execution. | `false` |
+| `Weights` | [`*mat.Dense`](#doc_a__mat_Dense) | The weight of labels | `mat.NewDense(1, 1, nil)` |
+
+### Output options
+
+Output options are returned via Go's support for multiple return values, in the order listed below.
+
+| ***name*** | ***type*** | ***description*** |
+|------------|------------|-------------------|
+| `OutputModel` | [`decisionTreeModel`](#doc_model) | Output for trained decision tree. | 
+| `Predictions` | [`*mat.Dense (1d)`](#doc_a__mat_Dense__1d_) | Class predictions for each test point. | 
+| `Probabilities` | [`*mat.Dense`](#doc_a__mat_Dense) | Class probabilities for each test point. | 
+
+### Detailed documentation
+{: #decision_tree_detailed-documentation }
+
+Train and evaluate using a decision tree.  Given a dataset containing numeric or categorical features, and associated labels for each point in the dataset, this program can train a decision tree on that data.
+
+The training set and associated labels are specified with the `Training` and `Labels` parameters, respectively.  The labels should be in the range `[0, num_classes - 1]`. Optionally, if `Labels` is not specified, the labels are assumed to be the last dimension of the training dataset.
+
+When a model is trained, the `OutputModel` output parameter may be used to save the trained model.  A model may be loaded for predictions with the `InputModel` parameter.  The `InputModel` parameter may not be specified when the `Training` parameter is specified.  The `MinimumLeafSize` parameter specifies the minimum number of training points that must fall into each leaf for it to be split.  The `MinimumGainSplit` parameter specifies the minimum gain that is needed for the node to split.  The `MaximumDepth` parameter specifies the maximum depth of the tree.  If `PrintTrainingAccuracy` is specified, the training accuracy will be printed.
+
+Test data may be specified with the `Test` parameter, and if performance numbers are desired for that test set, labels may be specified with the `TestLabels` parameter.  Predictions for each test point may be saved via the `Predictions` output parameter.  Class probabilities for each prediction may be saved with the `Probabilities` output parameter.
+
+### Example
+For example, to train a decision tree with a minimum leaf size of 20 on the dataset contained in `data` with labels `labels`, saving the output model to `tree` and printing the training error, one could call
+
+```go
+// Initialize optional parameters for DecisionTree().
+param := mlpack.DecisionTreeOptions()
+param.Training = data
+param.Labels = labels
+param.MinimumLeafSize = 20
+param.MinimumGainSplit = 0.001
+param.PrintTrainingAccuracy = true
+
+tree, _, _ := mlpack.DecisionTree(param)
+```
+
+Then, to use that model to classify points in `test_set` and print the test error given the labels `test_labels` using that model, while saving the predictions for each point to `predictions`, one could call 
+
+```go
+// Initialize optional parameters for DecisionTree().
+param := mlpack.DecisionTreeOptions()
+param.InputModel = &tree
+param.Test = test_set
+param.TestLabels = test_labels
+
+_, predictions, _ := mlpack.DecisionTree(param)
+```
+
+### See also
+
+ - [Random forest](#random_forest)
+ - [Decision trees on Wikipedia](https://en.wikipedia.org/wiki/Decision_tree_learning)
+ - [Induction of Decision Trees (pdf)](https://www.hunch.net/~coms-4771/quinlan.pdf)
+ - [DecisionTree C++ class documentation](../../user/methods/decision_tree.md)
 
 ## Adaboost()
 {: #adaboost }

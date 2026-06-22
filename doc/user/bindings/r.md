@@ -32,7 +32,7 @@ mlpack bindings for R take and return a restricted set of types, for simplicity.
  - `numeric vector`{: #doc_numeric_vector }: A 1-d matrix-like containing `numeric` data (could be an `matrix` or a `data.frame` with one dimension of size 1).
  - `integer vector`{: #doc_integer_vector }: A 1-d matrix-like containing `integer` data (could be an `matrix` or a `data.frame` with one dimension of size 1).
  - `categorical matrix/data.frame`{: #doc_categorical_matrix_data_frame }: A 2-d array containing `numeric` data.  Like the regular 2-d matrices, this can be a `matrix`, or a `data.frame`. However, this type can also accept a `data.frame` that has columns of type `character`, `logical` or `factor`.  These values will be converted to `numeric` indices before being passed to mlpack, and then inside mlpack they will be properly treated as categorical variables, so there is no need to do one-hot encoding for this matrix type.
- - `<Model> (mlpack model)`{: #doc_model }: An mlpack model pointer.  `<Model>` refers to the type of model that is being stored, so, e.g., for `cf()`, the type will be `CFModel`. This type holds a pointer to C++ memory containing the mlpack model.  Note that this means the mlpack model itself cannot be easily inspected in R.  However, the pointer can be passed to subsequent calls to mlpack functions, and can be serialized and deserialized via either the `Serialize()` and `Unserialize()` functions.
+ - `<Model> (mlpack model)`{: #doc_model }: An mlpack model pointer, with an S3 class attribute.  `<Model>` refers to the type of model that is being stored, so, e.g., for `cf()`, the type will be `CFModel`. This type holds a pointer to C++ memory containing the mlpack model.  Note that this means the mlpack model itself cannot be easily inspected in R.  However, the pointer can be passed to subsequent calls to mlpack functions, and can be serialized and deserialized via either the `Serialize()` and `Unserialize()` functions.
 </div>
 
 
@@ -134,93 +134,6 @@ R> neighbors <- output$neighbors
  - [Approximate furthest neighbor in high dimensions (pdf)](https://www.rasmuspagh.net/papers/approx-furthest-neighbor-SISAP15.pdf)
  - [QDAFN class documentation](https://github.com/mlpack/mlpack/blob/master/src/mlpack/methods/approx_kfn/qdafn.hpp)
  - [DrusillaSelect class documentation](https://github.com/mlpack/mlpack/blob/master/src/mlpack/methods/approx_kfn/drusilla_select.hpp)
-
-## bayesian_linear_regression()
-{: #bayesian_linear_regression }
-
-#### BayesianLinearRegression
-{: #bayesian_linear_regression_descr }
-
-```R
-R> library(mlpack)
-R> d <- bayesian_linear_regression(center=FALSE, input=matrix(numeric(),
-        0, 0), input_model=NA, responses=matrix(numeric(), 0, 0), scale=FALSE,
-        test=matrix(numeric(), 0, 0), verbose=getOption("mlpack.verbose",
-        FALSE))
-R> output_model <- d$output_model
-R> predictions <- d$predictions
-R> stds <- d$stds
-```
-
-An implementation of the bayesian linear regression. [Detailed documentation](#bayesian_linear_regression_detailed-documentation).
-
-
-
-### Input options
-
-| ***name*** | ***type*** | ***description*** | ***default*** |
-|------------|------------|-------------------|---------------|
-| `center` | [`logical`](#doc_logical) | Center the data and fit the intercept if enabled. | `FALSE` |
-| `check_input_matrices` | [`logical`](#doc_logical) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `FALSE` |
-| `input` | [`numeric matrix`](#doc_numeric_matrix) | Matrix of covariates (X). | `matrix(numeric(), 0, 0)` |
-| `input_model` | [`BayesianLinearRegression`](#doc_model) | Trained BayesianLinearRegression model to use. | `NA` |
-| `responses` | [`numeric vector`](#doc_numeric_vector) | Matrix of responses/observations (y). | `matrix(numeric(), 0, 0)` |
-| `scale` | [`logical`](#doc_logical) | Scale each feature by their standard deviations if enabled. | `FALSE` |
-| `test` | [`numeric matrix`](#doc_numeric_matrix) | Matrix containing points to regress on (test points). | `matrix(numeric(), 0, 0)` |
-| `verbose` | [`logical`](#doc_logical) | Display informational messages and the full list of parameters and timers at the end of execution. | `getOption("mlpack.verbose", FALSE)` |
-
-### Output options
-
-Results are returned in a R list.  The keys of the list are the names of the output parameters.
-
-| ***name*** | ***type*** | ***description*** |
-|------------|------------|-------------------|
-| `output_model` | [`BayesianLinearRegression`](#doc_model) | Output BayesianLinearRegression model. | 
-| `predictions` | [`numeric matrix`](#doc_numeric_matrix) | If --test_file is specified, this file is where the predicted responses will be saved. | 
-| `stds` | [`numeric matrix`](#doc_numeric_matrix) | If specified, this is where the standard deviations of the predictive distribution will be saved. | 
-
-### Detailed documentation
-{: #bayesian_linear_regression_detailed-documentation }
-
-An implementation of the bayesian linear regression.
-This model is a probabilistic view and implementation of the linear regression. The final solution is obtained by computing a posterior distribution from gaussian likelihood and a zero mean gaussian isotropic  prior distribution on the solution. 
-Optimization is AUTOMATIC and does not require cross validation. The optimization is performed by maximization of the evidence function. Parameters are tuned during the maximization of the marginal likelihood. This procedure includes the Ockham's razor that penalizes over complex solutions. 
-
-This program is able to train a Bayesian linear regression model or load a model from file, output regression predictions for a test set, and save the trained model to a file.
-
-To train a BayesianLinearRegression model, the `input` and `responses`parameters must be given. The `center`and `scale` parameters control the centering and the normalizing options. A trained model can be saved with the `output_model`. If no training is desired at all, a model can be passed via the `input_model` parameter.
-
-The program can also provide predictions for test data using either the trained model or the given input model.  Test points can be specified with the `test` parameter.  Predicted responses to the test points can be saved with the `predictions` output parameter. The corresponding standard deviation can be save by precising the `stds` parameter.
-
-### Example
-For example, the following command trains a model on the data `"data"` and responses `"responses"`with center set to true and scale set to false (so, Bayesian linear regression is being solved, and then the model is saved to `"blr_model"`:
-
-```R
-R> output <- bayesian_linear_regression(input=data, responses=responses,
-  center=1, scale=0)
-R> blr_model <- output$output_model
-```
-
-The following command uses the `"blr_model"` to provide predicted  responses for the data `"test"` and save those  responses to `"test_predictions"`: 
-
-```R
-R> output <- bayesian_linear_regression(input_model=blr_model, test=test)
-R> test_predictions <- output$predictions
-```
-
-Because the estimator computes a predictive distribution instead of a simple point estimate, the `stds` parameter allows one to save the prediction uncertainties: 
-
-```R
-R> output <- bayesian_linear_regression(input_model=blr_model, test=test)
-R> test_predictions <- output$predictions
-R> stds <- output$stds
-```
-
-### See also
-
- - [Bayesian Interpolation](https://cs.uwaterloo.ca/~mannr/cs886-w10/mackay-bayesian.pdf)
- - [Bayesian Linear Regression, Section 3.3](https://www.microsoft.com/en-us/research/wp-content/uploads/2006/01/Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf)
- - [BayesianLinearRegression C++ class documentation](../../user/methods/bayesian_linear_regression.md)
 
 ## cf()
 {: #cf }
@@ -413,91 +326,6 @@ R> dbscan(input=input, epsilon=0.5, min_size=5)
  - [A density-based algorithm for discovering clusters in large spatial databases with noise (pdf)](https://cdn.aaai.org/KDD/1996/KDD96-037.pdf)
  - [DBSCAN class documentation](https://github.com/mlpack/mlpack/blob/master/src/mlpack/methods/dbscan/dbscan.hpp)
 
-## decision_tree()
-{: #decision_tree }
-
-#### Decision tree
-{: #decision_tree_descr }
-
-```R
-R> library(mlpack)
-R> d <- decision_tree(input_model=NA, labels=matrix(integer(), 0, 0),
-        maximum_depth=0, minimum_gain_split=1e-07, minimum_leaf_size=20,
-        print_training_accuracy=FALSE, test=matrix(numeric(), 0, 0),
-        test_labels=matrix(integer(), 0, 0), training=matrix(numeric(), 0, 0),
-        verbose=getOption("mlpack.verbose", FALSE), weights=matrix(numeric(), 0,
-        0))
-R> output_model <- d$output_model
-R> predictions <- d$predictions
-R> probabilities <- d$probabilities
-```
-
-An implementation of an ID3-style decision tree for classification, which supports categorical data.  Given labeled data with numeric or categorical features, a decision tree can be trained and saved; or, an existing decision tree can be used for classification on new points. [Detailed documentation](#decision_tree_detailed-documentation).
-
-
-
-### Input options
-
-| ***name*** | ***type*** | ***description*** | ***default*** |
-|------------|------------|-------------------|---------------|
-| `check_input_matrices` | [`logical`](#doc_logical) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `FALSE` |
-| `input_model` | [`DecisionTreeModel`](#doc_model) | Pre-trained decision tree, to be used with test points. | `NA` |
-| `labels` | [`integer vector`](#doc_integer_vector) | Training labels. | `matrix(integer(), 0, 0)` |
-| `maximum_depth` | [`integer`](#doc_integer) | Maximum depth of the tree (0 means no limit). | `0` |
-| `minimum_gain_split` | [`numeric`](#doc_numeric) | Minimum gain for node splitting. | `1e-07` |
-| `minimum_leaf_size` | [`integer`](#doc_integer) | Minimum number of points in a leaf. | `20` |
-| `print_training_accuracy` | [`logical`](#doc_logical) | Print the training accuracy. | `FALSE` |
-| `test` | [`categorical matrix/data.frame`](#doc_categorical_matrix_data_frame) | Testing dataset (may be categorical). | `matrix(numeric(), 0, 0)` |
-| `test_labels` | [`integer vector`](#doc_integer_vector) | Test point labels, if accuracy calculation is desired. | `matrix(integer(), 0, 0)` |
-| `training` | [`categorical matrix/data.frame`](#doc_categorical_matrix_data_frame) | Training dataset (may be categorical). | `matrix(numeric(), 0, 0)` |
-| `verbose` | [`logical`](#doc_logical) | Display informational messages and the full list of parameters and timers at the end of execution. | `getOption("mlpack.verbose", FALSE)` |
-| `weights` | [`numeric matrix`](#doc_numeric_matrix) | The weight of labels | `matrix(numeric(), 0, 0)` |
-
-### Output options
-
-Results are returned in a R list.  The keys of the list are the names of the output parameters.
-
-| ***name*** | ***type*** | ***description*** |
-|------------|------------|-------------------|
-| `output_model` | [`DecisionTreeModel`](#doc_model) | Output for trained decision tree. | 
-| `predictions` | [`integer vector`](#doc_integer_vector) | Class predictions for each test point. | 
-| `probabilities` | [`numeric matrix`](#doc_numeric_matrix) | Class probabilities for each test point. | 
-
-### Detailed documentation
-{: #decision_tree_detailed-documentation }
-
-Train and evaluate using a decision tree.  Given a dataset containing numeric or categorical features, and associated labels for each point in the dataset, this program can train a decision tree on that data.
-
-The training set and associated labels are specified with the `training` and `labels` parameters, respectively.  The labels should be in the range `[0, num_classes - 1]`. Optionally, if `labels` is not specified, the labels are assumed to be the last dimension of the training dataset.
-
-When a model is trained, the `output_model` output parameter may be used to save the trained model.  A model may be loaded for predictions with the `input_model` parameter.  The `input_model` parameter may not be specified when the `training` parameter is specified.  The `minimum_leaf_size` parameter specifies the minimum number of training points that must fall into each leaf for it to be split.  The `minimum_gain_split` parameter specifies the minimum gain that is needed for the node to split.  The `maximum_depth` parameter specifies the maximum depth of the tree.  If `print_training_accuracy` is specified, the training accuracy will be printed.
-
-Test data may be specified with the `test` parameter, and if performance numbers are desired for that test set, labels may be specified with the `test_labels` parameter.  Predictions for each test point may be saved via the `predictions` output parameter.  Class probabilities for each prediction may be saved with the `probabilities` output parameter.
-
-### Example
-For example, to train a decision tree with a minimum leaf size of 20 on the dataset contained in `"data"` with labels `"labels"`, saving the output model to `"tree"` and printing the training error, one could call
-
-```R
-R> output <- decision_tree(training=data, labels=labels, minimum_leaf_size=20,
-  minimum_gain_split=0.001, print_training_accuracy=TRUE)
-R> tree <- output$output_model
-```
-
-Then, to use that model to classify points in `"test_set"` and print the test error given the labels `"test_labels"` using that model, while saving the predictions for each point to `"predictions"`, one could call 
-
-```R
-R> output <- decision_tree(input_model=tree, test=test_set,
-  test_labels=test_labels)
-R> predictions <- output$predictions
-```
-
-### See also
-
- - [Random forest](#random_forest)
- - [Decision trees on Wikipedia](https://en.wikipedia.org/wiki/Decision_tree_learning)
- - [Induction of Decision Trees (pdf)](https://www.hunch.net/~coms-4771/quinlan.pdf)
- - [DecisionTree C++ class documentation](../../user/methods/decision_tree.md)
-
 ## det()
 {: #det }
 
@@ -615,8 +443,7 @@ The `leaf_size` parameter controls the leaf size of the kd-tree that is used to 
 For example, the minimum spanning tree of the input dataset `"data"` can be calculated with a leaf size of 20 and stored as `"spanning_tree"` using the following command:
 
 ```R
-R> output <- emst(input=data, leaf_size=20)
-R> spanning_tree <- output$output
+R> spanning_tree <- emst(input=data, leaf_size=20)
 ```
 
 The output matrix is a three-dimensional matrix, where each row indicates an edge.  The first dimension corresponds to the lesser index of the edge; the second dimension corresponds to the greater index of the edge; and the third column corresponds to the distance between the two points.
@@ -769,15 +596,13 @@ The `no_force_positive` parameter, if set, will avoid the checks after each iter
 As an example, to train a 6-Gaussian GMM on the data in `"data"` with a maximum of 100 iterations of EM and 3 trials, saving the trained GMM to `"gmm"`, the following command can be used:
 
 ```R
-R> output <- gmm_train(input=data, gaussians=6, trials=3)
-R> gmm <- output$output_model
+R> gmm <- gmm_train(input=data, gaussians=6, trials=3)
 ```
 
 To re-train that GMM on another set of data `"data2"`, the following command may be used: 
 
 ```R
-R> output <- gmm_train(input_model=gmm, input=data2, gaussians=6)
-R> new_gmm <- output$output_model
+R> new_gmm <- gmm_train(input_model=gmm, input=data2, gaussians=6)
 ```
 
 ### See also
@@ -831,8 +656,7 @@ This program is able to generate samples from a pre-trained GMM (use gmm_train t
 The following command can be used to generate 100 samples from the pre-trained GMM `"gmm"` and store those generated samples in `"samples"`:
 
 ```R
-R> output <- gmm_generate(input_model=gmm, samples=100)
-R> samples <- output$output
+R> samples <- gmm_generate(input_model=gmm, samples=100)
 ```
 
 ### See also
@@ -885,8 +709,7 @@ This program calculates the probability that given points came from a given GMM 
 So, for example, to calculate the probabilities of each point in `"points"` coming from the pre-trained GMM `"gmm"`, while storing those probabilities in `"probs"`, the following command could be used:
 
 ```R
-R> output <- gmm_probability(input_model=gmm, input=points)
-R> probs <- output$output
+R> probs <- gmm_probability(input_model=gmm, input=points)
 ```
 
 ### See also
@@ -1116,8 +939,7 @@ This utility takes an already-trained HMM, specified as `input_model`, and evalu
 For example, to predict the state sequence of the observations `"obs"` using the HMM `"hmm"`, storing the predicted state sequence to `"states"`, the following command could be used:
 
 ```R
-R> output <- hmm_viterbi(input=obs, input_model=hmm)
-R> states <- output$output
+R> states <- hmm_viterbi(input=obs, input_model=hmm)
 ```
 
 ### See also
@@ -1270,8 +1092,7 @@ You can also provide a dataset and save them as images using `dataset` and `save
  An example to load an image : 
 
 ```R
-R> output <- image_converter(input=X, height=256, width=256, channels=3)
-R> Y <- output$output
+R> Y <- image_converter(input=X, height=256, width=256, channels=3)
 ```
 
  An example to save an image is :
@@ -1460,8 +1281,7 @@ Optionally, the Nystroem method ("Using the Nystroem method to speed up kernel m
 For example, the following command will perform KPCA on the dataset `"input"` using the Gaussian kernel, and saving the transformed data to `"transformed"`: 
 
 ```R
-R> output <- kernel_pca(input=input, kernel="gaussian")
-R> transformed <- output$output
+R> transformed <- kernel_pca(input=input, kernel="gaussian")
 ```
 
 ### See also
@@ -1562,57 +1382,101 @@ R> final <- output$centroid
  - [A dual-tree algorithm for fast k-means clustering with large k (pdf)](http://www.ratml.org/pub/pdf/2017dual.pdf)
  - [KMeans class documentation](https://github.com/mlpack/mlpack/blob/master/src/mlpack/methods/kmeans/kmeans.hpp)
 
-## lars()
-{: #lars }
+## class bayesian_linear_regression
+{: #bayesian_linear_regression }
 
-#### LARS
-{: #lars_descr }
-
-```R
-R> library(mlpack)
-R> d <- lars(input=matrix(numeric(), 0, 0), input_model=NA, lambda1=0,
-        lambda2=0, no_intercept=FALSE, no_normalize=FALSE,
-        responses=matrix(numeric(), 0, 0), test=matrix(numeric(), 0, 0),
-        use_cholesky=FALSE, verbose=getOption("mlpack.verbose", FALSE))
-R> output_model <- d$output_model
-R> output_predictions <- d$output_predictions
-```
-
-An implementation of Least Angle Regression (Stagewise/laSso), also known as LARS.  This can train a LARS/LASSO/Elastic Net model and use that model or a pre-trained model to output regression predictions for a test set. [Detailed documentation](#lars_detailed-documentation).
+#### BayesianLinearRegression Training
+{: #bayesian_linear_regression_descr }
 
 
+An implementation of the Bayesian linear regression.
+This model is a probabilistic view and implementation of the linear regression. The final solution is obtained by computing a posterior distribution from gaussian likelihood and a zero mean gaussian isotropic  prior distribution on the solution. 
+Optimization is AUTOMATIC and does not require cross validation. The optimization is performed by maximization of the evidence function. Parameters are tuned during the maximization of the marginal likelihood. This procedure includes the Ockham's razor that penalizes over complex solutions. 
 
-### Input options
+To train a BayesianLinearRegression model, the `input` and `responses` parameters must be given. The `center` and `scale` parameters control the centering and the normalizing options. A trained model is returned.
+
+
+### Parameters
 
 | ***name*** | ***type*** | ***description*** | ***default*** |
 |------------|------------|-------------------|---------------|
+| `center` | [`logical`](#doc_logical) | Center the data and fit the intercept if enabled. | `FALSE` |
 | `check_input_matrices` | [`logical`](#doc_logical) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `FALSE` |
-| `input` | [`numeric matrix`](#doc_numeric_matrix) | Matrix of covariates (X). | `matrix(numeric(), 0, 0)` |
-| `input_model` | [`LARS`](#doc_model) | Trained LARS model to use. | `NA` |
-| `lambda1` | [`numeric`](#doc_numeric) | Regularization parameter for l1-norm penalty. | `0` |
-| `lambda2` | [`numeric`](#doc_numeric) | Regularization parameter for l2-norm penalty. | `0` |
-| `no_intercept` | [`logical`](#doc_logical) | Do not fit an intercept in the model. | `FALSE` |
-| `no_normalize` | [`logical`](#doc_logical) | Do not normalize data to unit variance before modeling. | `FALSE` |
-| `responses` | [`numeric matrix`](#doc_numeric_matrix) | Matrix of responses/observations (y). | `matrix(numeric(), 0, 0)` |
-| `test` | [`numeric matrix`](#doc_numeric_matrix) | Matrix containing points to regress on (test points). | `matrix(numeric(), 0, 0)` |
-| `use_cholesky` | [`logical`](#doc_logical) | Use Cholesky decomposition during computation rather than explicitly computing the full Gram matrix. | `FALSE` |
+| `scale` | [`logical`](#doc_logical) | Scale each feature by their standard deviations if enabled. | `FALSE` |
 | `verbose` | [`logical`](#doc_logical) | Display informational messages and the full list of parameters and timers at the end of execution. | `getOption("mlpack.verbose", FALSE)` |
+| `stddevs` | [`logical`](#doc_logical) | Return standard deviations along with predictions. | `FALSE` |
 
-### Output options
+### Example
 
-Results are returned in a R list.  The keys of the list are the names of the output parameters.
+```r
 
-| ***name*** | ***type*** | ***description*** |
-|------------|------------|-------------------|
-| `output_model` | [`LARS`](#doc_model) | Output LARS model. | 
-| `output_predictions` | [`numeric matrix`](#doc_numeric_matrix) | If --test_file is specified, this file is where the predicted responses will be saved. | 
 
-### Detailed documentation
-{: #lars_detailed-documentation }
+suppressMessages(library(mlpack)) # in case 'mlpack' is not yet loaded
+X <- as.matrix(read.csv("http://datasets.mlpack.org/admission_predict.csv", header=FALSE))
+y <- as.matrix(read.csv("http://datasets.mlpack.org/admission_predict.responses.csv", header=FALSE))
+pp <- preprocess_split(input=X, input_label=as.matrix(1:nrow(X)), test_ratio=0.2)
+X_train <- pp[["training"]]
+X_test <- pp[["test"]]
+# labels are indices to operate on both factors or numeric data
+y_train <- y[as.integer(pp[["training_labels"]]), 1]
+y_test <- y[as.integer(pp[["test_labels"]]), 1]
 
-An implementation of LARS: Least Angle Regression (Stagewise/laSso).  This is a stage-wise homotopy-based algorithm for L1-regularized linear regression (LASSO) and L1+L2-regularized linear regression (Elastic Net).
+model <- bayesian_linear_regression_train(input=X_train, responses=y_train,
+  center=1, scale=0)
+  
+pred <- predict(model, newdata=X_test) 
+```
 
-This program is able to train a LARS/LASSO/Elastic Net model or load a model from file, output regression predictions for a test set, and save the trained model to a file.  The LARS algorithm is described in more detail below:
+### Methods
+
+| **name** | **description** |
+|----------|-----------------|
+| train | An implementation of the Bayesian linear regression training. |
+| predict | An implementation of the Bayesian linear regression prediction: Given a pre-trained model and a test data set, it provides model predictions. |
+
+### 1. train
+
+An implementation of the Bayesian linear regression training.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `input` | [`numeric matrix`](#doc_numeric_matrix) | Matrix of covariates (X). | 
+| `responses` | [`numeric vector`](#doc_numeric_vector) | Matrix of responses/observations (y). | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`BayesianLinearRegression`](#doc_model) | Output BayesianLinearRegression model. | 
+
+### 2. predict
+
+An implementation of the Bayesian linear regression prediction: Given a pre-trained model and a test data set, it provides model predictions.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `test` | [`numeric matrix`](#doc_numeric_matrix) | Matrix containing points to regress on (test points). | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`numeric matrix`](#doc_numeric_matrix) | Matrix of predicted responses, with associated standard deviations if option selected. | 
+
+## class lars
+{: #lars }
+
+#### LARS Training
+{: #lars_descr }
+
+
+An implementation of LARS: Least Angle Regression (stagewise/lasso).  This is a stage-wise homotopy-based algorithm for L1-regularized linear regression (LASSO) and L1+L2-regularized linear regression (Elastic Net).
+
+This program is able to train a LARS/LASSO/Elastic Net model or load a model from a file, output regression predictions for a test set, and save the trained model to a file.  The LARS algorithm is described in more detail below:
 
 Let X be a matrix where each row is a point and each column is a dimension, and let y be a vector of targets.
 
@@ -1630,28 +1494,79 @@ For efficiency reasons, it is not recommended to use this algorithm with `lambda
 
 To train a LARS/LASSO/Elastic Net model, the `input` and `responses` parameters must be given.  The `lambda1`, `lambda2`, and `use_cholesky` parameters control the training options.  A trained model can be saved with the `output_model`.  If no training is desired at all, a model can be passed via the `input_model` parameter.
 
-The program can also provide predictions for test data using either the trained model or the given input model.  Test points can be specified with the `test` parameter.  Predicted responses to the test points can be saved with the `output_predictions` output parameter.
+
+### Parameters
+
+| ***name*** | ***type*** | ***description*** | ***default*** |
+|------------|------------|-------------------|---------------|
+| `check_input_matrices` | [`logical`](#doc_logical) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `FALSE` |
+| `lambda1` | [`numeric`](#doc_numeric) | Regularization parameter for l1-norm penalty. | `0` |
+| `lambda2` | [`numeric`](#doc_numeric) | Regularization parameter for l2-norm penalty. | `0` |
+| `no_intercept` | [`logical`](#doc_logical) | Do not fit an intercept in the model. | `FALSE` |
+| `no_normalize` | [`logical`](#doc_logical) | Do not normalize data to unit variance before modeling. | `FALSE` |
+| `use_cholesky` | [`logical`](#doc_logical) | Use Cholesky decomposition during computation rather than explicitly computing the full Gram matrix. | `FALSE` |
+| `verbose` | [`logical`](#doc_logical) | Display informational messages and the full list of parameters and timers at the end of execution. | `getOption("mlpack.verbose", FALSE)` |
 
 ### Example
-For example, the following command trains a model on the data `"data"` and responses `"responses"` with lambda1 set to 0.4 and lambda2 set to 0 (so, LASSO is being solved), and then the model is saved to `"lasso_model"`:
 
-```R
-R> output <- lars(input=data, responses=responses, lambda1=0.4, lambda2=0)
-R> lasso_model <- output$output_model
+```r
+
+
+suppressMessages(library(mlpack)) # in case 'mlpack' is not yet loaded
+X <- as.matrix(read.csv("http://datasets.mlpack.org/admission_predict.csv", header=FALSE))
+y <- as.matrix(read.csv("http://datasets.mlpack.org/admission_predict.responses.csv", header=FALSE))
+pp <- preprocess_split(input=X, input_label=as.matrix(1:nrow(X)), test_ratio=0.2)
+X_train <- pp[["training"]]
+X_test <- pp[["test"]]
+# labels are indices to operate on both factors or numeric data
+y_train <- y[as.integer(pp[["training_labels"]]), 1]
+y_test <- y[as.integer(pp[["test_labels"]]), 1]
+
+model <- lars_train(input=X_train, responses=y_train, lambda1=1e-05,
+  lambda2=1e-06)
+  
+pred <- predict(model, newdata=X_test) 
 ```
 
-The following command uses the `"lasso_model"` to provide predicted responses for the data `"test"` and save those responses to `"test_predictions"`: 
+### Methods
 
-```R
-R> output <- lars(input_model=lasso_model, test=test)
-R> test_predictions <- output$output_predictions
-```
+| **name** | **description** |
+|----------|-----------------|
+| train | An implementation of Least Angle Regression (stagewise/lasso), also known as LARS.  This can train a LARS/LASSO/Elastic Net model, and save the pre-trained model for later use to output regression predictions from a test set. |
+| predict | An implementation of Least Angle Regression (stagewise/lasso), also known as LARS.  This program can use a pre-trained LARS/LASSO/Elastic Net model to output regression predictions from a test set. |
 
-### See also
+### 1. train
 
- - [linear_regression()](#linear_regression)
- - [Least angle regression (pdf)](https://mlpack.org/papers/lars.pdf)
- - [LARS C++ class documentation](../../user/methods/lars.md)
+An implementation of Least Angle Regression (stagewise/lasso), also known as LARS.  This can train a LARS/LASSO/Elastic Net model, and save the pre-trained model for later use to output regression predictions from a test set.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `input` | [`numeric matrix`](#doc_numeric_matrix) | Matrix of covariates (X). | 
+| `responses` | [`numeric vector`](#doc_numeric_vector) | Row vector of responses/observations (y). | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`LARS`](#doc_model) | Output LARS model. | 
+
+### 2. predict
+
+An implementation of Least Angle Regression (stagewise/lasso), also known as LARS.  This program can use a pre-trained LARS/LASSO/Elastic Net model to output regression predictions from a test set.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `test` | [`numeric matrix`](#doc_numeric_matrix) | Matrix containing points to regress on (test points). | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`numeric matrix`](#doc_numeric_matrix) | Matrix containing predicted responses. | 
 
 ## linear_svm()
 {: #linear_svm }
@@ -1934,60 +1849,12 @@ R> new_codes <- output$codes
  - [Nonlinear learning using local coordinate coding (pdf)](https://proceedings.neurips.cc/paper_files/paper/2009/file/2afe4567e1bf64d32a5527244d104cea-Paper.pdf)
  - [LocalCoordinateCoding C++ class documentation](../../user/methods/local_coordinate_coding.md)
 
-## logistic_regression()
+## class logistic_regression
 {: #logistic_regression }
 
-#### L2-regularized Logistic Regression and Prediction
+#### L2-regularized Logistic Regression Training and Prediction
 {: #logistic_regression_descr }
 
-```R
-R> library(mlpack)
-R> d <- logistic_regression(batch_size=64, decision_boundary=0.5,
-        input_model=NA, labels=matrix(integer(), 0, 0), lambda=0,
-        max_iterations=10000, optimizer="lbfgs", print_training_accuracy=FALSE,
-        step_size=0.01, test=matrix(numeric(), 0, 0), tolerance=1e-10,
-        training=matrix(numeric(), 0, 0), verbose=getOption("mlpack.verbose",
-        FALSE))
-R> output_model <- d$output_model
-R> predictions <- d$predictions
-R> probabilities <- d$probabilities
-```
-
-An implementation of L2-regularized logistic regression for two-class classification.  Given labeled data, a model can be trained and saved for future use; or, a pre-trained model can be used to classify new points. [Detailed documentation](#logistic_regression_detailed-documentation).
-
-
-
-### Input options
-
-| ***name*** | ***type*** | ***description*** | ***default*** |
-|------------|------------|-------------------|---------------|
-| `batch_size` | [`integer`](#doc_integer) | Batch size for SGD. | `64` |
-| `check_input_matrices` | [`logical`](#doc_logical) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `FALSE` |
-| `decision_boundary` | [`numeric`](#doc_numeric) | Decision boundary for prediction; if the logistic function for a point is less than the boundary, the class is taken to be 0; otherwise, the class is 1. | `0.5` |
-| `input_model` | [`LogisticRegression`](#doc_model) | Existing model (parameters). | `NA` |
-| `labels` | [`integer vector`](#doc_integer_vector) | A matrix containing labels (0 or 1) for the points in the training set (y). | `matrix(integer(), 0, 0)` |
-| `lambda` | [`numeric`](#doc_numeric) | L2-regularization parameter for training. | `0` |
-| `max_iterations` | [`integer`](#doc_integer) | Maximum iterations for optimizer (0 indicates no limit). | `10000` |
-| `optimizer` | [`character`](#doc_character) | Optimizer to use for training ('lbfgs' or 'sgd'). | `"lbfgs"` |
-| `print_training_accuracy` | [`logical`](#doc_logical) | If set, then the accuracy of the model on the training set will be printed (verbose must also be specified). | `FALSE` |
-| `step_size` | [`numeric`](#doc_numeric) | Step size for SGD optimizer. | `0.01` |
-| `test` | [`numeric matrix`](#doc_numeric_matrix) | Matrix containing test dataset. | `matrix(numeric(), 0, 0)` |
-| `tolerance` | [`numeric`](#doc_numeric) | Convergence tolerance for optimizer. | `1e-10` |
-| `training` | [`numeric matrix`](#doc_numeric_matrix) | A matrix containing the training set (the matrix of predictors, X). | `matrix(numeric(), 0, 0)` |
-| `verbose` | [`logical`](#doc_logical) | Display informational messages and the full list of parameters and timers at the end of execution. | `getOption("mlpack.verbose", FALSE)` |
-
-### Output options
-
-Results are returned in a R list.  The keys of the list are the names of the output parameters.
-
-| ***name*** | ***type*** | ***description*** |
-|------------|------------|-------------------|
-| `output_model` | [`LogisticRegression`](#doc_model) | Output for trained logistic regression model. | 
-| `predictions` | [`integer vector`](#doc_integer_vector) | If test data is specified, this matrix is where the predictions for the test set will be saved. | 
-| `probabilities` | [`numeric matrix`](#doc_numeric_matrix) | If test data is specified, this matrix is where the class probabilities for the test set will be saved. | 
-
-### Detailed documentation
-{: #logistic_regression_detailed-documentation }
 
 An implementation of L2-regularized logistic regression using either the L-BFGS optimizer or SGD (stochastic gradient descent).  This solves the regression problem
 
@@ -1995,7 +1862,7 @@ An implementation of L2-regularized logistic regression using either the L-BFGS 
 
 In this setting, y corresponds to class labels and X corresponds to data.
 
-This program allows loading a logistic regression model (via the `input_model` parameter) or training a logistic regression model given training data (specified with the `training` parameter), or both those things at once.  In addition, this program allows classification on a test dataset (specified with the `test` parameter) and the classification results may be saved with the `predictions` output parameter. The trained logistic regression model may be saved using the `output_model` output parameter.
+This implementation can train a logistic regression model given training data (specified with the `training` parameter).  A trained logistic regression model can then be used to perform classification on a test dataset (specified with the `test` parameter).  Alternatively, classification probabilities can be computed and saved with the `probabilities` parameter.
 
 The training data, if specified, may have class labels as its last dimension.  Alternately, the `labels` parameter may be used to specify a separate matrix of labels.
 
@@ -2003,32 +1870,100 @@ When a model is being trained, there are many options.  L2 regularization (to pr
 
 For SGD, an iteration refers to a single point. So to take a single pass over the dataset with SGD, `max_iterations` should be set to the number of points in the dataset.
 
-Optionally, the model can be used to predict the responses for another matrix of data points, if `test` is specified.  The `test` parameter can be specified without the `training` parameter, so long as an existing logistic regression model is given with the `input_model` parameter.  The output predictions from the logistic regression model may be saved with the `predictions` parameter.
-
 This implementation of logistic regression does not support the general multi-class case but instead only the two-class case.  Any labels must be either 0 or 1.  For more classes, see the softmax regression implementation.
+### Parameters
+
+| ***name*** | ***type*** | ***description*** | ***default*** |
+|------------|------------|-------------------|---------------|
+| `batch_size` | [`integer`](#doc_integer) | Batch size for SGD. | `64` |
+| `check_input_matrices` | [`logical`](#doc_logical) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `FALSE` |
+| `lambda` | [`numeric`](#doc_numeric) | L2-regularization parameter for training. | `0` |
+| `max_iterations` | [`integer`](#doc_integer) | Maximum iterations for optimizer (0 indicates no limit). | `10000` |
+| `optimizer` | [`character`](#doc_character) | Optimizer to use for training ('lbfgs' or 'sgd'). | `"lbfgs"` |
+| `print_training_accuracy` | [`logical`](#doc_logical) | If set, then the accuracy of the model on the training set will be printed (verbose must also be specified). | `FALSE` |
+| `step_size` | [`numeric`](#doc_numeric) | Step size for SGD optimizer. | `0.01` |
+| `tolerance` | [`numeric`](#doc_numeric) | Convergence tolerance for optimizer. | `1e-10` |
+| `verbose` | [`logical`](#doc_logical) | Display informational messages and the full list of parameters and timers at the end of execution. | `getOption("mlpack.verbose", FALSE)` |
+| `decision_boundary` | [`numeric`](#doc_numeric) | Decision boundary for prediction; if the logistic function for a point is less than the boundary, the class is taken to be 0; otherwise, the class is 1. | `0.5` |
 
 ### Example
-As an example, to train a logistic regression model on the data '`"data"`' with labels '`"labels"`' with L2 regularization of 0.1, saving the model to '`"lr_model"`', the following command may be used:
 
-```R
-R> output <- logistic_regression(training=data, labels=labels, lambda=0.1,
-  print_training_accuracy=TRUE)
-R> lr_model <- output$output_model
+```r
+
+
+suppressMessages(library(mlpack)) # in case 'mlpack' is not yet loaded
+X <- as.matrix(read.csv("http://datasets.mlpack.org/iris.csv", header=FALSE))
+y <- as.matrix(read.csv("http://datasets.mlpack.org/iris_labels.csv", header=FALSE))
+pp <- preprocess_split(input=X, input_label=as.matrix(1:nrow(X)), test_ratio=0.2)
+X_train <- pp[["training"]]
+X_test <- pp[["test"]]
+# labels are indices to operate on both factors or numeric data
+y_train <- y[as.integer(pp[["training_labels"]]), 1]
+y_test <- y[as.integer(pp[["test_labels"]]), 1]
+
+model <- logistic_regression_train(training=X_train, labels=y_train,
+  lambda=0.1)
+  
+pred <- predict(model, newdata=X_test) 
+prob <- predict(model, newdata=X_test, type="probabilities") 
 ```
 
-Then, to use that model to predict classes for the dataset '`"test"`', storing the output predictions in '`"predictions"`', the following command may be used: 
+### Methods
 
-```R
-R> output <- logistic_regression(input_model=lr_model, test=test)
-R> predictions <- output$predictions
-```
+| **name** | **description** |
+|----------|-----------------|
+| train | An implementation of L2-regularized logistic regression for two-class classification.  Given labeled data, a model is trained and saved for future use; or, a pre-trained model can be used to classify new points. |
+| predict | An implementation of L2-regularized logistic regression for two-class classification.  Uses a trained model to classify new points. |
+| probabilities | An implementation of L2-regularized logistic regression for two-class classification.  Uses a trained model to classify new points and provide classification probabilities. |
 
-### See also
+### 1. train
 
- - [softmax_regression()](#softmax_regression)
- - [random_forest()](#random_forest)
- - [Logistic regression on Wikipedia](https://en.wikipedia.org/wiki/Logistic_regression)
- - [:LogisticRegression C++ class documentation](../../user/methods/logistic_regression.md)
+An implementation of L2-regularized logistic regression for two-class classification.  Given labeled data, a model is trained and saved for future use; or, a pre-trained model can be used to classify new points.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `labels` | [`integer vector`](#doc_integer_vector) | A matrix containing labels (0 or 1) for the points in the training set (y). | 
+| `training` | [`numeric matrix`](#doc_numeric_matrix) | A matrix containing the training set (the matrix of predictors, X). | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`LogisticRegression`](#doc_model) | Output for trained logistic regression model. | 
+
+### 2. predict
+
+An implementation of L2-regularized logistic regression for two-class classification.  Uses a trained model to classify new points.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `test` | [`numeric matrix`](#doc_numeric_matrix) | Matrix containing test dataset. | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`integer vector`](#doc_integer_vector) | If test data is specified, this matrix is where the predictions for the test set will be saved. | 
+
+### 3. probabilities
+
+An implementation of L2-regularized logistic regression for two-class classification.  Uses a trained model to classify new points and provide classification probabilities.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `test` | [`numeric matrix`](#doc_numeric_matrix) | Matrix containing test dataset. | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`numeric matrix`](#doc_numeric_matrix) | Predicted class probabilities for each point in the test set. | 
 
 ## lsh()
 {: #lsh }
@@ -2612,9 +2547,8 @@ Multiple different decomposition techniques can be used.  The method to use can 
 For example, to reduce the dimensionality of the matrix `"data"` to 5 dimensions using randomized SVD for the decomposition, storing the output matrix to `"data_mod"`, the following command can be used:
 
 ```R
-R> output <- pca(input=data, new_dimensionality=5,
+R> data_mod <- pca(input=data, new_dimensionality=5,
   decomposition_method="randomized")
-R> data_mod <- output$output
 ```
 
 ### See also
@@ -2836,15 +2770,13 @@ The binarized matrix may be saved with the `output` output parameter.
 For example, if we want to set all variables greater than 5 in the dataset `"X"` to 1 and variables less than or equal to 5.0 to 0, and save the result to `"Y"`, we could run
 
 ```R
-R> output <- preprocess_binarize(input=X, threshold=5)
-R> Y <- output$output
+R> Y <- preprocess_binarize(input=X, threshold=5)
 ```
 
 But if we want to apply this to only the first (0th) dimension of `"X"`,  we could instead run
 
 ```R
-R> output <- preprocess_binarize(input=X, threshold=5, dimension=0)
-R> Y <- output$output
+R> Y <- preprocess_binarize(input=X, threshold=5, dimension=0)
 ```
 
 ### See also
@@ -3046,8 +2978,8 @@ The output matrix with encoded features may be saved with the `output` parameter
 So, a simple example where we want to encode 1st and 3rd feature from dataset `"X"` into `"X_output"` would be
 
 ```R
-R> output <- preprocess_one_hot_encoding(input=X, dimensions=1, dimensions=3)
-R> X_ouput <- output$output
+R> X_output <- preprocess_one_hot_encoding(input=X, dimensions=1,
+  dimensions=3)
 ```
 
 ### See also
@@ -3118,96 +3050,6 @@ R> ic <- output$output_ic
  - [Independent component analysis on Wikipedia](https://en.wikipedia.org/wiki/Independent_component_analysis)
  - [ICA using spacings estimates of entropy (pdf)](https://www.jmlr.org/papers/volume4/learned-miller03a/learned-miller03a.pdf)
  - [Radical C++ class documentation](../../user/methods/radical.md)
-
-## random_forest()
-{: #random_forest }
-
-#### Random forests
-{: #random_forest_descr }
-
-```R
-R> library(mlpack)
-R> d <- random_forest(input_model=NA, labels=matrix(integer(), 0, 0),
-        maximum_depth=0, minimum_gain_split=0, minimum_leaf_size=1,
-        num_trees=10, print_training_accuracy=FALSE, seed=0, subspace_dim=0,
-        test=matrix(numeric(), 0, 0), test_labels=matrix(integer(), 0, 0),
-        training=matrix(numeric(), 0, 0), verbose=getOption("mlpack.verbose",
-        FALSE), warm_start=FALSE)
-R> output_model <- d$output_model
-R> predictions <- d$predictions
-R> probabilities <- d$probabilities
-```
-
-An implementation of the standard random forest algorithm by Leo Breiman for classification.  Given labeled data, a random forest can be trained and saved for future use; or, a pre-trained random forest can be used for classification. [Detailed documentation](#random_forest_detailed-documentation).
-
-
-
-### Input options
-
-| ***name*** | ***type*** | ***description*** | ***default*** |
-|------------|------------|-------------------|---------------|
-| `check_input_matrices` | [`logical`](#doc_logical) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `FALSE` |
-| `input_model` | [`RandomForestModel`](#doc_model) | Pre-trained random forest to use for classification. | `NA` |
-| `labels` | [`integer vector`](#doc_integer_vector) | Labels for training dataset. | `matrix(integer(), 0, 0)` |
-| `maximum_depth` | [`integer`](#doc_integer) | Maximum depth of the tree (0 means no limit). | `0` |
-| `minimum_gain_split` | [`numeric`](#doc_numeric) | Minimum gain needed to make a split when building a tree. | `0` |
-| `minimum_leaf_size` | [`integer`](#doc_integer) | Minimum number of points in each leaf node. | `1` |
-| `num_trees` | [`integer`](#doc_integer) | Number of trees in the random forest. | `10` |
-| `print_training_accuracy` | [`logical`](#doc_logical) | If set, then the accuracy of the model on the training set will be predicted (verbose must also be specified). | `FALSE` |
-| `seed` | [`integer`](#doc_integer) | Random seed.  If 0, 'std::time(NULL)' is used. | `0` |
-| `subspace_dim` | [`integer`](#doc_integer) | Dimensionality of random subspace to use for each split.  '0' will autoselect the square root of data dimensionality. | `0` |
-| `test` | [`numeric matrix`](#doc_numeric_matrix) | Test dataset to produce predictions for. | `matrix(numeric(), 0, 0)` |
-| `test_labels` | [`integer vector`](#doc_integer_vector) | Test dataset labels, if accuracy calculation is desired. | `matrix(integer(), 0, 0)` |
-| `training` | [`numeric matrix`](#doc_numeric_matrix) | Training dataset. | `matrix(numeric(), 0, 0)` |
-| `verbose` | [`logical`](#doc_logical) | Display informational messages and the full list of parameters and timers at the end of execution. | `getOption("mlpack.verbose", FALSE)` |
-| `warm_start` | [`logical`](#doc_logical) | If true and passed along with `training` and `input_model` then trains more trees on top of existing model. | `FALSE` |
-
-### Output options
-
-Results are returned in a R list.  The keys of the list are the names of the output parameters.
-
-| ***name*** | ***type*** | ***description*** |
-|------------|------------|-------------------|
-| `output_model` | [`RandomForestModel`](#doc_model) | Model to save trained random forest to. | 
-| `predictions` | [`integer vector`](#doc_integer_vector) | Predicted classes for each point in the test set. | 
-| `probabilities` | [`numeric matrix`](#doc_numeric_matrix) | Predicted class probabilities for each point in the test set. | 
-
-### Detailed documentation
-{: #random_forest_detailed-documentation }
-
-This program is an implementation of the standard random forest classification algorithm by Leo Breiman.  A random forest can be trained and saved for later use, or a random forest may be loaded and predictions or class probabilities for points may be generated.
-
-The training set and associated labels are specified with the `training` and `labels` parameters, respectively.  The labels should be in the range `[0, num_classes - 1]`. Optionally, if `labels` is not specified, the labels are assumed to be the last dimension of the training dataset.
-
-When a model is trained, the `output_model` output parameter may be used to save the trained model.  A model may be loaded for predictions with the `input_model`parameter. The `input_model` parameter may not be specified when the `training` parameter is specified.  The `minimum_leaf_size` parameter specifies the minimum number of training points that must fall into each leaf for it to be split.  The `num_trees` controls the number of trees in the random forest.  The `minimum_gain_split` parameter controls the minimum required gain for a decision tree node to split.  Larger values will force higher-confidence splits.  The `maximum_depth` parameter specifies the maximum depth of the tree.  The `subspace_dim` parameter is used to control the number of random dimensions chosen for an individual node's split.  If `print_training_accuracy` is specified, the calculated accuracy on the training set will be printed.
-
-Test data may be specified with the `test` parameter, and if performance measures are desired for that test set, labels for the test points may be specified with the `test_labels` parameter.  Predictions for each test point may be saved via the `predictions`output parameter.  Class probabilities for each prediction may be saved with the `probabilities` output parameter.
-
-### Example
-For example, to train a random forest with a minimum leaf size of 20 using 10 trees on the dataset contained in `"data"`with labels `"labels"`, saving the output random forest to `"rf_model"` and printing the training error, one could call
-
-```R
-R> output <- random_forest(training=data, labels=labels, minimum_leaf_size=20,
-  num_trees=10, print_training_accuracy=TRUE)
-R> rf_model <- output$output_model
-```
-
-Then, to use that model to classify points in `"test_set"` and print the test error given the labels `"test_labels"` using that model, while saving the predictions for each point to `"predictions"`, one could call 
-
-```R
-R> output <- random_forest(input_model=rf_model, test=test_set,
-  test_labels=test_labels)
-R> predictions <- output$predictions
-```
-
-### See also
-
- - [decision_tree()](#decision_tree)
- - [hoeffding_tree()](#hoeffding_tree)
- - [softmax_regression()](#softmax_regression)
- - [Random forest on Wikipedia](https://en.wikipedia.org/wiki/Random_forest)
- - [Random forests (pdf)](https://www.eecis.udel.edu/~shatkay/Course/papers/BreimanRandomForests2001.pdf)
- - [RandomForest C++ class documentation](../../user/methods/random_forest.md)
 
 ## krann()
 {: #krann }
@@ -3457,161 +3299,391 @@ R> codes <- output$codes
  - [Regularization and variable selection via the elastic net](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=46217f372a75dddc2254fdbc6b9418ba3554e453)
  - [SparseCoding C++ class documentation](../../user/methods/sparse_coding.md)
 
-## adaboost()
+## class random_forest
+{: #random_forest }
+
+#### Random Forests train
+{: #random_forest_descr }
+
+
+This program is an implementation of the standard random forest classification algorithm by Leo Breiman.  A random forest is trained (and returned for later use for subsequent use where predictions or class probabilities for points may be generated.
+
+The training set and associated labels are specified with the `training` and `labels` parameters, respectively.  The labels should be in the range `[0, num_classes - 1]`. Optionally, if `labels` is not specified, the labels are assumed to be the last dimension of the training dataset.
+
+The `minimum_leaf_size` parameter specifies the minimum number of training points that must fall into each leaf for it to be split.  The `num_trees` controls the number of trees in the random forest.  The `minimum_gain_split` parameter controls the minimum required gain for a decision tree node to split.  Larger values will force higher-confidence splits.  The `maximum_depth` parameter specifies the maximum depth of the tree.  The `subspace_dim` parameter is used to control the number of random dimensions chosen for an individual node's split.  If `print_training_accuracy` is specified, the calculated accuracy on the training set will be printed.
+### Parameters
+
+| ***name*** | ***type*** | ***description*** | ***default*** |
+|------------|------------|-------------------|---------------|
+| `check_input_matrices` | [`logical`](#doc_logical) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `FALSE` |
+| `maximum_depth` | [`integer`](#doc_integer) | Maximum depth of the tree (0 means no limit). | `0` |
+| `minimum_gain_split` | [`numeric`](#doc_numeric) | Minimum gain needed to make a split when building a tree. | `0` |
+| `minimum_leaf_size` | [`integer`](#doc_integer) | Minimum number of points in each leaf node. | `1` |
+| `num_trees` | [`integer`](#doc_integer) | Number of trees in the random forest. | `10` |
+| `print_training_accuracy` | [`logical`](#doc_logical) | If set, then the accuracy of the model on the training set will be predicted (verbose must also be specified). | `FALSE` |
+| `seed` | [`integer`](#doc_integer) | Random seed.  If 0, 'std::time(NULL)' is used. | `0` |
+| `subspace_dim` | [`integer`](#doc_integer) | Dimensionality of random subspace to use for each split.  '0' will autoselect the square root of data dimensionality. | `0` |
+| `verbose` | [`logical`](#doc_logical) | Display informational messages and the full list of parameters and timers at the end of execution. | `getOption("mlpack.verbose", FALSE)` |
+
+### Example
+
+```r
+
+
+suppressMessages(library(mlpack)) # in case 'mlpack' is not yet loaded
+X <- as.matrix(read.csv("http://datasets.mlpack.org/iris.csv", header=FALSE))
+y <- as.matrix(read.csv("http://datasets.mlpack.org/iris_labels.csv", header=FALSE))
+pp <- preprocess_split(input=X, input_label=as.matrix(1:nrow(X)), test_ratio=0.2)
+X_train <- pp[["training"]]
+X_test <- pp[["test"]]
+# labels are indices to operate on both factors or numeric data
+y_train <- y[as.integer(pp[["training_labels"]]), 1]
+y_test <- y[as.integer(pp[["test_labels"]]), 1]
+
+model <- random_forest_train(training=X_train, labels=y_train,
+  minimum_leaf_size=20, num_trees=10, print_training_accuracy=TRUE)
+  
+pred <- predict(model, newdata=X_test) 
+prob <- predict(model, newdata=X_test, type="probabilities") 
+```
+
+### Methods
+
+| **name** | **description** |
+|----------|-----------------|
+| train | An implementation of the standard random forest algorithm by Leo Breiman for classification.  Given labeled data, a random forest is trained. |
+| predict | Class predictions from random forest model. |
+| probabilities | Class probabilities from random forest model. |
+
+### 1. train
+
+An implementation of the standard random forest algorithm by Leo Breiman for classification.  Given labeled data, a random forest is trained.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `labels` | [`integer vector`](#doc_integer_vector) | Labels for training dataset. | 
+| `training` | [`numeric matrix`](#doc_numeric_matrix) | Training dataset. | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`RandomForestModel`](#doc_model) | Model to save trained random forest to. | 
+
+### 2. predict
+
+Class predictions from random forest model.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `test` | [`numeric matrix`](#doc_numeric_matrix) | Test dataset to produce predictions for. | 
+| `test_labels` | [`integer vector`](#doc_integer_vector) | Test dataset labels, if accuracy calculation is desired. | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`integer vector`](#doc_integer_vector) | Predicted classes for each point in the test set. | 
+
+### 3. probabilities
+
+Class probabilities from random forest model.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `test` | [`numeric matrix`](#doc_numeric_matrix) | Test dataset to produce predictions for. | 
+| `test_labels` | [`integer vector`](#doc_integer_vector) | Test dataset labels, if accuracy calculation is desired. | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`numeric matrix`](#doc_numeric_matrix) | Predicted class probabilities for each point in the test set. | 
+
+## class decision_tree
+{: #decision_tree }
+
+#### Decision tree training
+{: #decision_tree_descr }
+
+
+Train using a decision tree.  Given a dataset containing numeric or categorical features, and associated labels for each point in the dataset, this program can train a decision tree on that data.
+
+The training set and associated labels are specified with the `training` and `labels` parameters, respectively.  The labels should be in the range `[0, num_classes - 1]`. Optionally, if `labels` is not specified, the labels are assumed to be the last dimension of the training dataset.
+
+The trained model is returned, and can then be used for prediction. The `minimum_leaf_size` parameter specifies the minimum number of training points that must fall into each leaf for it to be split.  The `minimum_gain_split` parameter specifies the minimum gain that is needed for the node to split.  The `maximum_depth` parameter specifies the maximum depth of the tree.  If `print_training_accuracy` is specified, the training accuracy will be printed.
+### Parameters
+
+| ***name*** | ***type*** | ***description*** | ***default*** |
+|------------|------------|-------------------|---------------|
+| `check_input_matrices` | [`logical`](#doc_logical) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `FALSE` |
+| `maximum_depth` | [`integer`](#doc_integer) | Maximum depth of the tree (0 means no limit). | `0` |
+| `minimum_gain_split` | [`numeric`](#doc_numeric) | Minimum gain for node splitting. | `1e-07` |
+| `minimum_leaf_size` | [`integer`](#doc_integer) | Minimum number of points in a leaf. | `20` |
+| `print_training_accuracy` | [`logical`](#doc_logical) | Print the training accuracy. | `FALSE` |
+| `verbose` | [`logical`](#doc_logical) | Display informational messages and the full list of parameters and timers at the end of execution. | `getOption("mlpack.verbose", FALSE)` |
+
+### Example
+
+```r
+
+
+suppressMessages(library(mlpack)) # in case 'mlpack' is not yet loaded
+X <- as.matrix(read.csv("http://datasets.mlpack.org/iris.csv", header=FALSE))
+y <- as.matrix(read.csv("http://datasets.mlpack.org/iris_labels.csv", header=FALSE))
+pp <- preprocess_split(input=X, input_label=as.matrix(1:nrow(X)), test_ratio=0.2)
+X_train <- pp[["training"]]
+X_test <- pp[["test"]]
+# labels are indices to operate on both factors or numeric data
+y_train <- y[as.integer(pp[["training_labels"]]), 1]
+y_test <- y[as.integer(pp[["test_labels"]]), 1]
+
+model <- decision_tree_train(training=X_train, labels=y_train,
+  minimum_leaf_size=20, minimum_gain_split=0.001)
+  
+pred <- predict(model, newdata=X_test) 
+prob <- predict(model, newdata=X_test, type="probabilities") 
+```
+
+### Methods
+
+| **name** | **description** |
+|----------|-----------------|
+| train | Training ID3-style decision tree model. |
+| predict | Class predictions from train decision tree model. |
+| probabilities | Class predictions from train decision tree model. |
+
+### 1. train
+
+Training ID3-style decision tree model.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `labels` | [`integer vector`](#doc_integer_vector) | Training labels. | 
+| `training` | [`categorical matrix/data.frame`](#doc_categorical_matrix_data_frame) | Training dataset (may contain categorical variables). | 
+| `weights` | [`numeric matrix`](#doc_numeric_matrix) | The weight of labels | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`DecisionTreeModel`](#doc_model) | Output for trained decision tree. | 
+
+### 2. predict
+
+Class predictions from train decision tree model.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `test` | [`categorical matrix/data.frame`](#doc_categorical_matrix_data_frame) | Testing dataset (may contain categorical variables). | 
+| `test_labels` | [`integer vector`](#doc_integer_vector) | Test point labels, if accuracy calculation is desired. | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`integer vector`](#doc_integer_vector) | Class predictions for each test point. | 
+
+### 3. probabilities
+
+Class predictions from train decision tree model.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `test` | [`categorical matrix/data.frame`](#doc_categorical_matrix_data_frame) | Testing dataset (may contain categorical variables). | 
+| `test_labels` | [`integer vector`](#doc_integer_vector) | Test point labels, if accuracy calculation is desired. | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`numeric matrix`](#doc_numeric_matrix) | Class probabilities for each test point if probabilities has been selected. | 
+
+## class adaboost
 {: #adaboost }
 
 #### AdaBoost
 {: #adaboost_descr }
 
-```R
-R> library(mlpack)
-R> d <- adaboost(input_model=NA, iterations=1000,
-        labels=matrix(integer(), 0, 0), test=matrix(numeric(), 0, 0),
-        tolerance=1e-10, training=matrix(numeric(), 0, 0),
-        verbose=getOption("mlpack.verbose", FALSE),
-        weak_learner="decision_stump")
-R> output_model <- d$output_model
-R> predictions <- d$predictions
-R> probabilities <- d$probabilities
-```
-
-An implementation of the AdaBoost.MH (Adaptive Boosting) algorithm for classification.  This can be used to train an AdaBoost model on labeled data or use an existing AdaBoost model to predict the classes of new points. [Detailed documentation](#adaboost_detailed-documentation).
-
-
-
-### Input options
-
-| ***name*** | ***type*** | ***description*** | ***default*** |
-|------------|------------|-------------------|---------------|
-| `check_input_matrices` | [`logical`](#doc_logical) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `FALSE` |
-| `input_model` | [`AdaBoostModel`](#doc_model) | Input AdaBoost model. | `NA` |
-| `iterations` | [`integer`](#doc_integer) | The maximum number of boosting iterations to be run (0 will run until convergence.) | `1000` |
-| `labels` | [`integer vector`](#doc_integer_vector) | Labels for the training set. | `matrix(integer(), 0, 0)` |
-| `test` | [`numeric matrix`](#doc_numeric_matrix) | Test dataset. | `matrix(numeric(), 0, 0)` |
-| `tolerance` | [`numeric`](#doc_numeric) | The tolerance for change in values of the weighted error during training. | `1e-10` |
-| `training` | [`numeric matrix`](#doc_numeric_matrix) | Dataset for training AdaBoost. | `matrix(numeric(), 0, 0)` |
-| `verbose` | [`logical`](#doc_logical) | Display informational messages and the full list of parameters and timers at the end of execution. | `getOption("mlpack.verbose", FALSE)` |
-| `weak_learner` | [`character`](#doc_character) | The type of weak learner to use: 'decision_stump', or 'perceptron'. | `"decision_stump"` |
-
-### Output options
-
-Results are returned in a R list.  The keys of the list are the names of the output parameters.
-
-| ***name*** | ***type*** | ***description*** |
-|------------|------------|-------------------|
-| `output_model` | [`AdaBoostModel`](#doc_model) | Output trained AdaBoost model. | 
-| `predictions` | [`integer vector`](#doc_integer_vector) | Predicted labels for the test set. | 
-| `probabilities` | [`numeric matrix`](#doc_numeric_matrix) | Predicted class probabilities for each point in the test set. | 
-
-### Detailed documentation
-{: #adaboost_detailed-documentation }
 
 This program implements the AdaBoost (or Adaptive Boosting) algorithm. The variant of AdaBoost implemented here is AdaBoost.MH. It uses a weak learner, either decision stumps or perceptrons, and over many iterations, creates a strong learner that is a weighted ensemble of weak learners. It runs these iterations until a tolerance value is crossed for change in the value of the weighted training error.
 
 For more information about the algorithm, see the paper "Improved Boosting Algorithms Using Confidence-Rated Predictions", by R.E. Schapire and Y. Singer.
-
-This program allows training of an AdaBoost model, and then application of that model to a test dataset.  To train a model, a dataset must be passed with the `training` option.  Labels can be given with the `labels` option; if no labels are specified, the labels will be assumed to be the last column of the input dataset.  Alternately, an AdaBoost model may be loaded with the `input_model` option.
-
-Once a model is trained or loaded, it may be used to provide class predictions for a given test dataset.  A test dataset may be specified with the `test` parameter.  The predicted classes for each point in the test dataset are output to the `predictions` output parameter.  The AdaBoost model itself is output to the `output_model` output parameter.
-
-### Example
-For example, to run AdaBoost on an input dataset `"data"` with labels `"labels"`and perceptrons as the weak learner type, storing the trained model in `"model"`, one could use the following command: 
-
-```R
-R> output <- adaboost(training=data, labels=labels,
-  weak_learner="perceptron")
-R> model <- output$output_model
-```
-
-Similarly, an already-trained model in `"model"` can be used to provide class predictions from test data `"test_data"` and store the output in `"predictions"` with the following command: 
-
-```R
-R> output <- adaboost(input_model=model, test=test_data)
-R> predictions <- output$predictions
-```
-
-### See also
-
- - [AdaBoost on Wikipedia](https://en.wikipedia.org/wiki/AdaBoost)
- - [Improved boosting algorithms using confidence-rated predictions (pdf)](http://www.schapire.net/papers/SchapireSi98.pdf)
- - [Perceptron](#perceptron)
- - [Decision Trees](#decision_tree)
- - [AdaBoost C++ class documentation](../../user/methods/adaboost.md)
-
-## linear_regression()
-{: #linear_regression }
-
-#### Simple Linear Regression and Prediction
-{: #linear_regression_descr }
-
-```R
-R> library(mlpack)
-R> d <- linear_regression(input_model=NA, lambda=0,
-        test=matrix(numeric(), 0, 0), training=matrix(numeric(), 0, 0),
-        training_responses=matrix(numeric(), 0, 0),
-        verbose=getOption("mlpack.verbose", FALSE))
-R> output_model <- d$output_model
-R> output_predictions <- d$output_predictions
-```
-
-An implementation of simple linear regression and ridge regression using ordinary least squares.  Given a dataset and responses, a model can be trained and saved for later use, or a pre-trained model can be used to output regression predictions for a test set. [Detailed documentation](#linear_regression_detailed-documentation).
-
-
-
-### Input options
+### Parameters
 
 | ***name*** | ***type*** | ***description*** | ***default*** |
 |------------|------------|-------------------|---------------|
 | `check_input_matrices` | [`logical`](#doc_logical) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `FALSE` |
-| `input_model` | [`LinearRegression`](#doc_model) | Existing LinearRegression model to use. | `NA` |
-| `lambda` | [`numeric`](#doc_numeric) | Tikhonov regularization for ridge regression.  If 0, the method reduces to linear regression. | `0` |
-| `test` | [`numeric matrix`](#doc_numeric_matrix) | Matrix containing X' (test regressors). | `matrix(numeric(), 0, 0)` |
-| `training` | [`numeric matrix`](#doc_numeric_matrix) | Matrix containing training set X (regressors). | `matrix(numeric(), 0, 0)` |
-| `training_responses` | [`numeric vector`](#doc_numeric_vector) | Optional vector containing y (responses). If not given, the responses are assumed to be the last row of the input file. | `matrix(numeric(), 0, 0)` |
+| `iterations` | [`integer`](#doc_integer) | The maximum number of boosting iterations to be run (0 will run until convergence.) | `1000` |
+| `tolerance` | [`numeric`](#doc_numeric) | The tolerance for change in values of the weighted error during training. | `1e-10` |
 | `verbose` | [`logical`](#doc_logical) | Display informational messages and the full list of parameters and timers at the end of execution. | `getOption("mlpack.verbose", FALSE)` |
+| `weak_learner` | [`character`](#doc_character) | The type of weak learner to use: 'decision_stump', or 'perceptron'. | `"decision_stump"` |
 
-### Output options
+### Example
 
-Results are returned in a R list.  The keys of the list are the names of the output parameters.
+```r
 
-| ***name*** | ***type*** | ***description*** |
-|------------|------------|-------------------|
-| `output_model` | [`LinearRegression`](#doc_model) | Output LinearRegression model. | 
-| `output_predictions` | [`numeric vector`](#doc_numeric_vector) | If --test_file is specified, this matrix is where the predicted responses will be saved. | 
 
-### Detailed documentation
-{: #linear_regression_detailed-documentation }
+suppressMessages(library(mlpack)) # in case 'mlpack' is not yet loaded
+X <- as.matrix(read.csv("http://datasets.mlpack.org/iris.csv", header=FALSE))
+y <- as.matrix(read.csv("http://datasets.mlpack.org/iris_labels.csv", header=FALSE))
+pp <- preprocess_split(input=X, input_label=as.matrix(1:nrow(X)), test_ratio=0.2)
+X_train <- pp[["training"]]
+X_test <- pp[["test"]]
+# labels are indices to operate on both factors or numeric data
+y_train <- y[as.integer(pp[["training_labels"]]), 1]
+y_test <- y[as.integer(pp[["test_labels"]]), 1]
+
+model <- adaboost_train(training=X_train, labels=y_train)
+
+pred <- predict(model, newdata=X_test) 
+prob <- predict(model, newdata=X_test, type="probabilities") 
+```
+
+### Methods
+
+| **name** | **description** |
+|----------|-----------------|
+| train | Training AdaBoost model. |
+| predict | Class predictions from model. |
+| probabilities | Class probabilities from model. |
+
+### 1. train
+
+Training AdaBoost model.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `labels` | [`integer vector`](#doc_integer_vector) | Labels for the training set. | 
+| `training` | [`numeric matrix`](#doc_numeric_matrix) | Dataset for training AdaBoost. | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`AdaBoostModel`](#doc_model) | Output trained AdaBoost model. | 
+
+### 2. predict
+
+Class predictions from model.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `test` | [`numeric matrix`](#doc_numeric_matrix) | Test dataset. | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`integer vector`](#doc_integer_vector) | Predicted labels for the test set. | 
+
+### 3. probabilities
+
+Class probabilities from model.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `test` | [`numeric matrix`](#doc_numeric_matrix) | Test dataset. | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`numeric matrix`](#doc_numeric_matrix) | Predicted class probabilities for each point in the test set. | 
+
+## class linear_regression
+{: #linear_regression }
+
+#### Simple Linear Regression
+{: #linear_regression_descr }
+
 
 An implementation of simple linear regression and simple ridge regression using ordinary least squares. This solves the problem
 
   y = X * b + e
+### Parameters
 
-where X (specified by `training`) and y (specified either as the last column of the input matrix `training` or via the `training_responses` parameter) are known and b is the desired variable.  If the covariance matrix (X'X) is not invertible, or if the solution is overdetermined, then specify a Tikhonov regularization constant (with `lambda`) greater than 0, which will regularize the covariance matrix to make it invertible.  The calculated b may be saved with the `output_predictions` output parameter.
-
-Optionally, the calculated value of b is used to predict the responses for another matrix X' (specified by the `test` parameter):
-
-   y' = X' * b
-
-and the predicted responses y' may be saved with the `output_predictions` output parameter.  This type of regression is related to least-angle regression, which mlpack implements as the 'lars' program.
+| ***name*** | ***type*** | ***description*** | ***default*** |
+|------------|------------|-------------------|---------------|
+| `check_input_matrices` | [`logical`](#doc_logical) | If specified, the input matrix is checked for NaN and inf values; an exception is thrown if any are found. | `FALSE` |
+| `lambda` | [`numeric`](#doc_numeric) | Tikhonov regularization for ridge regression.  If 0, the method reduces to linear regression. | `0` |
+| `verbose` | [`logical`](#doc_logical) | Display informational messages and the full list of parameters and timers at the end of execution. | `getOption("mlpack.verbose", FALSE)` |
 
 ### Example
-For example, to run a linear regression on the dataset `"X"` with responses `"y"`, saving the trained model to `"lr_model"`, the following command could be used:
 
-```R
-R> output <- linear_regression(training=X, training_responses=y)
-R> lr_model <- output$output_model
+```r
+
+
+suppressMessages(library(mlpack)) # in case 'mlpack' is not yet loaded
+X <- as.matrix(read.csv("https://datasets.mlpack.org/admission_predict.csv", header=FALSE))
+y <- as.matrix(read.csv("https://datasets.mlpack.org/admission_predict.responses.csv", header=FALSE))
+pp <- preprocess_split(input=X, input_label=as.matrix(1:nrow(X)), test_ratio=0.2)
+X_train <- pp[["training"]]
+X_test <- pp[["test"]]
+# labels are indices to operate on both factors or numeric data
+y_train <- y[as.integer(pp[["training_labels"]]), 1]
+y_test <- y[as.integer(pp[["test_labels"]]), 1]
+
+model <- linear_regression_train(training=X_train, training_responses=y_train)
+  
+pred <- predict(model, newdata=X_test) 
 ```
 
-Then, to use `"lr_model"` to predict responses for a test set `"X_test"`, saving the predictions to `"X_test_responses"`, the following command could be used:
+### Methods
 
-```R
-R> output <- linear_regression(input_model=lr_model, test=X_test)
-R> X_test_responses <- output$output_predictions
-```
+| **name** | **description** |
+|----------|-----------------|
+| train | Train a linear regression model. |
+| predict | Predictions from model. |
 
-### See also
+### 1. train
 
- - [lars()](#lars)
- - [Linear regression on Wikipedia](https://en.wikipedia.org/wiki/Linear_regression)
- - [LinearRegression C++ class documentation](../../user/methods/linear_regression.md)
+Train a linear regression model.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `training` | [`numeric matrix`](#doc_numeric_matrix) | Matrix containing training set X (regressors). | 
+| `training_responses` | [`numeric vector`](#doc_numeric_vector) | Optional vector containing y (responses). If not given, the responses are assumed to be the last row of the input file. | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`LinearRegression`](#doc_model) | Output LinearRegression model. | 
+
+### 2. predict
+
+Predictions from model.
+
+#### Input Parameters:
+
+| **name** | **type** | **description** |
+|----------|----------|-----------------|
+| `test` | [`numeric matrix`](#doc_numeric_matrix) | Matrix containing X' (test regressors). | 
+
+#### Returns: 
+
+| **type** | **description** |
+|----------|-----------------|
+| [`numeric vector`](#doc_numeric_vector) | Matrix containing predicted responses. | 
 
